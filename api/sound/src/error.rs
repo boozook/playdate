@@ -1,0 +1,29 @@
+use core::fmt;
+
+
+pub type ApiError = sys::error::Error<self::Error>;
+
+
+#[derive(Debug)]
+pub enum Error {
+	FileNotExist,
+	/// Causes when allocation failed and/or null-ptr returned.
+	Alloc,
+}
+
+impl fmt::Display for Error {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		match &self {
+			Error::FileNotExist => write!(f, "Snd: File doesn't exist"),
+			Error::Alloc => write!(f, "Snd: Allocation failed"),
+		}
+	}
+}
+
+
+impl Into<ApiError> for Error {
+	fn into(self) -> ApiError { ApiError::Api(self) }
+}
+
+
+impl core::error::Error for Error {}

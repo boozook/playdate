@@ -1,0 +1,62 @@
+required_version = "1.6.0"
+unstable_features = true
+edition = "2018"
+
+
+max_width = 114
+comment_width = 124
+
+fn_params_layout = "Tall"
+use_small_heuristics = "Default"
+
+# Indentation:
+newline_style = "Unix"
+indent_style = "Visual" # Block
+hard_tabs = true
+tab_spaces = 3
+
+# Strings and comments:
+format_strings = false
+normalize_comments = false # wrap_comments + normalize
+wrap_comments = false
+
+# Single line expressions and items:
+empty_item_single_line = true   # Put empty-body functions and impls on a single line
+struct_lit_single_line = true   # Put small struct literals on a single line
+fn_single_line = true           # Put single-expression functions on a single line
+where_single_line = true        # To force single line where layout
+use_field_init_shorthand = true
+
+# Imports:
+imports_indent = "Visual"
+imports_layout = "Mixed"
+
+# Ordering:
+reorder_imports = false    # Reorder import statements alphabetically
+reorder_modules = false    # Reorder module statemtents alphabetically in group
+reorder_impl_items = false
+
+# Spaces around punctuation:
+binop_separator = "Back"          # Front / Back : Where to put a binary operator when a binary expression goes multiline
+type_punctuation_density = "Wide" # Wide / false : Determines if '+' or '=' are wrapped in spaces in the punctuation of types
+space_before_colon = false        # Leave a space before the colon
+space_after_colon = true          # Leave a space after the colon
+spaces_around_ranges = false      # Put spaces around the  .. and ... range operators
+match_arm_leading_pipes = "Never"
+
+# Misc:
+combine_control_expr = true            # Combine control expressions with function calls.
+match_arm_blocks = true                # Wrap the body of arms in blocks when it does not fit on the same line with the pattern of arms
+force_multiline_blocks = true          # Force multiline closure bodies and match arms to be wrapped in a block
+brace_style = "PreferSameLine"         # ClosingNextLine? / PreferSameLine / AlwaysNextLine : Brace style for items
+control_brace_style = "AlwaysSameLine" # AlwaysNextLine / AlwaysSameLine / ClosingNextLine : Brace style for control flow constructs
+trailing_comma = "Vertical"            # How to handle trailing commas for lists
+trailing_semicolon = true              # Add trailing semicolon after break, continue and return
+match_block_trailing_comma = true      # Put a trailing comma after a block based match arm (non-block arms are not affected)
+blank_lines_upper_bound = 2            # Maximum number of blank lines which can be put between items.
+blank_lines_lower_bound = 0            # Minimum number of blank lines which must be put between items.
+
+# Options that can change the source code beyond whitespace/blocks (somewhat linty things) :
+merge_derives = true              # Merge multiple `#[derive(...)]` into a single one
+use_try_shorthand = true          # Replace uses of the try! macro by the ? shorthand
+condense_wildcard_suffixes = true # Replace strings of _ wildcards by a single .. in tuple patterns

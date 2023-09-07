@@ -1,0 +1,486 @@
+#![cfg_attr(feature = "documentation", feature(get_mut_unchecked))]
+pub extern crate bindgen;
+
+use std::env;
+use std::path::{Path, PathBuf};
+use bindgen::callbacks::DeriveInfo;
+use bindgen::{EnumVariation, RustTarget, Builder, MacroTypeVariation};
+use playdate::consts::*;
+use playdate::toolchain::gcc::ArmToolchain;
+use playdate::toolchain::sdk::Sdk;
+
+
+pub mod error;
+pub mod gen;
+pub mod cfg;
+
+type Result<T, E = error::Error> = std::result::Result<T, E>;
+
+
+pub const SDK_VER_SUPPORTED: &str = "^2.0.0"; // used for version validation.
+pub const SDK_PATH_ENV_VAR: &str = SDK_ENV_VAR;
+
+
+/// Generated Rust bindings.
+pub enum Bindings {
+	Bindgen(bindgen::Bindings),
+	#[cfg(feature = "extra-codegen")]
+	Engaged(gen::Bindings),
+}
+
+
+impl Bindings {
+	#[inline(always)]
+	/// Write these bindings as source text to a file.
+	pub fn write_to_file<P: AsRef<Path>>(&self, path: P) -> std::io::Result<()> {
+		match self {
+			Bindings::Bindgen(this) => this.write_to_file(path),
+			#[cfg(feature = "extra-codegen")]
+			Bindings::Engaged(this) => this.write_to_file(path),
+		}
+	}
+
+	#[inline(always)]
+	/// Write these bindings as source text to the given `Write`able.
+	pub fn write<'a>(&self, writer: Box<dyn std::io::Write + 'a>) -> std::io::Result<()> {
+		match self {
+			Bindings::Bindgen(this) => this.write(writer),
+			#[cfg(feature = "extra-codegen")]
+			Bindings::Engaged(this) => this.write(writer),
+		}
+	}
+}
+
+impl std::fmt::Display for Bindings {
+	#[inline(always)]
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Bindings::Bindgen(this) => std::fmt::Display::fmt(this, f),
+			#[cfg(feature = "extra-codegen")]
+			Bindings::Engaged(this) => std::fmt::Display::fmt(this, f),
+		}
+	}
+}
+
+
+/// Bindings output filename components.
+#[derive(Debug, Clone)]
+pub struct Filename {
+	/// Version of the Playdate SDK.
+	pub sdk: semver::Version,
+	/// Version of the bindings generator.
+	pub gen: semver::Version,
+	/// String representation of enabled features/derives.
+	pub mask: DerivesMask,
+	/// Rust target-triple.
+	pub target: String,
+	/// Cargo profile
+	pub profile: String,
+}
+
+impl Filename {
+	pub fn new<T: Into<DerivesMask>>(sdk: semver::Version, derives: T) -> Result<Self> {
+		Self::new_for(sdk, env_var("TARGET")?, env_var("PROFILE")?, derives)
+	}
+
+	#[inline(never)]
+	pub fn new_for<T: Into<DerivesMask>>(sdk: semver::Version,
+	                                     target: String,
+	                                     profile: String,
+	                                     derives: T)
+	                                     -> Result<Self> {
+		Ok(Self { sdk,
+		          gen: semver::Version::parse(env!("CARGO_PKG_VERSION"))?,
+		          mask: derives.into(),
+		          target,
+		          profile })
+	}
+}
+
+
+impl std::fmt::Display for Filename {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let derives = &self.mask;
+		let profile = &self.profile;
+		let target = &self.target;
+		let sdk = &self.sdk;
+		let gen = format!("{}.{}", self.gen.major, self.gen.minor);
+
+		write!(f, "pd{sdk}-gen{gen}-{profile}-{target}-{derives}.rs")
+	}
+}
+
+
+pub struct Generator {
+	/// Playdate SDK.
+	pub sdk: Sdk,
+	/// Version of the Playdate SDK.
+	pub version: semver::Version,
+
+	/// ARM GCC.
+	pub gcc: ArmToolchain,
+
+	/// Suggested filename for export bindings.
+	pub filename: Filename,
+	/// Configured [`bindgen::Builder`].
+	pub builder: Builder,
+
+	// configuration
+	pub derives: cfg::Derive,
+}
+
+
+impl Generator {
+	pub fn new(cfg: cfg::Config) -> Result<Self> { create_generator(cfg) }
+
+
+	pub fn generate(mut self) -> Result<Bindings> {
+		// disable formatting if we gonna extra work:
+		if cfg!(feature = "extra-codegen") {
+			self.builder = self.builder.formatter(bindgen::Formatter::None);
+		}
+
+		// generate:
+		let bindings = self.builder.generate()?;
+
+		#[cfg(not(feature = "extra-codegen"))]
+		return Ok(bindings).map(Bindings::Bindgen);
+
+		#[cfg(feature = "extra-codegen")]
+		gen::engage(&bindings, &self.sdk, None).map(Bindings::Engaged)
+	}
+
+	// fn filename() -> Filename
+}
+
+
+fn create_generator(cfg: cfg::Config) -> Result<Generator, error::Error> {
+	println!("cargo:rerun-if-env-changed=TARGET");
+	let cargo_target_triple = env::var("TARGET").expect("TARGET cargo env var");
+
+	println!("cargo:rerun-if-env-changed=PROFILE");
+	let cargo_profile = env::var("PROFILE").expect("PROFILE cargo env var");
+	let is_debug = cargo_profile == "debug" || env_cargo_feature("DEBUG");
+
+	let sdk = cfg.sdk.map(Result::Ok).unwrap_or_else(|| Sdk::try_new())?;
+	let version_path = sdk.version_file();
+	let version_raw = sdk.read_version()?;
+	let version = check_sdk_version(&version_raw)?;
+	println!("cargo:rerun-if-changed={}", version_path.display());
+	let sdk_c_api = sdk.c_api();
+
+	let main_header = sdk_c_api.join("pd_api.h");
+	println!("cargo:rerun-if-changed={}", main_header.display());
+	println!("cargo:rerun-if-env-changed={SDK_ENV_VAR}");
+	println!("cargo:include={}", sdk_c_api.display());
+
+
+	// builder:
+	let gcc = cfg.gcc
+	             .map(Result::Ok)
+	             .unwrap_or_else(|| ArmToolchain::try_new())?;
+	let mut builder = create_builder(&cargo_target_triple, &sdk_c_api, &main_header, &cfg.derive);
+	builder = apply_profile(builder, is_debug);
+	builder = apply_target(builder, &cargo_target_triple, &gcc);
+
+
+	let filename = Filename::new_for(
+	                                 version.to_owned(),
+	                                 cargo_target_triple,
+	                                 cargo_profile,
+	                                 &cfg.derive,
+	)?;
+
+	Ok(Generator { sdk,
+	               gcc,
+	               version,
+	               filename,
+	               builder,
+	               derives: cfg.derive })
+}
+
+
+fn check_sdk_version(version: &str) -> Result<semver::Version, error::Error> {
+	let requirement =
+		semver::VersionReq::parse(SDK_VER_SUPPORTED).expect("Builtin supported version requirement is invalid.");
+	let version = semver::Version::parse(version.trim())?;
+	if !requirement.matches(&version) {
+		println!("cargo:warning=Playdate SDK version not tested. Supported version '{requirement}' does not matches current '{version}'.");
+	}
+	Ok(version)
+}
+
+
+pub fn env_var(name: &'static str) -> Result<String> {
+	env::var(name).map_err(|err| error::Error::Env { err, ctx: name })
+}
+
+pub fn env_cargo_feature(feature: &str) -> bool { env::var(format!("CARGO_FEATURE_{feature}")).is_ok() }
+
+
+#[derive(Debug, Clone)]
+pub struct DerivesMask {
+	inner: Vec<bool>,
+}
+
+impl DerivesMask {
+	pub fn push(&mut self, value: bool) { self.inner.push(value) }
+}
+
+
+impl From<cfg::Derive> for DerivesMask {
+	fn from(values: cfg::Derive) -> Self {
+		// Caution: do not change the order of the features.
+		Self { inner: vec![
+		                   values.default,
+		                   values.eq,
+		                   values.copy,
+		                   values.debug,
+		                   values.hash,
+		                   values.ord,
+		                   values.partialeq,
+		                   values.partialord,
+		] }
+	}
+}
+
+impl From<&'_ cfg::Derive> for DerivesMask {
+	fn from(value: &'_ cfg::Derive) -> Self { (*value).into() }
+}
+
+impl std::fmt::Display for DerivesMask {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let iter = self.inner.iter().map(|v| if *v { "1" } else { "0" });
+		write!(f, "{}", iter.collect::<String>())
+	}
+}
+
+
+fn create_builder(_target: &str, capi: &Path, header: &Path, derive: &cfg::Derive) -> Builder {
+	let mut builder = bindgen::builder()
+	.header(format!("{}", header.display()))
+	.rust_target(RustTarget::Nightly)
+
+	// allow types:
+	.allowlist_recursively(true)
+	.allowlist_type("PlaydateAPI")
+	.allowlist_type("PDSystemEvent")
+	.allowlist_type("LCDSolidColor")
+	.allowlist_type("LCDColor")
+	.allowlist_type("LCDPattern")
+	.allowlist_type("PDEventHandler")
+
+	.allowlist_var("LCD_COLUMNS")
+	.allowlist_var("LCD_ROWS")
+	.allowlist_var("LCD_ROWSIZE")
+	.allowlist_var("LCD_SCREEN_RECT")
+	.allowlist_var("SEEK_SET")
+	.allowlist_var("SEEK_CUR")
+	.allowlist_var("SEEK_END")
+	.allowlist_var("AUDIO_FRAMES_PER_CYCLE")
+	.allowlist_var("NOTE_C4")
+
+	// experimental:
+	.default_macro_constant_type(MacroTypeVariation::Unsigned)
+	.allowlist_var("LCDMakePattern")
+	.allowlist_type("LCDMakePattern")
+	.allowlist_var("LCDOpaquePattern")
+	.allowlist_type("LCDOpaquePattern")
+
+	.bitfield_enum("FileOptions")
+	.bitfield_enum("PDButtons")
+
+	// types:
+	.use_core()
+	.ctypes_prefix("core::ffi")
+	.size_t_is_usize(true)
+	.no_convert_floats()
+	.translate_enum_integer_types(true)
+	.array_pointers_in_arguments(true)
+	.explicit_padding(false)
+
+	.default_enum_style(EnumVariation::Rust { non_exhaustive: false })
+
+	.layout_tests(true)
+	.enable_function_attribute_detection()
+	.detect_include_paths(true)
+
+	.clang_args(&["--include-directory", &capi.display().to_string()])
+	.clang_arg("-DTARGET_EXTENSION=1")
+
+	.dynamic_link_require_all(true)
+
+	// derives:
+	.derive_default(derive.default)
+	.derive_eq(derive.eq)
+	.derive_copy(derive.copy)
+	.derive_debug(derive.debug)
+	.derive_hash(derive.hash)
+	.derive_ord(derive.ord)
+	.derive_partialeq(derive.partialeq)
+	.derive_partialord(derive.partialord)
+
+	.must_use_type("playdate_*")
+	.must_use_type(".*")
+	.generate_comments(true);
+
+
+	builder = builder.parse_callbacks(Box::new(bindgen::CargoCallbacks));
+	if !derive.copy {
+		builder = builder.parse_callbacks(Box::new(DeriveCopyToPrimitives));
+	}
+
+
+	// explicitly set "do not derive":
+	if !derive.default {
+		builder = builder.no_default(".*");
+	}
+	if !derive.copy {
+		builder = builder.no_copy(".*");
+	}
+	if !derive.debug {
+		builder = builder.no_debug(".*");
+	}
+	if !derive.hash {
+		builder = builder.no_hash(".*");
+	}
+	if !derive.partialeq {
+		builder = builder.no_partialeq(".*");
+	}
+
+	builder
+}
+
+
+fn apply_profile(mut builder: Builder, debug: bool) -> Builder {
+	// extra code-gen for `debug` feature:
+	if debug {
+		builder = builder.clang_arg("-D_DEBUG=1").derive_debug(true);
+	} else {
+		// should we set "-D_DEBUG=0"?
+		// builder = builder.derive_debug(false).no_debug(".*");
+	}
+	builder
+}
+
+
+// This is for build with ARM toolchain.
+// TODO: impl build with just LLVM.
+fn apply_target(mut builder: Builder, target: &str, gcc: &ArmToolchain) -> Builder {
+	builder = if DEVICE_TARGET == target {
+		let arm_eabi_include = gcc.include();
+		// println!("cargo:rustc-link-search={}", arm_eabi.join("lib").display()); // for executable
+		println!("cargo:include={}", arm_eabi_include.display());
+
+		// TODO: prevent build this for other targets:
+		// builder = builder.raw_line(format!("#![cfg(target = \"{DEVICE_TARGET}\")]\n\n"));
+
+		builder.clang_arg("-DTARGET_PLAYDATE=1")
+		       .blocklist_file("stdlib.h")
+		       .clang_args(&["-target", DEVICE_TARGET])
+		       .clang_arg("-fshort-enums")
+		       .clang_args(&["--include-directory", &arm_eabi_include.display().to_string()])
+		       .clang_arg(format!("-I{}", arm_eabi_include.display()))
+	} else {
+		builder.clang_arg("-DTARGET_SIMULATOR=1")
+	};
+	builder
+}
+
+
+/// Derives `Copy` to simple structs and enums.
+#[derive(Debug)]
+struct DeriveCopyToPrimitives;
+impl bindgen::callbacks::ParseCallbacks for DeriveCopyToPrimitives {
+	fn add_derives(&self, info: &DeriveInfo<'_>) -> Vec<String> {
+		const TYPES: &[&str] = &[
+		                         "PDButtons",
+		                         "FileOptions",
+		                         "LCDBitmapDrawMode",
+		                         "LCDBitmapFlip",
+		                         "LCDSolidColor",
+		                         "LCDLineCapStyle",
+		                         "PDStringEncoding",
+		                         "LCDPolygonFillRule",
+		                         "PDLanguage",
+		                         "PDPeripherals",
+		                         "l_valtype",
+		                         "LuaType",
+		                         "json_value_type",
+		                         "SpriteCollisionResponseType",
+		                         "SoundFormat",
+		                         "LFOType",
+		                         "SoundWaveform",
+		                         "TwoPoleFilterType",
+		                         "PDSystemEvent",
+		];
+
+		if TYPES.contains(&info.name) {
+			vec!["Copy".to_string()]
+		} else {
+			vec![]
+		}
+	}
+}
+
+
+pub fn rustfmt<'out>(mut rustfmt_path: Option<PathBuf>,
+                     source: String,
+                     config_path: Option<&Path>)
+                     -> std::io::Result<String> {
+	use std::io::Write;
+	use std::process::{Command, Stdio};
+
+	rustfmt_path = rustfmt_path.or_else(|| std::env::var("RUSTFMT").map(PathBuf::from).ok());
+	#[cfg(feature = "which-rustfmt")]
+	{
+		rustfmt_path = rustfmt_path.or_else(|| which::which("rustfmt").ok());
+	}
+	let rustfmt = rustfmt_path.as_deref().unwrap_or(Path::new("rustfmt"));
+
+
+	let mut cmd = Command::new(rustfmt);
+
+	cmd.stdin(Stdio::piped()).stdout(Stdio::piped());
+
+	if let Some(path) = config_path {
+		cmd.arg("--config-path");
+		cmd.arg(path);
+	}
+
+	let mut child = cmd.spawn()?;
+	let mut child_stdin = child.stdin.take().unwrap();
+	let mut child_stdout = child.stdout.take().unwrap();
+
+	// Write to stdin in a new thread, so that we can read from stdout on this
+	// thread. This keeps the child from blocking on writing to its stdout which
+	// might block us from writing to its stdin.
+	let stdin_handle = std::thread::spawn(move || {
+		let _ = child_stdin.write_all(source.as_bytes());
+		source
+	});
+
+	let mut output = vec![];
+	std::io::copy(&mut child_stdout, &mut output)?;
+
+	let status = child.wait()?;
+	let source = stdin_handle.join()
+	                         .expect("The thread writing to rustfmt's stdin doesn't do anything that could panic");
+
+	match String::from_utf8(output) {
+		Ok(bindings) => {
+			match status.code() {
+				Some(0) => Ok(bindings.into()),
+				Some(2) => {
+					Err(std::io::Error::new(std::io::ErrorKind::Other, "Rustfmt parsing errors.".to_string()).into())
+				},
+				Some(3) => {
+					println!("cargo:warning=Rustfmt could not format some lines.");
+					Ok(bindings.into())
+				},
+				_ => Err(std::io::Error::new(std::io::ErrorKind::Other, "Internal rustfmt error".to_string()).into()),
+			}
+		},
+		_ => Ok(source),
+	}
+}

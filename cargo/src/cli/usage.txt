@@ -1,0 +1,18 @@
+cargo{toolchain} {NAME} <COMMAND> [OPTIONS]
+  cargo-{NAME} mimics cargo and hence you can use any of the options supported by cargo,
+        such as package, lib, example, bin, target-dir or manifest-path for example.
+        Those arguments that {BIN_NAME} doesn't know will be forwarded to underlying cargo as is.
+  {toolchain_usage}
+  Examples:
+    Build for default target, host simulator:
+      build --simulator
+    Build for playdate target:
+      build --device
+      build --target=thumbv7em-none-eabihf
+    Build for many targets - playdate, host simulator, other simulator running on redox:
+      build --device --simulator --target=x86_64-unknown-redox
+    Run on any connected device or simulator:
+      run --device
+      run --simulator
+    Run on specified connected device:
+      run --device=PDU1-Y000235

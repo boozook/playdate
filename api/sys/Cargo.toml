@@ -1,0 +1,95 @@
+[package]
+name = "playdate-sys"
+version = "0.1.0"
+edition = "2021"
+build = "src/build.rs"
+include = ["gen/*.rs"]
+
+readme = "README.md"
+authors = ["Alex Koz <a@koz.email>"]
+description = "Low-level Playdate API bindings"
+keywords = ["playdate", "bindings", "ffi", "gamedev"]
+categories = ["external-ffi-bindings", "development-tools::ffi"]
+homepage = "https://github.com/boozook/playdate"
+repository = "https://github.com/boozook/playdate.git"
+documentation = "https://docs.rs/playdate-sys"
+
+
+[features]
+default = ["lang-items", "bindgen-runtime", "bindings-derive-debug"]
+lang-items = ["allocator", "panic-handler", "eh-personality"]
+# lang-items:
+allocator = []      # global allocator
+panic-handler = []  # global panic handler
+eh-personality = [] # eh_personality for sim-targets, dummy empty no-op
+
+entry-point = [] # simple minimal proxy entry point
+error-ctx = []   # errors with context
+
+# bindings build options:
+bindgen-logging = ["bindgen/logging"]
+bindgen-pretty-please = ["bindgen/pretty-please"]
+bindgen-which-rustfmt = ["bindgen/which-rustfmt"]
+bindgen-runtime = ["bindgen/runtime"]             # runtime linking (dlopen)
+bindgen-static = ["bindgen/static"]               # static linking to clang
+# parse docs from the SDK, gen doc-comments
+bindings-documentation = ["bindgen/documentation"]
+
+# derives:
+bindings-derive-default = []      # ask bindgen to derive `Default`
+bindings-derive-eq = []           # ask bindgen to derive `Eq`
+bindings-derive-copy = []         # ask bindgen to derive `Copy`
+bindings-derive-debug = []        # ask bindgen to derive `Debug`
+bindings-derive-hash = []         # ask bindgen to derive `Hash`
+bindings-derive-ord = []          # ask bindgen to derive `Ord`
+bindings-derive-partialeq = []    # ask bindgen to derive `PartialEq`
+bindings-derive-partialord = []   # ask bindgen to derive `PartialOrd`
+bindings-derive-constparamty = [] # derive `ConstParamTy`
+# These "derive-" bindgen's options are presented as features
+# to allow top-down infecting of the deps-tree, from user's top to this crate.
+
+
+[dependencies]
+heapless = "0.7"
+
+
+[build-dependencies]
+semver = "1.0"
+
+[build-dependencies.bindgen]
+package = "playdate-bindgen"
+path = "../../support/bindgen"
+version = "0.1.0"
+default-features = false
+
+
+[package.metadata.docs.rs]
+all-features = false
+features = [
+	"bindings-derive-default",
+	"bindings-derive-eq",
+	"bindings-derive-copy",
+	"bindings-derive-debug",
+	"bindings-derive-hash",
+	"bindings-derive-ord",
+	"bindings-derive-partialeq",
+	"bindings-derive-partialord",
+]
+# https://docs.rs/about/builds#cross-compiling
+# rustc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
+default-target = "thumbv7em-none-eabihf"
+cargo-args = [
+	"-Zunstable-options",
+	"-Zrustdoc-scrape-examples",
+	"-Zbuild-std=core,alloc",
+]
+
+
+[[example]]
+name = "hello-world"
+crate-type = ["dylib", "staticlib"]
+path = "examples/hello-world.rs"
+
+[package.metadata.playdate]
+bundle-id = "rs.playdate.sys"

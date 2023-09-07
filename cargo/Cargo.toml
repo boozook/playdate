@@ -1,0 +1,96 @@
+[package]
+name = "cargo-playdate"
+version = "0.1.0"
+edition = "2021"
+
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+authors = ["Alex Koz <a@koz.email>"]
+description = "Build tool for neat yellow console."
+homepage = "https://github.com/boozook/playdate"
+repository = "https://github.com/boozook/playdate.git"
+keywords = [
+	"playdate",
+	"build",
+	"cargo",
+	"plugin",
+	"subcommand",
+	"cargo-subcommand",
+	"gamedev",
+]
+categories = [
+	"command-line-utilities",
+	"development-tools",
+	"development-tools::cargo-plugins",
+	"development-tools::build-utils",
+	# "development-tools::testing", # TODO: uncomment when test command is implemented
+]
+
+
+[[bin]]
+name = "cargo-playdate"
+path = "src/main.rs"
+
+
+[dependencies]
+once_cell = "1.18"
+try-lazy-init = "0.0.2"
+
+clap_lex = "0.5"
+dirs = "5.0"
+fs_extra = "1.3"
+
+cargo = "=0.72.1"
+cargo-util = "=0.2.4"
+cargo-platform = "0.1.3"
+
+semver = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.7"
+toml_edit = { version = "0.19", features = ["serde"] }
+regex = "1"
+byteorder = "1.4"
+zip = { version = "0.6.6", features = ["time"] }
+walkdir = "2.3"
+
+anyhow = "1.0"
+termcolor = "1.2"
+env_logger = "0.10"
+log = "0.4"
+
+
+[dependencies.playdate]
+path = "../support/build"
+package = "playdate-build"
+features = ["assets-report", "toml"]
+default-features = false
+
+[dependencies.tool]
+version = "=0.1.0"                       # TODO: relax semver when tool's api stabilized
+path = "../support/tool"
+package = "playdate-tool"
+features = ["usb", "clap", "usb", "cli"]
+
+
+[dependencies.clap]
+version = "4.3"
+default-features = true
+features = [
+	"default",
+	"std",
+	"color",
+	"help",
+	"usage",
+	"error-context",
+	"suggestions",
+	"derive",
+	"cargo",
+	"env",
+	"string",
+	"unicode",
+]
+
+
+[dev-dependencies]
+target = "2.0.0"

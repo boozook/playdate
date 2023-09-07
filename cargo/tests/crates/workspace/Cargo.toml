@@ -1,0 +1,40 @@
+[workspace]
+resolver = "2"
+members = ["sub"]
+
+
+[package]
+name = "test-workspace-main-crate"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+
+[lib]
+path = "../simple/lib.rs"
+crate-type = ["dylib", "staticlib"]
+
+[[bin]]
+name = "main-bin"
+path = "bin.rs"
+
+
+[dependencies.pd]
+package = "playdate-sys"
+path = "../../../../api/sys"
+
+
+[profile.dev]
+panic = "abort"
+
+
+[profile.release]
+panic = "abort"
+opt-level = "s"
+overflow-checks = false
+lto = "fat"
+incremental = true
+
+debug = 0
+strip = "debuginfo"      # or symbols, for bin
+debug-assertions = false

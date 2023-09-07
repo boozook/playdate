@@ -1,0 +1,50 @@
+[workspace]
+
+[package]
+name = "no-cfg"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+
+[lib]
+name = "game"
+path = "../lib.rs"
+crate-type = [
+	"rlib",      # for example
+	"dylib",     # for simulator
+	"staticlib", # for hardware
+]
+
+
+[[example]]
+name = "example-lib"
+crate-type = ["dylib", "staticlib"]
+path = "../../simple/lib.rs"
+
+[[example]]
+name = "example-bin"
+crate-type = ["bin"]
+path = "../bin.rs"
+
+
+[dependencies.pd]
+package = "playdate-sys"
+path = "../../../../../api/sys"
+
+
+[profile.dev]
+panic = "abort"
+
+
+[profile.release]
+panic = "abort"
+opt-level = "s"         # optimize for binary size (mb. use 3)
+overflow-checks = false # Runtime integer overflow checks. (TODO: false)
+lto = "fat"
+incremental = false
+codegen-units = 1
+
+debug = 0
+strip = "debuginfo"      # or symbols, for bin
+debug-assertions = false

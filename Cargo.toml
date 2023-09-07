@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+members = [
+	"cargo",
+	"api/*",
+	"support/*",
+	# "components/*"
+]
+default-members = [
+	"cargo",
+	"support/tool",
+	"api/playdate",
+	"api/sys",
+	"support/build",
+]
+exclude = ["cargo/tests/crates/**/*"]

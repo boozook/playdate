@@ -1,0 +1,27 @@
+[package]
+name = "test-workspace-sub-crate"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+
+# libraries:
+
+[lib]
+path = "../../simple/lib.rs"
+crate-type = ["dylib", "staticlib"]
+
+[[example]]
+name = "example-lib"
+crate-type = ["dylib", "staticlib"]
+path = "../../simple/lib.rs"
+
+[[example]]
+name = "example-bin"
+crate-type = ["bin"]
+path = "../bin.rs"
+
+
+[dependencies.pd]
+package = "playdate-sys"
+path = "../../../../../api/sys"

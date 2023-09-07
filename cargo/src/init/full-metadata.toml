@@ -1,0 +1,42 @@
+# Playdate Package Info
+# doc: // TODO: https://github.com/boozook/playdate/#configuration
+# official doc: https://sdk.play.date/#pdxinfo
+[package.metadata.playdate]
+name = "{name}"
+author = "{author}"
+version = "{version}"
+bundle-id = "com.yourcompany.{bundle_id}"
+description = "{description}"
+
+content-warning = "This game contains mild realistic, violence and bloodshed."
+content-warning2 = "Really scary game."
+
+image-path = "img/system"
+launch-sound-path = "sfx/jump"
+
+
+# Assets Rules
+# TODO: link to documentation
+[package.metadata.playdate.assets]
+"img/system/" = "${{PLAYDATE_SDK_PATH}}/Examples/Game Template/Source/SystemAssets/*.png"
+"sfx/jump.wav" = "${{PLAYDATE_SDK_PATH}}/Examples/Level 1-1/Source/sfx/jump.wav"
+# This is a complex way of specifying what assets should be included.
+# Left hand is a path where asset should be in the package,
+# Right hand is the path where source(s) should be found.
+
+# Also this way supports simple include and exclude instructions:
+# "rel-to-crate-root/file-to-include" = true   # left hand is a local path, relative to crate-root,
+# "file-to-exclude" = false  # OR resulting path that where asset will be in the resulting package.
+
+# Another way to declare assets is much simpler:
+# [package.metadata.playdate]
+# assets = ["assets/**/*.wav", "assets/**/*.png"]
+# That means "just include all of this".
+
+
+# Assets Configuration
+[package.metadata.playdate.options.assets]
+dependencies = true    # allow to build assets for dependencies (default is `true`)
+overwrite = true       # overwrite existing (default is `true`)
+method = "link"        # "copy" or "link"   (default is `link`)
+follow-symlinks = true # follow symlinks    (default is `true`)

@@ -1,0 +1,57 @@
+[package]
+name = "playdate-bindgen"
+version = "0.1.0"
+edition = "2021"
+
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+authors = ["Alex Koz <a@koz.email>"]
+description = "Bindgen configuration for Playdate API and utils."
+keywords = ["playdate", "bindings", "ffi", "code-generation"]
+categories = ["development-tools::ffi", "development-tools::build-utils"]
+homepage = "https://github.com/boozook/playdate"
+repository = "https://github.com/boozook/playdate.git"
+documentation = "https://docs.rs/playdate-bindgen"
+
+
+[dependencies]
+semver = "1.0"
+
+# parser:
+html2md = { version = "0.2.14", optional = true }
+html5ever = { version = "0.26.0", optional = true }
+markup5ever_rcdom = { version = "0.2.0", optional = true }
+# doc-gen:
+proc-macro2 = { version = "1.0.66", optional = true }
+syn = { version = "2.0", optional = true }
+quote = { version = "1.0", optional = true }
+
+log = { version = "0.4", optional = true }
+prettyplease = { version = "0.2.7", optional = true, features = ["verbatim"] }
+which = { version = "4.2.1", optional = true, default-features = false }
+
+[dependencies.playdate]
+package = "playdate-build-utils"
+path = "../utils"
+version = "0.1"
+
+[dependencies.bindgen]
+version = "=0.66.1"
+default-features = false
+
+
+[features]
+default = ["runtime", "documentation"]
+documentation = ["extra-codegen", "html2md", "html5ever", "markup5ever_rcdom"]
+extra-codegen = ["syn", "proc-macro2", "quote"]
+
+# bindgen options
+runtime = ["bindgen/runtime"]                            # runtime linking (dlopen)
+static = ["bindgen/static"]                              # static linking to clang
+logging = ["bindgen/logging"]
+pretty-please = ["bindgen/prettyplease", "prettyplease"]
+which-rustfmt = ["bindgen/which-rustfmt", "which"]
+
+
+[package.metadata.docs.rs]
+features = ["documentation"]

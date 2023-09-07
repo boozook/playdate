@@ -1,0 +1,103 @@
+# Build System for Playdate applications
+
+Cargo-playdate is a plugin for cargo that can build programs for [Playdate handheld gaming system](https://play.date) written in Rust.
+
+It can build programs written in Rust, manage assets, build package for Playdate and run in sim or install and run on device.
+Usually it builds static or dynamic libraries for sim and hardware,
+but also it can build executable binaries for hardware and this method produces highly optimized output with dramatically minimized size (thanks to DCE & LTO).
+_\* But for binaries you're need also patched pdc from [dev-forum][]._
+
+
+[dev-forum]: https://devforum.play.date/t/sdk-2-0-b2-pdc-produces-pdx-with-broken-binary/11345/28
+
+
+### Status
+
+Currently tested and works good on following platforms:
+- Unix (x86-64 and aarch64)
+  - macos 👍
+  - linux 👍
+- Windows (x86-64 and aarch64)
+  - build 👍
+  - package 👍
+  - install & run ⚠️ - issues, work in progress.
+
+
+## Prerequisites
+
+To build cargo-playdate you're need:
+1. Rust __nightly__ toolchain
+2. Probably `libusb` and `pkg-config` or `vcpkg`, follow [instructions for rusb crate][rusb].
+
+To build programs using cargo-playdate you need:
+1. Rust __nightly__ toolchain
+2. [Playdate SDK][sdk]
+   - Ensure that env var `PLAYDATE_SDK_PATH` points to the SDK root
+3. Follow the [official documentation][doc-prerequisites]
+   - Ensure that `arm-none-eabi-gcc` or `gcc-arm-none-eabi` in your `PATH`
+4. This tool.
+
+[sdk]: https://play.date/dev/#cardSDK
+[doc-prerequisites]: https://sdk.play.date/Inside%20Playdate%20with%20C.html#_prerequisites
+[rusb]: https://crates.io/crates/rusb
+
+
+## Installation
+
+```bash
+cargo install --git="https://github.com/boozook/playdate.git" --bin=cargo-playdate
+```
+
+
+## Hello World
+
+Generate new project using `new` or `init` command.
+
+```bash
+mkdir hello-world && cd $_
+crank init --lib --full-metadata --deps="sys:git, controls:git"
+crank run
+```
+
+
+## Crank(start) compatibility
+
+TODO
+
+
+## Configuration
+
+There is no configuration other then inherited by cargo and some special environment variables.
+
+- `CRANK_LOG` working same way as `CARGO_LOG` or default `RUST_LOG`. Also `CRANK_LOG_STYLE`
+- `PLAYDATE_SDK_PATH` path to the SDK root
+- `ARM_GCC_PATH` path to the `arm-none-eabi-gcc` executable.
+
+Execute `cargo playdate -h` for more details, or with `--help` for further more.
+
+
+
+### Limitations
+
+1. Global crate-level attributes like `crate_type` and `crate_name` doesn't supported, e.g:
+```rust
+#![crate_name = "Game"]
+#![crate_type = "lib"]
+```
+
+2. Cargo-targets such as `bin` and `example` should be in the cargo manifest. Autodetect isn't yet tested and may not work. Example:
+```toml
+[[example]]
+name = "demo"
+crate-type = ["dylib", "staticlib"]
+path = "examples/demo.rs"
+```
+
+
+3. Assets especially for `example` cargo-targets inherits from package assets. Currently there's no way to set assets for single cargo-target, but only for entire package. WiP, there will be "dev-assets" extra table inherited by main.
+
+
+
+- - -
+
+This software is not sponsored or supported by Panic.

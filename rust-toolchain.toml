@@ -1,0 +1,7 @@
+[toolchain]
+channel = "nightly"
+targets = ["thumbv7em-none-eabihf"]
+components = [
+	"rust-src", # for build-std
+	"rustfmt",
+]

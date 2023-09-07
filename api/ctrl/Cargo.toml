@@ -1,0 +1,55 @@
+#:schema ../../cargo-playdate.json
+
+[package]
+name = "playdate-controls"
+version = "0.1.0"
+edition = "2021"
+
+readme = "README.md"
+authors = ["Alex Koz <a@koz.email>"]
+description = "High-level controls API built on-top of Playdate API"
+homepage = "https://github.com/boozook/playdate"
+repository = "https://github.com/boozook/playdate.git"
+
+
+[features]
+default = ["pd/default"]
+lang-items = ["pd/lang-items"]
+allocator = ["pd/allocator"]
+panic-handler = ["pd/panic-handler"]
+eh-personality = ["pd/eh-personality"]
+entry-point = ["pd/entry-point"]
+error-ctx = ["pd/error-ctx"]
+bindgen-runtime = ["pd/bindgen-runtime"]
+bindings-pre-built = ["pd/bindings-pre-built"]
+bindings-generate = ["pd/bindings-generate"]
+bindings-derive-default = ["pd/bindings-derive-default"]
+bindings-derive-eq = ["pd/bindings-derive-eq"]
+bindings-derive-copy = ["pd/bindings-derive-copy"]
+bindings-derive-debug = ["pd/bindings-derive-debug"]
+bindings-derive-hash = ["pd/bindings-derive-hash"]
+bindings-derive-ord = ["pd/bindings-derive-ord"]
+bindings-derive-partialeq = ["pd/bindings-derive-partialeq"]
+bindings-derive-partialord = ["pd/bindings-derive-partialord"]
+bindings-derive-constparamty = ["pd/bindings-derive-constparamty"]
+bindings-documentation = ["pd/bindings-documentation"]
+
+
+[dependencies.pd]
+path = "../sys"
+package = "playdate-sys"
+default-features = false
+
+
+[[example]]
+name = "buttons"
+crate-type = ["dylib", "staticlib"]
+path = "examples/buttons.rs"
+
+[[example]]
+name = "accelerometer"
+crate-type = ["dylib", "staticlib"]
+path = "examples/accelerometer.rs"
+
+[package.metadata.playdate]
+bundle-id = "rs.playdate.ctrl"
