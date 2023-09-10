@@ -14,9 +14,7 @@ keywords = [
 	"build",
 	"cargo",
 	"plugin",
-	"subcommand",
 	"cargo-subcommand",
-	"gamedev",
 ]
 categories = [
 	"command-line-utilities",
@@ -25,6 +23,8 @@ categories = [
 	"development-tools::build-utils",
 	# "development-tools::testing", # TODO: uncomment when test command is implemented
 ]
+
+include = ["cargo-playdate.json"]
 
 
 [[bin]]
@@ -61,6 +61,7 @@ log = "0.4"
 
 
 [dependencies.playdate]
+version = "0.1"
 path = "../support/build"
 package = "playdate-build"
 features = ["assets-report", "toml"]

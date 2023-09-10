@@ -369,7 +369,7 @@ fn cargo_config<P: AsRef<Path>>(config: &Config, path: P) -> CargoResult<()> {
 /// \* Local schema currently is default option
 /// because schema is not published on schemastore.org yet.
 fn manifest_schema<P: AsRef<Path>>(config: &Config, dir: P) -> CargoResult<Option<String>> {
-	let bytes = include_bytes!("../../../cargo-playdate.json");
+	let bytes = include_bytes!("../../cargo-playdate.json");
 	let schema = if config.create_local_schema {
 		let path = dir.as_ref().join(".cargo").join("cargo-playdate.json");
 
