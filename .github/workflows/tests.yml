@@ -131,6 +131,9 @@ jobs:
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
 
+      - name: Check
+        run: cargo check --tests -p=cargo-playdate --all-features
+
       - name: Test Utils
         run: |
           cargo test -p=playdate-build-utils --all-features
@@ -140,11 +143,6 @@ jobs:
       - name: Test
         run: |
           cargo test -p=cargo-playdate -- --nocapture --test-threads=1
-          rm -rf ./target/tmp
-
-      - name: Test (+usb)
-        run: |
-          cargo test -p=cargo-playdate --features=usb -- --nocapture --test-threads=1
           rm -rf ./target/tmp
 
       - name: Install
