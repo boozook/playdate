@@ -150,7 +150,7 @@ arm-none-eabi-gcc ./target/thumbv7em-none-eabihf/release/libexample.a \
 
 - - -
 
-See examples (__🚨 TODO: LINK HERE__).
+See [examples](https://github.com/boozook/playdate/tree/main/api/sys/examples).
 
 
 ### Configure profile
