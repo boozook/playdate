@@ -13,33 +13,34 @@ repository = "https://github.com/boozook/playdate.git"
 [features]
 default = ["sys/default"]
 # sys- features:
-lang-items = ["sys/lang-items"]
-allocator = ["sys/allocator"]
-panic-handler = ["sys/panic-handler"]
-eh-personality = ["sys/eh-personality"]
-error-ctx = ["sys/error-ctx"]
-bindgen-runtime = ["sys/bindgen-runtime"]
-bindings-pre-built = ["sys/bindings-pre-built"]
-bindings-generate = ["sys/bindings-generate"]
-bindings-derive-default = ["sys/bindings-derive-default"]
-bindings-derive-eq = ["sys/bindings-derive-eq"]
-bindings-derive-copy = ["sys/bindings-derive-copy"]
-bindings-derive-debug = ["sys/bindings-derive-debug"]
-bindings-derive-hash = ["sys/bindings-derive-hash"]
-bindings-derive-ord = ["sys/bindings-derive-ord"]
-bindings-derive-partialeq = ["sys/bindings-derive-partialeq"]
-bindings-derive-partialord = ["sys/bindings-derive-partialord"]
-bindings-derive-constparamty = ["sys/bindings-derive-constparamty"]
-bindings-documentation = ["sys/bindings-documentation"]
+lang-items = ["sys/lang-items", "fs/lang-items"]
+allocator = ["sys/allocator", "fs/allocator"]
+panic-handler = ["sys/panic-handler", "fs/panic-handler"]
+eh-personality = ["sys/eh-personality", "fs/eh-personality"]
+error-ctx = ["sys/error-ctx", "fs/error-ctx"]
+bindgen-runtime = ["sys/bindgen-runtime", "fs/bindgen-runtime"]
+bindgen-static = ["sys/bindgen-static", "fs/bindgen-static"]
+bindings-derive-default = ["sys/bindings-derive-default", "fs/bindings-derive-default"]
+bindings-derive-eq = ["sys/bindings-derive-eq", "fs/bindings-derive-eq"]
+bindings-derive-copy = ["sys/bindings-derive-copy", "fs/bindings-derive-copy"]
+bindings-derive-debug = ["sys/bindings-derive-debug", "fs/bindings-derive-debug"]
+bindings-derive-hash = ["sys/bindings-derive-hash", "fs/bindings-derive-hash"]
+bindings-derive-ord = ["sys/bindings-derive-ord", "fs/bindings-derive-ord"]
+bindings-derive-partialeq = ["sys/bindings-derive-partialeq", "fs/bindings-derive-partialeq"]
+bindings-derive-partialord = ["sys/bindings-derive-partialord", "fs/bindings-derive-partialord"]
+bindings-derive-constparamty = ["sys/bindings-derive-constparamty", "fs/bindings-derive-constparamty"]
+bindings-documentation = ["sys/bindings-documentation", "fs/bindings-documentation"]
 
 
 [dependencies.sys]
 path = "../sys"
+version = "0.1"
 package = "playdate-sys"
 default-features = false
 
 [dependencies.fs]
 path = "../fs"
+version = "0.1"
 package = "playdate-fs"
 default-features = false
 

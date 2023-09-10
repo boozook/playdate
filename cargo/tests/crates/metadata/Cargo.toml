@@ -18,7 +18,6 @@ bundle-id = "test.workspace.main.crate"
 
 [package.metadata.playdate.assets]
 "main/" = "Cargo.toml"
-"*" = false
 # options.method = "link"
 # options.overwrite = true
 # options.dependencies = true

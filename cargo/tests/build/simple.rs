@@ -11,7 +11,7 @@ use crate::common::*;
 
 fn run_build(crate_path: &Path,
              args: impl IntoIterator<Item = impl Into<OsString>>)
-             -> Result<(Output, &'static Path)> {
+             -> Result<(Output, PathBuf)> {
 	println!("crate: {}", crate_path.display());
 
 	let target_dir = target_dir();
@@ -20,7 +20,11 @@ fn run_build(crate_path: &Path,
 	               .map(Into::into)
 	               .chain([OsString::from(target_dir_arg)]);
 	let output = Tool::build(&crate_path, args)?;
-	assert!(output.status.success());
+	assert!(
+	        output.status.success(),
+	        "Tool failed with stderr:\n{}",
+	        std::str::from_utf8(&output.stderr).unwrap()
+	);
 	Ok((output, target_dir))
 }
 
@@ -262,7 +266,7 @@ mod examples {
 	}
 
 	#[test]
-	/// target: playdate hardware
+	/// target: playdate hardware+simulator(host)
 	fn sim_dev_release_examples() -> Result<()> {
 		let dev_target = DEVICE_TARGET;
 		let host_target = target_triple();

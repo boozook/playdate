@@ -106,12 +106,23 @@ pub fn to_dyn_lib_name<S: Display>(crate_name: S) -> String {
 }
 
 
-pub fn target_dir() -> &'static Path {
+pub fn target_dir() -> PathBuf {
+	use rand::RngCore;
+
 	let tmp = Path::new(env!("CARGO_TARGET_TMPDIR"));
 	if !tmp.exists() {
 		std::fs::create_dir_all(tmp).expect("can't create tmp dir");
 	}
-	tmp
+
+	// add random:
+	let mut values = [0u8; 4];
+	rand::thread_rng().fill_bytes(&mut values);
+	let rand = values.into_iter()
+	                 .map(|v| v.to_string())
+	                 .collect::<Vec<_>>()
+	                 .join("");
+
+	tmp.join(rand)
 }
 
 pub fn target_triple() -> String {

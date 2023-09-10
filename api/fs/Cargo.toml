@@ -19,8 +19,7 @@ panic-handler = ["sys/panic-handler"]
 eh-personality = ["sys/eh-personality"]
 error-ctx = ["sys/error-ctx"]
 bindgen-runtime = ["sys/bindgen-runtime"]
-bindings-pre-built = ["sys/bindings-pre-built"]
-bindings-generate = ["sys/bindings-generate"]
+bindgen-static = ["sys/bindgen-static"]
 bindings-derive-default = ["sys/bindings-derive-default"]
 bindings-derive-eq = ["sys/bindings-derive-eq"]
 bindings-derive-copy = ["sys/bindings-derive-copy"]
@@ -35,6 +34,7 @@ bindings-documentation = ["sys/bindings-documentation"]
 
 [dependencies.sys]
 path = "../sys"
+version = "0.1"
 package = "playdate-sys"
 default-features = false
 

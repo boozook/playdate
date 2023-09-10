@@ -6,11 +6,5 @@ members = [
 	"support/*",
 	# "components/*"
 ]
-default-members = [
-	"cargo",
-	"support/tool",
-	"api/playdate",
-	"api/sys",
-	"support/build",
-]
+default-members = ["cargo", "support/tool"]
 exclude = ["cargo/tests/crates/**/*"]

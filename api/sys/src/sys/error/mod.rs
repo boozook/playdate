@@ -36,6 +36,21 @@ impl<T: fmt::Display> fmt::Display for Error<T> {
 	}
 }
 
+impl<T> Error<T> {
+	pub fn from_err<E>(error: Error<E>) -> Self
+		where T: From<E> {
+		match error {
+			Error::Api(err) => Error::Api(err.into()),
+			Error::Utf8(err) => Error::Utf8(err),
+			Error::FromUtf8(err) => Error::FromUtf8(err),
+			Error::CStr(err) => Error::CStr(err),
+			Error::NullPtr(err) => Error::NullPtr(err),
+			#[cfg(feature = "error-ctx")]
+			Error::NullPtrCtx(err) => Error::NullPtrCtx(err),
+		}
+	}
+}
+
 
 impl<T> From<Utf8Error> for Error<T> {
 	fn from(error: Utf8Error) -> Self { Self::Utf8(error) }

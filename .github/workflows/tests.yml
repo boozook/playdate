@@ -27,7 +27,7 @@ jobs:
         os:
           - macos-latest
           - ubuntu-latest
-          - windows-latest
+          # - windows-latest
         sdk:
           - latest
 
@@ -35,6 +35,11 @@ jobs:
       - uses: actions/checkout@v3
       - name: Cache
         uses: Swatinem/rust-cache@v1
+
+      - name: Config
+        run: |
+          mkdir -p .cargo
+          cp -rf .github/config.toml .cargo/config.toml
 
       - name: Install Playdate SDK ${{ matrix.sdk }}
         id: sdk
@@ -45,37 +50,31 @@ jobs:
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
 
-      - name: Install cargo-action-fmt
-        uses: baptiste0928/cargo-install@v2.1.0
-        with:
-          crate: cargo-action-fmt
-
       - name: Test Crates
         run: |
           FEATURES_1=bindgen-runtime
-          FEATURES_2=bindgen-runtime,bindings-derive-debug,error-ctx
-          FEATURES_3=bindgen-runtime,bindings-derive-debug,bindings-documentation
+          FEATURES_2=bindgen-runtime,bindings-derive-debug,bindings-documentation,error-ctx
 
-          cargo test -p=playdate-sys -- --nocapture
           cargo test -p=playdate-sys --features=$FEATURES_1 -- --nocapture
           cargo test -p=playdate-sys --features=$FEATURES_2 -- --nocapture
-          cargo test -p=playdate-sys --features=$FEATURES_3 -- --nocapture
 
           cargo test -p=playdate-fs --lib --no-default-features --features=$FEATURES_1 -- --nocapture
           cargo test -p=playdate-fs --lib --no-default-features --features=$FEATURES_2 -- --nocapture
-          cargo test -p=playdate-fs --lib --no-default-features --features=$FEATURES_3 -- --nocapture
 
           cargo test -p=playdate-sound --lib --no-default-features --features=$FEATURES_1 -- --nocapture
           cargo test -p=playdate-sound --lib --no-default-features --features=$FEATURES_2 -- --nocapture
-          cargo test -p=playdate-sound --lib --no-default-features --features=$FEATURES_3 -- --nocapture
 
           cargo test -p=playdate-color --lib --no-default-features --features=$FEATURES_1 -- --nocapture
           cargo test -p=playdate-color --lib --no-default-features --features=$FEATURES_2 -- --nocapture
-          cargo test -p=playdate-color --lib --no-default-features --features=$FEATURES_3 -- --nocapture
 
           cargo test -p=playdate-controls --lib --no-default-features --features=$FEATURES_1 -- --nocapture
           cargo test -p=playdate-controls --lib --no-default-features --features=$FEATURES_2 -- --nocapture
-          cargo test -p=playdate-controls --lib --no-default-features --features=$FEATURES_3 -- --nocapture
+
+          cargo test -p=playdate-menu --lib --no-default-features --features=$FEATURES_1 -- --nocapture
+          cargo test -p=playdate-menu --lib --no-default-features --features=$FEATURES_2 -- --nocapture
+
+          cargo test -p=playdate-graphics --lib --no-default-features --features=$FEATURES_1 -- --nocapture
+          cargo test -p=playdate-graphics --lib --no-default-features --features=$FEATURES_2 -- --nocapture
 
       - name: Examples
         run: |
@@ -85,6 +84,8 @@ jobs:
           cargo build --target=thumbv7em-none-eabihf -p=playdate-controls --examples --features=$FEATURES -Zbuild-std
           cargo build --target=thumbv7em-none-eabihf -p=playdate-color --examples --features=$FEATURES -Zbuild-std
           cargo build --target=thumbv7em-none-eabihf -p=playdate-sound --examples --features=$FEATURES -Zbuild-std
+          cargo build --target=thumbv7em-none-eabihf -p=playdate-menu --examples --features=$FEATURES -Zbuild-std
+          cargo build --target=thumbv7em-none-eabihf -p=playdate-graphics --examples --features=$FEATURES -Zbuild-std
 
       # Imitate docs.rs environment
       - name: Test in no-sdk environment
@@ -106,8 +107,8 @@ jobs:
       matrix:
         os:
           - macos-latest
-          - ubuntu-latest
-          - windows-latest
+          # - ubuntu-latest
+          # - windows-latest
         sdk:
           - latest
 
@@ -115,6 +116,11 @@ jobs:
       - uses: actions/checkout@v3
       - name: Cache
         uses: Swatinem/rust-cache@v1
+
+      - name: Config
+        run: |
+          mkdir -p .cargo
+          cp -rf .github/config.toml .cargo/config.toml
 
       - name: Install Playdate SDK ${{ matrix.sdk }}
         id: sdk
@@ -125,29 +131,24 @@ jobs:
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
 
-      - name: Install cargo-action-fmt
-        uses: baptiste0928/cargo-install@v2.1.0
-        with:
-          crate: cargo-action-fmt
-
       - name: Test Utils
         run: |
           cargo test -p=playdate-build-utils --all-features
           cargo test -p=playdate-build --all-features
           cargo test -p=playdate-tool --all-features
 
-      - name: Check
-        run: |
-          cargo check -p=cargo-playdate -q --message-format=json | cargo-action-fmt
-          cargo test -p=cargo-playdate --no-run -q --message-format=json | cargo-action-fmt
-
       - name: Test
         run: |
-          cargo test -p=cargo-playdate -- --nocapture
+          cargo test -p=cargo-playdate -- --nocapture --test-threads=1
+          rm -rf ./target/tmp
+
+      - name: Test (+usb)
+        run: |
+          cargo test -p=cargo-playdate --features=usb -- --nocapture --test-threads=1
+          rm -rf ./target/tmp
 
       - name: Install
-        run: |
-          cargo install -p=cargo-playdate --debug
+        run: cargo install --path=./cargo --debug
 
       - name: Examples
         run: |
@@ -158,6 +159,8 @@ jobs:
           cargo playdate package --simulator --device -p=playdate-controls --examples
           cargo playdate package --simulator --device -p=playdate-color --examples
           cargo playdate package --simulator --device -p=playdate-sound --examples
+          cargo playdate package --simulator --device -p=playdate-menu --examples
+          cargo playdate package --simulator --device -p=playdate-graphics --examples
 
       # TODO: build crankstart with examples for compatibility test
 

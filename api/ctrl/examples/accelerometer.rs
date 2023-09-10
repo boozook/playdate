@@ -5,13 +5,13 @@ use alloc::boxed::Box;
 use core::ffi::*;
 
 #[macro_use]
-extern crate pd;
+extern crate sys;
 extern crate playdate_controls as controls;
-use pd::ffi::*;
+use sys::ffi::*;
 
 
 const INITIAL_X: u32 = LCD_COLUMNS / 2;
-const INITIAL_Y: u32 = (pd::ffi::LCD_ROWS - TEXT_HEIGHT) / 2;
+const INITIAL_Y: u32 = (sys::ffi::LCD_ROWS - TEXT_HEIGHT) / 2;
 const TEXT_HEIGHT: u32 = 16;
 
 
@@ -41,7 +41,7 @@ impl State {
 		let (x, y, z) = controls::peripherals::Accelerometer::get()?;
 
 		unsafe {
-			let graphics = (*pd::API).graphics;
+			let graphics = (*sys::API).graphics;
 			(*graphics).clear?(LCDSolidColor::kColorWhite as LCDColor);
 
 			// render state to string
@@ -80,7 +80,7 @@ impl State {
 				self.pos.y = LCD_ROWS as i32 - TEXT_HEIGHT as i32
 			}
 
-			(*(*pd::API).system).drawFPS?(0, 0);
+			(*(*sys::API).system).drawFPS?(0, 0);
 			Some(())
 		}
 	}
@@ -91,7 +91,7 @@ impl State {
 		match event {
 			// initial setup
 			PDSystemEvent::kEventInit => {
-				unsafe { (*(*pd::API).display).setRefreshRate?(20.0) }
+				unsafe { (*(*sys::API).display).setRefreshRate?(20.0) }
 				// turn on the accelerometer
 				controls::peripherals::Accelerometer::enable()?;
 			},
@@ -114,7 +114,7 @@ pub extern "C" fn eventHandlerShim(api: *const PlaydateAPI, event: PDSystemEvent
 	match event {
 		PDSystemEvent::kEventInit => unsafe {
 			// register the API entry point
-			pd::API = api;
+			sys::API = api;
 
 			// create game state
 			if STATE.is_none() {

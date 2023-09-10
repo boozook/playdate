@@ -1,0 +1,62 @@
+[package]
+name = "playdate-graphics"
+version = "0.1.0"
+edition = "2021"
+
+readme = "README.md"
+authors = ["Alex Koz <a@koz.email>"]
+description = "High-level graphics API built on-top of Playdate API"
+homepage = "https://github.com/boozook/playdate"
+repository = "https://github.com/boozook/playdate.git"
+
+
+[features]
+default = ["sys/default", "color/default", "fs/default"]
+# sys- features:
+lang-items = ["sys/lang-items", "color/lang-items", "fs/lang-items"]
+allocator = ["sys/allocator", "color/allocator", "fs/allocator"]
+panic-handler = ["sys/panic-handler", "color/panic-handler", "fs/panic-handler"]
+eh-personality = ["sys/eh-personality", "color/eh-personality", "fs/eh-personality"]
+error-ctx = ["sys/error-ctx", "color/error-ctx", "fs/error-ctx"]
+bindgen-runtime = ["sys/bindgen-runtime", "color/bindgen-runtime", "fs/bindgen-runtime"]
+bindgen-static = ["sys/bindgen-static", "color/bindgen-static", "fs/bindgen-static"]
+bindings-derive-default = ["sys/bindings-derive-default", "color/bindings-derive-default", "fs/bindings-derive-default"]
+bindings-derive-eq = ["sys/bindings-derive-eq", "color/bindings-derive-eq", "fs/bindings-derive-eq"]
+bindings-derive-copy = ["sys/bindings-derive-copy", "color/bindings-derive-copy", "fs/bindings-derive-copy"]
+bindings-derive-debug = ["sys/bindings-derive-debug", "color/bindings-derive-debug", "fs/bindings-derive-debug"]
+bindings-derive-hash = ["sys/bindings-derive-hash", "color/bindings-derive-hash", "fs/bindings-derive-hash"]
+bindings-derive-ord = ["sys/bindings-derive-ord", "color/bindings-derive-ord", "fs/bindings-derive-ord"]
+bindings-derive-partialeq = ["sys/bindings-derive-partialeq", "color/bindings-derive-partialeq", "fs/bindings-derive-partialeq"]
+bindings-derive-partialord = ["sys/bindings-derive-partialord", "color/bindings-derive-partialord", "fs/bindings-derive-partialord"]
+bindings-derive-constparamty = ["sys/bindings-derive-constparamty", "color/bindings-derive-constparamty", "fs/bindings-derive-constparamty"]
+bindings-documentation = ["sys/bindings-documentation", "color/bindings-documentation", "fs/bindings-documentation"]
+
+
+[dependencies.sys]
+path = "../sys"
+version = "0.1"
+package = "playdate-sys"
+default-features = false
+
+# used: Error and Path
+[dependencies.fs]
+path = "../fs"
+version = "0.1"
+package = "playdate-fs"
+default-features = false
+
+# used: Color
+[dependencies.color]
+path = "../color"
+version = "0.1"
+package = "playdate-color"
+default-features = false
+
+
+[[example]]
+name = "bitmap"
+crate-type = ["dylib", "staticlib"]
+path = "examples/bitmap.rs"
+
+[package.metadata.playdate]
+bundle-id = "rs.playdate.menu"

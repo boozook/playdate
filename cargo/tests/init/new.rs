@@ -13,7 +13,7 @@ fn run(crate_name: &str,
        -> Result<(Output, PathBuf)> {
 	println!("crate: {}", crate_name);
 
-	let crate_path = target_dir().join("create-new-tests").join(&crate_name);
+	let crate_path = target_dir().join(format!("create-new--{crate_name}"));
 
 	if crate_path.try_exists()? {
 		std::fs::remove_dir_all(&crate_path)?;
@@ -21,7 +21,7 @@ fn run(crate_name: &str,
 
 	let crate_parent = crate_path.parent().expect("parent");
 	if !crate_parent.try_exists()? {
-		std::fs::create_dir_all(&crate_path)?;
+		std::fs::create_dir_all(&crate_parent)?;
 	}
 
 	let mut extra = vec![OsString::from(&crate_path)];

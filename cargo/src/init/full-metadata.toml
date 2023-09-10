@@ -1,5 +1,5 @@
 # Playdate Package Info
-# doc: // TODO: https://github.com/boozook/playdate/#configuration
+# doc: https://github.com/boozook/playdate/blob/main/support/build/README.md#metadata
 # official doc: https://sdk.play.date/#pdxinfo
 [package.metadata.playdate]
 name = "{name}"
@@ -16,7 +16,7 @@ launch-sound-path = "sfx/jump"
 
 
 # Assets Rules
-# TODO: link to documentation
+# doc: https://github.com/boozook/playdate/blob/main/support/build/README.md#assets
 [package.metadata.playdate.assets]
 "img/system/" = "${{PLAYDATE_SDK_PATH}}/Examples/Game Template/Source/SystemAssets/*.png"
 "sfx/jump.wav" = "${{PLAYDATE_SDK_PATH}}/Examples/Level 1-1/Source/sfx/jump.wav"

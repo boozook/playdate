@@ -13,30 +13,30 @@ repository = "https://github.com/boozook/playdate.git"
 
 
 [features]
-default = ["pd/default"]
-lang-items = ["pd/lang-items"]
-allocator = ["pd/allocator"]
-panic-handler = ["pd/panic-handler"]
-eh-personality = ["pd/eh-personality"]
-entry-point = ["pd/entry-point"]
-error-ctx = ["pd/error-ctx"]
-bindgen-runtime = ["pd/bindgen-runtime"]
-bindings-pre-built = ["pd/bindings-pre-built"]
-bindings-generate = ["pd/bindings-generate"]
-bindings-derive-default = ["pd/bindings-derive-default"]
-bindings-derive-eq = ["pd/bindings-derive-eq"]
-bindings-derive-copy = ["pd/bindings-derive-copy"]
-bindings-derive-debug = ["pd/bindings-derive-debug"]
-bindings-derive-hash = ["pd/bindings-derive-hash"]
-bindings-derive-ord = ["pd/bindings-derive-ord"]
-bindings-derive-partialeq = ["pd/bindings-derive-partialeq"]
-bindings-derive-partialord = ["pd/bindings-derive-partialord"]
-bindings-derive-constparamty = ["pd/bindings-derive-constparamty"]
-bindings-documentation = ["pd/bindings-documentation"]
+default = ["sys/default"]
+lang-items = ["sys/lang-items"]
+allocator = ["sys/allocator"]
+panic-handler = ["sys/panic-handler"]
+eh-personality = ["sys/eh-personality"]
+entry-point = ["sys/entry-point"]
+error-ctx = ["sys/error-ctx"]
+bindgen-runtime = ["sys/bindgen-runtime"]
+bindgen-static = ["sys/bindgen-static"]
+bindings-derive-default = ["sys/bindings-derive-default"]
+bindings-derive-eq = ["sys/bindings-derive-eq"]
+bindings-derive-copy = ["sys/bindings-derive-copy"]
+bindings-derive-debug = ["sys/bindings-derive-debug"]
+bindings-derive-hash = ["sys/bindings-derive-hash"]
+bindings-derive-ord = ["sys/bindings-derive-ord"]
+bindings-derive-partialeq = ["sys/bindings-derive-partialeq"]
+bindings-derive-partialord = ["sys/bindings-derive-partialord"]
+bindings-derive-constparamty = ["sys/bindings-derive-constparamty"]
+bindings-documentation = ["sys/bindings-documentation"]
 
 
-[dependencies.pd]
+[dependencies.sys]
 path = "../sys"
+version = "0.1"
 package = "playdate-sys"
 default-features = false
 

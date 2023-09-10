@@ -49,19 +49,16 @@ impl Error {
 	pub fn latest() -> Result<Option<Self>, ApiError> {
 		let f = sys::api_ok!(file.geterr)?;
 		let ptr = unsafe { f() };
-		if ptr.is_null() {
-			Ok(None)
-		} else {
-			unsafe { CStr::from_ptr(ptr as _) }.to_str()
-			                                   .map_err(Into::into)
-			                                   .map(Self::from)
-			                                   .map(Into::into)
-		}
+		Self::from_ptr(ptr)
 	}
 
 	pub fn latest_using(fs: &Fs) -> Result<Option<Self>, ApiError> {
 		let f = fs.0.geterr.ok_or_null()?;
 		let ptr = unsafe { f() };
+		Self::from_ptr(ptr)
+	}
+
+	pub fn from_ptr(ptr: *const core::ffi::c_char) -> Result<Option<Self>, ApiError> {
 		if ptr.is_null() {
 			Ok(None)
 		} else {

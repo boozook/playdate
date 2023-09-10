@@ -1,7 +1,7 @@
 use core::ffi::c_float;
-use pd::ffi::PDButtons;
-use pd::ffi::PDPeripherals;
-use pd::api;
+use sys::ffi::PDButtons;
+use sys::ffi::PDPeripherals;
+use sys::api;
 
 
 macro_rules! sysfn {

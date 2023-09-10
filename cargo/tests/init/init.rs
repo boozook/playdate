@@ -13,7 +13,7 @@ fn run(crate_name: &str,
        -> Result<(Output, PathBuf)> {
 	println!("crate: {}", crate_name);
 
-	let crate_path = target_dir().join("create-init-tests").join(&crate_name);
+	let crate_path = target_dir().join(format!("create-init--{crate_name}"));
 
 	if crate_path.try_exists()? {
 		std::fs::remove_dir_all(&crate_path)?;

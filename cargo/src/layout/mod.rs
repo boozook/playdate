@@ -36,7 +36,7 @@ impl<T: Layout> Layout for &mut T {
 
 
 pub trait LayoutLockable: Layout {
-	/// The lockfile filename for a build (e.g: `.crank-lock`).
+	/// The lockfile filename for a build (e.g: `.name-lock`).
 	fn lockfilename(&self) -> Cow<str>;
 
 	/// Lock the destination directory of the layout.

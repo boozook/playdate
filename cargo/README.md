@@ -20,7 +20,7 @@ Currently tested and works good on following platforms:
 - Windows (x86-64 and aarch64)
   - build 👍
   - package 👍
-  - install & run ⚠️ - issues, work in progress.
+  - install & run ⚠️ - issues, work in progress, see [troubleshooting](#troubleshooting).
 
 
 ## Prerequisites
@@ -55,8 +55,8 @@ Generate new project using `new` or `init` command.
 
 ```bash
 mkdir hello-world && cd $_
-crank init --lib --full-metadata --deps="sys:git, controls:git"
-crank run
+cargo playdate init --lib --full-metadata --deps="sys:git, controls:git"
+cargo playdate run
 ```
 
 
@@ -69,7 +69,7 @@ TODO
 
 There is no configuration other then inherited by cargo and some special environment variables.
 
-- `CRANK_LOG` working same way as `CARGO_LOG` or default `RUST_LOG`. Also `CRANK_LOG_STYLE`
+- `CARGO_PLAYDATE_LOG` working same way as `CARGO_LOG` or default `RUST_LOG`. Also `CARGO_PLAYDATE_LOG_STYLE`
 - `PLAYDATE_SDK_PATH` path to the SDK root
 - `ARM_GCC_PATH` path to the `arm-none-eabi-gcc` executable.
 
@@ -97,6 +97,12 @@ path = "examples/demo.rs"
 3. Assets especially for `example` cargo-targets inherits from package assets. Currently there's no way to set assets for single cargo-target, but only for entire package. WiP, there will be "dev-assets" extra table inherited by main.
 
 
+
+## Troubleshooting
+
+* Is some cases (see [status](#status)) hardware cannot be detected. Try to build cargo-playdate with or without feature `usb`.
+
+* Welcome to [discussions](https://github.com/boozook/playdate/discussions) and [issues](https://github.com/boozook/playdate/issues).
 
 - - -
 

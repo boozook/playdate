@@ -1,5 +1,6 @@
 extern crate bindgen;
 
+use std::borrow::Cow;
 use std::env;
 use std::error::Error;
 use std::path::{PathBuf, Path};
@@ -108,13 +109,21 @@ fn main() {
 	// open_bindings(&out_path);
 }
 
+
+/// Needed for dev purposes.
+/// Opens bindings in a `$EDITOR` or `code` if first doesn't set.
+/// This is useful for reading, validating & debugging codegen results.
 #[allow(dead_code)]
 fn open_bindings(path: &Path) {
-	std::process::Command::new("code").arg(path)
-	                                  .envs(env::vars())
-	                                  .current_dir(env::current_dir().expect("PWD"))
-	                                  .spawn()
-	                                  .ok();
+	let editor = std::env::var("EDITOR").map(Cow::from)
+	                                    .unwrap_or_else(|_| "code".into());
+	let mut editor = editor.split(" ");
+	std::process::Command::new(editor.next().unwrap()).args(editor)
+	                                                  .arg(path)
+	                                                  .envs(env::vars())
+	                                                  .current_dir(env::current_dir().expect("PWD"))
+	                                                  .spawn()
+	                                                  .ok();
 }
 
 

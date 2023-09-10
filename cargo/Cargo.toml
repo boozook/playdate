@@ -67,10 +67,10 @@ features = ["assets-report", "toml"]
 default-features = false
 
 [dependencies.tool]
-version = "=0.1.0"                       # TODO: relax semver when tool's api stabilized
+version = "=0.1.0"         # TODO: relax semver when tool's api stabilized
 path = "../support/tool"
 package = "playdate-tool"
-features = ["usb", "clap", "usb", "cli"]
+features = ["clap", "cli"]
 
 
 [dependencies.clap]
@@ -94,3 +94,9 @@ features = [
 
 [dev-dependencies]
 target = "2.0.0"
+rand = "0.8"
+
+
+[features]
+default = []
+usb = ["tool/usb"]

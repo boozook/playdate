@@ -2,17 +2,18 @@
 #![feature(const_trait_impl)]
 #![feature(impl_trait_in_assoc_type)]
 
-pub extern crate pd as sys;
-use pd::ffi::LCDColor;
-use pd::ffi::LCDPattern;
-use pd::ffi::LCDSolidColor;
+pub extern crate sys;
+use sys::ffi::LCDColor;
+use sys::ffi::LCDPattern;
+use sys::ffi::LCDSolidColor;
 
 
 #[derive(PartialEq, Clone)]
 #[cfg_attr(feature = "bindings-derive-debug", derive(Debug))]
 pub enum Color<'t> {
 	Solid(LCDSolidColor),
-	Pattern(&'t LCDPattern),
+	PatternRef(&'t LCDPattern),
+	Pattern(LCDPattern),
 }
 
 impl Color<'static> {
@@ -26,7 +27,8 @@ impl From<Color<'_>> for LCDColor {
 	fn from(color: Color) -> Self {
 		match color {
 			Color::Solid(color) => color as LCDColor,
-			Color::Pattern(pattern) => (pattern as *const u8) as LCDColor,
+			Color::Pattern(ref pattern) => (pattern as *const u8) as LCDColor,
+			Color::PatternRef(pattern) => (pattern as *const u8) as LCDColor,
 		}
 	}
 }

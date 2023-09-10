@@ -352,10 +352,12 @@ mod tests {
 	fn gcc_from_env_path() { Gcc::try_from_env_path().unwrap(); }
 
 	#[test]
+	#[cfg(unix)]
 	fn gcc_from_default_path() { Gcc::try_from_default_path().unwrap(); }
 
 
 	#[test]
+	#[cfg(unix)]
 	fn gcc_sysroot_fallback() {
 		let gcc = Gcc::try_new().unwrap();
 		let res = gcc.sysroot_fallback().unwrap();
@@ -363,6 +365,7 @@ mod tests {
 	}
 
 	#[test]
+	#[ignore = "sysroot can be empty"]
 	fn gcc_sysroot_by_output() {
 		let gcc = Gcc::try_new().unwrap();
 		let res = gcc.sysroot_by_output().unwrap();

@@ -102,10 +102,10 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 	                        .flatten()
 	                        .is_some()
 	{
-		// skip "crank" command
+		// skip root command
 		matches.subcommand()
 	} else {
-		// get "crank", then subcommand
+		// get root, then subcommand
 		matches.subcommand_matches(CMD_NAME)
 		       .map(|m| m.subcommand())
 		       .flatten()
@@ -389,9 +389,9 @@ fn compile_options(cmd: &Cmd, matches: &ArgMatches, ws: &Workspace<'_>) -> Cargo
 
 /// - Find `cmd` and replace to `Cmd::Build`
 /// - Replace all `--target(=)PlaydateTarget::*` to normalized `CompileKind`
-/// - Strip first args such as `cargo crank cmd`.
+/// - Strip first args such as `cargo playdate cmd`.
 ///
-/// Note: this doesn't support flag-series with values like `-abc="c-value"`.
+/// Note: this doesn't supports flag-series with values like `-abc="c-value"`.
 fn adapt_args_for_underlying_cargo<S, I>(cmd: &Cmd,
                                          aliases: Option<&HashMap<String, String>>,
                                          args: I,

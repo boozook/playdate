@@ -1,7 +1,7 @@
 use core::fmt::Debug;
 use core::fmt::Display;
 use core::ops::BitAnd;
-use pd::ffi::PDButtons;
+use sys::ffi::PDButtons;
 
 
 #[const_trait]

@@ -6,18 +6,18 @@ use alloc::borrow::Cow;
 use alloc::boxed::Box;
 
 #[macro_use]
-extern crate pd;
+extern crate sys;
 extern crate playdate_controls as controls;
 use alloc::format;
 use alloc::vec::Vec;
 use controls::buttons::PDButtonsExt;
 use controls::buttons::PDButtonsIter;
 use crate::controls::buttons::IterSingleButtons;
-use pd::ffi::*;
+use sys::ffi::*;
 
 
 const INITIAL_X: u32 = LCD_COLUMNS / 2;
-const INITIAL_Y: u32 = (pd::ffi::LCD_ROWS - TEXT_HEIGHT) / 2;
+const INITIAL_Y: u32 = (sys::ffi::LCD_ROWS - TEXT_HEIGHT) / 2;
 const TEXT_HEIGHT: u32 = 16;
 
 
@@ -47,7 +47,7 @@ impl State {
 		let buttons = controls::peripherals::Buttons::get()?;
 
 		unsafe {
-			let graphics = (*pd::API).graphics;
+			let graphics = (*sys::API).graphics;
 			(*graphics).clear?(LCDSolidColor::kColorWhite as LCDColor);
 
 			// render buttons state to string
@@ -102,7 +102,7 @@ impl State {
 				self.pos.y = LCD_ROWS as i32 - TEXT_HEIGHT as i32
 			}
 
-			(*(*pd::API).system).drawFPS?(0, 0);
+			(*(*sys::API).system).drawFPS?(0, 0);
 			Some(())
 		}
 	}
@@ -113,7 +113,7 @@ impl State {
 		match event {
 			// initial setup
 			PDSystemEvent::kEventInit => unsafe {
-				(*(*pd::API).display).setRefreshRate?(20.0);
+				(*(*sys::API).display).setRefreshRate?(20.0);
 			},
 			_ => {},
 		}
@@ -130,7 +130,7 @@ pub extern "C" fn eventHandlerShim(api: *const PlaydateAPI, event: PDSystemEvent
 	match event {
 		PDSystemEvent::kEventInit => unsafe {
 			// register the API entry point
-			pd::API = api;
+			sys::API = api;
 
 			// create game state
 			if STATE.is_none() {

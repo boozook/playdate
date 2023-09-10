@@ -241,7 +241,7 @@ It is possible to add extra things there only if that is:
 - feature-gated, in case the thing has dependencies or isn't so small.
 
 
-### Development Extension
+### Extension Development
 
 You can add functionality that based on this package. Just create a new your oun package on-top this and re-export all features.
 
@@ -260,8 +260,8 @@ _This makes kind of paramount importance if a user is using several of these ext
   default = ["playdate-sys/default"]
   lang-items = ["playdate-sys/lang-items"]
   allocator = ["playdate-sys/allocator"]
-  bindings-derive-default = ["playdate-sys/bindings-derive-default"]
   bindings-derive-debug = ["playdate-sys/bindings-derive-debug"]
+  bindings-derive-default = ["playdate-sys/bindings-derive-default"]
   ...
   ```
 

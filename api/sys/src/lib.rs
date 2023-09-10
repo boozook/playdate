@@ -120,6 +120,12 @@ pub mod misc {
 			#[doc(hidden)]
 			#[no_mangle]
 			pub extern "C" fn _getpid() -> core::ffi::c_int { 0 }
+
+			#[doc(hidden)]
+			#[no_mangle]
+			#[cfg(target_os = "windows")]
+			// TODO: Somehow link with proper impl: https://stackoverflow.com/q/76439798/829264
+			pub extern "C" fn _sbrk() {}
 		};
 	}
 }

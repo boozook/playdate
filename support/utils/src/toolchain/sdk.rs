@@ -198,8 +198,5 @@ mod tests {
 
 
 	#[test]
-	fn sdk_from_env_path() { Sdk::try_from_default_env().unwrap(); }
-
-	#[test]
-	fn sdk_from_default_config() { Sdk::try_from_default_config().unwrap(); }
+	fn sdk() { Sdk::try_new().unwrap(); }
 }

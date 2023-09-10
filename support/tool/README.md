@@ -2,14 +2,12 @@
 
 CLI-tool and lib for interaction with Playdate device and sim.
 
-This software is not sponsored or supported by Panic.
-
 
 ### Status
 
 This is earlier version, that means "alpha" or "MVP".
 API can be changed in future versions.
-Global refactoring is planned with main reason of properly work with usb on all platforms.
+Global __refactoring is planned__ with main reason of properly work with usb on all platforms.
 
 Currently tested and works good on following platforms:
 - Unix (x86-64 and aarch64)
