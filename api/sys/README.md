@@ -1,6 +1,6 @@
 # Modular low-level Playdate API
 
-Low-level bindings to Playdate API with optional official documentation and optional lang-items.
+Low-level bindings to Playdate API with optional adapted official documentation and optional lang-items.
 
 ## Main concepts in a thesis statement
 
@@ -265,7 +265,10 @@ _This makes kind of paramount importance if a user is using several of these ext
   ...
   ```
 
-<!-- TODO: For example see existing extensions (__🚨 TODO: LINKS HERE__). -->
+For example see existing crates in the [repo/api][repo-api].
+
+[repo-api]: https://github.com/boozook/playdate/tree/main/api
+
 
 
 ### How to generate _prebuilt_ bindings?
@@ -307,3 +310,9 @@ To trigger changing _prebuilt_ bindings, you need set env var: `PD_BUILD_PREBUIL
 
 
 [cargo-playdate-crates]: https://crates.io/crates/cargo-playdate
+[crate-docs-example]: https://docs.rs/playdate-sys/0.1.3/playdate_sys/ffi/struct.playdate_sys.html
+
+
+- - -
+
+This software is not sponsored or supported by Panic.
