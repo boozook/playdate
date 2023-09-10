@@ -1,6 +1,6 @@
 [package]
 name = "cargo-playdate"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 readme = "README.md"
@@ -23,8 +23,6 @@ categories = [
 	"development-tools::build-utils",
 	# "development-tools::testing", # TODO: uncomment when test command is implemented
 ]
-
-include = ["cargo-playdate.json"]
 
 
 [[bin]]
