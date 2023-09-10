@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 readme = "README.md"
+license = "MIT OR Apache-2.0"
 authors = ["Alex Koz <a@koz.email>"]
 description = "High-level color API built on-top of Playdate API"
 homepage = "https://github.com/boozook/playdate"
@@ -32,7 +33,7 @@ bindings-documentation = ["sys/bindings-documentation"]
 
 
 [dependencies.sys]
-path = "../sys"
 version = "0.1"
+path = "../sys"
 package = "playdate-sys"
 default-features = false

@@ -2,7 +2,7 @@
 #![feature(const_trait_impl)]
 #![feature(impl_trait_in_assoc_type)]
 
-pub extern crate sys;
+extern crate sys;
 use sys::ffi::LCDColor;
 use sys::ffi::LCDPattern;
 use sys::ffi::LCDSolidColor;

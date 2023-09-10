@@ -6,6 +6,7 @@ build = "src/build.rs"
 include = ["gen/*.rs"]
 
 readme = "README.md"
+license = "MIT OR Apache-2.0"
 authors = ["Alex Koz <a@koz.email>"]
 description = "Low-level Playdate API bindings"
 keywords = ["playdate", "bindings", "ffi", "gamedev"]
