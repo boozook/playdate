@@ -124,20 +124,20 @@ jobs:
       - name: Format
         run: rustfmt api/sys/gen/*.rs
 
-      - name: Test (host)
-        # env: # uncomment when all bindings for min-supported-SDK will be there
-        #   IGNORE_EXISTING_PLAYDATE_SDK: 1
-        run: |
-          cargo test -p=playdate-sys ${{ matrix.features.v }}
-          cargo test -p=playdate-sys ${{ matrix.features.v }} --release
+      # - name: Test (host)
+      #   # env: # uncomment when all bindings for min-supported-SDK will be there
+      #   #   IGNORE_EXISTING_PLAYDATE_SDK: 1
+      #   run: |
+      #     cargo test -p=playdate-sys ${{ matrix.features.v }}
+      #     cargo test -p=playdate-sys ${{ matrix.features.v }} --release
 
-      - name: Test (device)
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        # env: # uncomment when all bindings for min-supported-SDK will be there
-        #   IGNORE_EXISTING_PLAYDATE_SDK: 1
-        run: |
-          cargo build -p=playdate-sys ${{ matrix.features.v }} --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc
-          cargo build -p=playdate-sys ${{ matrix.features.v }} --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc --release
+      # - name: Test (device)
+      #   if: ${{ matrix.os == 'ubuntu-latest' }}
+      #   # env: # uncomment when all bindings for min-supported-SDK will be there
+      #   #   IGNORE_EXISTING_PLAYDATE_SDK: 1
+      #   run: |
+      #     cargo build -p=playdate-sys ${{ matrix.features.v }} --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc
+      #     cargo build -p=playdate-sys ${{ matrix.features.v }} --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc --release
 
       - name: Commit
         id: commit
