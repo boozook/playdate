@@ -161,21 +161,25 @@ jobs:
         with:
           ref: api/sys/pre-build
 
-      # TODO: compare, create PR
       - name: Create PR
-        uses: peter-evans/create-pull-request@v5
+        uses: sudoStatus200/create-sync-pr@0.3.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: Update pre-built bindings
-          branch: api/sys/pre-build-pr
-          base: ${{ github.event.repository.default_branch }}
-          commit-message: Automated build pre-built bindings
-          # committer: Update Workflow
-          # author: Alex Koz <boozook@users.noreply.github.com>
-          # branch-suffix: short-commit-hash
-          delete-branch: false
-          assignees: boozook
-          reviewers: boozook
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          SOURCE_BRANCH: api/sys/pre-build
+          TARGET_BRANCH: ${{ github.event.repository.default_branch }}
+        # uses: peter-evans/create-pull-request@v5
+        # with:
+        #   token: ${{ secrets.GITHUB_TOKEN }}
+        #   title: Update pre-built bindings
+        #   branch: api/sys/pre-build-pr
+        #   base: ${{ github.event.repository.default_branch }}
+        #   commit-message: Automated build pre-built bindings
+        #   # committer: Update Workflow
+        #   # author: Alex Koz <boozook@users.noreply.github.com>
+        #   # branch-suffix: short-commit-hash
+        #   delete-branch: false
+        #   assignees: boozook
+        #   reviewers: boozook
 
 
         # uses: technote-space/create-pr-action@v2
