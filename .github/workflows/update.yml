@@ -108,14 +108,19 @@ jobs:
       - name: Format
         run: rustfmt api/sys/gen/*.rs
 
-      - name: Test (dev)
+      - name: Test (host)
+        env:
+          IGNORE_EXISTING_PLAYDATE_SDK: 1
         run: |
           cargo test -p=playdate-sys ${{ matrix.features }}
-          cargo build -p=playdate-sys ${{ matrix.features }} --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc
-
-      - name: Test (release)
-        run: |
           cargo test -p=playdate-sys ${{ matrix.features }} --release
+
+      - name: Test (device)
+        if: ${{ matrix.os }} == "ubuntu-latest"
+        env:
+          IGNORE_EXISTING_PLAYDATE_SDK: 1
+        run: |
+          cargo build -p=playdate-sys ${{ matrix.features }} --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc
           cargo build -p=playdate-sys ${{ matrix.features }} --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc --release
 
       - name: Commit
@@ -132,7 +137,7 @@ jobs:
 
       - name: Committed
         run: |
-          echo "Created: ${{ steps.commit.outputs.committed }}"
+          echo "Committed: ${{ steps.commit.outputs.committed }}"
           echo "Pushed: ${{ steps.commit.outputs.pushed }}"
           echo "SHA: ${{ steps.commit.outputs.commit_sha }}"
 
@@ -154,7 +159,7 @@ jobs:
         shell: bash
     permissions:
       pull-requests: write
-      # contents: write
+      contents: write
     steps:
       # checkout branch from pre-gen job
       - uses: actions/checkout@v4
@@ -180,7 +185,6 @@ jobs:
         #   delete-branch: false
         #   assignees: boozook
         #   reviewers: boozook
-
 
         # uses: technote-space/create-pr-action@v2
         # with:
