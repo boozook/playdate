@@ -48,7 +48,6 @@ jobs:
         if: ${{ steps.branch.outputs.created == 'false' }}
         uses: Joao208/resync-branch@1.5.0
         with:
-          # PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
           PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH_NAME: api/sys/pre-build
           DEFAULT_BRANCH: ${{github.event.repository.default_branch}}
@@ -149,10 +148,30 @@ jobs:
     defaults:
       run:
         shell: bash
+    permissions:
+      pull-requests: write
+      # contents: write
     steps:
+      # checkout branch from pre-gen job
       - uses: actions/checkout@v4
         with:
           ref: api/sys/pre-build
-      # checkout branch from pre-gen job
 
       # TODO: compare, create PR
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: Update pre-built bindings
+          branch: api/sys/pre-build
+          base: ${{ github.event.repository.default_branch }}
+          # branch-suffix: short-commit-hash
+          delete-branch: false
+          assignees: boozook
+          reviewers: boozook
+
+
+        # uses: technote-space/create-pr-action@v2
+        # with:
+        #   PR_BRANCH_NAME: api/sys/pre-build
+        #   PR_TITLE: Update pre-built bindings
