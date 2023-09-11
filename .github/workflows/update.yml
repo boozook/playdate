@@ -40,6 +40,8 @@ jobs:
         with:
           branch: refs/heads/api/sys/pre-build
           # ${{ github.event.pull_request.head.sha }}
+      - name: Created
+        run: 'echo "Created: ${{ steps.branch.outputs.created }}"'
 
       # if not created => rebase to master
       - name: ReSync Branch
@@ -115,11 +117,13 @@ jobs:
 
       - name: Commit
         run: |
+          git pull
+
           git config --global user.name 'Alex Koz'
           git config --global user.email 'boozook@users.noreply.github.com'
 
           git add ./api/sys/gen/*.rs
-          git commit -am "Automated gen pre-built bindings"
+          git commit -am "Automated build pre-built bindings"
           git push
 
   pr:
