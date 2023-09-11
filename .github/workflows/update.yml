@@ -109,16 +109,16 @@ jobs:
         run: rustfmt api/sys/gen/*.rs
 
       - name: Test (host)
-        env:
-          IGNORE_EXISTING_PLAYDATE_SDK: 1
+        # env: # uncomment when all bindings for min-supported-SDK will be there
+        #   IGNORE_EXISTING_PLAYDATE_SDK: 1
         run: |
           cargo test -p=playdate-sys ${{ matrix.features }}
           cargo test -p=playdate-sys ${{ matrix.features }} --release
 
       - name: Test (device)
         if: ${{ matrix.os }} == "ubuntu-latest"
-        env:
-          IGNORE_EXISTING_PLAYDATE_SDK: 1
+        # env: # uncomment when all bindings for min-supported-SDK will be there
+        #   IGNORE_EXISTING_PLAYDATE_SDK: 1
         run: |
           cargo build -p=playdate-sys ${{ matrix.features }} --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc
           cargo build -p=playdate-sys ${{ matrix.features }} --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc --release
