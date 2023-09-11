@@ -116,7 +116,7 @@ jobs:
           cargo build -p=playdate-sys ${{ matrix.features.v }} --release
 
       - name: Device
-        if: ${{ matrix.os }} == "ubuntu-latest"
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           cargo build -p=playdate-sys ${{ matrix.features.v }} --target=thumbv7em-none-eabihf
           cargo build -p=playdate-sys ${{ matrix.features.v }} --target=thumbv7em-none-eabihf --release
@@ -132,7 +132,7 @@ jobs:
           cargo test -p=playdate-sys ${{ matrix.features.v }} --release
 
       - name: Test (device)
-        if: ${{ matrix.os }} == "ubuntu-latest"
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         # env: # uncomment when all bindings for min-supported-SDK will be there
         #   IGNORE_EXISTING_PLAYDATE_SDK: 1
         run: |
