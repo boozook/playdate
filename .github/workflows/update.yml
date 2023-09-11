@@ -45,7 +45,7 @@ jobs:
 
       # if not created => rebase to master
       - name: ReSync Branch
-        if: ${{ steps.branch.outputs.created == false }}
+        if: ${{ steps.branch.outputs.created == 'false' }}
         uses: Joao208/resync-branch@1.5.0
         with:
           # PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
