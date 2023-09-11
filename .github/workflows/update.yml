@@ -192,7 +192,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: Update pre-built bindings
-          branch: api/sys/pre-build-pr
+          branch: api/sys/pre-build
           base: ${{ github.event.repository.default_branch }}
           commit-message: Automated update pre-built bindings
           # committer: Update Workflow
