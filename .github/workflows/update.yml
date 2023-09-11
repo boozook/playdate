@@ -45,7 +45,7 @@ jobs:
 
       # if not created => rebase to master
       - name: ReSync Branch
-        if: ${{ !steps.branch.outputs.created }}
+        if: ${{ steps.branch.outputs.created == false }}
         uses: Joao208/resync-branch@1.5.0
         with:
           # PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
@@ -116,15 +116,32 @@ jobs:
           cargo build -p=playdate-sys ${{ matrix.features }} --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc --release
 
       - name: Commit
+        id: commit
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: ./api/sys/gen/*.rs
+          author_name: Alex Koz
+          author_email: boozook@users.noreply.github.com
+          committer_name: Update Workflow
+          message: Automated build pre-built bindings
+          pull: "--rebase --autostash"
+          push: true
+
+      - name: Committed
         run: |
-          git pull
+          echo "Created: ${{ steps.commit.outputs.committed }}"
+          echo "Pushed: ${{ steps.commit.outputs.pushed }}"
+          echo "SHA: ${{ steps.commit.outputs.commit_sha }}"
 
-          git config --global user.name 'Alex Koz'
-          git config --global user.email 'boozook@users.noreply.github.com'
+        # run: |
+        #   git pull
 
-          git add ./api/sys/gen/*.rs
-          git commit -am "Automated build pre-built bindings"
-          git push
+        #   git config --global user.name 'Alex Koz'
+        #   git config --global user.email 'boozook@users.noreply.github.com'
+
+        #   git add ./api/sys/gen/*.rs
+        #   git commit -am "Automated build pre-built bindings"
+        #   git push
 
   pr:
     needs: pre-gen
