@@ -59,7 +59,7 @@ jobs:
           ref: api/sys/pre-build
 
       - name: Cache
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2.6.2
 
       - name: Install Playdate SDK ${{ matrix.sdk }}
         id: sdk
