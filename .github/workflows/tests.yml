@@ -19,7 +19,7 @@ jobs:
     defaults:
       run:
         shell: bash
-
+    needs: format
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -32,7 +32,7 @@ jobs:
           - latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Cache
         uses: Swatinem/rust-cache@v1
 
@@ -100,7 +100,7 @@ jobs:
     defaults:
       run:
         shell: bash
-
+    needs: format
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -113,7 +113,7 @@ jobs:
           - latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Cache
         uses: Swatinem/rust-cache@v1
 
@@ -170,6 +170,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
       - name: Check
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: clechasseur/rs-fmt-check@v2
+        with:
+          toolchain: nightly
+
+      - name: Check
+        if: ${{ github.event_name != 'pull_request' }}
         run: cargo fmt -- --check
