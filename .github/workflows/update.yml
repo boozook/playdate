@@ -34,7 +34,7 @@ jobs:
 
       - name: Create Branch
         id: branch
-        uses: peterjgrainger/action-create-branch@v2.2.0
+        uses: peterjgrainger/action-create-branch@v2.3.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -105,12 +105,12 @@ jobs:
 
       - name: Test (dev)
         run: |
-          cargo test -p=playdate-sys ${{ matrix.features }} --all-targets
+          cargo test -p=playdate-sys ${{ matrix.features }}
           cargo build -p=playdate-sys ${{ matrix.features }} --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc
 
       - name: Test (release)
         run: |
-          cargo test -p=playdate-sys ${{ matrix.features }} --all-targets --release
+          cargo test -p=playdate-sys ${{ matrix.features }} --release
           cargo build -p=playdate-sys ${{ matrix.features }} --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc --release
 
       - name: Commit
