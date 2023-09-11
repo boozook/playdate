@@ -51,6 +51,7 @@ jobs:
           PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH_NAME: api/sys/pre-build
           DEFAULT_BRANCH: ${{github.event.repository.default_branch}}
+          # TODO: do not reset, just rebase to master
 
   pre-gen:
     defaults:
@@ -163,8 +164,11 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: Update pre-built bindings
-          branch: api/sys/pre-build
+          branch: api/sys/pre-build-pr
           base: ${{ github.event.repository.default_branch }}
+          commit-message: Automated build pre-built bindings
+          committer: Update Workflow
+          # author: Alex Koz <boozook@users.noreply.github.com>
           # branch-suffix: short-commit-hash
           delete-branch: false
           assignees: boozook
