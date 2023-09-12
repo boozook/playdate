@@ -53,21 +53,29 @@ jobs:
         with:
           ref: ${{ github.event.inputs.source || github.ref || github.event.repository.default_branch }}
 
+      - name: Base branch name
+        id: base
+        if: ${{ github.ref_type == 'branch' }}
+        run: echo "value=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+
+      - name: Work branch name
+        id: work_branch
+        run: |
+          NAME_SUFFIX="${{ (github.ref_type == 'branch' && github.ref_name) || (github.event.inputs.sha || github.sha) }}"
+          echo "value=api/sys/pre-build/$NAME_SUFFIX" >> "$GITHUB_OUTPUT"
+          echo "suffix: '$NAME_SUFFIX'"
+
       - name: Create Branch
         id: branch
         uses: peterjgrainger/action-create-branch@v2.3.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          branch: refs/heads/api/sys/pre-build
+          branch: refs/heads/${{ steps.work_branch.outputs.value }}
           sha: ${{ github.event.inputs.sha || github.sha }}
+
       - name: Created
         run: 'echo "Created: ${{ steps.branch.outputs.created }}"'
-
-      - name: determine base branch
-        id: base
-        if: ${{ github.ref_type == 'branch' }}
-        run: echo "value=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
 
       # if not created => rebase to master
       - name: ReSync Branch
@@ -75,8 +83,11 @@ jobs:
         uses: Joao208/resync-branch@1.5.0
         with:
           PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH_NAME: api/sys/pre-build
+          BRANCH_NAME: ${{ steps.work_branch.outputs.value }}
           DEFAULT_BRANCH: ${{ github.event.inputs.source || steps.base.outputs.value || github.event.repository.default_branch }}
+    outputs:
+      working: ${{ steps.work_branch.outputs.value }}
+      base: ${{ github.event.inputs.source || steps.base.outputs.value || github.event.repository.default_branch }}
 
   pre-gen:
     name: Gen (${{ matrix.os }}, ${{ matrix.features.name }})
@@ -112,14 +123,16 @@ jobs:
             name: full
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: api/sys/pre-build
-
       - name: Inputs
         run: |
           echo "I: SDK version: ${{ github.event.inputs.sdk }}"
           echo "M: SDK version: ${{ matrix.sdk }}"
+          echo "Base branch: ${{ needs.new-branch.outputs.base }}"
+          echo "Working branch: ${{ needs.new-branch.outputs.working }}"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.new-branch.outputs.working }}
 
       - name: Cache
         uses: Swatinem/rust-cache@v2.6.2
@@ -152,6 +165,7 @@ jobs:
       - name: Test (host)
         # env: # uncomment when all bindings for min-supported-SDK will be there
         #   IGNORE_EXISTING_PLAYDATE_SDK: 1
+        #   PLAYDATE_USE_PREBUILT_VERSION: ${{ steps.sdk.outputs.version }}
         run: |
           cargo test -p=playdate-sys --features="${{ matrix.features.v }}"
           cargo test -p=playdate-sys --features="${{ matrix.features.v }}" --release
@@ -160,6 +174,7 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-latest' }}
         # env: # uncomment when all bindings for min-supported-SDK will be there
         #   IGNORE_EXISTING_PLAYDATE_SDK: 1
+        #   PLAYDATE_USE_PREBUILT_VERSION: ${{ steps.sdk.outputs.version }}
         run: |
           cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc
           cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc --release
@@ -184,7 +199,7 @@ jobs:
 
   pr:
     name: Make PR
-    needs: pre-gen
+    needs: [pre-gen, new-branch]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -193,26 +208,21 @@ jobs:
       pull-requests: write
       contents: write
     steps:
+      - name: Inputs
+        run: |
+          echo "Base branch: ${{ needs.new-branch.outputs.base }}"
+          echo "Working branch: ${{ needs.new-branch.outputs.working }}"
+
       - uses: actions/checkout@v4
         with:
-          ref: api/sys/pre-build
-
-      - name: Determine Base Branch
-        id: branch
-        if: ${{ github.ref_type == 'branch' }}
-        run: echo "value=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
-
-      - name: Base
-        run: |
-          echo "determined: ${{ steps.branch.outputs.value }}"
-          echo "to: ${{ steps.branch.outputs.value || github.event.repository.default_branch }}"
+          ref: ${{ needs.new-branch.outputs.working }}
 
       - name: Create PR
         uses: TreTuna/sync-branches@1.4.0
         with:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          FROM_BRANCH: refs/heads/api/sys/pre-build
-          TO_BRANCH: ${{ steps.branch.outputs.value || github.event.repository.default_branch }}
+          FROM_BRANCH: refs/heads/${{ needs.new-branch.outputs.working }}
+          TO_BRANCH: ${{ needs.new-branch.outputs.base || github.event.repository.default_branch }}
           PULL_REQUEST_TITLE: Update pre-built bindings
           PULL_REQUEST_BODY: |
             Pre-built bindings just updated.
