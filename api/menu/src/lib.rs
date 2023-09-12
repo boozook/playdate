@@ -1,8 +1,8 @@
 #![cfg_attr(not(test), no_std)]
 #![feature(error_in_core)]
 
-pub extern crate sys;
-pub extern crate alloc;
+extern crate sys;
+extern crate alloc;
 
 pub mod error;
 

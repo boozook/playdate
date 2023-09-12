@@ -3,8 +3,8 @@
 #![feature(const_trait_impl)]
 
 #[macro_use]
-pub extern crate sys;
-pub extern crate alloc;
+extern crate sys;
+extern crate alloc;
 
 use core::ffi::c_char;
 use core::ffi::c_int;

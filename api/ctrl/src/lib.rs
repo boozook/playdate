@@ -4,6 +4,6 @@
 
 #[macro_use]
 extern crate alloc;
-pub extern crate sys;
+extern crate sys;
 pub mod buttons;
 pub mod peripherals;

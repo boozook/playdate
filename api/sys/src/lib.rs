@@ -32,6 +32,7 @@ pub mod ffi {
 	#![allow(non_camel_case_types)]
 	#![allow(non_snake_case)]
 	#![cfg_attr(test, allow(deref_nullptr))]
+	#![allow(clippy::all, clippy::pedantic, clippy::nursery)]
 	//! Low-level Playdate C-API.
 	//!
 	#![doc = concat!("\nSDK version: `", env!("PD_SDK_VERSION"), "`\n")]
