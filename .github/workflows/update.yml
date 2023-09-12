@@ -5,6 +5,7 @@ on:
       sdk:
         description: "Version of Playdate SDK"
         default: latest
+        type: string
         required: true
       source:
         description: "Source ref used to build bindings. Uses `github.ref`` by default."
@@ -92,7 +93,7 @@ jobs:
           - ubuntu-latest
           # - windows-latest
         sdk:
-          - ${{ github.event.inputs.source || 'latest' }}
+          - ${{ github.event.inputs.sdk || 'latest' }}
         features:
           - v: >-
               bindings-documentation
@@ -117,7 +118,7 @@ jobs:
 
       - name: Inputs
         run: |
-          echo "I: SDK version: ${{ github.event.inputs.source }}"
+          echo "I: SDK version: ${{ github.event.inputs.sdk }}"
           echo "M: SDK version: ${{ matrix.sdk }}"
 
       - name: Cache
