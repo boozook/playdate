@@ -1,6 +1,21 @@
 name: Update
 on:
   workflow_dispatch:
+    inputs:
+      source:
+        description: "Source ref used to build bindings. Uses `github.ref`` by default."
+        required: false
+      sha:
+        description: "Source SHA used to build bindings. Uses `github.sha`` by default."
+        required: false
+      sdk:
+        description: "Version of Playdate SDK"
+        default: latest
+        required: false
+
+  push:
+    branches: [main, master]
+
   schedule:
     - cron: "0 0 * * 1"
 
@@ -25,10 +40,17 @@ jobs:
       run:
         shell: bash
     steps:
+      - name: Input
+        run: |
+          echo "ref: ${{ github.ref }}, ${{ github.ref_name }}"
+          echo "inputs: ${{ github.event.inputs.source }}, ${{ github.event.inputs.sha }}"
+          echo "default branch: ${{ github.event.repository.default_branch }}"
+          echo "Will checkout ${{ github.event.inputs.source || github.ref }}"
+
       - name: Checkout Master
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.repository.default_branch }}
+          ref: ${{ github.event.inputs.source || github.ref || github.event.repository.default_branch }}
 
       - name: Create Branch
         id: branch
@@ -37,13 +59,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           branch: refs/heads/api/sys/pre-build
-          # ${{ github.event.pull_request.head.sha }}
+          sha: ${{ github.event.inputs.sha || github.sha }}
       - name: Created
         run: 'echo "Created: ${{ steps.branch.outputs.created }}"'
 
-      # TODO: do not reset, just rebase to master
-      # just try `git pull origin ${{github.event.repository.default_branch}}`
-      # and if failed => run ReSync
+      - name: determine base branch
+        id: base
+        if: ${{ github.ref_type == 'branch' }}
+        run: echo "value=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
 
       # if not created => rebase to master
       - name: ReSync Branch
@@ -52,7 +75,7 @@ jobs:
         with:
           PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH_NAME: api/sys/pre-build
-          DEFAULT_BRANCH: ${{github.event.repository.default_branch}}
+          DEFAULT_BRANCH: ${{ github.event.inputs.source || steps.base.outputs.value || github.event.repository.default_branch }}
 
   pre-gen:
     name: Gen (${{ matrix.os }}, ${{ matrix.features.v }})
@@ -69,7 +92,8 @@ jobs:
           - ubuntu-latest
           # - windows-latest
         sdk:
-          - latest
+          # - latest
+          - ${{ github.event.inputs.source || 'latest' }}
         features:
           - {
               v: --features=bindings-documentation,
@@ -170,12 +194,22 @@ jobs:
         with:
           ref: api/sys/pre-build
 
+      - name: Determine Base Branch
+        id: branch
+        if: ${{ github.ref_type == 'branch' }}
+        run: echo "value=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+
+      - name: Base
+        run: |
+          echo "determined: ${{ steps.branch.outputs.value }}"
+          echo "to: ${{ steps.branch.outputs.value || github.event.repository.default_branch }}"
+
       - name: Create PR
         uses: TreTuna/sync-branches@1.4.0
         with:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           FROM_BRANCH: refs/heads/api/sys/pre-build
-          TO_BRANCH: ${{ github.event.repository.default_branch }}
+          TO_BRANCH: ${{ steps.branch.outputs.value || github.event.repository.default_branch }}
           PULL_REQUEST_TITLE: Update pre-built bindings
           PULL_REQUEST_BODY: |
             Pre-built bindings just updated.
@@ -183,3 +217,4 @@ jobs:
           PULL_REQUEST_IS_DRAFT: false
           CONTENT_COMPARISON: true
           REVIEWERS: '["boozook"]'
+          LABELS: '["pre-built bindings"]'
