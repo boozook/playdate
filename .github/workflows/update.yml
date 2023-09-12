@@ -14,7 +14,7 @@ on:
         required: false
 
   push:
-    branches: [main, master]
+    branches: [main, master, "**"]
 
   schedule:
     - cron: "0 0 * * 1"
@@ -95,23 +95,21 @@ jobs:
           # - latest
           - ${{ github.event.inputs.source || 'latest' }}
         features:
-          - {
-              v: --features=bindings-documentation,
-              bindings-derive-debug,
-              name: default,
-            }
-          - {
-              v: --features=bindings-documentation,
-              bindings-derive-default,
-              bindings-derive-eq,
-              bindings-derive-copy,
-              bindings-derive-debug,
-              bindings-derive-hash,
-              bindings-derive-ord,
-              bindings-derive-partialeq,
-              bindings-derive-partialord,
-              name: full,
-            }
+          - v: >-
+              bindings-documentation
+              bindings-derive-debug
+            name: default
+          - v: >-
+              bindings-documentation
+              bindings-derive-default
+              bindings-derive-eq
+              bindings-derive-copy
+              bindings-derive-debug
+              bindings-derive-hash
+              bindings-derive-ord
+              bindings-derive-partialeq
+              bindings-derive-partialord
+            name: full
 
     steps:
       - uses: actions/checkout@v4
@@ -134,14 +132,14 @@ jobs:
 
       - name: Host
         run: |
-          cargo build -p=playdate-sys ${{ matrix.features.v }} -vv
-          cargo build -p=playdate-sys ${{ matrix.features.v }} --release
+          cargo build -p=playdate-sys --features="${{ matrix.features.v }}" -vv
+          cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --release
 
       - name: Device
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          cargo build -p=playdate-sys ${{ matrix.features.v }} --target=thumbv7em-none-eabihf
-          cargo build -p=playdate-sys ${{ matrix.features.v }} --target=thumbv7em-none-eabihf --release
+          cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --target=thumbv7em-none-eabihf
+          cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --target=thumbv7em-none-eabihf --release
 
       - name: Format
         run: rustfmt api/sys/gen/*.rs
@@ -150,16 +148,16 @@ jobs:
         # env: # uncomment when all bindings for min-supported-SDK will be there
         #   IGNORE_EXISTING_PLAYDATE_SDK: 1
         run: |
-          cargo test -p=playdate-sys ${{ matrix.features.v }}
-          cargo test -p=playdate-sys ${{ matrix.features.v }} --release
+          cargo test -p=playdate-sys --features="${{ matrix.features.v }}"
+          cargo test -p=playdate-sys --features="${{ matrix.features.v }}" --release
 
       - name: Test (device)
         if: ${{ matrix.os == 'ubuntu-latest' }}
         # env: # uncomment when all bindings for min-supported-SDK will be there
         #   IGNORE_EXISTING_PLAYDATE_SDK: 1
         run: |
-          cargo build -p=playdate-sys ${{ matrix.features.v }} --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc
-          cargo build -p=playdate-sys ${{ matrix.features.v }} --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc --release
+          cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc
+          cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc --release
 
       - name: Commit
         id: commit
