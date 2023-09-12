@@ -1,0 +1,57 @@
+name: Publish
+on:
+  workflow_dispatch:
+    inputs:
+      sdk:
+        description: "Version of Playdate SDK, needed to validate crates."
+        default: latest
+        type: string
+        required: true
+      dry-run:
+        description: "Enable dry-run mode, actually skip execution `cargo publish`."
+        default: false
+        type: boolean
+        required: false
+      check-repo:
+        description: "Check repository consistency."
+        default: true
+        type: boolean
+        required: false
+  # push:
+  #   branches: [main, master, "**"]
+
+  schedule:
+    - cron: "0 0 * * 1"
+
+env:
+  CARGO_NET_RETRY: 10
+  RUSTUP_MAX_RETRIES: 10
+  CARGO_TERM_COLOR: always
+  CARGO_TERM_PROGRESS_WHEN: never
+
+jobs:
+  crates-io:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Playdate SDK
+        id: sdk
+        uses: pd-rs/get-playdate-sdk@main
+        with:
+          version: ${{ github.event.inputs.sdk || 'latest' }}
+
+      - name: SDK ${{ steps.sdk.outputs.version }} installed
+        run: which pdc && pdc --version
+
+      - name: Publish
+        uses: katyo/publish-crates@v2
+        with:
+          dry-run: ${{ github.event.inputs.dry-run }}
+          check-repo: ${{ github.event.inputs.check-repo }}
+          ignore-unpublished-changes: true
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
