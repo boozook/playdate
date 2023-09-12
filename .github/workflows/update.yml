@@ -2,15 +2,15 @@ name: Update
 on:
   workflow_dispatch:
     inputs:
+      sdk:
+        description: "Version of Playdate SDK"
+        default: latest
+        required: true
       source:
         description: "Source ref used to build bindings. Uses `github.ref`` by default."
         required: false
       sha:
         description: "Source SHA used to build bindings. Uses `github.sha`` by default."
-        required: false
-      sdk:
-        description: "Version of Playdate SDK"
-        default: latest
         required: false
 
   push:
@@ -114,6 +114,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: api/sys/pre-build
+
+      - name: Inputs
+        run: |
+          echo "I: SDK version: ${{ github.event.inputs.source }}"
+          echo "M: SDK version: ${{ matrix.sdk }}"
 
       - name: Cache
         uses: Swatinem/rust-cache@v2.6.2
