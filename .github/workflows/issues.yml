@@ -1,0 +1,40 @@
+name: Issues
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      commit_ref:
+        description: "The SHA of the commit to get the diff for"
+        required: true
+      base_ref:
+        description: "By default, the commit entered above is compared to the one directly before it; to go back further, enter an earlier SHA here"
+        required: false
+jobs:
+  TODO:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      issues: write
+      contents: read
+      pull-requests: read
+      repository-projects: read
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: TODO to Issues
+        uses: "alstr/todo-to-issue-action@v4"
+        env:
+          MANUAL_COMMIT_REF: ${{ inputs.commit_ref }}
+          MANUAL_BASE_REF: ${{ inputs.base_ref }}
+        with:
+          CLOSE_ISSUES: true
+          AUTO_ASSIGN: true
+          IDENTIFIERS: >
+            [
+              { "name": "TODO", "labels": [] },
+              { "name": "FIXME", "labels": [] },
+              { "name": "XXX", "labels": [] },
+              { "name": "HACK", "labels": [] },
+              { "name": "BUG", "labels": ["bug"] }
+            ]
