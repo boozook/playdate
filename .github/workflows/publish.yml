@@ -17,8 +17,8 @@ on:
         default: true
         type: boolean
         required: false
-  # push:
-  #   branches: [main, master, "**"]
+  push:
+    branches: [main, master]
 
   schedule:
     - cron: "0 0 * * 1"
@@ -52,6 +52,6 @@ jobs:
         uses: katyo/publish-crates@v2
         with:
           dry-run: ${{ github.event.inputs.dry-run == 'true' }}
-          check-repo: ${{ github.event.inputs.check-repo == 'true' }}
+          check-repo: ${{ (github.event.inputs && github.event.inputs.check-repo == 'true') || true }}
           ignore-unpublished-changes: true
           registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
