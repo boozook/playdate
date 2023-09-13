@@ -100,7 +100,7 @@ fn dev_lib_debug() -> Result<()> {
 
 fn dylib_name() -> String {
 	const DYLIB_EXT: &str = dylib_suffix_for_host();
-	"pdex".to_owned() + DYLIB_EXT
+	"pdex.".to_owned() + DYLIB_EXT
 }
 
 
