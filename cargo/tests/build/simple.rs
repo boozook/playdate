@@ -98,6 +98,12 @@ fn dev_lib_debug() -> Result<()> {
 }
 
 
+fn dylib_name() -> String {
+	const DYLIB_EXT: &str = dylib_suffix_for_host();
+	"pdex.".to_owned() + DYLIB_EXT
+}
+
+
 #[test]
 /// target: default host
 fn sim_host_release() -> Result<()> {
@@ -112,7 +118,7 @@ fn sim_host_release() -> Result<()> {
 		let cargo_target_fullname = format!("{cargo_package_name}-{LIB_NAME}");
 		let artifact = export_dir.join("playdate")
 		                         .join(cargo_target_fullname)
-		                         .join(PathBuf::from("build/pdex.dylib"));
+		                         .join(PathBuf::from("build/").join(dylib_name()));
 		test_artifact_sim(&artifact, false)
 	}
 
@@ -131,7 +137,7 @@ fn sim_host_debug() -> Result<()> {
 		let cargo_target_fullname = format!("{cargo_package_name}-{LIB_NAME}");
 		let artifact = export_dir.join("playdate")
 		                         .join(cargo_target_fullname)
-		                         .join(PathBuf::from("build/pdex.dylib"));
+		                         .join(PathBuf::from("build/").join(dylib_name()));
 		test_artifact_sim(&artifact, false)
 	}
 
@@ -152,7 +158,7 @@ fn sim_host_release_exp() -> Result<()> {
 		let cargo_target_fullname = format!("{cargo_package_name}-{LIB_NAME}");
 		let artifact = export_dir.join("playdate")
 		                         .join(cargo_target_fullname)
-		                         .join(PathBuf::from("build/pdex.dylib"));
+		                         .join(PathBuf::from("build/").join(dylib_name()));
 		test_artifact_sim(&artifact, false)
 	}
 
@@ -171,7 +177,7 @@ fn dev_sim_release_exp() -> Result<()> {
 	                                                           .map(OsStr::new);
 	let expectations = [
 	                    ("pdex.elf", dev_target, true),
-	                    ("pdex.dylib", &host_target, false),
+	                    (&dylib_name(), &host_target, false),
 	];
 
 	for path in simple_crates()? {
@@ -283,7 +289,7 @@ mod examples {
 
 		let expectations = [
 		                    ("pdex.elf", dev_target, true),
-		                    ("pdex.dylib", &host_target, false),
+		                    (&dylib_name(), &host_target, false),
 		];
 
 		for path in simple_crates()? {

@@ -124,7 +124,8 @@ pub mod misc {
 
 			#[doc(hidden)]
 			#[no_mangle]
-			#[cfg(target_os = "windows")]
+			// it not needed on MacOS
+			#[cfg(not(target_os = "macos"))]
 			// TODO: Somehow link with proper impl: https://stackoverflow.com/q/76439798/829264
 			pub extern "C" fn _sbrk() {}
 		};
