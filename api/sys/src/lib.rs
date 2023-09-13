@@ -124,7 +124,7 @@ pub mod misc {
 
 			#[doc(hidden)]
 			#[no_mangle]
-			#[cfg(target_os = "windows")]
+			#[cfg(any(target_os = "windows", target_os = "linux"))]
 			// TODO: Somehow link with proper impl: https://stackoverflow.com/q/76439798/829264
 			pub extern "C" fn _sbrk() {}
 		};
