@@ -18,10 +18,13 @@ jobs:
         uses: cbrgm/mastodon-github-action@v1
         with:
           message: |
-            🦀 Rusty Playdate updated,
+            🦀 Rusty Playdate Updated
+
             New release happens!
 
             ${{ steps.url.outputs.value }}
+
+            #rust #rustdev #playdate
 
           # TODO: Write good-look link like [github.event.repository.name](url)
 
