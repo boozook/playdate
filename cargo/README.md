@@ -59,6 +59,14 @@ cargo playdate init --lib --full-metadata --deps="sys:git, controls:git"
 cargo playdate run
 ```
 
+New package will be created.
+Take a look at the package manifest file (Cargo.toml).
+There is extra metadata for your playdate package.
+
+For more information about metadata read [documentation][metadata-readme].
+
+[metadata-readme]: https://github.com/boozook/playdate/blob/main/support/build/README.md#assets
+
 
 ## Crank(start) compatibility
 
