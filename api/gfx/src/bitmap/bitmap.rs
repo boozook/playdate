@@ -1,12 +1,10 @@
 use core::ffi::c_char;
 use core::ffi::c_float;
 use core::ffi::c_int;
-use core::ffi::c_void;
 use alloc::boxed::Box;
 
 use sys::ffi::CString;
 use sys::ffi::LCDColor;
-use sys::ffi::LCDPattern;
 use sys::ffi::LCDRect;
 use sys::ffi::LCDBitmap;
 pub use sys::ffi::LCDBitmapFlip as BitmapFlip;
@@ -297,19 +295,6 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 	pub fn set_color_to_pattern(&self, color: &mut LCDColor, x: c_int, y: c_int) {
 		let f = self.1.set_color_to_pattern();
 		unsafe { f(color as _, self.0, x, y) }
-	}
-
-	/// Returns 8 x 8 pattern using this bitmap.
-	/// `x, y` indicates the top left corner of the 8 x 8 pattern.
-	pub fn get_color_of_pattern<'t>(&'t self, x: c_int, y: c_int) -> &mut LCDPattern {
-		let mut color: LCDColor = 0;
-		let f = self.1.set_color_to_pattern();
-		unsafe { f(&mut color, self.0, x, y) }
-		assert!(color.is_pattern());
-
-		let ptr = color as *mut c_void as *mut u8 as *mut LCDPattern;
-		// TODO: check if ptr.is_null() ...
-		unsafe { ptr.as_mut() }.unwrap()
 	}
 }
 
