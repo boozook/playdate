@@ -77,11 +77,8 @@ pub fn new_or_init<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<()> {
 	}
 
 
-	// export schema:
-	let schema_bang = manifest_schema(config, path)?.unwrap_or_default();
-
 	// export manifest:
-	let manifest = format!("{schema_bang}\n{}", manifest.to_string());
+	let manifest = manifest.to_string();
 	std::fs::write(manifest_path, manifest.trim_start())?;
 
 
@@ -356,39 +353,6 @@ fn cargo_config<P: AsRef<Path>>(config: &Config, path: P) -> CargoResult<()> {
 	std::fs::write(path, doc.to_string())?;
 
 	Ok(())
-}
-
-
-/// Returns schema-bang for toml cargo package manifest.
-///
-/// There can be three options:
-/// 1. URI pointing to schemastore.org
-/// 1. local path to .cargo/{file} if it requested or *
-/// 1. `None` if requested "no-schema"
-///
-/// \* Local schema currently is default option
-/// because schema is not published on schemastore.org yet.
-fn manifest_schema<P: AsRef<Path>>(config: &Config, dir: P) -> CargoResult<Option<String>> {
-	let bytes = include_bytes!("../../cargo-playdate.json");
-	let schema = if config.create_local_schema {
-		let path = dir.as_ref().join(".cargo").join("cargo-playdate.json");
-
-		if let Some(parent) = path.parent() {
-			if !parent.try_exists()? {
-				std::fs::create_dir_all(parent)?;
-			}
-		}
-		std::fs::write(path, bytes)?;
-
-		Some(format!("#:schema .cargo/cargo-playdate.json\n"))
-	} else {
-		const MANIFEST_SCHEMA_DEFAULT: &str = "https://json.schemastore.org/cargo-playdate.json";
-		let json: serde_json::Value = serde_json::from_slice(bytes)?;
-		let uri = json["$id"].as_str().unwrap_or(MANIFEST_SCHEMA_DEFAULT);
-		Some(format!("#:schema {uri}\n"))
-	};
-
-	Ok(schema)
 }
 
 

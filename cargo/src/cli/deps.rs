@@ -14,13 +14,20 @@ pub struct Dependency<'t> {
 
 impl Dependency<'_> {
 	pub const fn git(&self) -> Option<&'static str> {
+		const GIT: &'static str = env!("CARGO_PKG_REPOSITORY");
 		match self.source {
 			DependencySource::CratesIo => None,
 			DependencySource::Git => {
 				match self.name {
-					DependencyName::Sys => Some("https://github.com/boozook/playdate.git"),
-					DependencyName::Playdate => Some("https://github.com/boozook/playdate.git"),
-					DependencyName::Controls => Some("https://github.com/boozook/playdate.git"),
+					DependencyName::Sys => Some(GIT),
+					DependencyName::System => Some(GIT),
+					DependencyName::Menu => Some(GIT),
+					DependencyName::Controls => Some(GIT),
+					DependencyName::Fs => Some(GIT),
+					DependencyName::Sound => Some(GIT),
+					DependencyName::Graphics => Some(GIT),
+					DependencyName::Color => Some(GIT),
+					DependencyName::Playdate => Some(GIT),
 					DependencyName::Other(_) => None,
 				}
 			},
@@ -33,22 +40,48 @@ impl ValueEnum for Dependency<'_> {
 		use DependencyName as Name;
 		use DependencySource as Src;
 
-		&[
-		  Self { name: Name::Playdate,
-		         source: Src::CratesIo, },
-		  Self { name: Name::Playdate,
-		         source: Src::Git, },
-		  Self { name: Name::Sys,
-		         source: Src::CratesIo, },
-		  Self { name: Name::Sys,
-		         source: Src::Git, },
-		  Self { name: Name::Controls,
-		         source: Src::CratesIo, },
-		  Self { name: Name::Controls,
-		         source: Src::Git, },
-		  Self { name: Name::Other(Cow::Borrowed("any-other")),
-		         source: Src::CratesIo, },
-		]
+		#[rustfmt::skip]
+		let res = &[
+		            Self { name: Name::Playdate, source: Src::CratesIo, },
+		            Self { name: Name::Playdate, source: Src::Git, },
+
+						Self { name: Name::Sys, source: Src::CratesIo, },
+		            Self { name: Name::Sys, source: Src::Git, },
+
+						Self { name: Name::System, source: Src::CratesIo, },
+						Self { name: Name::System, source: Src::Git, },
+
+						Self { name: Name::Controls, source: Src::CratesIo, },
+		            Self { name: Name::Controls, source: Src::Git, },
+
+						Self { name: Name::Menu, source: Src::CratesIo, },
+						Self { name: Name::Menu, source: Src::Git, },
+
+						Self { name: Name::Fs, source: Src::CratesIo, },
+						Self { name: Name::Fs, source: Src::Git, },
+
+						Self { name: Name::Sound, source: Src::CratesIo, },
+						Self { name: Name::Sound, source: Src::Git, },
+
+						Self { name: Name::Graphics, source: Src::CratesIo, },
+						Self { name: Name::Graphics, source: Src::Git, },
+
+						Self { name: Name::Color, source: Src::CratesIo, },
+						Self { name: Name::Color, source: Src::Git, },
+
+		            Self { name: Name::Other(Cow::Borrowed("any-other")), source: Src::CratesIo, },
+		];
+
+		#[cfg(debug_assertions)]
+		{
+			let missed: Vec<_> =
+				DependencyName::value_variants().into_iter()
+				                                .filter(|name| res.iter().find(|dep| dep.name == **name).is_none())
+				                                .collect();
+			debug_assert_eq!(0, missed.len(), "Missing dependencies: {:?}", missed);
+		}
+
+		res
 	}
 
 	fn to_possible_value<'a>(&self) -> Option<PossibleValue> {
@@ -56,36 +89,23 @@ impl ValueEnum for Dependency<'_> {
 		use DependencySource as Src;
 
 		match (&self.name, &self.source) {
-			(Name::Sys, Src::CratesIo) => {
-				PossibleValue::new("playdate-sys").alias("sys")
-				                                  .help("Low-level Playdate API")
-				                                  .into()
-			},
-			(Name::Sys, Src::Git) => {
-				PossibleValue::new("playdate-sys:git").alias("sys:git")
-				                                      .help("Low-level Playdate API (git)")
-				                                      .into()
-			},
-			(Name::Playdate, Src::CratesIo) => PossibleValue::new("playdate").help("Playdate API").into(),
-			(Name::Playdate, Src::Git) => {
-				PossibleValue::new("playdate:git").help("Playdate API (git)")
-				                                  .into()
-			},
-			(Name::Controls, Src::CratesIo) => {
-				PossibleValue::new("playdate-controls").alias("controls")
-				                                       .help("Playdate Controls API")
-				                                       .into()
-			},
-			(Name::Controls, Src::Git) => {
-				PossibleValue::new("playdate-controls:git").alias("controls:git")
-				                                           .help("Playdate Controls API (git)")
-				                                           .into()
-			},
 			(Name::Other(s), Src::CratesIo) => {
 				PossibleValue::new(s.as_ref().to_owned()).help("Any other package (crates.io only)")
 				                                         .into()
 			},
 			(Name::Other(_), _) => None,
+
+			(name, Src::CratesIo) => {
+				PossibleValue::new(name.to_string()).aliases(name.aliases())
+				                                    .help(name.description().to_string())
+				                                    .into()
+			},
+			(name, Src::Git) => {
+				let help = format!("{} (git)", name.description());
+				PossibleValue::new(name.to_string()).aliases(name.aliases())
+				                                    .help(help)
+				                                    .into()
+			},
 		}
 	}
 }
@@ -119,20 +139,68 @@ impl std::fmt::Display for Dependency<'_> {
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum DependencyName<'t> {
 	Sys,
-	Playdate,
+	System,
 	Controls,
-	// Other(String),
+	Menu,
+	Fs,
+	Sound,
+	Graphics,
+	Color,
+	Playdate,
 	Other(Cow<'t, str>),
+}
+
+impl<'t> DependencyName<'t> {
+	pub fn as_str(&self) -> Cow<'t, str> {
+		match self {
+			DependencyName::Sys => "playdate-sys".into(),
+			DependencyName::System => "playdate-system".into(),
+			DependencyName::Controls => "playdate-controls".into(),
+			DependencyName::Menu => "playdate-menu".into(),
+			DependencyName::Fs => "playdate-fs".into(),
+			DependencyName::Sound => "playdate-sound".into(),
+			DependencyName::Graphics => "playdate-graphics".into(),
+			DependencyName::Color => "playdate-color".into(),
+			DependencyName::Playdate => "playdate".into(),
+			DependencyName::Other(s) => s.clone(),
+		}
+	}
+
+	pub fn description(&self) -> Cow<'t, str> {
+		match self {
+			DependencyName::Sys => "Low-level Playdate API".into(),
+			DependencyName::System => "Playdate system API".into(),
+			DependencyName::Controls => "Playdate controls API".into(),
+			DependencyName::Menu => "Playdate menu API".into(),
+			DependencyName::Fs => "Playdate file-system API".into(),
+			DependencyName::Sound => "Playdate sound API".into(),
+			DependencyName::Graphics => "Playdate graphics API".into(),
+			DependencyName::Color => "Playdate color API".into(),
+			DependencyName::Playdate => "High-level Playdate API".into(),
+			DependencyName::Other(s) => s.clone(),
+		}
+	}
+
+	pub fn aliases(&self) -> impl Iterator<Item = &'static str> {
+		match self {
+			DependencyName::Sys => &["sys"][..],
+			DependencyName::System => &["system"][..],
+			DependencyName::Controls => &["controls", "ctrl"][..],
+			DependencyName::Menu => &["menu"],
+			DependencyName::Fs => &["fs"],
+			DependencyName::Sound => &["sound"],
+			DependencyName::Graphics => &["graphics"],
+			DependencyName::Color => &["color"],
+			DependencyName::Playdate => &["pd"],
+			DependencyName::Other(_) => &[],
+		}.into_iter()
+		.map(|s| *s)
+	}
 }
 
 impl std::fmt::Display for DependencyName<'_> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		let s = match self {
-			DependencyName::Sys => "playdate-sys",
-			DependencyName::Playdate => "playdate",
-			DependencyName::Controls => "playdate-controls",
-			DependencyName::Other(s) => s,
-		};
+		let s = self.as_str();
 		write!(f, "{s}")
 	}
 }
@@ -141,11 +209,20 @@ impl FromStr for DependencyName<'_> {
 	type Err = Infallible;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		use DependencyName::*;
+
 		let this = match s.trim().to_lowercase().as_str() {
-			"playdate" => DependencyName::Playdate,
-			"playdate-sys" | "sys" | "" => DependencyName::Sys,
-			"playdate-controls" | "controls" => DependencyName::Controls,
-			other => DependencyName::Other(other.to_owned().into()),
+			"" => Sys, // default empty case
+			n if n == Sys.as_str() || Sys.aliases().find(|a| *a == n).is_some() => Sys,
+			n if n == System.as_str() || System.aliases().find(|a| *a == n).is_some() => System,
+			n if n == Controls.as_str() || Controls.aliases().find(|a| *a == n).is_some() => Controls,
+			n if n == Menu.as_str() || Menu.aliases().find(|a| *a == n).is_some() => Menu,
+			n if n == Fs.as_str() || Fs.aliases().find(|a| *a == n).is_some() => Fs,
+			n if n == Sound.as_str() || Sound.aliases().find(|a| *a == n).is_some() => Sound,
+			n if n == Graphics.as_str() || Graphics.aliases().find(|a| *a == n).is_some() => Graphics,
+			n if n == Color.as_str() || Color.aliases().find(|a| *a == n).is_some() => Color,
+			n if n == Playdate.as_str() || Playdate.aliases().find(|a| *a == n).is_some() => Playdate,
+			other => Other(other.to_owned().into()),
 		};
 		Ok(this)
 	}
@@ -191,8 +268,14 @@ impl DependencyName<'_> {
 		use DependencyName as Name;
 		static ALL: &[Name] = &[
 		                        Name::Sys,
-		                        Name::Playdate,
+		                        Name::System,
 		                        Name::Controls,
+		                        Name::Menu,
+		                        Name::Fs,
+		                        Name::Sound,
+		                        Name::Graphics,
+		                        Name::Color,
+		                        Name::Playdate,
 		                        Name::Other(Cow::Borrowed("any-other")),
 		];
 		ALL
@@ -200,18 +283,14 @@ impl DependencyName<'_> {
 
 	pub fn to_possible_value(&self) -> Option<PossibleValue> {
 		match self {
-			Self::Sys => {
-				PossibleValue::new("playdate-sys").help("Low-level Playdate API")
-				                                  .into()
-			},
-			Self::Playdate => PossibleValue::new("playdate").help("Playdate API").into(),
-			Self::Controls => {
-				PossibleValue::new("playdate-controls").help("Playdate Controls API")
-				                                       .into()
-			},
 			Self::Other(s) => {
 				PossibleValue::new(s.as_ref().to_owned()).help("Any other package")
 				                                         .into()
+			},
+			name => {
+				PossibleValue::new(name.to_string()).aliases(name.aliases())
+				                                    .help(name.description().to_string())
+				                                    .into()
 			},
 		}
 	}

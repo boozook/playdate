@@ -1,5 +1,3 @@
-#:schema ../../../../cargo-playdate.json
-
 [workspace]
 resolver = "2"
 members = ["sub"]
