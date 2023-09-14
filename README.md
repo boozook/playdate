@@ -88,12 +88,4 @@ There is all needed to find SDK and arm-gnu toolchain on user's system, build fl
 
 - - -
 
-> Some social things:
->
-> - <a rel="me" href="https://gamedev.social/@playdaters">Mastodon</a>
-
-
-
-- - -
-
 This software is not sponsored or supported by Panic.
