@@ -4,8 +4,31 @@ on:
     types: [published]
 jobs:
   post:
+    name: Post
     runs-on: ubuntu-latest
     steps:
-      - uses: rzr/fediverse-action@master
+      - name: Repo Url
+        id: url
+        run: |
+          URL="${{ format('{0}/{1}', github.server_url, github.repository) }}"
+          echo "value=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Toot
+        id: mastodon
+        uses: cbrgm/mastodon-github-action@v1
         with:
-          access-token: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+          message: |
+            🦀 Rusty Playdate Updated
+
+            New release happens!
+
+            ${{ steps.url.outputs.value }}
+
+            #rust #rustdev #playdate
+
+          # TODO: Write good-look link like [github.event.repository.name](url)
+
+          visibility: "public" # use `unlisted` for tests
+        env:
+          MASTODON_URL: ${{ secrets.MASTODON_URL }}
+          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}

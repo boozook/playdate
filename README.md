@@ -86,6 +86,12 @@ There is all needed to find SDK and arm-gnu toolchain on user's system, build fl
 [discussions]: https://github.com/boozook/playdate/discussions
 
 
+- - -
+
+> Some social things:
+>
+> - <a rel="me" href="https://gamedev.social/@playdaters">Mastodon</a>
+
 
 
 - - -
