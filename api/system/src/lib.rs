@@ -67,6 +67,32 @@ impl<Api: api::Api> System<Api> {
 		unsafe { f(x, y) }
 	}
 
+	/// Takes `on_update` and `userdata` and wraps it into the `Box`,
+	/// then registers callback.
+	///
+	/// Wrapping [`sys::ffi::playdate_sys::setUpdateCallback`]
+	#[doc(alias = "sys::ffi::playdate_sys::setUpdateCallback")]
+	pub fn set_update_callback_static<U: 'static>(&self,
+	                                          on_update: Option<fn(userdata: &mut U) -> bool>,
+	                                          userdata: U) {
+		unsafe extern "C" fn proxy<UD: 'static>(fn_ud: *mut c_void) -> c_int {
+			if let Some((callback, userdata)) = (fn_ud as *mut (fn(userdata: &mut UD) -> bool, UD)).as_mut() {
+				callback(userdata).into()
+			} else {
+				panic!("user callback missed");
+			}
+		}
+
+		let f = self.0.set_update_callback();
+
+		if let Some(callback) = on_update {
+			let ptr = Box::into_raw(Box::new((callback, userdata)));
+			unsafe { f(Some(proxy::<U>), ptr as *mut _) };
+		} else {
+			unsafe { f(None, core::ptr::null_mut()) };
+		}
+	}
+
 	/// Equivalent to [`sys::ffi::playdate_sys::getFlipped`]
 	#[doc(alias = "sys::ffi::playdate_sys::getFlipped")]
 	#[inline(always)]
@@ -148,12 +174,12 @@ impl<Api: api::Api> System<Api> {
 	#[inline(always)]
 	pub fn convert_epoch_to_date_time(&self, epoch: u32) -> PDDateTime {
 		let mut dt = PDDateTime { year: 0,
-		                                month: 0,
-		                                day: 0,
-		                                weekday: 0,
-		                                hour: 0,
-		                                minute: 0,
-		                                second: 0 };
+		                          month: 0,
+		                          day: 0,
+		                          weekday: 0,
+		                          hour: 0,
+		                          minute: 0,
+		                          second: 0 };
 		self.convert_epoch_to_date_time_to(epoch, &mut dt);
 		dt
 	}
