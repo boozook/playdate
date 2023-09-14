@@ -1,5 +1,3 @@
-#:schema ../../cargo-playdate.json
-
 [package]
 name = "playdate-controls"
 version = "0.1.1"
