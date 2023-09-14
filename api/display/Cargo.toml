@@ -1,0 +1,40 @@
+[package]
+name = "playdate-display"
+version = "0.1.0"
+edition = "2021"
+
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+authors = ["Alex Koz <a@koz.email>"]
+description = "High-level Display API built on-top of Playdate API"
+homepage = "https://github.com/boozook/playdate"
+repository = "https://github.com/boozook/playdate.git"
+
+
+[features]
+default = ["sys/default"]
+# sys- features:
+lang-items = ["sys/lang-items"]
+allocator = ["sys/allocator"]
+panic-handler = ["sys/panic-handler"]
+eh-personality = ["sys/eh-personality"]
+error-ctx = ["sys/error-ctx"]
+bindgen-runtime = ["sys/bindgen-runtime"]
+bindgen-static = ["sys/bindgen-static"]
+bindings-derive-default = ["sys/bindings-derive-default"]
+bindings-derive-eq = ["sys/bindings-derive-eq"]
+bindings-derive-copy = ["sys/bindings-derive-copy"]
+bindings-derive-debug = ["sys/bindings-derive-debug"]
+bindings-derive-hash = ["sys/bindings-derive-hash"]
+bindings-derive-ord = ["sys/bindings-derive-ord"]
+bindings-derive-partialeq = ["sys/bindings-derive-partialeq"]
+bindings-derive-partialord = ["sys/bindings-derive-partialord"]
+bindings-derive-constparamty = ["sys/bindings-derive-constparamty"]
+bindings-documentation = ["sys/bindings-documentation"]
+
+
+[dependencies.sys]
+version = "0.1"
+path = "../sys"
+package = "playdate-sys"
+default-features = false
