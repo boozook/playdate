@@ -18,6 +18,13 @@ Follow the instructions for:
 1. [playdate-sys](https://github.com/boozook/playdate/tree/main/api/sys#prerequisites)
 
 
+## Compatibility
+
+* __Minimal__ supported versions of Playdate SDK is `2.0.0` but with earlier versions all should work probably.
+
+* __Latest__ version of SDK is `2.0.3`, all tested and works correctly.
+
+
 
 ## Usage
 
