@@ -1,0 +1,38 @@
+name: Release
+on:
+  milestone:
+    types: [closed]
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  draft:
+    name: Draft
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      discussions: write
+    steps:
+      - name: Date
+        id: date
+        run: |
+          date +"%D"
+          CUR_DATE=`date +"%D"`
+          echo "value=$CUR_DATE" >> "$GITHUB_OUTPUT"
+
+      - name: Title
+        id: title
+        run: |
+          # https://docs.github.com/en/rest/issues/milestones?apiVersion=2022-11-28#get-a-milestone
+          TITLE="${{ github.event_name == 'milestone' && format('{0} ({1})', github.event.milestone.title, steps.date.outputs.value) || steps.date.outputs.value }}"
+          TITLE="${{ format('{0} ({1})', github.event.pull_request.title, steps.date.outputs.value) || steps.date.outputs.value }}"
+          echo "value=$TITLE" >> "$GITHUB_OUTPUT"
+
+      - name: Page
+        id: release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ (startsWith(github.ref, 'refs/tags/') && github.ref) || steps.date.outputs.value }}
+          name: ${{ steps.title.outputs.value }}
+          generate_release_notes: true
