@@ -1,0 +1,23 @@
+api:
+  - any:
+      - "api/**/*.rs"
+      - "api/**/*.toml"
+      - "components/**/*.rs"
+      - "components/**/*.toml"
+
+pre-built bindings:
+  - any:
+      - "api/gen/*"
+
+cargo:
+  - any:
+      - "cargo/**"
+
+bindgen:
+  - any:
+      - "support/bindgen/**"
+
+docs:
+  - any:
+      - "**/*.md"
+      - "**/*.txt"
