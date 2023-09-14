@@ -16,7 +16,7 @@ jobs:
       - name: Date
         id: date
         run: |
-          CUR_DATE=`date +"%Y-%m-%d"`
+          CUR_DATE=`date +"%Y.%m.%d"`
           echo "value=$CUR_DATE" >> "$GITHUB_OUTPUT"
 
       - name: Title
