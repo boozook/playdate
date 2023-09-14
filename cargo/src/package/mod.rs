@@ -291,10 +291,9 @@ fn execute_pdc<'l, Layout: playdate::layout::Layout>(config: &Config,
 			let profile = profiles.base_profile();
 			let optimized = profile.opt_level.as_str() == "0";
 			let debuginfo = match profile.debuginfo {
-				DebugInfo::None => false,
-				DebugInfo::Explicit(TomlDebugInfo::None) => false,
+				DebugInfo::Resolved(TomlDebugInfo::None) => false,
 				DebugInfo::Deferred(TomlDebugInfo::None) => false,
-				DebugInfo::Explicit(_) => true,
+				DebugInfo::Resolved(_) => true,
 				DebugInfo::Deferred(_) => true,
 			};
 			(optimized, debuginfo)

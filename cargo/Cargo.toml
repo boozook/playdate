@@ -1,6 +1,6 @@
 [package]
 name = "cargo-playdate"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 
 readme = "README.md"
@@ -38,8 +38,8 @@ clap_lex = "0.5"
 dirs = "5.0"
 fs_extra = "1.3"
 
-cargo = "=0.72.1"
-cargo-util = "=0.2.4"
+cargo = "=0.73.1"
+cargo-util = "=0.2.5"
 cargo-platform = "0.1.3"
 
 semver = "1.0"
