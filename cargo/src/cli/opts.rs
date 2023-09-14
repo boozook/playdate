@@ -370,10 +370,10 @@ pub fn main(aliases: Option<&HashMap<impl Into<Str> + Clone, impl AsRef<str>>>) 
 	                 .subcommand(set_aliases(build(), aliases))
 	                 .subcommand(run())
 	                 .subcommand(assets())
-	                 .subcommand(new_crate().hide(true))
-	                 .subcommand(init_crate().hide(true))
+	                 .subcommand(new_crate())
+	                 .subcommand(init_crate())
+	                 .subcommand(package())
 	                 .subcommand(migrate().hide(true))
-	                 .subcommand(package().hide(true))
 	                 .subcommand(publish().hide(true))
 }
 
