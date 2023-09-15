@@ -1,4 +1,4 @@
-use sys::ffi::PDDateTime;
+pub use sys::ffi::PDDateTime;
 
 use crate::api::Api;
 
