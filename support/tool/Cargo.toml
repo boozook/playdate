@@ -1,13 +1,13 @@
 [package]
 name = "playdate-tool"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 authors = ["Alex Koz <a@koz.email>"]
 description = "Tool for interaction with Playdate device and sim."
-keywords = ["playdate", "usb"]
+keywords = ["playdate", "usb", "utility"]
 categories = ["development-tools", "hardware-support"]
 homepage = "https://github.com/boozook/playdate"
 repository = "https://github.com/boozook/playdate.git"

@@ -2,12 +2,7 @@
 
 This project allows you to create games for the [Playdate handheld gaming system][playdate-website] in Rust lang.
 
-There is early development demonstrations of the building process: [bin][video-executable] and [sim][video-simulator] videos originally posted on [dev-forum][post-videos].
-
 [playdate-website]: https://play.date/
-[post-videos]: https://devforum.play.date/t/sdk-2-0-b2-pdc-produces-pdx-with-broken-binary/11345/37
-[video-executable]: https://www.youtube.com/watch?v=hfFspYbnF5k
-[video-simulator]: https://www.youtube.com/watch?v=w-pZrn8qex4
 
 
 * [Modular build system][support-dir]
@@ -18,6 +13,7 @@ There is early development demonstrations of the building process: [bin][video-e
   - with [examples][ctrl-examples-dir]
 
 Welcome to [discussions][] and [issues][] for any questions and suggestions.
+Take a look at [videos](#demo) or [do something great](#usage).
 
 
 ## Prerequisites
@@ -49,6 +45,14 @@ cargo install cargo-playdate
 cargo playdate run -p=playdate-sound --example=sp-simple
 cargo playdate run -p=playdate-sound --example=sp-simple --device
 ```
+
+### Demo
+
+Early development demonstrations of the building process: [bin][video-bin] and [sim][video-simulator] screencasts originally posted on [dev-forum][video-post].
+
+[video-post]: https://devforum.play.date/t/sdk-2-0-b2-pdc-produces-pdx-with-broken-binary/11345/37
+[video-bin]: https://www.youtube.com/watch?v=hfFspYbnF5k
+[video-simulator]: https://www.youtube.com/watch?v=w-pZrn8qex4
 
 
 ## Modularity
