@@ -1,0 +1,21 @@
+name: Docs
+on:
+  pull_request:
+  pull_request_target:
+
+jobs:
+  test:
+    name: Check
+    permissions:
+      pull-requests: write
+      contents: read
+      actions: read
+      statuses: read
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Proofread
+        uses: awreck/proofread-action@v1
+        id: proofread
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
