@@ -77,6 +77,7 @@ jobs:
             textlint-rule-en-capitalization
             textlint-rule-no-empty-section
             textlint-rule-no-exclamation-question-mark
+            textlint-rule-spelling dictionary-en
           # textlint-rule-no-empty-section
           # textlint-rule-no-empty-element
           # textlint-rule-terminology
