@@ -1,5 +1,6 @@
 [toolchain]
 channel = "nightly"
+profile = "minimal"
 targets = ["thumbv7em-none-eabihf"]
 components = [
 	"rust-src", # for build-std
