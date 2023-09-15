@@ -27,7 +27,6 @@ rules:
   textlint-rule-doubled-spaces: true
   textlint-rule-rousseau: true
   textlint-rule-common-misspellings: true
-  textlint-rule-ginger: true
   textlint-rule-write-good: true
   spellcheck-tech-word: true
   "@textlint-rule/textlint-rule-no-duplicate-abbr": true

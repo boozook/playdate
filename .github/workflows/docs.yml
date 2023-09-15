@@ -74,9 +74,8 @@ jobs:
             @textlint-rule/textlint-rule-no-duplicate-abbr
             textlint-rule-rousseau
             textlint-rule-common-misspellings
-            textlint-rule-ginger
             textlint-rule-write-good
-            spellcheck-tech-word
+            textlint-rule-spellcheck-tech-word
           path: ${{ github.event.inputs.path || steps.changes.outputs.all_changed_files || './**/*.md' }} # mb. null-fallback?
           annotate: ${{ github.event.inputs.path && 'false' || 'true' }}
           token: ${{ secrets.GITHUB_TOKEN }}
