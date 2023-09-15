@@ -6,6 +6,8 @@ use core::ffi::c_float;
 use core::ffi::c_int;
 use core::ffi::c_uint;
 use core::ffi::c_void;
+use core::marker::PhantomData;
+use core::pin::Pin;
 use core::time::Duration;
 
 use sys::ffi::PDDateTime;
@@ -28,6 +30,80 @@ impl<Api: Default + api::Api> System<Api> {
 
 impl<Api: api::Api> System<Api> {
 	pub fn new_with(api: Api) -> Self { Self(api) }
+}
+
+
+pub struct CallbackHandler<'t, F, U>(Option<Pin<Box<(F, U)>>>, PhantomData<&'t ()>);
+
+impl<'t, F, U> Drop for CallbackHandler<'t, F, U> {
+	fn drop(&mut self) {
+		let get_fn = || sys::api_opt!(system.setUpdateCallback);
+		if self.0.is_some() {
+			if let Some(f) = get_fn() {
+				unsafe {
+					f(None, core::ptr::null_mut());
+				}
+			}
+		}
+	}
+}
+
+
+impl<Api: api::Api> System<Api> {
+	/// Takes an any function with `userdata` into the `Pin`,
+	/// registers callback in the system and returns this wrapped function with userdata.
+	///
+	/// For register a fn-ptr you could better use [`set_update_callback_static`].
+	///
+	/// Wrapping [`sys::ffi::playdate_sys::setUpdateCallback`]
+	#[doc(alias = "sys::ffi::playdate_sys::setUpdateCallback")]
+	pub fn set_update_callback<'u, U, F>(&self, on_update: F, userdata: U) -> CallbackHandler<'u, F, U>
+		where U: 'u,
+		      F: 'u + FnMut(&mut U) -> bool {
+		unsafe extern "C" fn proxy<UD, Fn: FnMut(&mut UD) -> bool>(fn_ud: *mut c_void) -> c_int {
+			if let Some((callback, userdata)) = (fn_ud as *mut (Fn, UD)).as_mut() {
+				callback(userdata).into()
+			} else {
+				panic!("user callback missed");
+			}
+		}
+
+		let f = self.0.set_update_callback();
+
+		let mut userdata = Box::pin((on_update, userdata));
+		let ptr = unsafe { userdata.as_mut().get_unchecked_mut() } as *mut _ as *mut c_void;
+
+		unsafe { f(Some(proxy::<U, F>), ptr) };
+
+		CallbackHandler(userdata.into(), PhantomData)
+	}
+
+
+	/// Takes `on_update` and `userdata` and wraps it into the `Box`,
+	/// then registers callback.
+	///
+	/// Wrapping [`sys::ffi::playdate_sys::setUpdateCallback`]
+	#[doc(alias = "sys::ffi::playdate_sys::setUpdateCallback")]
+	pub fn set_update_callback_static<U: 'static>(&self,
+	                                              on_update: Option<fn(userdata: &mut U) -> bool>,
+	                                              userdata: U) {
+		unsafe extern "C" fn proxy<UD: 'static>(fn_ud: *mut c_void) -> c_int {
+			if let Some((callback, userdata)) = (fn_ud as *mut (fn(userdata: &mut UD) -> bool, UD)).as_mut() {
+				callback(userdata).into()
+			} else {
+				panic!("user callback missed");
+			}
+		}
+
+		let f = self.0.set_update_callback();
+
+		if let Some(callback) = on_update {
+			let ptr = Box::into_raw(Box::new((callback, userdata)));
+			unsafe { f(Some(proxy::<U>), ptr as *mut _) };
+		} else {
+			unsafe { f(None, core::ptr::null_mut()) };
+		}
+	}
 }
 
 
@@ -65,32 +141,6 @@ impl<Api: api::Api> System<Api> {
 	pub fn draw_fps(&self, x: c_int, y: c_int) {
 		let f = self.0.draw_fps();
 		unsafe { f(x, y) }
-	}
-
-	/// Takes `on_update` and `userdata` and wraps it into the `Box`,
-	/// then registers callback.
-	///
-	/// Wrapping [`sys::ffi::playdate_sys::setUpdateCallback`]
-	#[doc(alias = "sys::ffi::playdate_sys::setUpdateCallback")]
-	pub fn set_update_callback_static<U: 'static>(&self,
-	                                          on_update: Option<fn(userdata: &mut U) -> bool>,
-	                                          userdata: U) {
-		unsafe extern "C" fn proxy<UD: 'static>(fn_ud: *mut c_void) -> c_int {
-			if let Some((callback, userdata)) = (fn_ud as *mut (fn(userdata: &mut UD) -> bool, UD)).as_mut() {
-				callback(userdata).into()
-			} else {
-				panic!("user callback missed");
-			}
-		}
-
-		let f = self.0.set_update_callback();
-
-		if let Some(callback) = on_update {
-			let ptr = Box::into_raw(Box::new((callback, userdata)));
-			unsafe { f(Some(proxy::<U>), ptr as *mut _) };
-		} else {
-			unsafe { f(None, core::ptr::null_mut()) };
-		}
 	}
 
 	/// Equivalent to [`sys::ffi::playdate_sys::getFlipped`]
