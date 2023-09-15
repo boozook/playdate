@@ -54,7 +54,7 @@ jobs:
         run: cp -rf .github/.textlintrc .textlintrc
 
       - name: text lint
-        uses: rdohms/textlint-action@v1
+        uses: rdohms/textlint-action@v1.0.0
         with:
           # List required ruleset packages
           rulesets: >-
