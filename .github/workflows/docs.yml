@@ -74,6 +74,7 @@ jobs:
             textlint-rule-write-good
             textlint-rule-spellcheck-tech-word
             textlint-rule-alex
+            textlint-rule-en-capitalization
           # textlint-rule-no-empty-section
           # textlint-rule-no-empty-element
           # textlint-rule-terminology
