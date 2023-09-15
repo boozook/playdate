@@ -78,7 +78,7 @@ jobs:
             textlint-rule-no-empty-section
             textlint-rule-no-exclamation-question-mark
             textlint-rule-spelling dictionary-en
-            textlint-rule-terminology textlint-extra-terms
+            textlint-rule-terminology@3.0.0 textlint-extra-terms
             textlint-rule-en-spell
           # textlint-rule-spellchecke
           # textlint-rule-standardize
