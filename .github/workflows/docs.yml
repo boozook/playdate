@@ -80,7 +80,7 @@ jobs:
             textlint-rule-spelling dictionary-en
             textlint-rule-terminology textlint-extra-terms
             textlint-rule-en-spell
-            textlint-rule-spellchecke
+          # textlint-rule-spellchecke
           # textlint-rule-standardize
           # textlint-rule-no-empty-section
           # textlint-rule-no-empty-element
