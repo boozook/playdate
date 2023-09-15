@@ -2,9 +2,32 @@ name: Docs
 on:
   pull_request:
   pull_request_target:
+  workflow_dispatch:
+    inputs:
+      path:
+        description: "Path to docs (glob)"
+        default: ./**/*.md
+        type: string
+        required: true
 
 jobs:
   test:
+    name: Proofread
+    permissions:
+      pull-requests: write
+      contents: read
+      actions: read
+      statuses: read
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Check
+        uses: awreck/proofread-action@v1
+        id: proofread
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  lint:
     name: Check
     permissions:
       pull-requests: write
@@ -14,8 +37,44 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - name: Proofread
-        uses: awreck/proofread-action@v1
-        id: proofread
+      - name: Changes
+        id: changes
+        if: ${{ !startsWith(github.event_name, 'pull_request') }}
+        uses: tj-actions/changed-files@v39
         with:
+          since_last_remote_commit: true
+          files: "**/*.{md,txt}"
+          # files_yaml: |
+          #   text:
+          #     - '**/*.txt'
+          #     - '**/*.md'
+          #     - README.md
+
+      - name: Config
+        run: cp -rf .github/.textlintrc .textlintrc
+
+      - name: text lint
+        uses: rdohms/textlint-action@v1
+        with:
+          # List required ruleset packages
+          rulesets: >-
+            textlint-filter-rule-allowlist
+            textlint-rule-no-todo
+            textlint-rule-alive-link
+            textlint-rule-no-start-duplicated-conjunction
+            textlint-rule-no-empty-section
+            textlint-rule-no-empty-element
+            textlint-rule-date-weekday-mismatch
+            textlint-rule-terminology
+            textlint-rule-period-in-list-item
+            textlint-rule-no-zero-width-spaces
+            textlint-rule-doubled-spaces
+            @textlint-rule/textlint-rule-no-duplicate-abbr
+            textlint-rule-rousseau
+            textlint-rule-common-misspellings
+            textlint-rule-ginger
+            textlint-rule-write-good
+            spellcheck-tech-word
+          path: ${{ github.event.inputs.path || steps.changes.outputs.all_changed_files || './**/*.md' }} # mb. null-fallback?
+          annotate: ${{ github.event.inputs.path && 'false' || 'true' }}
           token: ${{ secrets.GITHUB_TOKEN }}
