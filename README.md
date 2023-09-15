@@ -1,5 +1,15 @@
 # 🦀 Playdate API and build tools in Rust
 
+This project allows you to create games for the [Playdate handheld gaming system][playdate-website] in Rust lang.
+
+There is early development demonstrations of the building process: [bin][video-executable] and [sim][video-simulator] videos originally posted on [dev-forum][post-videos].
+
+[playdate-website]: https://play.date/
+[post-videos]: https://devforum.play.date/t/sdk-2-0-b2-pdc-produces-pdx-with-broken-binary/11345/37
+[video-executable]: https://www.youtube.com/watch?v=hfFspYbnF5k
+[video-simulator]: https://www.youtube.com/watch?v=w-pZrn8qex4
+
+
 * [Modular build system][support-dir]
   - build-support libraries
   - pre-configured bindgen with extra codegen
