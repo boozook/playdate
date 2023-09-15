@@ -37,6 +37,8 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
+      - uses: actions/checkout@v4
+
       - name: Changes
         id: changes
         if: ${{ !startsWith(github.event_name, 'pull_request') }}
@@ -51,7 +53,7 @@ jobs:
           #     - README.md
 
       - name: Config
-        run: cp -rf .github/.textlintrc .textlintrc
+        run: cp -rf .github/textlintrc.yml .textlintrc.yaml
 
       - name: text lint
         uses: rdohms/textlint-action@v1.0.0
