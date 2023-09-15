@@ -7,8 +7,9 @@ use core::ffi::c_int;
 use core::ffi::c_uint;
 use core::ffi::c_void;
 use core::marker::PhantomData;
-use core::pin::Pin;
 use core::time::Duration;
+use core::pin::Pin;
+use alloc::boxed::Box;
 
 pub mod time;
 pub mod lang;
