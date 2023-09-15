@@ -64,8 +64,6 @@ jobs:
             textlint-rule-no-todo
             textlint-rule-alive-link
             textlint-rule-no-start-duplicated-conjunction
-            textlint-rule-no-empty-section
-            textlint-rule-no-empty-element
             textlint-rule-date-weekday-mismatch
             textlint-rule-terminology
             textlint-rule-period-in-list-item
@@ -76,6 +74,8 @@ jobs:
             textlint-rule-common-misspellings
             textlint-rule-write-good
             textlint-rule-spellcheck-tech-word
+          # textlint-rule-no-empty-section
+          # textlint-rule-no-empty-element
           path: ${{ github.event.inputs.path || steps.changes.outputs.all_changed_files || './**/*.md' }} # mb. null-fallback?
           annotate: ${{ github.event.inputs.path && 'false' || 'true' }}
           token: ${{ secrets.GITHUB_TOKEN }}

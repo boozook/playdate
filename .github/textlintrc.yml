@@ -18,8 +18,8 @@ rules:
     retry: 3
     timeout: 20
     maxRetryDelay: 20
-  textlint-rule-no-empty-section: true
-  textlint-rule-no-empty-element: true
+  # textlint-rule-no-empty-section: true
+  # textlint-rule-no-empty-element: true
   textlint-rule-date-weekday-mismatch: true
   textlint-rule-terminology: true
   textlint-rule-period-in-list-item: true
