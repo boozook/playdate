@@ -81,6 +81,9 @@ jobs:
           cargo test -p=playdate-display --lib --no-default-features --features=$FEATURES_1 -- --nocapture
           cargo test -p=playdate-display --lib --no-default-features --features=$FEATURES_2 -- --nocapture
 
+          cargo test -p=playdate-system --lib --no-default-features --features=$FEATURES_1 -- --nocapture
+          cargo test -p=playdate-system --lib --no-default-features --features=$FEATURES_2 -- --nocapture
+
       - name: Examples
         run: |
           FEATURES=bindgen-runtime,bindings-derive-debug

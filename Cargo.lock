@@ -2635,6 +2635,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "playdate-system"
+version = "0.1.0"
+dependencies = [
+ "playdate-sys",
+]
+
+[[package]]
 name = "playdate-tool"
 version = "0.1.0"
 dependencies = [
