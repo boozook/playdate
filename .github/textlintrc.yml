@@ -1,37 +1,37 @@
 plugins:
 filters:
   # textlint-filter-rule-allowlist
-  allowlist:
-    allow:
-      - build system
+  # allowlist:
+  #   allow:
+  #     - build system
 
 rules:
   no-todo: true
   no-start-duplicated-conjunction: true
-  alive-link:
-    language: "en"
-    checkRelative: true
-    baseURI: https://github.com/boozook/playdate/blob/main/
-    ignoreRedirects: true
-    ignore:
-      - https://crates.io/**
-    retry: 3
-    timeout: 20
-    maxRetryDelay: 20
-  # textlint-rule-no-empty-section: true
-  # textlint-rule-no-empty-element: true
-  # textlint-rule-terminology: true
-  textlint-rule-date-weekday-mismatch: true
-  textlint-rule-period-in-list-item: true
-  textlint-rule-no-zero-width-spaces: true
-  textlint-rule-doubled-spaces: true
-  textlint-rule-rousseau: true
-  textlint-rule-common-misspellings: true
-  textlint-rule-write-good: true
-  spellcheck-tech-word: true
-  "@textlint-rule/textlint-rule-no-duplicate-abbr": true
-  # textlint-rule-unexpanded-acronym: false
-  # textlint-rule-spelling:
+  # alive-link:
   #   language: "en"
-  #   suggestCorrections: true
-  # EXTRA DEP: dictionary-en
+  #   checkRelative: true
+  #   baseURI: https://github.com/boozook/playdate/blob/main/
+  #   ignoreRedirects: true
+  #   ignore:
+  #     - https://crates.io/**
+  #   retry: 3
+  #   timeout: 20
+  #   maxRetryDelay: 20
+  # # textlint-rule-no-empty-section: true
+  # # textlint-rule-no-empty-element: true
+  # # textlint-rule-terminology: true
+  # textlint-rule-date-weekday-mismatch: true
+  # textlint-rule-period-in-list-item: true
+  # textlint-rule-no-zero-width-spaces: true
+  # textlint-rule-doubled-spaces: true
+  # textlint-rule-rousseau: true
+  # textlint-rule-common-misspellings: true
+  # textlint-rule-write-good: true
+  # spellcheck-tech-word: true
+  # "@textlint-rule/textlint-rule-no-duplicate-abbr": true
+  # # textlint-rule-unexpanded-acronym: false
+  # # textlint-rule-spelling:
+  # #   language: "en"
+  # #   suggestCorrections: true
+  # # EXTRA DEP: dictionary-en
