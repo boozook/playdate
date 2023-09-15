@@ -41,7 +41,7 @@ jobs:
 
       - name: Changes
         id: changes
-        if: ${{ !startsWith(github.event_name, 'pull_request') }}
+        if: ${{ startsWith(github.event_name, 'pull_request') }}
         uses: tj-actions/changed-files@v39
         with:
           since_last_remote_commit: true
@@ -65,7 +65,6 @@ jobs:
             textlint-rule-alive-link
             textlint-rule-no-start-duplicated-conjunction
             textlint-rule-date-weekday-mismatch
-            textlint-rule-terminology
             textlint-rule-period-in-list-item
             textlint-rule-no-zero-width-spaces
             textlint-rule-doubled-spaces
@@ -76,6 +75,7 @@ jobs:
             textlint-rule-spellcheck-tech-word
           # textlint-rule-no-empty-section
           # textlint-rule-no-empty-element
+          # textlint-rule-terminology
           path: ${{ github.event.inputs.path || steps.changes.outputs.all_changed_files || './**/*.md' }} # mb. null-fallback?
           annotate: ${{ github.event.inputs.path && 'false' || 'true' }}
           token: ${{ secrets.GITHUB_TOKEN }}

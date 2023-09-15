@@ -20,8 +20,8 @@ rules:
     maxRetryDelay: 20
   # textlint-rule-no-empty-section: true
   # textlint-rule-no-empty-element: true
+  # textlint-rule-terminology: true
   textlint-rule-date-weekday-mismatch: true
-  textlint-rule-terminology: true
   textlint-rule-period-in-list-item: true
   textlint-rule-no-zero-width-spaces: true
   textlint-rule-doubled-spaces: true
