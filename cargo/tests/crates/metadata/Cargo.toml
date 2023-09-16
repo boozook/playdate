@@ -2,7 +2,6 @@
 resolver = "2"
 members = ["sub"]
 
-
 [package]
 name = "test-workspace-main-crate"
 version = "0.1.0"
@@ -12,6 +11,7 @@ publish = false
 
 [package.metadata.playdate]
 bundle-id = "test.workspace.main.crate"
+description = "test"
 
 [package.metadata.playdate.assets]
 "main/" = "Cargo.toml"
