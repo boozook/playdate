@@ -28,7 +28,7 @@ jobs:
         os:
           - macos-latest
           - ubuntu-latest
-          # - windows-latest
+          - windows-latest
         sdk:
           - latest
 
@@ -42,6 +42,26 @@ jobs:
         run: |
           mkdir -p .cargo
           cp -rf .github/config.toml .cargo/config.toml
+
+      - name: Cache LLVM
+        id: cache-llvm
+        if: matrix.os == 'windows-latest'
+        uses: actions/cache@v3
+        with:
+          path: ${{ runner.temp }}/llvm
+          key: llvm-14.0
+
+      # See:
+      # https://github.com/rust-lang/rust-bindgen/issues/1797
+      # https://rust-lang.github.io/rust-bindgen/requirements.html#windows
+      - name: Install LLVM
+        if: matrix.os == 'windows-latest'
+        uses: KyleMayes/install-llvm-action@v1.8.3
+        with:
+          version: "14.0"
+          directory: ${{ runner.temp }}/llvm
+          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
+          env: true
 
       - name: Install Playdate SDK ${{ matrix.sdk }}
         id: sdk
@@ -132,6 +152,34 @@ jobs:
           mkdir -p .cargo
           cp -rf .github/config.toml .cargo/config.toml
 
+      - name: Cache LLVM
+        id: cache-llvm
+        if: matrix.os == 'windows-latest'
+        uses: actions/cache@v3
+        with:
+          path: ${{ runner.temp }}/llvm
+          key: llvm-14.0
+
+      # See:
+      # https://github.com/rust-lang/rust-bindgen/issues/1797
+      # https://rust-lang.github.io/rust-bindgen/requirements.html#windows
+      - name: Install LLVM
+        if: matrix.os == 'windows-latest'
+        uses: KyleMayes/install-llvm-action@v1.8.3
+        with:
+          version: "14.0"
+          directory: ${{ runner.temp }}/llvm
+          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
+          env: true
+
+      - name: Install Deps
+        if: matrix.os == 'windows-latest'
+        run: |
+          # mingw-w64-x86_64-libusb
+          choco install pkgconfiglite
+          pkg-config --cflags --libs libusb-1.0
+          pkg-config --cflags --libs libusb
+
       - name: Install Playdate SDK ${{ matrix.sdk }}
         id: sdk
         uses: pd-rs/get-playdate-sdk@main
@@ -150,11 +198,12 @@ jobs:
           cargo test -p=playdate-build --all-features
           cargo test -p=playdate-tool --all-features
 
-      - name: Install Sim Deps
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: |
-          sudo apt update
-          sudo apt -y install libwebkit2gtk-4.0-dev
+      # Simulator doesn't works in headless mode
+      # - name: Install Sim Deps
+      #   if: ${{ matrix.os == 'ubuntu-latest' }}
+      #   run: |
+      #     sudo apt update
+      #     sudo apt -y install libwebkit2gtk-4.0-dev
 
       - name: Test
         run: |
@@ -190,6 +239,26 @@ jobs:
         run: |
           mkdir -p .cargo
           cp -rf .github/config.toml .cargo/config.toml
+
+      - name: Cache LLVM
+        id: cache-llvm
+        if: matrix.os == 'windows-latest'
+        uses: actions/cache@v3
+        with:
+          path: ${{ runner.temp }}/llvm
+          key: llvm-14.0
+
+      # See:
+      # https://github.com/rust-lang/rust-bindgen/issues/1797
+      # https://rust-lang.github.io/rust-bindgen/requirements.html#windows
+      - name: Install LLVM
+        if: matrix.os == 'windows-latest'
+        uses: KyleMayes/install-llvm-action@v1.8.3
+        with:
+          version: "14.0"
+          directory: ${{ runner.temp }}/llvm
+          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
+          env: true
 
       - name: Install Playdate SDK ${{ matrix.sdk }}
         id: sdk
