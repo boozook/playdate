@@ -13,10 +13,10 @@ use crate::common::*;
 
 
 fn run(crate_name: &str, crate_path: &Path, args: impl IntoIterator<Item = impl Into<OsString>>) -> Result<()> {
-	println!("crate: {}", crate_path.display());
+	println!("crate: {crate_name}: {}", crate_path.display());
 
 	let value = test_value();
-	let target_dir = target_dir().join(crate_name);
+	let target_dir = target_dir_rand();
 	let target_dir_arg = format!("--target-dir={}", target_dir.display());
 	let args = [OsString::from("run")].into_iter()
 	                                  .chain(args.into_iter().map(Into::into))

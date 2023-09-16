@@ -34,9 +34,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - name: Cache
-        uses: Swatinem/rust-cache@v2.6.2
-        with: { shared-key: "tests" }
+        uses: actions/cache@v3
+        with:
+          path: |
+            target/
+            ~/.cargo
+          key: ${{ runner.os }}-cargo-tests-${{ hashFiles('Cargo.lock') }}
 
       - name: Config
         run: |
@@ -143,9 +148,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - name: Cache
-        uses: Swatinem/rust-cache@v2.6.2
-        with: { shared-key: "tests" }
+        uses: actions/cache@v3
+        with:
+          path: |
+            target/
+            ~/.cargo
+          key: ${{ runner.os }}-cargo-tests-${{ hashFiles('Cargo.lock') }}
 
       - name: Config
         run: |
@@ -229,14 +239,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - name: Cache
-        uses: Swatinem/rust-cache@v2.6.2
+        uses: actions/cache@v3
         with:
-          shared-key: "tests"
-          save-if: false
+          path: |
+            ~/.cargo
+          key: ${{ runner.os }}-cargo-tests-${{ hashFiles('Cargo.lock') }}
 
       - name: Config
         run: |
+          rm -rf ./target/tmp || true
+          rm -rf ./target/playdate || true
           mkdir -p .cargo
           cp -rf .github/config.toml .cargo/config.toml
 
@@ -298,11 +312,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Check
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
         uses: clechasseur/rs-fmt-check@v2
         with:
           toolchain: nightly
 
       - name: Check
-        if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ github.event_name != 'pull_request' && github.event_name != 'pull_request_target' }}
         run: cargo fmt -- --check
