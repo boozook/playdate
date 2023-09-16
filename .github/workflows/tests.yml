@@ -150,6 +150,12 @@ jobs:
           cargo test -p=playdate-build --all-features
           cargo test -p=playdate-tool --all-features
 
+      - name: Install Sim Deps
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run:
+          sudo apt update
+          sudo apt -y install libwebkit2gtk-4.0-dev
+
       - name: Test
         run: |
           cargo test -p=cargo-playdate -- --nocapture
