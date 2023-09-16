@@ -152,7 +152,7 @@ jobs:
 
       - name: Install Sim Deps
         if: ${{ matrix.os == 'ubuntu-latest' }}
-        run:
+        run: |
           sudo apt update
           sudo apt -y install libwebkit2gtk-4.0-dev
 
