@@ -14,7 +14,8 @@ use pd::ffi::*;
 
 // for bin:
 #[used]
-pub static EVENT_HANDLER_SHIM: extern "C" fn(*const pd::ffi::PlaydateAPI, pd::ffi::PDSystemEvent, u32) -> i32 = eventHandlerShim;
+pub static EVENT_HANDLER_SHIM: extern "C" fn(*const pd::ffi::PlaydateAPI, pd::ffi::PDSystemEvent, u32) -> i32 =
+	eventHandlerShim;
 
 
 #[no_mangle]

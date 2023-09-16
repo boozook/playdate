@@ -11,7 +11,7 @@ use crate::common::*;
 
 fn run_build(crate_path: &Path,
              args: impl IntoIterator<Item = impl Into<OsString>>)
-             -> Result<(Output, PathBuf)> {
+             -> Result<(Output, &'static Path)> {
 	println!("crate: {}", crate_path.display());
 
 	let target_dir = target_dir();
