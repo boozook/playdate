@@ -9,6 +9,8 @@ extern crate alloc;
 extern crate pd;
 use pd::ffi::*;
 
+#[path = "../../shared.rs"]
+mod shared;
 
 pd::ll_symbols!();
 
@@ -40,6 +42,11 @@ pub extern "C" fn eventHandlerShim(api: *const PlaydateAPI, event: PDSystemEvent
 
 
 unsafe extern "C" fn on_update(_: *mut c_void) -> i32 {
+	// This is used for execution tests:
+	if let Some(s) = shared::CARGO_PLAYDATE_TEST_VALUE {
+		println!("{}{s}", shared::CARGO_PLAYDATE_TEST_VALUE_PREFIX);
+	}
+
 	check_crank_docked();
 	1
 }

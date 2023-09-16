@@ -152,7 +152,7 @@ jobs:
 
       - name: Test
         run: |
-          cargo test -p=cargo-playdate -- --nocapture --test-threads=1
+          cargo test -p=cargo-playdate -- --nocapture
           rm -rf ./target/tmp
 
   use-tool:

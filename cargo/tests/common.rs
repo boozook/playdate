@@ -13,6 +13,10 @@ use anyhow::Result;
 
 pub use playdate::compile::dylib_suffix_for_host;
 
+#[path = "./shared.rs"]
+mod shared;
+pub use shared::*;
+
 
 pub struct Tool<'p>(Cow<'p, Path>);
 
@@ -35,12 +39,14 @@ impl Tool<'_> {
 	pub fn execute<I, S>(pwd: &Path, args: I) -> Result<Output>
 		where I: IntoIterator<Item = S>,
 		      S: AsRef<OsStr> {
-		let output = Command::new(Self::path()).current_dir(pwd)
-		                                       .args(args)
-		                                       .stdout(Stdio::inherit())
-		                                       .stderr(Stdio::inherit())
-		                                       .output()?;
+		let output = Self::command().current_dir(pwd).args(args).output()?;
 		Ok(output)
+	}
+
+	pub fn command() -> Command {
+		let mut cmd = Command::new(Self::path());
+		cmd.stdout(Stdio::inherit()).stderr(Stdio::inherit());
+		cmd
 	}
 
 
@@ -94,6 +100,12 @@ pub fn simple_crates() -> Result<impl Iterator<Item = PathBuf>> {
 
 pub fn workspace() -> Result<&'static Path> {
 	let root = Path::new("tests/crates/workspace");
+	assert!(root.exists());
+	Ok(root)
+}
+
+pub fn metadata_workspace() -> Result<&'static Path> {
+	let root = Path::new("tests/crates/metadata");
 	assert!(root.exists());
 	Ok(root)
 }
