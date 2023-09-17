@@ -15,7 +15,7 @@ impl<Api: Default + api::Api> Default for Display<Api> {
 }
 
 impl<Api: Default + api::Api> Display<Api> {
-	pub fn new(api: Api) -> Self { Self(api) }
+	pub fn new() -> Self { Self(Default::default()) }
 }
 
 impl<Api: api::Api> Display<Api> {
