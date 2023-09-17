@@ -2601,7 +2601,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-display"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "playdate-sys",
 ]
@@ -2648,7 +2648,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-system"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "playdate-sys",
 ]

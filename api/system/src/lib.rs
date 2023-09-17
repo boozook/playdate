@@ -26,7 +26,7 @@ impl<Api: Default + api::Api> Default for System<Api> {
 }
 
 impl<Api: Default + api::Api> System<Api> {
-	pub fn new(api: Api) -> Self { Self(api) }
+	pub fn new() -> Self { Self(Default::default()) }
 }
 
 impl<Api: api::Api> System<Api> {
