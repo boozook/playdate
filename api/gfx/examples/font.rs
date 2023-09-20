@@ -10,7 +10,10 @@ use alloc::boxed::Box;
 
 use sys::ffi::*;
 use gfx::color::*;
+
 use gfx::bitmap;
+use gfx::bitmap::{BitmapDrawMode, BitmapFlip, BitmapFlipExt};
+
 use gfx::text;
 use gfx::text::StringEncodingExt;
 
@@ -18,18 +21,21 @@ use gfx::text::StringEncodingExt;
 const CENTER_X: u32 = LCD_COLUMNS / 2;
 const CENTER_Y: u32 = LCD_ROWS / 2;
 const TEXT_HEIGHT: u32 = 16;
+const FONT_PATH: &'static str = "/System/Fonts/Asheville-Sans-14-Bold.pft";
 
 
 /// App state
 struct State {
 	rotation: c_float,
 	image: Option<bitmap::Bitmap>,
+	font: Option<text::Font>,
 }
 
 impl State {
 	const fn new() -> Self {
 		Self { rotation: 0.,
-		       image: None }
+		       image: None,
+		       font: None }
 	}
 
 
@@ -43,7 +49,10 @@ impl State {
 		gfx::clear(Color::WHITE);
 
 		// get width (screen-size) of text
-		let text_width = gfx::text::get_text_width_cstr(cstr, ENC, None, 0);
+		let text_width = gfx::text::get_text_width_cstr(cstr, ENC, self.font.as_ref(), 0);
+
+		// set font
+		gfx::text::set_font(self.font.as_ref().unwrap());
 
 		// render text
 		gfx::text::draw_text_cstr(
@@ -74,7 +83,39 @@ impl State {
 			PDSystemEvent::kEventInit => {
 				unsafe { (*(*sys::API).display).setRefreshRate?(60.0) };
 
-				self.image = Some(bitmap::Bitmap::new(100, 100, color::Color::BLACK).unwrap());
+				let font = text::load_font(FONT_PATH).unwrap();
+				let bitmap = bitmap::Bitmap::new(100, 100, color::Color::BLACK).unwrap();
+
+				// Indexes of symbols in system representation:
+				// Note, UTF-codes is also should be acceptable.
+				const RUST: [u32; 4] = [82, 117, 115, 116];
+
+				let page = text::get_font_page(&font, RUST[0]).unwrap();
+
+				// draw some glyphs to bitmap:
+				const OFFSET: i32 = 16;
+				gfx::push_context(&bitmap);
+				for (i, code) in RUST.into_iter().enumerate() {
+					let mut advance = 0;
+					let (glyph, bitmap_ref) = text::get_page_glyph_with_bitmap(&page, code, &mut advance).unwrap();
+					let mut char = bitmap_ref.into_bitmap();
+
+					let kern = RUST.get(i + 1)
+					               .map(|next| text::get_glyph_kerning(&glyph, code, *next))
+					               .unwrap_or_default();
+
+					let w = char.bitmap_data().map(|bd| bd.width).unwrap();
+					let x = OFFSET + i as i32 * w;
+					let y = OFFSET + kern;
+
+					gfx::set_draw_mode(BitmapDrawMode::kDrawModeInverted);
+					char.draw(x as _, y as _, BitmapFlip::Unflipped);
+				}
+				gfx::pop_context();
+
+
+				self.font = font.into();
+				self.image = Some(bitmap);
 			},
 			_ => {},
 		}

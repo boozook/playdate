@@ -92,21 +92,21 @@ impl<Api: api::Api, const FOD: bool> BitmapTable<Api, FOD> {
 	/// Returns the `index` bitmap in this table,
 	/// if `index` is out of bounds, the function returns `None`.
 	///
-	/// Creates new default `BitApi`.
-	pub fn get_bitmap<'table, BitApi: BitmapApi>(&'table self, index: c_int) -> Option<Bitmap<BitApi, true>>
+	/// Creates new default api access-point.
+	pub fn get<'table, BitApi: BitmapApi>(&'table self, index: c_int) -> Option<Bitmap<BitApi, true>>
 		where Bitmap<BitApi, true>: 'table,
 		      BitApi: Default {
-		self.get_bitmap_with(BitApi::default(), index)
+		self.get_with(BitApi::default(), index)
 	}
 
 	/// Returns the `index` bitmap in this table,
 	/// if `index` is out of bounds, the function returns `None`.
 	///
-	/// Produced `Bitmap` uses passed `api` api-access.
-	pub fn get_bitmap_with<'table, BitApi: BitmapApi>(&'table self,
-	                                                  api: BitApi,
-	                                                  index: c_int)
-	                                                  -> Option<Bitmap<BitApi, true>>
+	/// Produced `Bitmap` uses passed `api` access-point.
+	pub fn get_with<'table, BitApi: BitmapApi>(&'table self,
+	                                           api: BitApi,
+	                                           index: c_int)
+	                                           -> Option<Bitmap<BitApi, true>>
 		where Bitmap<BitApi, true>: 'table
 	{
 		let f = self.1.get_table_bitmap();

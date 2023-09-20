@@ -14,6 +14,10 @@ pub enum Error {
 
 	/// Mask must be the same size as the target bitmap.
 	InvalidMask,
+
+	/// Font error.
+	/// This occurs when char or page not found.
+	Font,
 }
 
 impl fmt::Display for Error {
@@ -21,6 +25,7 @@ impl fmt::Display for Error {
 		match &self {
 			Error::Fs(err) => err.fmt(f),
 			Error::Alloc => write!(f, "Allocation failed"),
+			Error::Font => write!(f, "Font error"),
 			Error::InvalidMask => write!(f, "Mask must be the same size as the target bitmap"),
 		}
 	}

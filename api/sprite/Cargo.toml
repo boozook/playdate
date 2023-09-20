@@ -1,6 +1,6 @@
 [package]
 name = "playdate-sprite"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 readme = "README.md"
@@ -66,7 +66,7 @@ package = "playdate-sys"
 default-features = false
 
 [dependencies.gfx]
-version = "0.1"
+version = "0.2"
 path = "../gfx"
 package = "playdate-graphics"
 default-features = false

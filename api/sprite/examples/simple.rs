@@ -12,7 +12,6 @@ use alloc::boxed::Box;
 use sys::ffi::*;
 use gfx::color::*;
 use gfx::bitmap::*;
-use gfx::*;
 use sprite::*;
 
 
