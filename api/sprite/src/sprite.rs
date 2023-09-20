@@ -1,4 +1,4 @@
-//! Basic Sprite implementations.
+//! Sprite implementations.
 
 use core::ffi::c_int;
 use core::ffi::c_void;
@@ -22,6 +22,8 @@ use crate::AnySprite;
 use crate::SpriteApi;
 use crate::TypedSprite;
 use crate::api;
+
+pub use crate::ext::*;
 
 
 pub type OwnedSprite<Userdata, Api> = Sprite<Userdata, Api, true>;
@@ -487,16 +489,6 @@ impl<Userdata, Api: api::Api, const FOD: bool> Sprite<Userdata, Api, FOD> {
 	}
 
 
-	//
-	//
-	//
-	//
-	//
-
-
-	// TODO: rename to more convenient names
-
-
 	/// Marks the area of the sprite, relative to its bounds,
 	/// to be checked for collisions with other sprites' collide rects.
 	///
@@ -554,15 +546,17 @@ impl<Userdata, Api: api::Api, const FOD: bool> Sprite<Userdata, Api, FOD> {
 	/// `actual_x`, `actual_y` are set to the sprite’s position after collisions.
 	/// If no collisions occurred, this will be the same as `goal_x`, `goal_y`.
 	///
+	/// Resulting slice with entire content can be freely dropped.
+	///
 	/// Equivalent to [`sys::ffi::playdate_sprite::moveWithCollisions`]
 	#[doc(alias = "sys::ffi::playdate_sprite::moveWithCollisions")]
 	#[must_use = "Result is borrowed by C-API"]
-	pub fn move_with_collisions(&self,
-	                            goal_x: c_float,
-	                            goal_y: c_float,
-	                            actual_x: &mut c_float,
-	                            actual_y: &mut c_float)
-	                            -> &[SpriteCollisionInfo] {
+	pub fn move_with_collisions<'t>(&'t self,
+	                                goal_x: c_float,
+	                                goal_y: c_float,
+	                                actual_x: &mut c_float,
+	                                actual_y: &mut c_float)
+	                                -> &'t [SpriteCollisionInfo] {
 		let f = self.1.move_with_collisions();
 		let mut len: c_int = 0;
 		let ptr = unsafe { f(self.0, goal_x, goal_y, actual_x, actual_y, &mut len) };

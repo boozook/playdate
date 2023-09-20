@@ -265,6 +265,7 @@ impl<T: SpriteApi> SpriteApi for &'_ T {
 }
 
 
+/// Represents strictly typed sprite, includes associated user-data and free-on-drop flag.
 pub trait TypedSprite: AsRaw<Type = LCDSprite> + SpriteApi {
 	/// Associated user-data with sprite.
 	type Userdata;

@@ -1,3 +1,5 @@
+//! Playdate Bitmap API
+
 use core::ffi::c_char;
 use core::ffi::c_float;
 use core::ffi::c_int;
@@ -9,22 +11,22 @@ use sys::ffi::CString;
 use sys::ffi::LCDColor;
 use sys::ffi::LCDRect;
 use sys::ffi::LCDBitmap;
-pub use sys::ffi::LCDBitmapFlip as BitmapFlip;
-pub use sys::ffi::LCDBitmapDrawMode as BitmapDrawMode;
 use fs::Path;
-pub use color::*;
 use crate::error::ApiError;
 use crate::error::Error;
 use super::api;
 
+pub use color::*;
+pub use sys::ffi::LCDBitmapFlip as BitmapFlip;
+pub use sys::ffi::LCDBitmapDrawMode as BitmapDrawMode;
+pub use crate::{BitmapFlipExt, BitmapDrawModeExt};
+
 
 pub trait AnyBitmap: AsRaw<Type = LCDBitmap> + BitmapApi {}
-
 impl<T: AnyBitmap> AnyBitmap for &'_ T {}
-
 impl AnyBitmap for BitmapRef<'_> {}
-
 impl<Api: api::Api, const FOD: bool> AnyBitmap for Bitmap<Api, FOD> {}
+
 
 pub trait BitmapApi {
 	type Api: api::Api;
@@ -115,6 +117,7 @@ impl<'owner> BitmapRef<'owner> {
 }
 
 
+// TODO: Properly document methods of `Bitmap`.
 impl<Api: api::Api> Bitmap<Api, true> {
 	pub fn new(width: c_int, height: c_int, bg: Color) -> Result<Self, Error>
 		where Api: Default {
@@ -133,12 +136,15 @@ impl<Api: api::Api> Bitmap<Api, true> {
 	}
 
 
+	/// Load a bitmap from a file.
 	pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, ApiError>
 		where Api: Default {
 		let api = Api::default();
 		Self::load_with(api, path)
 	}
 
+	/// Load a bitmap from a file,
+	/// create new bitmap with given api-access-point.
 	pub fn load_with<P: AsRef<Path>>(api: Api, path: P) -> Result<Self, ApiError> {
 		let mut err = Box::new(core::ptr::null() as *const c_char);
 		let out_err = Box::into_raw(err);
@@ -210,7 +216,7 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 	}
 
 
-	pub fn get_bitmap_data<'bitmap>(&'bitmap mut self) -> Result<BitmapData<'bitmap>, Error> {
+	pub fn bitmap_data<'bitmap>(&'bitmap mut self) -> Result<BitmapData<'bitmap>, Error> {
 		let mut width: c_int = 0;
 		let mut height: c_int = 0;
 		let mut row_bytes: c_int = 0;
@@ -268,20 +274,22 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 		}
 	}
 
-	/// Gets a mask image for the given bitmap. If the image doesn’t have a mask, returns None.
+	/// Gets a mask image for the given bitmap.
+	/// If the image doesn’t have a mask, returns None.
 	///
 	/// Clones inner api-access.
 	#[inline(always)]
-	pub fn get_mask(&self) -> Option<Bitmap<Api, false>>
+	pub fn mask(&self) -> Option<Bitmap<Api, false>>
 		where Api: Clone {
-		self.get_mask_with(self.1.clone())
+		self.mask_with(self.1.clone())
 	}
 
-	/// Gets a mask image for the given bitmap. If the image doesn’t have a mask, returns None.
+	/// Gets a mask image for the given bitmap.
+	/// If the image doesn’t have a mask, returns None.
 	///
 	/// Produced `Bitmap` uses passed `api` api-access.
 	// XXX: investigate is it should be free-on-drop?
-	pub fn get_mask_with<NewApi: api::Api>(&self, api: NewApi) -> Option<Bitmap<NewApi, false>> {
+	pub fn mask_with<NewApi: api::Api>(&self, api: NewApi) -> Option<Bitmap<NewApi, false>> {
 		let f = self.1.get_bitmap_mask();
 		let ptr = unsafe { f(self.0) };
 		if !ptr.is_null() {
@@ -416,7 +424,14 @@ impl<'bitmap> BitmapData<'bitmap> {
 // Global Bitmap-related methods
 //
 
-pub fn get_debug_bitmap() -> Result<Bitmap<api::Default, false>, ApiError> {
+/// Only valid in the Simulator,
+/// returns the debug framebuffer as a bitmap.
+///
+/// Returns error on device.
+///
+/// Equivalent to [`sys::ffi::playdate_graphics::getDebugBitmap`].
+#[doc(alias = "sys::ffi::playdate_graphics::getDebugBitmap")]
+pub fn debug_bitmap() -> Result<Bitmap<api::Default, false>, ApiError> {
 	let f = sys::api_ok!(graphics.getDebugBitmap)?;
 	let ptr = unsafe { f() };
 	if ptr.is_null() {
@@ -426,7 +441,9 @@ pub fn get_debug_bitmap() -> Result<Bitmap<api::Default, false>, ApiError> {
 	}
 }
 
-pub fn get_display_buffer_bitmap() -> Result<Bitmap<api::Default, false>, Error> {
+/// Equivalent to [`sys::ffi::playdate_graphics::getDisplayBufferBitmap`].
+#[doc(alias = "sys::ffi::playdate_graphics::getDisplayBufferBitmap")]
+pub fn display_buffer_bitmap() -> Result<Bitmap<api::Default, false>, Error> {
 	let f = *sys::api!(graphics.getDisplayBufferBitmap);
 	let ptr = unsafe { f() };
 	if ptr.is_null() {
@@ -436,6 +453,12 @@ pub fn get_display_buffer_bitmap() -> Result<Bitmap<api::Default, false>, Error>
 	}
 }
 
+/// Returns a copy the contents of the working frame buffer as a bitmap.
+///
+/// The caller is responsible for freeing the returned bitmap, it will automatically on drop.
+///
+/// Equivalent to [`sys::ffi::playdate_graphics::copyFrameBufferBitmap`].
+#[doc(alias = "sys::ffi::playdate_graphics::copyFrameBufferBitmap")]
 pub fn copy_frame_buffer_bitmap() -> Result<Bitmap<api::Default, true>, Error> {
 	let f = *sys::api!(graphics.copyFrameBufferBitmap);
 	let ptr = unsafe { f() };
@@ -448,30 +471,71 @@ pub fn copy_frame_buffer_bitmap() -> Result<Bitmap<api::Default, true>, Error> {
 
 
 /// Sets the stencil used for drawing.
+///
 /// If the `tile` is `true` the stencil image will be tiled.
+///
 /// Tiled stencils must have width equal to a multiple of 32 pixels.
-pub fn set_stencil_tiled<Api: api::Api, const FOD: bool>(image: &Bitmap<Api, FOD>, tile: bool) {
+///
+/// Equivalent to [`sys::ffi::playdate_graphics::setStencilImage`].
+#[doc(alias = "sys::ffi::playdate_graphics::setStencilImage")]
+pub fn set_stencil_tiled(image: &impl AnyBitmap, tile: bool) {
 	let f = *sys::api!(graphics.setStencilImage);
-	unsafe { f(image.0, tile as _) };
+	unsafe { f(image.as_raw(), tile as _) };
 }
 
 /// Sets the stencil used for drawing.
 /// For a tiled stencil, use [`set_stencil_tiled`] instead.
-pub fn set_stencil<Api: api::Api, const FOD: bool>(image: &Bitmap<Api, FOD>) {
+///
+/// NOTE: Officially deprecated in favor of [`set_stencil_tiled`], which adds a `tile` flag
+///
+/// Equivalent to [`sys::ffi::playdate_graphics::setStencil`].
+#[doc(alias = "sys::ffi::playdate_graphics::setStencil")]
+pub fn set_stencil(image: &impl AnyBitmap) {
 	let f = *sys::api!(graphics.setStencil);
-	unsafe { f(image.0) };
+	unsafe { f(image.as_raw()) };
 }
 
-pub fn set_draw_mode(mode: sys::ffi::LCDBitmapDrawMode) {
+/// Sets the mode used for drawing bitmaps.
+///
+/// Note that text drawing uses bitmaps, so this affects how fonts are displayed as well.
+///
+/// Equivalent to [`sys::ffi::playdate_graphics::setDrawMode`].
+#[doc(alias = "sys::ffi::playdate_graphics::setDrawMode")]
+pub fn set_draw_mode(mode: BitmapDrawMode) {
 	let f = *sys::api!(graphics.setDrawMode);
 	unsafe { f(mode) };
 }
 
-pub fn push_context<Api: api::Api, const FOD: bool>(target: &Bitmap<Api, FOD>) {
+/// Push a new drawing context for drawing into the given bitmap.
+///
+/// If underlying ptr in the `target` is `null`, the drawing functions will use the display framebuffer.
+/// This mostly should not happen, just for note.
+///
+/// To clear entire context use [`clear_context`].
+///
+/// Equivalent to [`sys::ffi::playdate_graphics::pushContext`].
+#[doc(alias = "sys::ffi::playdate_graphics::pushContext")]
+pub fn push_context(target: &impl AnyBitmap) {
 	let f = *sys::api!(graphics.pushContext);
-	unsafe { f(target.0) };
+	unsafe { f(target.as_raw()) };
 }
 
+/// Resets drawing context for drawing into the system display framebuffer.
+///
+/// So drawing functions will use the display framebuffer.
+///
+/// Equivalent to [`sys::ffi::playdate_graphics::pushContext`].
+#[doc(alias = "sys::ffi::playdate_graphics::pushContext")]
+pub fn clear_context() {
+	let f = *sys::api!(graphics.pushContext);
+	unsafe { f(core::ptr::null_mut()) };
+}
+
+/// Pops a context off the stack (if any are left),
+/// restoring the drawing settings from before the context was pushed.
+///
+/// Equivalent to [`sys::ffi::playdate_graphics::popContext`].
+#[doc(alias = "sys::ffi::playdate_graphics::popContext")]
 pub fn pop_context() {
 	let f = *sys::api!(graphics.popContext);
 	unsafe { f() };

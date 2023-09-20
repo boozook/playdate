@@ -7,9 +7,9 @@
 
 ```bash
 # Simulator:
-cargo playdate run -p=playdate-graphics --example=bitmap --features=bindgen-runtime,bindings-derive-debug
+cargo playdate run -p=playdate-graphics --example=bitmap --features=bindgen-runtime
 # Device:
-cargo playdate run -p=playdate-graphics --example=bitmap --features=bindgen-runtime,bindings-derive-debug --device
+cargo playdate run -p=playdate-graphics --example=bitmap --features=bindgen-runtime --device
 ```
 
 More information how to use [cargo-playdate][] in help: `cargo playdate --help`.

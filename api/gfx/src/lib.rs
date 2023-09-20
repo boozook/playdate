@@ -1,3 +1,4 @@
+//! Playdate Graphics API
 #![cfg_attr(not(test), no_std)]
 #![feature(error_in_core)]
 
@@ -17,8 +18,8 @@ pub mod bitmap {
 pub use sys::ffi::LCDBitmapFlip as BitmapFlip;
 pub use sys::ffi::LCDBitmapDrawMode as BitmapDrawMode;
 
-pub use bitmap::get_debug_bitmap;
-pub use bitmap::get_display_buffer_bitmap;
+pub use bitmap::debug_bitmap;
+pub use bitmap::display_buffer_bitmap;
 pub use bitmap::copy_frame_buffer_bitmap;
 
 pub use bitmap::set_stencil;
@@ -55,6 +56,7 @@ unsafe fn as_slice_mut(buf: *mut u8) -> Result<&'static mut [u8], ApiError> {
 /// Bytes are MSB-ordered; i.e., the pixel in column 0 is the 0x80 bit of the first byte of the row.
 ///
 /// Equivalent to [`sys::ffi::playdate_graphics::getFrame`].
+#[doc(alias = "sys::ffi::playdate_graphics::getFrame")]
 pub fn get_frame() -> Result<&'static mut [u8], ApiError> {
 	let f = *sys::api!(graphics.getFrame);
 	unsafe { as_slice_mut(f()) }
@@ -65,6 +67,7 @@ pub fn get_frame() -> Result<&'static mut [u8], ApiError> {
 /// __the last completed frame__.
 ///
 /// Equivalent to [`sys::ffi::playdate_graphics::getDisplayFrame`].
+#[doc(alias = "sys::ffi::playdate_graphics::getDisplayFrame")]
 pub fn get_display_frame() -> Result<&'static mut [u8], ApiError> {
 	let f = *sys::api!(graphics.getDisplayFrame);
 	unsafe { as_slice_mut(f()) }
@@ -79,6 +82,7 @@ pub fn get_display_frame() -> Result<&'static mut [u8], ApiError> {
 /// Both `start` and `end` are __included__ in the range.
 ///
 /// Equivalent to [`sys::ffi::playdate_graphics::markUpdatedRows`].
+#[doc(alias = "sys::ffi::playdate_graphics::markUpdatedRows")]
 pub fn mark_updated_rows(start: c_int, end: c_int) {
 	let f = *sys::api!(graphics.markUpdatedRows);
 	unsafe { f(start, end) }
@@ -89,6 +93,7 @@ pub fn mark_updated_rows(start: c_int, end: c_int) {
 /// so there shouldn’t be any need to call it yourself.
 ///
 /// Equivalent to [`sys::ffi::playdate_graphics::display`].
+#[doc(alias = "sys::ffi::playdate_graphics::display")]
 pub fn display() {
 	let f = *sys::api!(graphics.display);
 	unsafe { f() }
@@ -97,6 +102,7 @@ pub fn display() {
 /// Clears the entire display, filling it with `color`.
 ///
 /// Equivalent to [`sys::ffi::playdate_graphics::clear`].
+#[doc(alias = "sys::ffi::playdate_graphics::clear")]
 #[inline(always)]
 pub fn clear(color: color::Color) { clear_raw(color.into()) }
 
@@ -108,6 +114,7 @@ pub fn clear(color: color::Color) { clear_raw(color.into()) }
 /// so this function is useful if you're working with `LCDColor` directly.
 ///
 /// Equivalent to [`sys::ffi::playdate_graphics::clear`].
+#[doc(alias = "sys::ffi::playdate_graphics::clear")]
 pub fn clear_raw(color: LCDColor) {
 	let f = *sys::api!(graphics.clear);
 	unsafe { f(color) }
@@ -116,12 +123,19 @@ pub fn clear_raw(color: LCDColor) {
 /// Sets the current clip rect in __screen__ coordinates.
 ///
 /// Equivalent to [`sys::ffi::playdate_graphics::setScreenClipRect`].
+#[doc(alias = "sys::ffi::playdate_graphics::setScreenClipRect")]
 pub fn set_screen_clip_rect(x: c_int, y: c_int, width: c_int, height: c_int) {
 	let f = *sys::api!(graphics.setScreenClipRect);
 	unsafe { f(x, y, width, height) }
 }
 
+/// Offsets the origin point for all drawing calls to `x, y` (can be negative).
+///
+/// This is useful, for example, for centering a "camera"
+/// on a sprite that is moving around a world larger than the screen.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::setDrawOffset`].
+#[doc(alias = "sys::ffi::playdate_graphics::setDrawOffset")]
 pub fn set_draw_offset(dx: c_int, dy: c_int) {
 	let f = *sys::api!(graphics.setDrawOffset);
 	unsafe { f(dx, dy) }
@@ -133,19 +147,26 @@ pub fn set_draw_offset(dx: c_int, dy: c_int) {
 /// The clip rect is cleared at the beginning of each update.
 ///
 /// Equivalent to [`sys::ffi::playdate_graphics::setClipRect`].
+#[doc(alias = "sys::ffi::playdate_graphics::setClipRect")]
 pub fn set_clip_rect(x: c_int, y: c_int, width: c_int, height: c_int) {
 	let f = *sys::api!(graphics.setClipRect);
 	unsafe { f(x, y, width, height) }
 }
 
+/// Clears the current clip rect.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::clearClipRect`].
+#[doc(alias = "sys::ffi::playdate_graphics::clearClipRect")]
 pub fn clear_clip_rect() {
 	let f = *sys::api!(graphics.clearClipRect);
 	unsafe { f() }
 }
 
-
+/// Sets the background color shown when the display is offset
+/// or for clearing dirty areas in the sprite system.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::setBackgroundColor`].
+#[doc(alias = "sys::ffi::playdate_graphics::setBackgroundColor")]
 pub fn set_background_color(color: LCDSolidColor) {
 	let f = *sys::api!(graphics.setBackgroundColor);
 	unsafe { f(color) }
@@ -163,41 +184,59 @@ pub fn set_background_color(color: LCDSolidColor) {
 /// See [https://en.wikipedia.org/wiki/Nonzero-rule](https://en.wikipedia.org/wiki/Nonzero-rule) for an explanation of the winding rule.
 ///
 /// Equivalent to [`sys::ffi::playdate_graphics::fillPolygon`].
+#[doc(alias = "sys::ffi::playdate_graphics::fillPolygon")]
 pub fn fill_polygon(num_points: c_int, coords: &mut [c_int], color: LCDColor, rule: LCDPolygonFillRule) {
 	let f = *sys::api!(graphics.fillPolygon);
 	unsafe { f(num_points, coords.as_mut_ptr(), color, rule) }
 }
 
-
+/// Draws a line from `x1, y1` to `x2, y2` with a stroke width of `width`.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::drawLine`].
+#[doc(alias = "sys::ffi::playdate_graphics::drawLine")]
 pub fn draw_line(x1: c_int, y1: c_int, x2: c_int, y2: c_int, width: c_int, color: LCDColor) {
 	let f = *sys::api!(graphics.drawLine);
 	unsafe { f(x1, y1, x2, y2, width, color) }
 }
 
-
+/// Draws a filled triangle with points at `x1, y1`, `x2, y2`, and `x3, y3`.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::fillTriangle`].
+#[doc(alias = "sys::ffi::playdate_graphics::fillTriangle")]
 pub fn fill_triangle(x1: c_int, y1: c_int, x2: c_int, y2: c_int, x3: c_int, y3: c_int, color: LCDColor) {
 	let f = *sys::api!(graphics.fillTriangle);
 	unsafe { f(x1, y1, x2, y2, x3, y3, color) }
 }
 
-
+/// Draws a `width` by `height` rect at `x, y`.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::drawRect`].
+#[doc(alias = "sys::ffi::playdate_graphics::drawRect")]
 pub fn draw_rect(x: c_int, y: c_int, width: c_int, height: c_int, color: LCDColor) {
 	let f = *sys::api!(graphics.drawRect);
 	unsafe { f(x, y, width, height, color) }
 }
 
-
+/// Draws a filled `width` by `height` rect at `x, y`.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::fillRect`].
+#[doc(alias = "sys::ffi::playdate_graphics::fillRect")]
 pub fn fill_rect(x: c_int, y: c_int, width: c_int, height: c_int, color: LCDColor) {
 	let f = *sys::api!(graphics.fillRect);
 	unsafe { f(x, y, width, height, color) }
 }
 
-
+/// Draw an ellipse stroked inside the rect.
+///
+/// Draws an ellipse inside the rectangle `x, y, width, height` of width `line_width`
+/// (inset from the rectangle bounds).
+///
+/// If `start_angle != end_angle`, this draws an arc between the given angles.
+///
+/// Angles are given in degrees, clockwise from due north.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::drawEllipse`].
+#[doc(alias = "sys::ffi::playdate_graphics::drawEllipse")]
 pub fn draw_ellipse(x: c_int,
                     y: c_int,
                     width: c_int,
@@ -210,8 +249,14 @@ pub fn draw_ellipse(x: c_int,
 	unsafe { f(x, y, width, height, line_width, start_angle, end_angle, color) }
 }
 
-
+/// Fills an ellipse inside the rectangle `x, y, width, height`.
+///
+/// If `start_angle != end_angle`, this draws a wedge/Pacman between the given angles.
+///
+/// Angles are given in degrees, clockwise from due north.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::fillEllipse`].
+#[doc(alias = "sys::ffi::playdate_graphics::fillEllipse")]
 pub fn fill_ellipse(x: c_int,
                     y: c_int,
                     width: c_int,

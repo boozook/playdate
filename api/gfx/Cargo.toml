@@ -1,6 +1,6 @@
 [package]
 name = "playdate-graphics"
-version = "0.1.4"
+version = "0.2.0"
 edition = "2021"
 
 readme = "README.md"
@@ -60,6 +60,11 @@ default-features = false
 name = "bitmap"
 crate-type = ["dylib", "staticlib"]
 path = "examples/bitmap.rs"
+
+[[example]]
+name = "font"
+crate-type = ["dylib", "staticlib"]
+path = "examples/font.rs"
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.menu"
