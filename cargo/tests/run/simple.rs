@@ -1,3 +1,5 @@
+#![allow(unexpected_cfgs)]
+
 use std::ffi::OsStr;
 use std::ffi::OsString;
 use std::fs::File;
@@ -95,6 +97,8 @@ fn test_value() -> String {
 
 
 #[test]
+#[cfg_attr(not(exec_tests),
+           ignore = "execution tests not requested, set RUSTFLAGS='--cfg exec_tests' to enable.")]
 #[cfg_attr(not(target_os = "macos"),
            ignore = "Simulator as headless works on mac and maybe on windows.")]
 fn run_metadata_workspace_root_dev() -> Result<()> {
@@ -108,6 +112,8 @@ fn run_metadata_workspace_root_dev() -> Result<()> {
 }
 
 #[test]
+#[cfg_attr(not(exec_tests),
+           ignore = "execution tests not requested, set RUSTFLAGS='--cfg exec_tests' to enable.")]
 #[cfg_attr(not(target_os = "macos"),
            ignore = "Simulator as headless works on mac and maybe on windows.")]
 fn run_metadata_workspace_root_release() -> Result<()> {
