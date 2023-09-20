@@ -14,6 +14,9 @@ pub mod bitmap {
 	pub use bitmap::*;
 }
 
+pub use sys::ffi::LCDBitmapFlip as BitmapFlip;
+pub use sys::ffi::LCDBitmapDrawMode as BitmapDrawMode;
+
 pub use bitmap::get_debug_bitmap;
 pub use bitmap::get_display_buffer_bitmap;
 pub use bitmap::copy_frame_buffer_bitmap;
@@ -219,3 +222,30 @@ pub fn fill_ellipse(x: c_int,
 	let f = *sys::api!(graphics.fillEllipse);
 	unsafe { f(x, y, width, height, start_angle, end_angle, color) }
 }
+
+
+pub trait BitmapFlipExt {
+	#![allow(non_upper_case_globals)]
+	const Unflipped: BitmapFlip = BitmapFlip::kBitmapUnflipped;
+	const FlippedX: BitmapFlip = BitmapFlip::kBitmapFlippedX;
+	const FlippedY: BitmapFlip = BitmapFlip::kBitmapFlippedY;
+	const FlippedXY: BitmapFlip = BitmapFlip::kBitmapFlippedXY;
+}
+
+impl BitmapFlipExt for BitmapFlip {}
+
+
+pub trait BitmapDrawModeExt {
+	#![allow(non_upper_case_globals)]
+	const Copy: BitmapDrawMode = BitmapDrawMode::kDrawModeCopy;
+	const WhiteTransparent: BitmapDrawMode = BitmapDrawMode::kDrawModeWhiteTransparent;
+	const BlackTransparent: BitmapDrawMode = BitmapDrawMode::kDrawModeBlackTransparent;
+	const FillWhite: BitmapDrawMode = BitmapDrawMode::kDrawModeFillWhite;
+	const FillBlack: BitmapDrawMode = BitmapDrawMode::kDrawModeFillBlack;
+	const XOR: BitmapDrawMode = BitmapDrawMode::kDrawModeXOR;
+	const NXOR: BitmapDrawMode = BitmapDrawMode::kDrawModeNXOR;
+	const Inverted: BitmapDrawMode = BitmapDrawMode::kDrawModeInverted;
+}
+
+
+impl BitmapDrawModeExt for BitmapDrawMode {}

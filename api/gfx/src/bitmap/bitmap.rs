@@ -1,13 +1,16 @@
 use core::ffi::c_char;
 use core::ffi::c_float;
 use core::ffi::c_int;
+use core::marker::PhantomData;
 use alloc::boxed::Box;
 
+use sys::traits::AsRaw;
 use sys::ffi::CString;
 use sys::ffi::LCDColor;
 use sys::ffi::LCDRect;
 use sys::ffi::LCDBitmap;
 pub use sys::ffi::LCDBitmapFlip as BitmapFlip;
+pub use sys::ffi::LCDBitmapDrawMode as BitmapDrawMode;
 use fs::Path;
 pub use color::*;
 use crate::error::ApiError;
@@ -15,9 +18,102 @@ use crate::error::Error;
 use super::api;
 
 
+pub trait AnyBitmap: AsRaw<Type = LCDBitmap> + BitmapApi {}
+
+impl<T: AnyBitmap> AnyBitmap for &'_ T {}
+
+impl AnyBitmap for BitmapRef<'_> {}
+
+impl<Api: api::Api, const FOD: bool> AnyBitmap for Bitmap<Api, FOD> {}
+
+pub trait BitmapApi {
+	type Api: api::Api;
+	fn api(&self) -> Self::Api
+		where Self::Api: Copy;
+	fn api_ref(&self) -> &Self::Api;
+}
+
+impl BitmapApi for BitmapRef<'_> {
+	type Api = api::Default;
+
+	fn api(&self) -> Self::Api
+		where Self::Api: Copy {
+		api::Default::default()
+	}
+
+	fn api_ref(&self) -> &Self::Api { &self.1 }
+}
+
+impl<Api: api::Api, const FOD: bool> BitmapApi for Bitmap<Api, FOD> {
+	type Api = Api;
+	fn api(&self) -> Api
+		where Self::Api: Copy {
+		self.1
+	}
+
+	fn api_ref(&self) -> &Self::Api { &self.1 }
+}
+
+impl<T: BitmapApi> BitmapApi for &'_ T {
+	type Api = T::Api;
+
+	fn api(&self) -> Self::Api
+		where Self::Api: Copy {
+		(*self).api()
+	}
+
+	fn api_ref(&self) -> &Self::Api { (*self).api_ref() }
+}
+
+
 #[cfg_attr(feature = "bindings-derive-debug", derive(Debug))]
 pub struct Bitmap<Api: api::Api = api::Default, const FREE_ON_DROP: bool = true>(pub(crate) *mut LCDBitmap,
                                                                                  pub(crate) Api);
+
+impl<Api: api::Api, const FOD: bool> AsRaw for Bitmap<Api, FOD> {
+	type Type = LCDBitmap;
+	unsafe fn as_raw(&self) -> *mut LCDBitmap { self.0 }
+}
+
+impl<Api: api::Api + Default, const FOD: bool> From<*mut LCDBitmap> for Bitmap<Api, FOD> {
+	fn from(ptr: *mut LCDBitmap) -> Self { Self(ptr, Api::default()) }
+}
+
+impl<Api: api::Api + Copy> Bitmap<Api, true> {
+	/// Convert this bitmap into the same bitmap that will not be freed on drop.
+	/// That means that only C-part of the bitmap will be freed.
+	///
+	/// __Safety is guaranteed by the caller.__
+	pub fn into_shared(mut self) -> Bitmap<Api, false> {
+		let res = Bitmap(self.0, self.1);
+		self.0 = core::ptr::null_mut();
+		res
+	}
+}
+
+
+#[repr(transparent)]
+pub struct BitmapRef<'owner>(*mut LCDBitmap, api::Default, PhantomData<&'owner ()>);
+
+impl AsRaw for BitmapRef<'_> {
+	type Type = LCDBitmap;
+	unsafe fn as_raw(&self) -> *mut LCDBitmap { self.0 }
+}
+
+impl From<*mut LCDBitmap> for BitmapRef<'_> {
+	fn from(ptr: *mut LCDBitmap) -> Self { Self(ptr, Default::default(), PhantomData) }
+}
+
+impl<'owner> BitmapRef<'owner> {
+	pub fn into_bitmap(self) -> Bitmap<<Self as BitmapApi>::Api, false> {
+		Bitmap(unsafe { self.as_raw() }, self.api())
+	}
+
+	pub fn into_bitmap_with<Api: api::Api>(self, api: Api) -> Bitmap<Api, false> {
+		Bitmap(unsafe { self.as_raw() }, api)
+	}
+}
+
 
 impl<Api: api::Api> Bitmap<Api, true> {
 	pub fn new(width: c_int, height: c_int, bg: Color) -> Result<Self, Error>
@@ -105,9 +201,6 @@ impl<Api: api::Api + Clone> Clone for Bitmap<Api, true> {
 		}
 	}
 }
-// impl<Api: api::Api + Clone> Clone for Bitmap<Api, false> {
-// 	fn clone(&self) -> Self { Self(self.0, self.1.clone()) }
-// }
 
 
 impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
@@ -178,7 +271,6 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 	/// Gets a mask image for the given bitmap. If the image doesn’t have a mask, returns None.
 	///
 	/// Clones inner api-access.
-	// XXX: investigate is it should be free-on-drop?
 	#[inline(always)]
 	pub fn get_mask(&self) -> Option<Bitmap<Api, false>>
 		where Api: Clone {
@@ -312,7 +404,7 @@ pub struct BitmapData<'bitmap> {
 impl<'bitmap> BitmapData<'bitmap> {
 	pub fn width(&self) -> c_int { self.width }
 	pub fn height(&self) -> c_int { self.height }
-	pub fn rowbytes(&self) -> c_int { self.row_bytes }
+	pub fn row_bytes(&self) -> c_int { self.row_bytes }
 	pub fn mask(&self) -> Option<&[u8]> { self.mask.as_deref() }
 	pub fn mask_mut(&mut self) -> Option<&mut [u8]> { self.mask.as_deref_mut() }
 	pub fn data(&self) -> &[u8] { self.data }

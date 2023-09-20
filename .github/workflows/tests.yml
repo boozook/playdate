@@ -2,7 +2,7 @@ name: Tests
 on:
   pull_request:
   push:
-    branches: [main, master]
+    branches: [main, master, "**"]
 
 env:
   CARGO_INCREMENTAL: 1
@@ -13,6 +13,18 @@ env:
   # logging:
   RUST_LOG: trace
   CARGO_PLAYDATE_LOG: trace
+  # crates lists:
+  API_CRATES: >-
+    -p=playdate-sys
+    -p=playdate-fs
+    -p=playdate-sound
+    -p=playdate-color
+    -p=playdate-controls
+    -p=playdate-menu
+    -p=playdate-graphics
+    -p=playdate-display
+    -p=playdate-system
+    -p=playdate-sprite
 
 jobs:
   api:
@@ -85,34 +97,19 @@ jobs:
           cargo test -p=playdate-sys --features=$FEATURES_1 -- --nocapture
           cargo test -p=playdate-sys --features=$FEATURES_2 -- --nocapture
 
-          cargo test -p=playdate-fs --lib --no-default-features --features=$FEATURES_1 -- --nocapture
-          cargo test -p=playdate-fs --lib --no-default-features --features=$FEATURES_2 -- --nocapture
+          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=$FEATURES_1 -- --nocapture
+          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=$FEATURES_2 -- --nocapture
 
-          cargo test -p=playdate-sound --lib --no-default-features --features=$FEATURES_1 -- --nocapture
-          cargo test -p=playdate-sound --lib --no-default-features --features=$FEATURES_2 -- --nocapture
-
-          cargo test -p=playdate-color --lib --no-default-features --features=$FEATURES_1 -- --nocapture
-          cargo test -p=playdate-color --lib --no-default-features --features=$FEATURES_2 -- --nocapture
-
-          cargo test -p=playdate-controls --lib --no-default-features --features=$FEATURES_1 -- --nocapture
-          cargo test -p=playdate-controls --lib --no-default-features --features=$FEATURES_2 -- --nocapture
-
-          cargo test -p=playdate-menu --lib --no-default-features --features=$FEATURES_1 -- --nocapture
-          cargo test -p=playdate-menu --lib --no-default-features --features=$FEATURES_2 -- --nocapture
-
-          cargo test -p=playdate-graphics --lib --no-default-features --features=$FEATURES_1 -- --nocapture
-          cargo test -p=playdate-graphics --lib --no-default-features --features=$FEATURES_2 -- --nocapture
-
-          cargo test -p=playdate-display --lib --no-default-features --features=$FEATURES_1 -- --nocapture
-          cargo test -p=playdate-display --lib --no-default-features --features=$FEATURES_2 -- --nocapture
-
-          cargo test -p=playdate-system --lib --no-default-features --features=$FEATURES_1 -- --nocapture
-          cargo test -p=playdate-system --lib --no-default-features --features=$FEATURES_2 -- --nocapture
+      - name: Check device target
+        run: |
+          # should we check with -Zbuild-std ?
+          cargo check ${{ env.API_CRATES }} --target=thumbv7em-none-eabihf
 
       - name: Examples
         run: |
           FEATURES=bindgen-runtime,bindings-derive-debug
 
+          # TODO: use ${{ env.API_CRATES }} when all crates will have example
           cargo build --target=thumbv7em-none-eabihf -p=playdate-fs --examples --features=$FEATURES -Zbuild-std
           cargo build --target=thumbv7em-none-eabihf -p=playdate-controls --examples --features=$FEATURES -Zbuild-std
           cargo build --target=thumbv7em-none-eabihf -p=playdate-color --examples --features=$FEATURES -Zbuild-std
@@ -245,7 +242,10 @@ jobs:
         with:
           path: |
             ~/.cargo
-          key: ${{ runner.os }}-cargo-tests-${{ hashFiles('Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-tests-examples-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-tests-examples-${{ hashFiles('Cargo.lock') }}
+            ${{ runner.os }}-cargo-tests-${{ hashFiles('Cargo.lock') }}
 
       - name: Config
         run: |
@@ -253,6 +253,7 @@ jobs:
           rm -rf ./target/playdate || true
           mkdir -p .cargo
           cp -rf .github/config.toml .cargo/config.toml
+          cargo clean
 
       - name: Cache LLVM
         id: cache-llvm
@@ -290,6 +291,7 @@ jobs:
         run: |
           FEATURES=bindgen-runtime,bindings-derive-debug
 
+          # TODO: use ${{ env.API_CRATES }} when all crates will have example
           cargo playdate package --simulator --device -p=playdate-sys --examples --features=$FEATURES
           cargo playdate package --simulator --device -p=playdate-fs --examples --features=$FEATURES
           cargo playdate package --simulator --device -p=playdate-controls --examples --features=$FEATURES
