@@ -217,6 +217,13 @@ jobs:
           cargo test -p=cargo-playdate -- --nocapture
           rm -rf ./target/tmp
 
+      - name: Execution Test
+        env:
+          RUSTFLAGS: --cfg exec_tests
+        run: |
+          cargo test -p=cargo-playdate run -- --nocapture
+          rm -rf ./target/tmp
+
   use-tool:
     name: Examples
     defaults:

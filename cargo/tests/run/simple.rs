@@ -43,7 +43,7 @@ fn run(crate_name: &str, crate_path: &Path, args: impl IntoIterator<Item = impl 
 	println!("cmd: {:?}", cmd);
 
 	let start = Instant::now();
-	let limit = Duration::from_secs(60 * 1);
+	let limit = Duration::from_secs(40);
 
 
 	while start.elapsed() < limit {
