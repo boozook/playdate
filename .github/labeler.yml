@@ -1,9 +1,7 @@
 api:
   - any:
-      - "api/**/*.rs"
-      - "api/**/*.toml"
-      - "components/**/*.rs"
-      - "components/**/*.toml"
+      - "api/**"
+      - "components/**"
 
 pre-built bindings:
   - any:
