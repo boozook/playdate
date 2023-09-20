@@ -104,9 +104,9 @@ impl<Api: api::Api, const FOD: bool> BitmapTable<Api, FOD> {
 	///
 	/// Produced `Bitmap` uses passed `api` access-point.
 	pub fn get_with<'table, BitApi: BitmapApi>(&'table self,
-	                                              api: BitApi,
-	                                              index: c_int)
-	                                              -> Option<Bitmap<BitApi, true>>
+	                                           api: BitApi,
+	                                           index: c_int)
+	                                           -> Option<Bitmap<BitApi, true>>
 		where Bitmap<BitApi, true>: 'table
 	{
 		let f = self.1.get_table_bitmap();
