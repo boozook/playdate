@@ -139,7 +139,7 @@ jobs:
         os:
           - macos-latest
           - ubuntu-latest
-          # - windows-latest
+          - windows-latest
         sdk:
           - latest
 
@@ -158,26 +158,6 @@ jobs:
         run: |
           mkdir -p .cargo
           cp -rf .github/config.toml .cargo/config.toml
-
-      - name: Cache LLVM
-        id: cache-llvm
-        if: runner.os == 'Windows'
-        uses: actions/cache@v3
-        with:
-          path: ${{ runner.temp }}/llvm
-          key: llvm-14.0
-
-      # See:
-      # https://github.com/rust-lang/rust-bindgen/issues/1797
-      # https://rust-lang.github.io/rust-bindgen/requirements.html#windows
-      - name: Install LLVM
-        if: runner.os == 'Windows'
-        uses: KyleMayes/install-llvm-action@v1.8.3
-        with:
-          version: "14.0"
-          directory: ${{ runner.temp }}/llvm
-          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
-          env: true
 
       - name: Install Deps
         if: runner.os == 'Windows'
