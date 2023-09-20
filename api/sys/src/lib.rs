@@ -23,6 +23,8 @@
 pub extern crate alloc;
 
 pub mod log;
+pub mod traits;
+
 mod sys;
 pub use sys::*;
 

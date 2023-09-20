@@ -13,4 +13,4 @@ jobs:
       - uses: actions/labeler@v4
         with:
           dot: false
-          sync-labels: true
+          sync-labels: false
