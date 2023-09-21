@@ -11,6 +11,7 @@ This project allows you to create games for the [Playdate handheld gaming system
   - [cargo-playdate][cargo-dir] - one-button solution to build, package and run programs
 * [Modular low- & high- level API][api-dir]
   - with [examples][ctrl-examples-dir]
+* __All the parts of API are accumulated in [One Crate][playdate-crate]__ ([git][playdate-crate-git])
 
 Welcome to [discussions][] and [issues][] for any questions and suggestions.
 Take a look at [videos](#demo) or [do something great](#usage).
@@ -92,6 +93,7 @@ There is all needed to find SDK and arm-gnu toolchain on user's system, build fl
 [cargo-playdate]: https://crates.io/crates/cargo-playdate
 [playdate-bindgen]: https://crates.io/crates/playdate-bindgen
 
+[playdate-crate-git]: https://github.com/boozook/playdate/blob/main/api/playdate
 [support-dir]: https://github.com/boozook/playdate/tree/main/support
 [cargo-dir]: https://github.com/boozook/playdate/tree/main/cargo
 [api-dir]: https://github.com/boozook/playdate/tree/main/api
