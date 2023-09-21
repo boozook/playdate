@@ -4,7 +4,6 @@ extern crate alloc;
 extern crate sys;
 
 pub extern crate menu;
-pub extern crate system;
 pub extern crate display;
 pub extern crate ctrl as controls;
 pub extern crate gfx as graphics;
