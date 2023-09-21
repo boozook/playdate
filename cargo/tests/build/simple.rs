@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::process::Output;
 use anyhow::Result;
 
-use playdate::consts::DEVICE_TARGET;
+use ::build::consts::DEVICE_TARGET;
 use crate::common::*;
 
 

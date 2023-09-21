@@ -1,7 +1,7 @@
 #![cfg(feature = "extra-codegen")]
 use std::io::Write;
 use std::path::Path;
-use playdate::toolchain::sdk::Sdk;
+use utils::toolchain::sdk::Sdk;
 use quote::ToTokens;
 use proc_macro2::TokenStream;
 

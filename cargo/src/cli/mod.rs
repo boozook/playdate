@@ -13,7 +13,7 @@ use std::str::FromStr;
 
 use clap::error::{ErrorKind, ContextKind, ContextValue};
 use clap::{Arg, ArgMatches, FromArgMatches};
-use cargo::core::Workspace;
+use cargo::core::{Workspace, VirtualManifest, WorkspaceConfig, WorkspaceRootConfig};
 use cargo::core::compiler::{CompileTarget, CompileKind};
 use cargo::ops::CompileOptions;
 use cargo::util::command_prelude::{ArgMatchesExt, CompileMode, ProfileChecking};
@@ -143,11 +143,36 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 		)?;
 
 
-		let workspace = matches.workspace(config)?;
+		let cmd = Cmd::try_from(name)?;
+
+		let workspace = if !matches!(cmd, Cmd::New | Cmd::Init) {
+			matches.workspace(config)?
+		} else {
+			// We should not create real ws for place where potentially nothing.
+			// So, lets create virtual one.
+			let cwd = env::current_dir()?;
+			let fake = cwd.join("Cargo.toml");
+			let fake_manifest =
+				VirtualManifest::new(
+				                     Default::default(),
+				                     Default::default(),
+				                     WorkspaceConfig::Root(WorkspaceRootConfig::new(
+					&cwd,
+					&Default::default(),
+					&Default::default(),
+					&Default::default(),
+					&Default::default(),
+					&Default::default(),
+				)),
+				                     Default::default(),
+				                     Default::default(),
+				                     Default::default(),
+				);
+			Workspace::new_virtual(cwd, fake, fake_manifest, config)?
+		};
 
 		log::debug!("ws target_dir: {:?}", workspace.target_dir().as_path_unlocked());
 
-		let cmd = Cmd::try_from(name)?;
 		let mut compile_options = compile_options(&cmd, matches, &workspace)?;
 
 		// add extra targets by shorthands:

@@ -61,8 +61,9 @@ Thanks to the modular structure of the system, you can use all or only the parts
 
 ### Create a Game
 
-1. Add [API-components][api-dir] as dependencies to your project
-1. Install [cargo-playdate][] to build your project
+1. Add [playdate crate][playdate-crate] as dependencies to your project
+  - Or/and [API-components][api-dir]
+2. Install [cargo-playdate][] to build your project
 
 ### Create an API-extension
 
@@ -86,6 +87,7 @@ There is all needed to find SDK and arm-gnu toolchain on user's system, build fl
 
 
 
+[playdate-crate]: https://crates.io/crates/playdate
 [playdate-sys]: https://crates.io/crates/playdate-sys
 [cargo-playdate]: https://crates.io/crates/cargo-playdate
 [playdate-bindgen]: https://crates.io/crates/playdate-bindgen

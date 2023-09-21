@@ -14,7 +14,7 @@ impl Device {
 			#[cfg(feature = "usb")]
 			let res = crate::usb::write(self, command.as_ref()).map_err(Error::from);
 			#[cfg(not(feature = "usb"))]
-			let res = Err(Error::Err("`usb` feature disabled"));
+			let res: Result<(), Error> = Err(Error::Err("`usb` feature disabled"));
 			res
 		};
 
@@ -41,7 +41,7 @@ impl Device {
 			#[cfg(feature = "usb")]
 			let res = crate::usb::read_output(self, echo).map_err(Error::from);
 			#[cfg(not(feature = "usb"))]
-			let res = Err(Error::Err("`usb` feature disabled"));
+			let res: Result<(), Error> = Err(Error::Err("`usb` feature disabled"));
 			res
 		};
 

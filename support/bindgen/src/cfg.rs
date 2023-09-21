@@ -1,5 +1,5 @@
-use playdate::toolchain::gcc::ArmToolchain;
-use playdate::toolchain::sdk::Sdk;
+use utils::toolchain::gcc::ArmToolchain;
+use utils::toolchain::sdk::Sdk;
 
 
 pub struct Config {

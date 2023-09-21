@@ -5,6 +5,8 @@
 #![feature(byte_slice_trim_ascii)]
 #![feature(const_trait_impl)]
 
+extern crate build as playdate;
+
 use std::borrow::Cow;
 
 use anyhow::bail;

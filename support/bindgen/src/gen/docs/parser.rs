@@ -19,7 +19,7 @@ use html5ever::tendril::TendrilSink;
 use html5ever::tree_builder::TreeSink;
 use markup5ever_rcdom::Handle;
 use markup5ever_rcdom::SerializableHandle;
-use playdate::toolchain::sdk::Sdk;
+use utils::toolchain::sdk::Sdk;
 
 use crate::Result;
 use super::DocsMap;

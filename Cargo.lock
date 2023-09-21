@@ -362,7 +362,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-playdate"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "anyhow",
  "byteorder",
@@ -371,7 +371,7 @@ dependencies = [
  "cargo-util",
  "clap",
  "clap_lex",
- "dirs 5.0.1",
+ "dirs",
  "env_logger",
  "fs_extra",
  "log",
@@ -737,31 +737,11 @@ dependencies = [
 
 [[package]]
 name = "dirs"
-version = "4.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca3aa72a6f96ea37bbc5aa912f6788242832f75369bdfdadcb0e38423f100059"
-dependencies = [
- "dirs-sys 0.3.7",
-]
-
-[[package]]
-name = "dirs"
 version = "5.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "44c45a9d03d6676652bcb5e724c7e988de1acad23a711b5217ab9cbecbec2225"
 dependencies = [
- "dirs-sys 0.4.1",
-]
-
-[[package]]
-name = "dirs-sys"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b1d1d91c932ef41c0f2663aa8b0ca0342d444d842c06914aa0a7e352d0bada6"
-dependencies = [
- "libc",
- "redox_users",
- "winapi",
+ "dirs-sys",
 ]
 
 [[package]]
@@ -2526,8 +2506,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "26072860ba924cbfa98ea39c8c19b4dd6a4a25423dbdf219c1eca91aa0cf6964"
 
 [[package]]
-name = "playdate-bindgen"
+name = "playdate"
 version = "0.1.0"
+dependencies = [
+ "playdate-controls",
+ "playdate-display",
+ "playdate-fs",
+ "playdate-graphics",
+ "playdate-menu",
+ "playdate-sound",
+ "playdate-sprite",
+ "playdate-sys",
+ "playdate-system",
+]
+
+[[package]]
+name = "playdate-bindgen"
+version = "0.1.1"
 dependencies = [
  "bindgen",
  "html2md",
@@ -2545,10 +2540,10 @@ dependencies = [
 
 [[package]]
 name = "playdate-build"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "crate-metadata",
- "dirs 4.0.0",
+ "dirs",
  "fs_extra",
  "log",
  "playdate-build-utils",
@@ -2562,43 +2557,43 @@ dependencies = [
 
 [[package]]
 name = "playdate-build-utils"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
- "dirs 5.0.1",
+ "dirs",
  "log",
 ]
 
 [[package]]
 name = "playdate-color"
-version = "0.1.2"
-dependencies = [
- "playdate-sys",
-]
-
-[[package]]
-name = "playdate-controls"
 version = "0.1.3"
 dependencies = [
  "playdate-sys",
 ]
 
 [[package]]
+name = "playdate-controls"
+version = "0.1.4"
+dependencies = [
+ "playdate-sys",
+]
+
+[[package]]
 name = "playdate-display"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "playdate-sys",
 ]
 
 [[package]]
 name = "playdate-fs"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "playdate-sys",
 ]
 
 [[package]]
 name = "playdate-graphics"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "playdate-color",
  "playdate-fs",
@@ -2607,14 +2602,14 @@ dependencies = [
 
 [[package]]
 name = "playdate-menu"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "playdate-sys",
 ]
 
 [[package]]
 name = "playdate-sound"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "playdate-fs",
  "playdate-sys",
@@ -2622,7 +2617,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-sprite"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "playdate-graphics",
  "playdate-sys",
@@ -2630,7 +2625,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-sys"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "heapless",
  "playdate-bindgen",
@@ -2639,14 +2634,14 @@ dependencies = [
 
 [[package]]
 name = "playdate-system"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "playdate-sys",
 ]
 
 [[package]]
 name = "playdate-tool"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "clap",
  "env_logger",
@@ -3045,9 +3040,9 @@ dependencies = [
 
 [[package]]
 name = "sha1"
-version = "0.10.5"
+version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f04293dc80c3993519f2d7f6f511707ee7094fe0c6d3406feb330cdb3540eba3"
+checksum = "e3bf829a2d51ab4a5ddf1352d8470c140cadc8301b2ae1789db023f01cedd6ba"
 dependencies = [
  "cfg-if",
  "cpufeatures",
