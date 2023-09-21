@@ -3,7 +3,7 @@ use std::io::Error as IoError;
 
 use bindgen::BindgenError;
 use semver::Error as SemverError;
-use playdate::toolchain::gcc::err::Error as GccError;
+use utils::toolchain::gcc::err::Error as GccError;
 
 
 #[derive(Debug)]

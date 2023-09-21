@@ -1,7 +1,7 @@
 use std::ffi::OsString;
 use std::path::PathBuf;
 
-use playdate::toolchain::sdk::Sdk;
+use ::build::toolchain::sdk::Sdk;
 
 use super::DeviceQuery;
 use crate::Error;

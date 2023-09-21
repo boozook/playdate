@@ -2,7 +2,7 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 
-use playdate::toolchain::sdk::Sdk;
+use ::build::toolchain::sdk::Sdk;
 
 use crate::Error;
 use crate::model::Device;
@@ -30,7 +30,7 @@ impl Device {
 
 
 pub fn mount_point(mount: &Path) -> Result<PathBuf, Error> {
-	use playdate::assets::resolver::EnvResolver;
+	use ::build::assets::resolver::EnvResolver;
 
 	let path = mount.to_str()
 	                .ok_or_else(|| Error::Error(format!("Mount point is not invalid utf-8: {}", mount.display())))

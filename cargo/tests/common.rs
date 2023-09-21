@@ -11,7 +11,7 @@ use std::process::Command;
 use std::fmt::Display;
 use anyhow::Result;
 
-pub use playdate::compile::dylib_suffix_for_host;
+pub use ::build::compile::dylib_suffix_for_host;
 
 #[path = "./shared.rs"]
 mod shared;

@@ -5,9 +5,9 @@ use std::env;
 use std::path::{Path, PathBuf};
 use bindgen::callbacks::DeriveInfo;
 use bindgen::{EnumVariation, RustTarget, Builder, MacroTypeVariation};
-use playdate::consts::*;
-use playdate::toolchain::gcc::ArmToolchain;
-use playdate::toolchain::sdk::Sdk;
+use utils::consts::*;
+use utils::toolchain::gcc::ArmToolchain;
+use utils::toolchain::sdk::Sdk;
 
 
 pub mod error;

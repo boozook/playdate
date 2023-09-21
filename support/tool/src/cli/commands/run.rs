@@ -5,7 +5,7 @@ use std::process::Command;
 use std::process::Stdio;
 use std::time::Duration;
 
-use playdate::toolchain::sdk::Sdk;
+use ::build::toolchain::sdk::Sdk;
 
 use crate::Error;
 use crate::OnDevicePath;

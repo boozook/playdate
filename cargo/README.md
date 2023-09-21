@@ -55,12 +55,17 @@ Generate new project using `new` or `init` command.
 
 ```bash
 mkdir hello-world && cd $_
-cargo playdate init --lib --full-metadata --deps="sys:git, controls:git"
+cargo playdate init --lib --full-metadata --deps="playdate"
 cargo playdate run
 ```
 
+> Note, there is more options for this commands, e.g. `--deps="sys:git, controls:git"`.
+> Run `cargo playdate new --help` for more about it.
+
 New package will be created.
+
 Take a look at the package manifest file (Cargo.toml).
+
 There is extra metadata for your playdate package.
 
 For more information about metadata read [documentation][metadata-readme].
@@ -68,9 +73,11 @@ For more information about metadata read [documentation][metadata-readme].
 [metadata-readme]: https://github.com/boozook/playdate/blob/main/support/build/README.md#assets
 
 
+<!--
 ## Crank(start) compatibility
 
-TODO
+TODO: Impl and describe compatibility with crank(start).
+-->
 
 
 ## Configuration

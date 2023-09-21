@@ -1,11 +1,7 @@
 [package]
 name = "playdate-sprite"
-version = "0.1.1"
-edition = "2021"
-
+version = "0.1.2"
 readme = "README.md"
-license = "MIT OR Apache-2.0"
-authors = ["Alex Koz <a@koz.email>"]
 description = "High-level sprite API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
 categories = [
@@ -15,8 +11,11 @@ categories = [
 	"graphics",
 	"no-std",
 ]
-homepage = "https://github.com/boozook/playdate"
-repository = "https://github.com/boozook/playdate.git"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
 
 
 [features]
@@ -59,17 +58,9 @@ bindings-documentation = [
 ]
 
 
-[dependencies.sys]
-version = "0.1"
-path = "../sys"
-package = "playdate-sys"
-default-features = false
-
-[dependencies.gfx]
-version = "0.2"
-path = "../gfx"
-package = "playdate-graphics"
-default-features = false
+[dependencies]
+sys = { workspace = true, default-features = false }
+gfx = { workspace = true, default-features = false }
 
 
 [[example]]

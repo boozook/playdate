@@ -1,17 +1,15 @@
 [package]
 name = "playdate-tool"
-version = "0.1.1"
-edition = "2021"
-
+version = "0.1.2"
 readme = "README.md"
-license = "MIT OR Apache-2.0"
-authors = ["Alex Koz <a@koz.email>"]
 description = "Tool for interaction with Playdate device and sim."
 keywords = ["playdate", "usb", "utility"]
 categories = ["development-tools", "hardware-support"]
-homepage = "https://github.com/boozook/playdate"
-repository = "https://github.com/boozook/playdate.git"
-documentation = "https://docs.rs/playdate-bindgen"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
 
 
 [[bin]]
@@ -21,40 +19,24 @@ required-features = ["cli"]
 
 
 [dependencies]
-regex = "1"
-log = "0.4"
+regex.workspace = true
+log.workspace = true
+env_logger = { workspace = true, optional = true }
 thiserror = "1.0"
 
-serde_json = "1.0"
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
 plist = "1.5"
 
-
-[dependencies.serde]
-version = "1.0"
-features = ["derive"]
-
-[dependencies.env_logger]
-version = "0.10"
-optional = true
-
-[dependencies.clap]
-version = "4.3"
-features = ["std", "env", "derive", "help", "usage", "color"]
-optional = true
+rusb = { version = "0.9", optional = true }
+usb-ids = { version = "1.2023.0", optional = true }
 
 # used assert::env-resolver and sdk
-[dependencies.playdate]
-version = "0.1"
-path = "../build"
-package = "playdate-build"
-default-features = false
+build = { workspace = true, default-features = false }
 
-[dependencies.rusb]
-version = "0.9"
-optional = true
-
-[dependencies.usb-ids]
-version = "1.2023.0"
+[dependencies.clap]
+features = ["std", "env", "derive", "help", "usage", "color"]
+workspace = true
 optional = true
 
 

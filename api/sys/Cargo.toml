@@ -1,12 +1,8 @@
 [package]
 name = "playdate-sys"
-version = "0.1.9"
-edition = "2021"
+version = "0.1.10"
 build = "src/build.rs"
-
 readme = "README.md"
-license = "MIT OR Apache-2.0"
-authors = ["Alex Koz <a@koz.email>"]
 description = "Low-level Playdate API bindings"
 keywords = ["playdate", "bindings", "ffi", "gamedev"]
 categories = [
@@ -15,9 +11,11 @@ categories = [
 	"game-development",
 	"no-std"
 ]
-homepage = "https://github.com/boozook/playdate"
-repository = "https://github.com/boozook/playdate.git"
-documentation = "https://docs.rs/playdate-sys"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
 
 
 [features]
@@ -34,7 +32,7 @@ panic-handler = []  # global panic handler
 eh-personality = [] # eh_personality for sim-targets, dummy empty no-op
 
 entry-point = [] # simple minimal proxy entry point
-error-ctx = []   # errors with context
+error-ctx = []   # errors with context (incomplete feature)
 
 # bindings build options:
 bindgen-logging = ["bindgen/logging"]
@@ -64,14 +62,13 @@ heapless = "0.7"
 
 
 [build-dependencies]
-semver = "1.0"
+semver.workspace = true
 
 # TODO: make bindgen optional:
 #       if no bindgen => use pre-built or find installed bindgen and call
 [build-dependencies.bindgen]
-package = "playdate-bindgen"
-path = "../../support/bindgen"
-version = "0.1"
+# optional = true
+workspace = true
 default-features = false
 
 

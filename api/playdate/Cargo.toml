@@ -1,0 +1,247 @@
+[package]
+name = "playdate"
+version = "0.1.0"
+readme = "README.md"
+description = "High-level Playdate API"
+keywords = ["playdate", "sdk", "api", "gamedev"]
+categories = ["game-development", "api-bindings", "no-std"]
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+
+[dependencies]
+ctrl = { workspace = true, default-features = false }
+display = { workspace = true, default-features = false }
+fs = { workspace = true, default-features = false }
+gfx = { workspace = true, default-features = false }
+menu = { workspace = true, default-features = false }
+sound = { workspace = true, default-features = false }
+sprite = { workspace = true, default-features = false }
+system = { workspace = true, default-features = false }
+sys = { workspace = true, default-features = false }
+
+
+# I have to do something with this ugly thing #
+[features]
+default = [
+	"sys/default",
+	"ctrl/default",
+	"display/default",
+	"fs/default",
+	"gfx/default",
+	"menu/default",
+	"sound/default",
+	"sprite/default",
+	"system/default",
+]
+lang-items = [
+	"sys/lang-items",
+	"ctrl/lang-items",
+	"display/lang-items",
+	"fs/lang-items",
+	"gfx/lang-items",
+	"menu/lang-items",
+	"sound/lang-items",
+	"sprite/lang-items",
+	"system/lang-items",
+]
+allocator = [
+	"sys/allocator",
+	"ctrl/allocator",
+	"display/allocator",
+	"fs/allocator",
+	"gfx/allocator",
+	"menu/allocator",
+	"sound/allocator",
+	"sprite/allocator",
+	"system/allocator",
+]
+panic-handler = [
+	"sys/panic-handler",
+	"ctrl/panic-handler",
+	"display/panic-handler",
+	"fs/panic-handler",
+	"gfx/panic-handler",
+	"menu/panic-handler",
+	"sound/panic-handler",
+	"sprite/panic-handler",
+	"system/panic-handler",
+]
+eh-personality = [
+	"sys/eh-personality",
+	"ctrl/eh-personality",
+	"display/eh-personality",
+	"fs/eh-personality",
+	"gfx/eh-personality",
+	"menu/eh-personality",
+	"sound/eh-personality",
+	"sprite/eh-personality",
+	"system/eh-personality",
+]
+error-ctx = [
+	"sys/error-ctx",
+	"ctrl/error-ctx",
+	"display/error-ctx",
+	"fs/error-ctx",
+	"gfx/error-ctx",
+	"menu/error-ctx",
+	"sound/error-ctx",
+	"sprite/error-ctx",
+	"system/error-ctx",
+]
+bindgen-runtime = [
+	"sys/bindgen-runtime",
+	"ctrl/bindgen-runtime",
+	"display/bindgen-runtime",
+	"fs/bindgen-runtime",
+	"gfx/bindgen-runtime",
+	"menu/bindgen-runtime",
+	"sound/bindgen-runtime",
+	"sprite/bindgen-runtime",
+	"system/bindgen-runtime",
+]
+bindgen-static = [
+	"sys/bindgen-static",
+	"ctrl/bindgen-static",
+	"display/bindgen-static",
+	"fs/bindgen-static",
+	"gfx/bindgen-static",
+	"menu/bindgen-static",
+	"sound/bindgen-static",
+	"sprite/bindgen-static",
+	"system/bindgen-static",
+]
+bindings-derive-default = [
+	"sys/bindings-derive-default",
+	"ctrl/bindings-derive-default",
+	"display/bindings-derive-default",
+	"fs/bindings-derive-default",
+	"gfx/bindings-derive-default",
+	"menu/bindings-derive-default",
+	"sound/bindings-derive-default",
+	"sprite/bindings-derive-default",
+	"system/bindings-derive-default",
+]
+bindings-derive-eq = [
+	"sys/bindings-derive-eq",
+	"ctrl/bindings-derive-eq",
+	"display/bindings-derive-eq",
+	"fs/bindings-derive-eq",
+	"gfx/bindings-derive-eq",
+	"menu/bindings-derive-eq",
+	"sound/bindings-derive-eq",
+	"sprite/bindings-derive-eq",
+	"system/bindings-derive-eq",
+]
+bindings-derive-copy = [
+	"sys/bindings-derive-copy",
+	"ctrl/bindings-derive-copy",
+	"display/bindings-derive-copy",
+	"fs/bindings-derive-copy",
+	"gfx/bindings-derive-copy",
+	"menu/bindings-derive-copy",
+	"sound/bindings-derive-copy",
+	"sprite/bindings-derive-copy",
+	"system/bindings-derive-copy",
+]
+bindings-derive-debug = [
+	"sys/bindings-derive-debug",
+	"ctrl/bindings-derive-debug",
+	"display/bindings-derive-debug",
+	"fs/bindings-derive-debug",
+	"gfx/bindings-derive-debug",
+	"menu/bindings-derive-debug",
+	"sound/bindings-derive-debug",
+	"sprite/bindings-derive-debug",
+	"system/bindings-derive-debug",
+]
+bindings-derive-hash = [
+	"sys/bindings-derive-hash",
+	"ctrl/bindings-derive-hash",
+	"display/bindings-derive-hash",
+	"fs/bindings-derive-hash",
+	"gfx/bindings-derive-hash",
+	"menu/bindings-derive-hash",
+	"sound/bindings-derive-hash",
+	"sprite/bindings-derive-hash",
+	"system/bindings-derive-hash",
+]
+bindings-derive-ord = [
+	"sys/bindings-derive-ord",
+	"ctrl/bindings-derive-ord",
+	"display/bindings-derive-ord",
+	"fs/bindings-derive-ord",
+	"gfx/bindings-derive-ord",
+	"menu/bindings-derive-ord",
+	"sound/bindings-derive-ord",
+	"sprite/bindings-derive-ord",
+	"system/bindings-derive-ord",
+]
+bindings-derive-partialeq = [
+	"sys/bindings-derive-partialeq",
+	"ctrl/bindings-derive-partialeq",
+	"display/bindings-derive-partialeq",
+	"fs/bindings-derive-partialeq",
+	"gfx/bindings-derive-partialeq",
+	"menu/bindings-derive-partialeq",
+	"sound/bindings-derive-partialeq",
+	"sprite/bindings-derive-partialeq",
+	"system/bindings-derive-partialeq",
+]
+bindings-derive-partialord = [
+	"sys/bindings-derive-partialord",
+	"ctrl/bindings-derive-partialord",
+	"display/bindings-derive-partialord",
+	"fs/bindings-derive-partialord",
+	"gfx/bindings-derive-partialord",
+	"menu/bindings-derive-partialord",
+	"sound/bindings-derive-partialord",
+	"sprite/bindings-derive-partialord",
+	"system/bindings-derive-partialord",
+]
+bindings-derive-constparamty = [
+	"sys/bindings-derive-constparamty",
+	"ctrl/bindings-derive-constparamty",
+	"display/bindings-derive-constparamty",
+	"fs/bindings-derive-constparamty",
+	"gfx/bindings-derive-constparamty",
+	"menu/bindings-derive-constparamty",
+	"sound/bindings-derive-constparamty",
+	"sprite/bindings-derive-constparamty",
+	"system/bindings-derive-constparamty",
+]
+bindings-documentation = [
+	"sys/bindings-documentation",
+	"ctrl/bindings-documentation",
+	"display/bindings-documentation",
+	"fs/bindings-documentation",
+	"gfx/bindings-documentation",
+	"menu/bindings-documentation",
+	"sound/bindings-documentation",
+	"sprite/bindings-documentation",
+	"system/bindings-documentation",
+]
+
+
+[package.metadata.docs.rs]
+all-features = false
+features = [
+	"bindings-derive-default",
+	"bindings-derive-eq",
+	"bindings-derive-copy",
+	"bindings-derive-debug",
+	"bindings-derive-hash",
+	"bindings-derive-ord",
+	"bindings-derive-partialeq",
+	"bindings-derive-partialord",
+]
+rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
+default-target = "thumbv7em-none-eabihf"
+cargo-args = [
+	"-Zunstable-options",
+	"-Zrustdoc-scrape-examples",
+	"-Zbuild-std=core,alloc",
+]

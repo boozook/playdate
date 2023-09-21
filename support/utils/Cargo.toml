@@ -1,22 +1,20 @@
 [package]
 name = "playdate-build-utils"
-version = "0.1.0"
-edition = "2021"
-
+version = "0.1.1"
 readme = "README.md"
-license = "MIT OR Apache-2.0"
-authors = ["Alex Koz <a@koz.email>"]
 description = "Utils that help to build program with Rust and Playdate API"
 keywords = ["playdate", "utility"]
 categories = ["development-tools::build-utils"]
-homepage = "https://github.com/boozook/playdate"
-repository = "https://github.com/boozook/playdate.git"
-documentation = "https://docs.rs/playdate-build-utils"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
 
 
 [dependencies]
-dirs = "5.0"
-log = { version = "0.4", optional = true }
+dirs.workspace = true
+log = { workspace = true, optional = true }
 
 
 [features]

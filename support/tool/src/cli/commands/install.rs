@@ -2,8 +2,8 @@ use std::path::PathBuf;
 use std::time::Duration;
 use std::process::Command;
 
-use playdate::toolchain::sdk::Sdk;
-use playdate::compile::PDX_PKG_EXT;
+use ::build::toolchain::sdk::Sdk;
+use ::build::compile::PDX_PKG_EXT;
 
 use crate::Error;
 use crate::OnDevicePath;
