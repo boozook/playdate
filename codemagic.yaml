@@ -1,0 +1,254 @@
+scripts:
+  - &rustup_minimal
+    name: Rustup
+    script: >-
+      curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal
+      --default-toolchain nightly
+      -c rustfmt
+
+  - &rustup_full
+    name: Rustup
+    script: >-
+      curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal
+      --default-toolchain nightly
+      -c rustfmt
+      -c rust-src
+      -t thumbv7em-none-eabihf
+
+  - &install_sdk
+    name: SDK
+    script: |
+      URL="https://download.panic.com/playdate_sdk/PlaydateSDK-latest.zip"
+      curl -L -sS --show-error --fail "${URL?}" -o sdk.zip
+      unzip sdk.zip
+      sudo installer -store -pkg "PlaydateSDK.pkg" -target /
+
+      echo "CFG: $(cat ~/.Playdate/config)"
+      export PLAYDATE_SDK_PATH="$(grep -E '^\s*SDKRoot' ~/.Playdate/config | head -n 1 | awk '{print $2}')"
+      echo "SDK root: $PLAYDATE_SDK_PATH"
+      echo "SDK version=$(cat $PLAYDATE_SDK_PATH/VERSION.txt)"
+      echo "PLAYDATE_SDK_PATH=$PLAYDATE_SDK_PATH" >> $CM_ENV
+
+      # clean
+      rm -rf sdk.zip
+      rm -rf PlaydateSDK.pkg
+      rm -rf __MACOSX
+
+workflows:
+  pre-gen:
+    name: Build
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    # when:
+    #   condition:
+
+    environment:
+      groups:
+        - github_credentials
+      vars:
+        FEATURES_MIN: >-
+          bindings-documentation
+          bindings-derive-debug
+        FEATURES_MAX: >-
+          bindings-documentation
+          bindings-derive-default
+          bindings-derive-eq
+          bindings-derive-copy
+          bindings-derive-debug
+          bindings-derive-hash
+          bindings-derive-ord
+          bindings-derive-partialeq
+          bindings-derive-partialord
+        PLAYDATE_SDK_PATH: ~/Developer/PlaydateSDK
+        # allow modify source for bindings generator:
+        PD_BUILD_PREBUILT: 1
+      xcode: latest
+
+    cache:
+      cache_paths:
+        - ~/.rustup
+        - ~/.cargo
+        # TODO: cache SDK installer
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: api/sys/pre-build/**
+          include: true
+          source: true
+      cancel_previous_builds: true
+
+    scripts:
+      - *rustup_minimal
+      - *install_sdk
+
+      - name: Input
+        script: |
+          echo "X: $CM_SPECIAL_REQUEST_BY_GHA"
+
+      - name: Build
+        script: |
+          source "$HOME/.cargo/env"
+
+          cargo build -p=playdate-sys --features="${FEATURES_MIN?}"
+          cargo build -p=playdate-sys --features="${FEATURES_MIN?}" --release
+          cargo build -p=playdate-sys --features="${FEATURES_MAX?}"
+          cargo build -p=playdate-sys --features="${FEATURES_MAX?}" --release
+
+      - name: Status
+        script: git status -u
+
+    publishing:
+      scripts:
+        - name: Push
+          ignore_failure: true
+          script: |
+            #!/usr/bin/env bash
+            set -e # exit on first failed command
+            set -x # print all executed commands to the log
+
+            git pull
+
+            git config --global user.name 'Alex Koz'
+            git config --global user.email 'boozook@users.noreply.github.com'
+            git remote set-url origin https://x-access-token:${GITHUB_TOKEN?}@github.com/$CM_REPO_SLUG.git
+
+            git add ./api/sys/gen/*.rs
+            git commit -m "Automated build pre-built bindings" && git push
+
+        - name: Report
+          script: |
+            echo "TODO: report to gh"
+            # if [ "$CM_GH_JOB" = "success" ]
+            # then
+            # fi
+  test:
+    name: Test
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    environment:
+      groups:
+        - github_credentials
+      vars:
+        FEATURES_MIN: >-
+          bindgen-runtime
+          bindings-derive-debug
+        FEATURES_MAX: >-
+          bindgen-runtime
+          bindings-documentation
+          bindings-derive-default
+          bindings-derive-eq
+          bindings-derive-copy
+          bindings-derive-debug
+          bindings-derive-hash
+          bindings-derive-ord
+          bindings-derive-partialeq
+          bindings-derive-partialord
+        PLAYDATE_SDK_PATH: ~/Developer/PlaydateSDK
+      xcode: latest
+
+    cache:
+      cache_paths:
+        - ~/.rustup
+        - ~/.cargo
+        - ./target
+
+    triggering:
+      events:
+        - pull_request
+      cancel_previous_builds: true
+    # when: condition: not event.pull_request.draft
+
+    scripts:
+      - *rustup_full
+      - *install_sdk
+
+      - name: Default features
+        script: |
+          source "$HOME/.cargo/env"
+
+          cargo test \
+            -p=playdate-sys \
+            -p=playdate-fs \
+            -p=playdate-sound \
+            -p=playdate-color \
+            -p=playdate-controls \
+            -p=playdate-menu \
+            -p=playdate-graphics \
+            -p=playdate-display \
+            -p=playdate-system \
+            -p=playdate-sprite \
+            -p=playdate \
+            --lib --no-default-features --features="${FEATURES_MIN?}" -- --nocapture
+
+      - name: All features
+        script: |
+          source "$HOME/.cargo/env"
+
+          cargo test \
+            -p=playdate-sys \
+            -p=playdate-fs \
+            -p=playdate-sound \
+            -p=playdate-color \
+            -p=playdate-controls \
+            -p=playdate-menu \
+            -p=playdate-graphics \
+            -p=playdate-display \
+            -p=playdate-system \
+            -p=playdate-sprite \
+            -p=playdate \
+            --lib --no-default-features --features="${FEATURES_MAX?}" -- --nocapture
+
+      - name: Build Examples
+        script: |
+          source "$HOME/.cargo/env"
+          cargo build --target=thumbv7em-none-eabihf -p=playdate-fs --examples --features="${FEATURES_MIN?}" -Zbuild-std
+          cargo build --target=thumbv7em-none-eabihf -p=playdate-controls --examples --features="${FEATURES_MIN?}" -Zbuild-std
+          cargo build --target=thumbv7em-none-eabihf -p=playdate-color --examples --features="${FEATURES_MIN?}" -Zbuild-std
+          cargo build --target=thumbv7em-none-eabihf -p=playdate-sound --examples --features="${FEATURES_MIN?}" -Zbuild-std
+          cargo build --target=thumbv7em-none-eabihf -p=playdate-menu --examples --features="${FEATURES_MIN?}" -Zbuild-std
+          cargo build --target=thumbv7em-none-eabihf -p=playdate-graphics --examples --features="${FEATURES_MIN?}" -Zbuild-std
+
+      - name: Check Tool
+        script: |
+          source "$HOME/.cargo/env"
+          cargo check --tests -p=cargo-playdate --all-features
+
+      - name: Test Tool
+        script: |
+          source "$HOME/.cargo/env"
+          cargo test -p=cargo-playdate -- --nocapture
+          rm -rf ./target/tmp
+
+      - name: Executions
+        script: |
+          source "$HOME/.cargo/env"
+          RUSTFLAGS="--cfg exec_tests" cargo test -p=cargo-playdate run -- --nocapture
+          sudo killall "Playdate Simulator"
+
+      - name: Clean
+        script: rm -rf ./target/tmp || true
+
+      - name: Install
+        script: |
+          source "$HOME/.cargo/env"
+          cargo install --path=./cargo --debug
+
+      - name: Pack Examples
+        script: |
+          source "$HOME/.cargo/env"
+          cargo playdate package --simulator --device -p=playdate-sys --examples --features="${FEATURES_MIN?}"
+          cargo playdate package --simulator --device -p=playdate-fs --examples --features="${FEATURES_MIN?}"
+          cargo playdate package --simulator --device -p=playdate-controls --examples --features="${FEATURES_MIN?}"
+          cargo playdate package --simulator --device -p=playdate-color --examples --features="${FEATURES_MIN?}"
+          cargo playdate package --simulator --device -p=playdate-sound --examples --features="${FEATURES_MIN?}"
+          cargo playdate package --simulator --device -p=playdate-menu --examples --features="${FEATURES_MIN?}"
+          cargo playdate package --simulator --device -p=playdate-graphics --examples --features="${FEATURES_MIN?}"
+
+      - name: Clean
+        script: |
+          source "$HOME/.cargo/env"
+          cargo uninstall cargo-playdate
+          rm -rf ./target/tmp || true
+          rm -rf ./target/playdate || true
