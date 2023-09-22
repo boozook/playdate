@@ -11,7 +11,7 @@ This project allows you to create games for the [Playdate handheld gaming system
   - [cargo-playdate][cargo-dir] - one-button solution to build, package and run programs
 * [Modular low- & high- level API][api-dir]
   - with [examples][ctrl-examples-dir]
-* __All the parts of API are accumulated in [One Crate][playdate-crate]__ ([git][playdate-crate-git])
+* __All the parts of API are accumulated in [One Crate][playdate-crate]__ ([here][playdate-crate-git])
 
 Welcome to [discussions][] and [issues][] for any questions and suggestions.
 Take a look at [videos](#demo) or [do something great](#usage).
