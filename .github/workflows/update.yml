@@ -115,7 +115,7 @@ jobs:
            "workflowId": "pre-gen",
            "branch": "${{ needs.new-branch.outputs.working }}",
            "labels": [ "gha" ],
-           "environment": {"variables": {"SDK_VERSION": "${{ github.event.inputs.sdk || 'latest' }}"}}
+           "environment": {"variables": {"SDK_VERSION": "2.0.0"}}
           }' |
           curl -s
           -H "Content-Type: application/json"
