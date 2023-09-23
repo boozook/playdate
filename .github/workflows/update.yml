@@ -91,79 +91,61 @@ jobs:
       base: ${{ github.event.inputs.source || steps.base.outputs.value || github.event.repository.default_branch }}
 
   pre-gen-arm:
-    # TODO: investigate how to trigger CM to use not default but specified workflow
-    # Perhaps problem is in that config missed on master yet.
-    if: false
     name: Gen (macos-arm64, all)
     defaults:
       run:
         shell: bash
     needs: new-branch
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     continue-on-error: true
-    strategy:
-      fail-fast: true
-      matrix:
-        os: [ubuntu-latest]
-        sdk:
-          - ${{ github.event.inputs.sdk || 'latest' }}
-
     steps:
       - name: Inputs
         run: |
           echo "I: SDK version: ${{ github.event.inputs.sdk }}"
-          echo "M: SDK version: ${{ matrix.sdk }}"
+          echo "M: SDK version: ${{ github.event.inputs.sdk || 'latest' }}"
           echo "Base branch: ${{ needs.new-branch.outputs.base }}"
           echo "Working branch: ${{ needs.new-branch.outputs.working }}"
 
-      - name: Trigger Codemagic
+      - name: Trigger
         id: build
-        uses: codemagic-ci-cd/trigger-codemagic-workflow-action@v1.0.0
-        with:
-          app-id: 650d74df35face92bc95f717
-          workflow-id: 650d74df35face92bc95f716
-          token: ${{ secrets.CODEMAGIC_API_TOKEN }}
-          branch: ${{ needs.new-branch.outputs.working }}
-          xcode: latest
-          # flutter: ${{ null }}
-          # cocoapods: ${{ null }}
-          # node: ${{ null }}
-          # npm: ${{ null }}
-          # ndk: ${{ null }}
-          # java: ${{ null }}
-          # ruby: ${{ null }}
-          flutter: ""
-          cocoapods: ""
-          node: ""
-          npm: ""
-          ndk: ""
-          java: ""
-          ruby: ""
-        env:
-          CM_SPECIAL_REQUEST_BY_GHA: true
+        run: >-
+          RESPONSE_JSON=$(
+          echo '{
+           "appId": "650d74df35face92bc95f717",
+           "workflowId": "pre-gen",
+           "branch": "${{ needs.new-branch.outputs.working }}",
+           "labels": [ "gha" ],
+           "environment": {"variables": {"SDK_VERSION": "${{ github.event.inputs.sdk || 'latest' }}"}}
+          }' |
+          curl -s
+          -H "Content-Type: application/json"
+          -H "x-auth-token: ${{ secrets.CODEMAGIC_API_TOKEN }}"
+          -X POST https://api.codemagic.io/builds
+          -d @- |
+          jq -Rr 'fromjson | .buildId'
+          ) &&
+          echo "build-id=$RESPONSE_JSON" >> "$GITHUB_OUTPUT" &&
+          echo "::notice title=Job URL::https://codemagic.io/app/650d74df35face92bc95f717/build/$RESPONSE_JSON"
 
       - name: Build ID
-        run: echo "${{ steps.build.outputs.build-id }}"
+        run: |
+          echo "ID: ${{ steps.build.outputs.build-id }}"
+          echo "URL: https://codemagic.io/app/650d74df35face92bc95f717/build/${{ steps.build.outputs.build-id }}"
 
-      - name: "Setup jq"
-        uses: dcarbone/install-jq-action@v2.0.0
+      - name: Wait
+        uses: TSRBerry/unstable-commands@v1
         with:
-          version: "1.7"
-
-      - name: Wait & Retry
-        uses: nick-fields/retry@v2.8.3
-        with:
-          shell: bash
-          timeout_seconds: 30
-          retry_wait_seconds: 30
-          max_attempts: 10
-          on_retry_command: echo "Retry..."
-          command: >-
-            curl -s
-              -H "Content-Type: application/json"
-              -H "x-auth-token: ${{ secrets.CODEMAGIC_API_TOKEN }}"
-              --request GET https://api.codemagic.io/builds/${{ steps.build.outputs.build-id }} |
-            jq -R 'fromjson | .build.buildActions.[] | select(.type == "finishing") | .status == "success"' --exit-status -
+          timeout-minutes: 6
+          max-retries: 20
+          retry-codes: "1"
+          commands: |
+            sleep 30 && \
+            RESPONSE=$(curl -s --fail -H "Content-Type: application/json" -H "x-auth-token: ${{ secrets.CODEMAGIC_API_TOKEN }}" --request GET "https://api.codemagic.io/builds/${{ steps.build.outputs.build-id }}")
+            JOB_STATUS=$(echo "$RESPONSE" | jq -Rr 'fromjson | .build.status' -)
+            echo "status: $JOB_STATUS"
+            JOB_STATUS_MD="External job status: [$JOB_STATUS](https://codemagic.io/app/650d74df35face92bc95f717/build/${{ steps.build.outputs.build-id }})"
+            echo "$JOB_STATUS_MD" > $GITHUB_STEP_SUMMARY
+            echo "$RESPONSE" | jq -R 'fromjson | .build.status == "finished"' --exit-status -
 
   pre-gen:
     name: Gen (${{ matrix.os }}, ${{ matrix.features.name }})
@@ -300,7 +282,7 @@ jobs:
 
   pr:
     name: Make PR
-    needs: [new-branch, pre-gen]
+    needs: [new-branch, pre-gen, pre-gen-arm]
     runs-on: ubuntu-latest
     defaults:
       run:
