@@ -127,7 +127,10 @@ jobs:
           echo "build-id=$RESPONSE_JSON" >> "$GITHUB_OUTPUT"
 
       - name: Build ID
-        run: echo "${{ steps.build.outputs.build-id }}"
+        run: |
+          JOB_STATUS_MD="[status: requested](https://codemagic.io/app/650d74df35face92bc95f717/build/${{ steps.build.outputs.build-id }})"
+          echo "$JOB_STATUS_MD" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.build.outputs.build-id }}"
 
       - name: Wait
         uses: TSRBerry/unstable-commands@v1
@@ -138,7 +141,10 @@ jobs:
           commands: |
             sleep 30 && \
             RESPONSE=$(curl -s --fail -H "Content-Type: application/json" -H "x-auth-token: ${{ secrets.CODEMAGIC_API_TOKEN }}" --request GET "https://api.codemagic.io/builds/${{ steps.build.outputs.build-id }}")
-            echo "$RESPONSE" | jq -Rr 'fromjson | .build.status' -
+            JOB_STATUS=$(echo "$RESPONSE" | jq -Rr 'fromjson | .build.status' -)
+            echo "status: $JOB_STATUS"
+            JOB_STATUS_MD="[status: $JOB_STATUS](https://codemagic.io/app/650d74df35face92bc95f717/build/${{ steps.build.outputs.build-id }})"
+            echo "$JOB_STATUS_MD" >> $GITHUB_STEP_SUMMARY
             echo "$RESPONSE" | jq -R 'fromjson | .build.status == "finished"' --exit-status -
 
   pre-gen:
