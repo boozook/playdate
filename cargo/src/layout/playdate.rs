@@ -182,6 +182,21 @@ impl PlaydateAssets<PathBuf> {
 		self.assets_plan().with_file_name(name).with_extension("json")
 	}
 
+	pub fn assets_plan_for_dev(&self, config: &Config, package: &Package) -> PathBuf {
+		let mut path = self.assets_plan_for(config, package);
+		let mut name = String::new();
+		path.file_stem().map(|stem| {
+			                name.push_str(stem.to_string_lossy().as_ref());
+		                });
+		name.push_str("-dev");
+		path.extension().map(|ext| {
+			                name.push_str(".");
+			                name.push_str(ext.to_string_lossy().as_ref());
+		                });
+		path.set_file_name(name);
+		path
+	}
+
 	fn name_for_package(config: &Config, package: &Package) -> TargetName {
 		let mut hasher = StableHasher::new();
 		let stable = package.package_id().stable_hash(config.workspace.root());
@@ -244,6 +259,16 @@ mod support {
 			create_dir_all(self.build())?;
 			Ok(())
 		}
+	}
+
+	impl<P: AsRef<Path>> PlaydateAssets<P> {
+		fn dev(&self) -> Cow<Path> { self.assets().parent().unwrap().join("dev").into() }
+
+		/// cargo-target-dir/playdate.assets/$name/dev/assets/
+		pub fn assets_dev(&self) -> Cow<Path> { self.dev().join(self.assets().file_name().unwrap()).into() }
+
+		/// cargo-target-dir/playdate.assets/$name/dev/build/
+		pub fn build_dev(&self) -> Cow<Path> { self.dev().join(self.build().file_name().unwrap()).into() }
 	}
 }
 

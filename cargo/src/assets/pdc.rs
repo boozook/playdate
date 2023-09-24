@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -11,8 +12,32 @@ use crate::config::Config;
 use crate::layout::PlaydateAssets;
 use crate::proc::logging::cmd_logged;
 
+use super::plan::AssetKind;
 
-pub fn build(config: &Config, package: &Package, layout: &PlaydateAssets<PathBuf>) -> CargoResult<()> {
+
+pub fn build(config: &Config,
+             package: &Package,
+             layout: &PlaydateAssets<PathBuf>,
+             kind: AssetKind)
+             -> CargoResult<()> {
+	let (src, build) = match kind {
+		AssetKind::Package => {
+			let src = layout.assets();
+			let build = layout.build();
+			(src, build)
+		},
+		AssetKind::Dev => {
+			let src = layout.assets_dev();
+			let build = layout.build_dev();
+			std::fs::create_dir(&build).ok();
+			(src.into(), build.into())
+		},
+	};
+
+	build_in(config, package, &src, &build, &layout.dest())
+}
+
+fn build_in(config: &Config, package: &Package, src: &Path, build: &Path, root: &Path) -> CargoResult<()> {
 	config.log()
 	      .status("Compiling", format!("assets for {}", package.package_id()));
 
@@ -20,11 +45,12 @@ pub fn build(config: &Config, package: &Package, layout: &PlaydateAssets<PathBuf
 		bail!("Build without Playdate SDK is not supported yet.");
 	}
 
-	let src = layout.assets();
-	let build = layout.build();
-	let dst = build.with_file_name(".build.pdx");
+	let prefix = src.file_name()
+	                .map(|s| format!(".{}", s.to_string_lossy()))
+	                .unwrap_or_default();
+	let dst = build.with_file_name(format!("{prefix}.build.pdx"));
 
-	soft_link_checked(&build, &dst, true, layout.dest())?;
+	soft_link_checked(&build, &dst, true, root)?;
 
 	// prepare src for pdc:
 	std::fs::write(&src.join("pdex.bin"), &[])?;

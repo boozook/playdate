@@ -22,15 +22,15 @@ pub enum Cmd {
 
 impl Cmd {
 	#[allow(dead_code)]
-	pub const ALL: &[Cmd] = &[
-	                          Self::Build,
-	                          Self::Run,
-	                          Self::New,
-	                          Self::Init,
-	                          Self::Migrate,
-	                          Self::Package,
-	                          Self::Assets,
-	                          Self::Publish,
+	pub const ALL: &'static [Cmd] = &[
+	                                  Self::Build,
+	                                  Self::Run,
+	                                  Self::New,
+	                                  Self::Init,
+	                                  Self::Migrate,
+	                                  Self::Package,
+	                                  Self::Assets,
+	                                  Self::Publish,
 	];
 
 	pub fn as_str(&self) -> &'static str {

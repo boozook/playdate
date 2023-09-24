@@ -141,6 +141,8 @@ pub mod format {
 		pub build_number: Option<String>,
 		#[serde(default = "PlayDateMetadataAssets::<T>::default")]
 		pub assets: PlayDateMetadataAssets<T>,
+		#[serde(alias = "dev-assets", rename = "dev-assets")]
+		pub dev_assets: Option<PlayDateMetadataAssets<T>>,
 		#[serde(default)]
 		pub options: Options,
 		#[serde(default)]
@@ -187,9 +189,17 @@ pub mod format {
 		fn extract_options(&mut self) -> Option<Result<AssetsOptions, Error>> {
 			match self {
 				PlayDateMetadataAssets::Map(map) => {
-					map.remove("options")
-					   .map(|v| v.try_into())
-					   .map(|res| res.map_err(Into::into))
+					// Remove only value that have `table/map` (not bool or str) type:
+					if map.get("options")
+					      .filter(|v| v.as_str().is_none() && v.as_bool().is_none())
+					      .is_some()
+					{
+						map.remove("options")
+						   .map(|v| v.try_into())
+						   .map(|res| res.map_err(Into::into))
+					} else {
+						None
+					}
 				},
 				_ => None,
 			}

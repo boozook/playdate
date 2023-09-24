@@ -310,7 +310,6 @@ struct CargoArtifact<'cfg, 'cr, Name: AsRef<str> + Debug> {
 	ck: CompileKind,
 	profile: ArtifactProfile,
 
-	#[allow(dead_code)]
 	example: bool,
 }
 
@@ -330,6 +329,8 @@ pub enum BuildProduct<'cfg> {
 
 		path: PathBuf,
 		layout: ForTargetLayout<PathBuf>,
+
+		example: bool,
 	},
 	Skip {
 		reason: String,
@@ -415,7 +416,8 @@ fn build_binary<'cfg, Layout, S>(config: &'cfg Config,
 		                        layout: pdl_ref.to_owned(),
 		                        path: product.to_path_buf().into(),
 		                        package: artifact.package,
-		                        name: artifact.name.as_ref().to_owned() }
+		                        name: artifact.name.as_ref().to_owned(),
+		                        example: artifact.example }
 	} else {
 		// Currently this case is usually unreachable, but who knows future…
 		BuildProduct::skip_as_unsupported(artifact)
@@ -519,7 +521,8 @@ fn build_library<'cfg, Layout, S>(config: &'cfg Config,
 		                        layout: pdl_ref.to_owned(),
 		                        path: product.to_path_buf().into(),
 		                        package: artifact.package,
-		                        name: artifact.name.as_ref().to_owned() }
+		                        name: artifact.name.as_ref().to_owned(),
+		                        example: artifact.example }
 	} else if artifact.ck.is_simulator() {
 		ensure!(artifact.ct.is_dynamic(), "dynamic lib expected");
 		let pdl = pdl.as_ref();
@@ -541,7 +544,8 @@ fn build_library<'cfg, Layout, S>(config: &'cfg Config,
 		                        layout: pdl.to_owned(),
 		                        path: product,
 		                        package: artifact.package,
-		                        name: artifact.name.as_ref().to_owned() }
+		                        name: artifact.name.as_ref().to_owned(),
+		                        example: artifact.example }
 	} else {
 		// Currently this case is usually unreachable, but who knows future…
 		BuildProduct::skip_as_unsupported(artifact)

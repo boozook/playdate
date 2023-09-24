@@ -268,9 +268,9 @@ jobs:
           cargo test -p=cargo-playdate -- --nocapture
           rm -rf ./target/tmp
 
+      # This test is flickering on CI 🤷🏻‍♂️
       - name: Execution
-        if: runner.os == 'macOS'
-        continue-on-error: true # this is flickering on CI 🤷🏻‍♂️
+        if: runner.os == 'macOS' && contains(github.event.head_commit.message, 'execution')
         env:
           RUSTFLAGS: --cfg exec_tests
         run: |

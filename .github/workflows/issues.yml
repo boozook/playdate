@@ -30,6 +30,17 @@ jobs:
         with:
           CLOSE_ISSUES: true
           AUTO_ASSIGN: true
+          ISSUE_TEMPLATE: |
+            {{ title }}
+            {{ url }}
+
+            {{ body }}
+
+            <details><summary>Source of this issue</summary>
+
+            {{ snippet }}
+
+            </details>
           IDENTIFIERS: >
             [
               { "name": "TODO", "labels": [] },
