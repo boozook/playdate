@@ -265,14 +265,10 @@ mod support {
 		fn dev(&self) -> Cow<Path> { self.assets().parent().unwrap().join("dev").into() }
 
 		/// cargo-target-dir/playdate.assets/$name/dev/assets/
-		pub fn assets_dev(&self) -> Cow<Path> {
-			self.dev().join(self.assets().file_name().unwrap()).into()
-		}
+		pub fn assets_dev(&self) -> Cow<Path> { self.dev().join(self.assets().file_name().unwrap()).into() }
 
 		/// cargo-target-dir/playdate.assets/$name/dev/build/
-		pub fn build_dev(&self) -> Cow<Path> {
-			self.dev().join(self.build().file_name().unwrap()).into()
-		}
+		pub fn build_dev(&self) -> Cow<Path> { self.dev().join(self.build().file_name().unwrap()).into() }
 	}
 }
 

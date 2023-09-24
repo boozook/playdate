@@ -30,7 +30,7 @@ sprite = { version = "0.1", path = "api/sprite", package = "playdate-sprite", de
 system = { version = "0.1", path = "api/system", package = "playdate-system", default-features = false }
 sys = { version = "0.1", path = "api/sys", package = "playdate-sys", default-features = false }
 
-build = { version = "0.1", path = "support/build", package = "playdate-build", default-features = false }
+build = { version = "0.2", path = "support/build", package = "playdate-build", default-features = false }
 utils = { version = "0.1", path = "support/utils", package = "playdate-build-utils", default-features = false }
 bindgen = { version = "0.1", path = "support/bindgen", package = "playdate-bindgen", default-features = false }
 tool = { version = "0.1", path = "support/tool", package = "playdate-tool" }

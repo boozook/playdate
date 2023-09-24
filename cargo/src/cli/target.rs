@@ -14,7 +14,7 @@ pub enum PlaydateTarget {
 }
 
 impl PlaydateTarget {
-	pub const ALL: &[Self] = &[Self::Device, Self::Simulator];
+	pub const ALL: &'static [Self] = &[Self::Device, Self::Simulator];
 
 	pub fn as_str(&self) -> &'static str {
 		match self {
