@@ -1,4 +1,4 @@
-//! Playdate Text API
+//! Playdate text API
 
 use core::ffi::{c_int, c_char};
 
