@@ -188,6 +188,7 @@ mod tests {
 		                   content_warning2: Default::default(),
 		                   build_number: Default::default(),
 		                   assets: Default::default(),
+		                   dev_assets: Default::default(),
 		                   options: Default::default(),
 		                   support: Default::default() }
 	}
@@ -203,6 +204,7 @@ mod tests {
 		                   content_warning2: Some("content_warning2".to_owned()),
 		                   build_number: Some("42".to_owned()),
 		                   assets: Default::default(),
+		                   dev_assets: Default::default(),
 		                   options: Default::default(),
 		                   support: Default::default() }
 	}

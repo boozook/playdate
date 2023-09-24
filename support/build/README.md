@@ -40,10 +40,15 @@ Describes where assets are stored, how and where they should be in the package.
 [package.metadata.playdate.assets]
 ```
 
-> #### Dev-Assets
-> `[package.metadata.playdate.dev-assets]`
-> Assets that for examples or tests only, inherited by main assets.
-> Not implemented yet, WiP.
+#### Dev-Assets
+
+Assets that for examples or tests only, inherited by main assets.
+
+```toml
+[package.metadata.playdate.dev-assets]
+```
+Dev assets works the same way as main assets,
+and further saying `assets` means both `assets` and `dev-assets`.
 
 
 There is two options how to set assets - list or table:
