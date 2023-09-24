@@ -1,3 +1,5 @@
+//! Playdate bitmap-table API
+
 use alloc::boxed::Box;
 use core::ffi::c_char;
 use core::ffi::c_int;
@@ -27,12 +29,21 @@ impl<Api: api::Api, const FOD: bool> Drop for BitmapTable<Api, FOD> {
 
 
 impl<Api: api::Api> BitmapTable<Api, true> {
+	/// Allocates and returns a new [`BitmapTable`] that can hold count `width` by `height` [`Bitmap`]s.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::newBitmapTable`].
+	#[doc(alias = "sys::ffi::playdate_graphics::newBitmapTable")]
 	pub fn new(count: c_int, width: c_int, height: c_int) -> Result<Self, Error>
 		where Api: Default {
 		let api = Api::default();
 		Self::new_with(api, count, width, height)
 	}
 
+	/// Allocates and returns a new [`BitmapTable`] that can hold count `width` by `height` [`Bitmap`]s,
+	/// using the given `api`.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::newBitmapTable`].
+	#[doc(alias = "sys::ffi::playdate_graphics::newBitmapTable")]
 	pub fn new_with(api: Api, count: c_int, width: c_int, height: c_int) -> Result<Self, Error> {
 		let f = api.new_bitmap_table();
 		let ptr = unsafe { f(count, width, height) };
@@ -44,12 +55,24 @@ impl<Api: api::Api> BitmapTable<Api, true> {
 	}
 
 
+	/// Allocates and returns a new [`Bitmap`] from the file at `path`.
+	///
+	/// If there is no file at `path`, the function returns error.
+	///
+	/// Calls [`sys::ffi::playdate_graphics::loadBitmapTable`].
+	#[doc(alias = "sys::ffi::playdate_graphics::loadBitmapTable")]
 	pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, ApiError>
 		where Api: Default {
 		let api = Api::default();
 		Self::load_with(api, path)
 	}
 
+	/// Allocates and returns a new [`Bitmap`] from the file at `path`.
+	///
+	/// If there is no file at `path`, the function returns error.
+	///
+	/// Calls [`sys::ffi::playdate_graphics::loadBitmapTable`].
+	#[doc(alias = "sys::ffi::playdate_graphics::loadBitmapTable")]
 	pub fn load_with<P: AsRef<Path>>(api: Api, path: P) -> Result<Self, ApiError> {
 		let mut err = Box::new(core::ptr::null() as *const c_char);
 		let out_err = Box::into_raw(err);
@@ -72,6 +95,10 @@ impl<Api: api::Api> BitmapTable<Api, true> {
 }
 
 impl<Api: api::Api, const FOD: bool> BitmapTable<Api, FOD> {
+	/// Loads the image-table at `path` into the previously allocated this table.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::loadIntoBitmapTable`].
+	#[doc(alias = "sys::ffi::playdate_graphics::loadIntoBitmapTable")]
 	pub fn load_into<P: AsRef<Path>>(&mut self, path: P) -> Result<(), ApiError> {
 		let mut err = Box::new(core::ptr::null() as *const c_char);
 		let out_err = Box::into_raw(err);
@@ -93,6 +120,9 @@ impl<Api: api::Api, const FOD: bool> BitmapTable<Api, FOD> {
 	/// if `index` is out of bounds, the function returns `None`.
 	///
 	/// Creates new default api access-point.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::getTableBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::getTableBitmap")]
 	pub fn get<'table, BitApi: BitmapApi>(&'table self, index: c_int) -> Option<Bitmap<BitApi, true>>
 		where Bitmap<BitApi, true>: 'table,
 		      BitApi: Default {
@@ -103,6 +133,9 @@ impl<Api: api::Api, const FOD: bool> BitmapTable<Api, FOD> {
 	/// if `index` is out of bounds, the function returns `None`.
 	///
 	/// Produced `Bitmap` uses passed `api` access-point.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::getTableBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::getTableBitmap")]
 	pub fn get_with<'table, BitApi: BitmapApi>(&'table self,
 	                                           api: BitApi,
 	                                           index: c_int)

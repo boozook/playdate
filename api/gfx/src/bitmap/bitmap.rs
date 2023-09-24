@@ -1,4 +1,4 @@
-//! Playdate Bitmap API
+//! Playdate bitmap API
 
 use core::ffi::c_char;
 use core::ffi::c_float;
@@ -117,14 +117,22 @@ impl<'owner> BitmapRef<'owner> {
 }
 
 
-// TODO: Properly document methods of `Bitmap`.
 impl<Api: api::Api> Bitmap<Api, true> {
+	/// Allocates and returns a new `width` by `height` Bitmap filled with `bg` color.
+	///
+	/// Calls [`sys::ffi::playdate_graphics::newBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::newBitmap")]
 	pub fn new(width: c_int, height: c_int, bg: Color) -> Result<Self, Error>
 		where Api: Default {
 		let api = Api::default();
 		Self::new_with(api, width, height, bg)
 	}
 
+	/// Allocates and returns a new `width` by `height` Bitmap filled with `bg` color,
+	/// using the given `api`.
+	///
+	/// Calls [`sys::ffi::playdate_graphics::newBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::newBitmap")]
 	pub fn new_with(api: Api, width: c_int, height: c_int, bg: Color) -> Result<Self, Error> {
 		let f = api.new_bitmap();
 		let ptr = unsafe { f(width, height, bg.into()) };
@@ -137,6 +145,9 @@ impl<Api: api::Api> Bitmap<Api, true> {
 
 
 	/// Load a bitmap from a file.
+	///
+	/// Calls [`sys::ffi::playdate_graphics::loadBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::loadBitmap")]
 	pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, ApiError>
 		where Api: Default {
 		let api = Api::default();
@@ -144,7 +155,10 @@ impl<Api: api::Api> Bitmap<Api, true> {
 	}
 
 	/// Load a bitmap from a file,
-	/// create new bitmap with given api-access-point.
+	/// create new bitmap with given `api`.
+	///
+	/// Calls [`sys::ffi::playdate_graphics::loadBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::loadBitmap")]
 	pub fn load_with<P: AsRef<Path>>(api: Api, path: P) -> Result<Self, ApiError> {
 		let mut err = Box::new(core::ptr::null() as *const c_char);
 		let out_err = Box::into_raw(err);
@@ -168,6 +182,10 @@ impl<Api: api::Api> Bitmap<Api, true> {
 
 
 impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
+	/// Load a bitmap from a file into `self`.
+	///
+	/// Calls [`sys::ffi::playdate_graphics::loadIntoBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::loadIntoBitmap")]
 	pub fn load_into<P: AsRef<Path>>(&mut self, path: P) -> Result<(), ApiError> {
 		let mut err = Box::new(core::ptr::null() as *const c_char);
 		let out_err = Box::into_raw(err);
@@ -197,6 +215,11 @@ impl<Api: api::Api, const FOD: bool> Drop for Bitmap<Api, FOD> {
 }
 
 impl<Api: api::Api + Clone> Clone for Bitmap<Api, true> {
+	/// Allocates and returns a new `Bitmap` that is an exact copy of `self`,
+	/// __not a reference__.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::copyBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::copyBitmap")]
 	fn clone(&self) -> Self {
 		let f = self.1.copy_bitmap();
 		let ptr = unsafe { f(self.0) };
@@ -210,12 +233,20 @@ impl<Api: api::Api + Clone> Clone for Bitmap<Api, true> {
 
 
 impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
+	/// Clears bitmap, filling with the given `bg` color.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::clearBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::clearBitmap")]
 	pub fn clear(&self, bg: Color) {
 		let f = self.1.clear_bitmap();
 		unsafe { f(self.0, bg.into()) };
 	}
 
 
+	/// Returns mutable borrow of bitmap-data by this bitmap.
+	///
+	/// Calls [`sys::ffi::playdate_graphics::getBitmapData`].
+	#[doc(alias = "sys::ffi::playdate_graphics::getBitmapData")]
 	pub fn bitmap_data<'bitmap>(&'bitmap mut self) -> Result<BitmapData<'bitmap>, Error> {
 		let mut width: c_int = 0;
 		let mut height: c_int = 0;
@@ -262,7 +293,11 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 	}
 
 
-	/// Sets a mask image for the given bitmap. The set mask must be the same size as the target bitmap.
+	/// Sets a mask image for the bitmap.
+	/// The set mask must be the same size as the `self` bitmap.
+	///
+	/// Calls [`sys::ffi::playdate_graphics::setBitmapMask`].
+	#[doc(alias = "sys::ffi::playdate_graphics::setBitmapMask")]
 	pub fn set_mask<Api2: api::Api, const FREE: bool>(&self, mask: &mut Bitmap<Api2, FREE>) -> Result<(), Error> {
 		// TODO: investigate is it correct "res == 0 => Ok"
 		let f = self.1.set_bitmap_mask();
@@ -278,6 +313,9 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 	/// If the image doesn’t have a mask, returns None.
 	///
 	/// Clones inner api-access.
+	///
+	/// Calls [`sys::ffi::playdate_graphics::getBitmapMask`].
+	#[doc(alias = "sys::ffi::playdate_graphics::getBitmapMask")]
 	#[inline(always)]
 	pub fn mask(&self) -> Option<Bitmap<Api, false>>
 		where Api: Clone {
@@ -288,6 +326,9 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 	/// If the image doesn’t have a mask, returns None.
 	///
 	/// Produced `Bitmap` uses passed `api` api-access.
+	///
+	/// Calls [`sys::ffi::playdate_graphics::getBitmapMask`].
+	#[doc(alias = "sys::ffi::playdate_graphics::getBitmapMask")]
 	// XXX: investigate is it should be free-on-drop?
 	pub fn mask_with<NewApi: api::Api>(&self, api: NewApi) -> Option<Bitmap<NewApi, false>> {
 		let f = self.1.get_bitmap_mask();
@@ -299,7 +340,10 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 		}
 	}
 
-	/// Returns a new, rotated and scaled Bitmap based on the given bitmap.
+	/// Returns a new, rotated and scaled Bitmap based on the bitmap.
+	///
+	/// Calls [`sys::ffi::playdate_graphics::rotatedBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::rotatedBitmap")]
 	#[inline(always)]
 	pub fn rotated_clone(&self,
 	                     rotation: c_float,
@@ -311,6 +355,10 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 		self.rotated_clone_with(self.1.clone(), rotation, x_scale, y_scale)
 	}
 
+	/// Returns a new, rotated and scaled Bitmap based on the bitmap using given `api`.
+	///
+	/// Calls [`sys::ffi::playdate_graphics::rotatedBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::rotatedBitmap")]
 	pub fn rotated_clone_with<NewApi: api::Api>(&self,
 	                                            api: NewApi,
 	                                            rotation: c_float,
@@ -332,12 +380,22 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 	}
 
 
+	/// Draws `self` with its upper-left corner at location `x`, `y`,
+	/// using the given `flip` orientation.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::drawBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::drawBitmap")]
 	#[inline(always)]
 	pub fn draw(&self, x: c_int, y: c_int, flip: BitmapFlip) {
 		let f = self.1.draw_bitmap();
 		unsafe { f(self.0, x, y, flip) }
 	}
 
+	/// Draws `self` with its upper-left corner at location `x`, `y`
+	/// __tiled inside a `width` by `height` rectangle__.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::tileBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::tileBitmap")]
 	#[inline(always)]
 	pub fn draw_tiled(&self, x: c_int, y: c_int, width: c_int, height: c_int, flip: BitmapFlip) {
 		let f = self.1.tile_bitmap();
@@ -352,6 +410,7 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 	/// * if `center_x` and `center_y` are both 0 the top left corner of the image (before rotation) is at (`x`,`y`), etc.
 	///
 	/// Equivalent to [`sys::ffi::playdate_graphics::drawRotatedBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::drawRotatedBitmap")]
 	#[inline(always)]
 	pub fn draw_rotated(&self,
 	                    x: c_int,
@@ -365,6 +424,12 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 		unsafe { f(self.0, x, y, degrees, center_x, center_y, x_scale, y_scale) }
 	}
 
+	/// Draws this bitmap scaled to `x_scale` and `y_scale` with its upper-left corner at location `x`, `y`.
+	///
+	/// Note that flip is not available when drawing scaled bitmaps but negative scale values will achieve the same effect.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::drawScaledBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::drawScaledBitmap")]
 	#[inline(always)]
 	pub fn draw_scaled(&self, x: c_int, y: c_int, x_scale: c_float, y_scale: c_float) {
 		let f = self.1.draw_scaled_bitmap();
@@ -372,8 +437,13 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 	}
 
 
-	/// Returns `true` if any of the opaque pixels in this bitmap when positioned at `x, y` with `flip` overlap any of the opaque pixels in `other` bitmap at `x_other`, `y_other` with `flip_other` within the non-empty `rect`,
+	/// Returns `true` if any of the opaque pixels in this bitmap when positioned at `x, y` with `flip`
+	/// overlap any of the opaque pixels in `other` bitmap at `x_other`, `y_other` with `flip_other`
+	/// within the non-empty `rect`,
 	/// or `false` if no pixels overlap or if one or both fall completely outside of `rect`.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::checkMaskCollision`].
+	#[doc(alias = "sys::ffi::playdate_graphics::checkMaskCollision")]
 	#[inline(always)]
 	pub fn check_mask_collision<OApi: api::Api, const OFOD: bool>(&self,
 	                                                              x: c_int,
@@ -390,8 +460,11 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 	}
 
 
-	/// Sets `color` to an 8 x 8 pattern using this bitmap.
+	/// Sets `color` to an `8 x 8` pattern using this bitmap.
 	/// `x, y` indicates the top left corner of the 8 x 8 pattern.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::setColorToPattern`].
+	#[doc(alias = "sys::ffi::playdate_graphics::setColorToPattern")]
 	pub fn set_color_to_pattern(&self, color: &mut LCDColor, x: c_int, y: c_int) {
 		let f = self.1.set_color_to_pattern();
 		unsafe { f(color as _, self.0, x, y) }
@@ -399,7 +472,9 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 }
 
 
-/// The data is 1 bit per pixel packed format, in MSB order; in other words, the high bit of the first byte in data is the top left pixel of the image.
+/// The data is 1 bit per pixel packed format, in MSB order; in other words,
+/// the high bit of the first byte in data is the top left pixel of the image.
+///
 /// The `mask` data is in same format but means transparency.
 pub struct BitmapData<'bitmap> {
 	pub width: c_int,
@@ -441,6 +516,10 @@ pub fn debug_bitmap() -> Result<Bitmap<api::Default, false>, ApiError> {
 	}
 }
 
+/// Returns a bitmap containing the contents of the display buffer.
+///
+/// __The system owns this bitmap—​do not free it.__
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::getDisplayBufferBitmap`].
 #[doc(alias = "sys::ffi::playdate_graphics::getDisplayBufferBitmap")]
 pub fn display_buffer_bitmap() -> Result<Bitmap<api::Default, false>, Error> {
