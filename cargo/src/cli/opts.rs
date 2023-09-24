@@ -61,7 +61,6 @@ pub fn special_args_for(cmd: &Cmd) -> Vec<Arg> {
 		Cmd::New => {
 			vec![
 			     flag_create_full_config(),
-			     flag_create_local_schema(),
 			     flag_create_full_metadata(),
 			     flag_create_deps_sys_only(),
 			     flag_create_deps_list(),
@@ -75,8 +74,19 @@ pub fn special_args_for(cmd: &Cmd) -> Vec<Arg> {
 
 fn shorthands_for(cmd: &Cmd) -> Vec<Arg> {
 	match cmd {
-		Cmd::Build => vec![flag_playdate_device(), flag_playdate_simulator()],
-		Cmd::Run => vec![flag_playdate_simulator().conflicts_with_all(["device", "mounting"])],
+		Cmd::Build => {
+			vec![
+			     flag_playdate_device(),
+			     flag_playdate_simulator(),
+			     flag_no_unwinding()
+			]
+		},
+		Cmd::Run => {
+			vec![
+			     flag_playdate_simulator().conflicts_with_all(["device", "mounting"]),
+			     flag_no_unwinding()
+			]
+		},
 
 		Cmd::New => vec![],
 		Cmd::Init => vec![],
@@ -176,7 +186,7 @@ fn assets() -> Command {
 	                                  .arg_build_plan()
 	                                  .arg_unit_graph()
 	                                  .arg_package_spec(
-	                                                    "Package to build (see `cargo help pkgid`)",
+	                                                    "Package to build (see `cargo help .pkgid`)",
 	                                                    "Alias for --workspace (deprecated)",
 	                                                    "Exclude packages from the build",
 	)
@@ -271,6 +281,17 @@ fn flag_zip_package() -> Arg {
 	               .action(ArgAction::SetTrue)
 }
 
+fn flag_no_unwinding() -> Arg {
+	let name = "no-unwinding";
+	const SHORT: &str =
+		"Prevents unwinding, shorthand for `panic=abort` rustc flag and `panic_immediate_abort` feature.";
+	const LONG: &str ="Prevents unwinding. Adds `-Cpanic=abort` to `RUSTFLAGS` so that build profiles do not need to specify `panic = \"abort\"` in the cargo manifest. Also adds `-Zbuild-std-features=panic_immediate_abort` to ensure that there is no `core::panicking` in the product.";
+	Arg::new(&name).long(&name)
+	               .help(SHORT)
+	               .long_help(LONG)
+	               .action(ArgAction::SetTrue)
+}
+
 fn flag_create_full_config() -> Arg {
 	let name = "full-config";
 	let help = format!("Create a full cargo config file with hardcoded link-paths that required to compile bin.");
@@ -279,18 +300,6 @@ fn flag_create_full_config() -> Arg {
 	Arg::new(&name).long(&name)
 	               .help(help)
 	               .long_help(long)
-	               .action(ArgAction::SetTrue)
-}
-
-fn flag_create_local_schema() -> Arg {
-	let name = "local-schema";
-	let help = format!("Create a local copy of schema for cargo manifest.");
-	let long = format!("{help} Needed for completions and validation for metadata part of manifest.");
-	Arg::new(&name).long(&name)
-	               .help(help)
-	               .long_help(long)
-						// XXX: default is set to true because schema is not published on schemastore.org yet.
-	               .default_value("true")
 	               .action(ArgAction::SetTrue)
 }
 

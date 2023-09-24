@@ -226,6 +226,9 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 		// zip flag for package:
 		let zip = matches.flag("zip");
 
+		// shorthand for panic behavior:
+		let prevent_unwinding = matches.flag("no-unwinding");
+
 		// path positional arg for new & init:
 		let create_path = matches._contains("path")
 		                         .then(|| matches.get_one::<PathBuf>("path").cloned())
@@ -279,6 +282,7 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 		                      mounting,
 		                      no_wait,
 		                      zip,
+		                      prevent_unwinding,
 		                      create_path,
 		                      create_full_config,
 		                      create_local_schema,

@@ -60,6 +60,9 @@ pub fn build<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<Vec<BuildProduct<'
 	// We cannot specify build-std for one target, so for all if needed for one:
 	if !has_only_nopd_targets(config)? {
 		cargo.args(["-Zbuild-std=core,alloc", "-Zunstable-options"]);
+		if config.prevent_unwinding {
+			cargo.arg("-Zbuild-std-features=panic_immediate_abort");
+		}
 	}
 	config.log().verbose(|mut log| {
 		            log.status("Cargo", args_line_for_proc(&cargo));
