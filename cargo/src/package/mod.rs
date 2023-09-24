@@ -98,9 +98,11 @@ fn package_single_target<'p>(config: &Config,
 	if let Some(assets) = assets {
 		assert_eq!(assets.package, product.package);
 		log::debug!("Preparing assets for packaging {}", product.presentable_name());
+
 		prepare_assets(
 		               config,
 		               assets,
+		               product.example,
 		               product.layout.build(),
 		               true,
 		               product.layout.root(),
@@ -212,11 +214,16 @@ fn package_multi_target<'p>(config: &Config,
 	}
 	crate::layout::Layout::prepare(&mut layout.as_mut())?;
 
+	let mut has_dev = Default::default();
 	for product in &products {
 		log::debug!("Preparing binaries for packaging {}", product.presentable_name());
 		assert_eq!(package, product.package, "package must be same");
 		let dst = layout.build().join(product.path.file_name().expect("file_name"));
 		soft_link_checked(&product.path, &dst, true, layout.as_inner().target())?;
+
+		if product.example {
+			has_dev = true;
+		}
 	}
 
 
@@ -224,7 +231,14 @@ fn package_multi_target<'p>(config: &Config,
 	if let Some(assets) = assets {
 		log::debug!("Preparing assets for packaging {}", assets.package.name());
 		assert_eq!(package, assets.package, "package must be same");
-		prepare_assets(config, assets, layout.build(), true, layout.as_inner().target())?;
+		prepare_assets(
+		               config,
+		               assets,
+		               has_dev,
+		               layout.build(),
+		               true,
+		               layout.as_inner().target(),
+		)?;
 	}
 
 	// manifest:
@@ -278,7 +292,7 @@ fn build_manifest<'l, Layout: playdate::layout::Layout>(config: &Config,
 fn execute_pdc<'l, Layout: playdate::layout::Layout>(config: &Config,
                                                      layout: &'l Layout)
                                                      -> CargoResult<Cow<'l, Path>> {
-	// TODO: mb use products[0].profile?
+	// TODO: Maybe use products[0].profile here too
 	let (optimized, debuginfo) = match config.compile_options.build_config.requested_profile.as_ref() {
 		"dev" => (false, true),
 		"release" => (true, false),
@@ -323,6 +337,7 @@ fn execute_pdc<'l, Layout: playdate::layout::Layout>(config: &Config,
 
 fn prepare_assets<Dst: AsRef<Path>>(config: &Config,
                                     assets: &AssetsArtifact,
+                                    dev: bool,
                                     dst: Dst,
                                     overwrite: bool,
                                     root: impl AsRef<Path>)
@@ -338,30 +353,52 @@ fn prepare_assets<Dst: AsRef<Path>>(config: &Config,
 			false
 		}
 	};
-	let mut files: Vec<_> = assets.layout
-	                              .build()
-	                              .read_dir()?
-	                              .filter_map(|entry| entry.ok())
-	                              .map(|entry| entry.path())
-	                              .filter(filter_hidden)
-	                              .collect();
-	if files.is_empty() {
-		log::debug!("No pre-built assets found, using original assets instead");
-		files.extend(assets.layout
-		                   .assets()
-		                   .read_dir()?
-		                   .filter_map(|entry| entry.ok())
-		                   .map(|entry| entry.path())
-		                   .filter(filter_hidden));
-	}
 
-	// link assets:
-	for src in files {
-		let dst_name = src.file_name()
-		                  .ok_or_else(|| anyhow!("Missed file name in {}", src.display()))?;
-		let dst = dst.as_ref().join(dst_name);
-		soft_link_checked(&src, &dst, overwrite, root.as_ref())?;
-		log::debug!("Asset {} prepared", src.as_relative_to_root(config).display());
+	let select_files_in = |build: &Path, assets: &Path| -> CargoResult<_> {
+		let mut files: Vec<_> = build.read_dir()?
+		                             .filter_map(|entry| entry.ok())
+		                             .map(|entry| entry.path())
+		                             .filter(filter_hidden)
+		                             .collect();
+		if files.is_empty() {
+			log::debug!("No pre-built assets found, using original assets instead");
+			files.extend(assets.read_dir()?
+			                   .filter_map(|entry| entry.ok())
+			                   .map(|entry| entry.path())
+			                   .filter(filter_hidden));
+		}
+		Ok(files)
+	};
+
+	let link_assets = |files: Vec<PathBuf>| -> CargoResult<_> {
+		for src in files {
+			let dst_name = src.file_name()
+			                  .ok_or_else(|| anyhow!("Missed file name in {}", src.display()))?;
+			let dst = dst.as_ref().join(dst_name);
+			soft_link_checked(&src, &dst, overwrite, root.as_ref())?;
+			log::debug!("Asset {} prepared", src.as_relative_to_root(config).display());
+		}
+		Ok(())
+	};
+
+
+	// Main assets:
+	let files: Vec<_> = select_files_in(&assets.layout.build(), &assets.layout.assets())?;
+	link_assets(files)?;
+
+	// Dev assets:
+	if dev {
+		let assets_dev = assets.layout.assets_dev();
+		if assets_dev.exists() {
+			let files: Vec<_> = select_files_in(&assets.layout.build_dev(), &assets_dev)?;
+			link_assets(files)?;
+		} else {
+			// That's OK, dev-assets can be missing, we doesn't create dir without need.
+			log::debug!(
+			            "Asset (dev) not found at {}",
+			            assets_dev.as_relative_to_root(config).display()
+			);
+		}
 	}
 	Ok(())
 }
@@ -381,6 +418,8 @@ struct SuccessfulBuildProduct<'cfg> {
 
 	path: PathBuf,
 	layout: ForTargetLayout<PathBuf>,
+
+	example: bool,
 }
 
 impl SuccessfulBuildProduct<'_> {
@@ -405,7 +444,8 @@ impl<'cfg> TryFrom<BuildProduct<'cfg>> for SuccessfulBuildProduct<'cfg> {
 			                        ck,
 			                        profile,
 			                        path,
-			                        layout, } => {
+			                        layout,
+			                        example, } => {
 				Ok(Self { package,
 				          name,
 				          src_ct,
@@ -413,7 +453,8 @@ impl<'cfg> TryFrom<BuildProduct<'cfg>> for SuccessfulBuildProduct<'cfg> {
 				          ck,
 				          profile,
 				          path,
-				          layout })
+				          layout,
+				          example })
 			},
 			BuildProduct::Skip { .. } => Err(()),
 		}
