@@ -29,10 +29,18 @@ impl Rustflags {
 		let host = config.host_target;
 		let device_target = CompileTarget::new(DEVICE_TARGET).expect("invalid target");
 
+		let prevent_unwinding = || -> Option<Cow<str>> {
+			if config.prevent_unwinding {
+				Some("-Cpanic=abort".into())
+			} else {
+				None
+			}
+		};
 		let bins_targeted = true; // TODO: determine from config
 		let rustflags_device = if !bins_targeted {
 			Self::rustflags_lib_playdate().into_iter()
 			                              .map(|s| Cow::from(*s))
+			                              .chain(prevent_unwinding().into_iter())
 			                              .collect()
 		} else {
 			let sdk = config.sdk()
@@ -51,6 +59,7 @@ impl Rustflags {
 			                              .chain(lib_search_paths.into_iter().map(|s| {
 				                              "-L".to_owned().add(s.to_string_lossy().as_ref()).into()
 			                              }))
+			                              .chain(prevent_unwinding().into_iter())
 			                              .collect()
 		};
 
@@ -59,6 +68,7 @@ impl Rustflags {
 		let rustflags_lib_host = || {
 			Self::rustflags_lib_host().into_iter()
 			                          .map(|s| Cow::from(*s))
+			                          .chain(prevent_unwinding().into_iter())
 			                          .collect()
 		};
 		flags.insert(CompileKind::Host, rustflags_lib_host());
