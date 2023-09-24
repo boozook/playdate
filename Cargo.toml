@@ -27,7 +27,7 @@ gfx = { version = "0.2", path = "api/gfx", package = "playdate-graphics", defaul
 menu = { version = "0.1", path = "api/menu", package = "playdate-menu", default-features = false }
 sound = { version = "0.1", path = "api/sound", package = "playdate-sound", default-features = false }
 sprite = { version = "0.1", path = "api/sprite", package = "playdate-sprite", default-features = false }
-system = { version = "0.1", path = "api/system", package = "playdate-system", default-features = false }
+system = { version = "0.2", path = "api/system", package = "playdate-system", default-features = false }
 sys = { version = "0.1", path = "api/sys", package = "playdate-sys", default-features = false }
 
 build = { version = "0.2", path = "support/build", package = "playdate-build", default-features = false }
