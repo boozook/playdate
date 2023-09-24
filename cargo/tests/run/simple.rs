@@ -99,8 +99,6 @@ fn test_value() -> String {
 #[test]
 #[cfg_attr(not(exec_tests),
            ignore = "execution tests not requested, set RUSTFLAGS='--cfg exec_tests' to enable.")]
-#[cfg_attr(not(target_os = "macos"),
-           ignore = "Simulator as headless works on mac and maybe on windows.")]
 fn run_metadata_workspace_root_dev() -> Result<()> {
 	let crate_name = "test-workspace-main-crate";
 	let args = ["--simulator", "-p", crate_name, "--lib"].into_iter()
@@ -114,8 +112,6 @@ fn run_metadata_workspace_root_dev() -> Result<()> {
 #[test]
 #[cfg_attr(not(exec_tests),
            ignore = "execution tests not requested, set RUSTFLAGS='--cfg exec_tests' to enable.")]
-#[cfg_attr(not(target_os = "macos"),
-           ignore = "Simulator as headless works on mac and maybe on windows.")]
 fn run_metadata_workspace_root_release() -> Result<()> {
 	let crate_name = "test-workspace-main-crate";
 	let args = ["--simulator", "-p", crate_name, "--lib", "--release"].into_iter()
