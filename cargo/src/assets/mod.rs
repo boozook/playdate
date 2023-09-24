@@ -1,5 +1,6 @@
+use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 
 use anyhow::bail;
 use cargo::CargoResult;
@@ -7,6 +8,7 @@ use cargo::core::{Package, Verbosity};
 use playdate::metadata::METADATA_FIELD;
 use playdate::layout::Layout;
 
+use crate::assets::plan::{AssetKind, CachedPlan};
 use crate::config::Config;
 use crate::layout::{PlaydateAssets, LayoutLockable, Layout as _, CrossTargetLayout};
 use crate::logger::LogErr;
@@ -35,7 +37,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 	let bcx = LazyBuildContext::new(&config)?;
 	let mut artifacts = AssetsArtifacts::new();
 
-	for (package, ..) in config.possible_targets()? {
+	for (package, targets, ..) in config.possible_targets()? {
 		let env = plan::LazyEnvBuilder::new(config, package);
 		let mut plans: HashMap<&Package, _> = Default::default();
 		let global_layout = CrossTargetLayout::new(config, package, None)?;
@@ -50,29 +52,67 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 			layout.clean()?;
 		}
 
+		let target_pid = package.package_id();
+		let has_dev = targets.iter()
+		                     .any(|t| t.is_example() || t.is_test() || t.is_bench());
+
 
 		log::debug!("Inspecting dependencies tree for {}", package.package_id());
 		let packages = deps_tree_metadata(package, &bcx, config)?;
 
-		// TODO: mb. instead of this, merge metadata into one?
+
+		// TODO: list deps in the plan
 
 		for (package, metadata) in packages {
 			let locked = layout.lock_mut(config.workspace.config())?;
+			let dev = has_dev && package.package_id() == target_pid;
+			let err_msg = |err| format!("{err}, caused when planning assets for {}.", package.package_id());
 
-			if let Some(plan) = plan::plan_for(config, package, &metadata, &env, &locked)? {
-				options.insert(package, metadata);
-				plans.insert(package, plan);
-			} else {
-				config.log()
-				      .verbose(|mut log| log.status("Skip", format!("{} without plan", package.package_id())));
+			match plan::plan_for(config, package, &metadata, &env, &locked, dev) {
+				// nothing to pack:
+				Ok(plan) if plan.is_empty() => {
+					config.log()
+					      .verbose(|mut log| log.status("Skip", format!("{} without plan", package.package_id())))
+					// TODO: add clean assets task for `package`/`kind`
+					// Also remove old build-plan.
+					// Here and below for error case.
+				},
+
+				// report and continue:
+				Err(err) if config.compile_options.build_config.keep_going => {
+					let msg = format!("{} Continuing because `keep-going` is set.", err_msg(&err));
+					config.log().error(msg)
+				},
+
+				// abort:
+				Err(err) => {
+					config.log().error(err_msg(&err));
+					return Err(err);
+				},
+
+				// add plan to pack:
+				Ok(plan) => {
+					// TODO: Check main/dev is empty and add clean assets task for `package`/`kind`
+					// Also remove old build-plan.
+
+					options.insert(package, metadata);
+					plans.insert(package, plan);
+				},
 			}
 		}
 
 		// report if needed:
 		if config.compile_options.build_config.emit_json() || config.compile_options.build_config.build_plan {
 			for (package, plan) in plans.iter() {
-				let message = plan.printable_serializable(&package);
-				config.workspace.config().shell().print_json(&message)?;
+				for (plan, kind) in plan.main
+				                        .as_ref()
+				                        .into_iter()
+				                        .map(|plan| (plan, AssetKind::Package))
+				                        .chain(plan.dev.as_ref().into_iter().map(|plan| (plan, AssetKind::Dev)))
+				{
+					let message = plan.printable_serializable(&package, kind);
+					config.workspace.config().shell().print_json(&message)?;
+				}
 			}
 		} else {
 			config.workspace
@@ -80,8 +120,14 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 			      .shell()
 			      .verbose(|shell| {
 				      for (package, plan) in plans.iter() {
-					      shell.status("Assets", format!("build plan for {}", package.package_id()))?;
-					      plan.pretty_print(shell, &config.workspace.root())?;
+					      for plan in plan.main
+					                      .as_ref()
+					                      .into_iter()
+					                      .chain(plan.dev.as_ref().into_iter())
+					      {
+						      shell.status("Assets", format!("build plan for {}", package.package_id()))?;
+						      plan.pretty_print(shell, &config.workspace.root())?;
+					      }
 				      }
 				      Ok(())
 			      })
@@ -89,7 +135,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 			      .ok();
 		}
 
-		/* TODO: how to resolve conflicts:
+		/* NOTE for future: how to resolve conflicts better:
 			- merge all plans, where
 			- resolve conflicts as it happening in the `build_plan()::re-mapping`:
 				e.g.: Mapping::* -> Mapping::ManyInto
@@ -99,18 +145,39 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 			// validate plans:
 			let mut has_errors = false;
 			let mut targets = HashMap::new();
-			for (package, plan) in plans.iter() {
-				for target in plan.as_inner().targets() {
-					if let Some(pid) = targets.get(&target) {
+
+			let mut check_duplicates = |package: &Package, target_kind: AssetKind, plan| {
+				for target in plan {
+					if let Some((pid, kind)) = targets.get::<Cow<Path>>(&target) {
 						has_errors = true;
+						let err_msg = |pid, kind| {
+							match kind {
+								AssetKind::Package => format!("{pid} in [assets]"),
+								AssetKind::Dev => format!("{pid} in [dev-assets]"),
+							}
+						};
+						let a = err_msg(pid, *kind);
+						let b = err_msg(&package.package_id(), target_kind);
 						let message = format!(
-						                      "Duplicate asset destination: {}, found in {:#?}",
+						                      "Duplicate dev-asset destination: '{}':\n\t{a}\n\t{b}",
 						                      target.as_relative_to_root(config).display(),
-						                      [pid, &package.package_id()]
 						);
+
 						config.log().error(message);
 					} else {
-						targets.insert(target, package.package_id());
+						targets.insert(target.to_owned(), (package.package_id(), target_kind));
+					}
+				}
+			};
+
+
+			for (package, plan) in plans.iter() {
+				if let Some(plan) = plan.main.as_ref() {
+					check_duplicates(*package, AssetKind::Package, plan.as_inner().targets());
+				}
+				if package.package_id() == target_pid {
+					if let Some(plan) = plan.dev.as_ref() {
+						check_duplicates(*package, AssetKind::Dev, plan.as_inner().targets());
 					}
 				}
 			}
@@ -125,7 +192,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 				}
 			}
 
-			// TODO: also check sources duplicates, but only warn.
+			// TODO: Also check sources duplicates, but only warn.
 		}
 
 
@@ -133,100 +200,141 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 		if !config.dry_run && !config.compile_options.build_config.build_plan && !plans.is_empty() {
 			let mut locked = layout.lock_mut(config.workspace.config())?;
 			locked.prepare()?;
-			let dest = locked.as_inner().assets();
 
-			for (dependency, plan) in plans.into_iter() {
-				if plan.difference.is_same() {
+			for (dependency, mut plan) in plans.into_iter() {
+				let apply = |plan: CachedPlan, kind| -> CargoResult<()> {
+					let dest = match kind {
+						AssetKind::Package => locked.as_inner().assets(),
+						AssetKind::Dev => locked.as_inner().assets_dev(),
+					};
+					let kind_prefix = match kind {
+						AssetKind::Package => "",
+						AssetKind::Dev => "dev-",
+					};
 					config.log().status(
-					                    "Skip",
-					                    format!(
-						"{}, cache state is {:?}",
-						dependency.package_id(),
-						&plan.difference
-					),
+					                    "Build",
+					                    format!("{kind_prefix}assets for {}", dependency.package_id()),
 					);
-					continue;
-				}
+					config.log().verbose(|mut log| {
+						            let s = format!("destination: {}", dest.as_relative_to_root(config).display());
+						            log.status("", s)
+					            });
 
 
-				config.log()
-				      .status("Build", format!("assets for {}", dependency.package_id()));
-				config.log().verbose(|mut log| {
-					            let s = format!("destination: {}", dest.as_relative_to_root(config).display());
-					            log.status("", s)
-				            });
+					let metadata = options.get(dependency).expect("Metadata is gone, impossible!");
+					let report = plan.apply(&dest, &metadata.assets_options(), config)?;
 
 
-				let metadata = options.get(dependency).expect("Metadata is gone, impossible!");
-				let report = plan.apply(&dest, &metadata.assets_options(), config)?;
+					// print report:
+					for (x, (m, results)) in report.results.iter().enumerate() {
+						let results = results.iter().enumerate();
+						let expr = m.exprs();
+						let incs = m.sources();
 
+						for (y, res) in results {
+							let path = incs[y].target();
+							let path = path.as_relative_to_root(config);
+							match res {
+								Ok(op) => {
+									config.log().verbose(|mut log| {
+										            let msg = format!("asset [{x}:{y}] {}", path.display());
+										            log.status(format!("{op:?}"), msg)
+									            })
+								},
+								Err(err) => {
+									use fs_extra::error::ErrorKind as FsExtraErrorKind;
 
-				// print report:
-				for (x, (m, results)) in report.results.iter().enumerate() {
-					let results = results.iter().enumerate();
-					let expr = m.exprs();
-					let incs = m.sources();
+									let error = match &err.kind {
+										FsExtraErrorKind::Io(err) => format!("IO: {err}"),
+										FsExtraErrorKind::StripPrefix(err) => format!("StripPrefix: {err}"),
+										FsExtraErrorKind::OsString(err) => format!("OsString: {err:?}"),
+										_ => err.to_string(),
+									};
+									let message = format!(
+									                      "Asset [{x}:{y}], rule: '{} <- {} | {}', {error}",
+									                      expr.0.original(),
+									                      expr.1.original(),
+									                      path.display()
+									);
 
-					for (y, res) in results {
-						let path = incs[y].target();
-						let path = path.as_relative_to_root(config);
-						match res {
-							Ok(op) => {
-								config.log().verbose(|mut log| {
-									            let msg = format!("asset [{x}:{y}] {}", path.display());
-									            log.status(format!("{op:?}"), msg)
-								            })
-							},
-							Err(err) => {
-								use fs_extra::error::ErrorKind as FsExtraErrorKind;
-
-								let error = match &err.kind {
-									FsExtraErrorKind::Io(err) => format!("IO: {err}"),
-									FsExtraErrorKind::StripPrefix(err) => format!("StripPrefix: {err}"),
-									FsExtraErrorKind::OsString(err) => format!("OsString: {err:?}"),
-									_ => err.to_string(),
-								};
-								let message = format!(
-								                      "Asset [{x}:{y}], rule: '{} <- {} | {}', {error}",
-								                      expr.0.original(),
-								                      expr.1.original(),
-								                      path.display()
-								);
-
-								config.log()
-								      .status_with_color("Error", message, termcolor::Color::Red)
-							},
-						};
+									config.log()
+									      .status_with_color("Error", message, termcolor::Color::Red)
+								},
+							};
+						}
 					}
-				}
 
-				if report.has_errors() {
-					if !config.compile_options.build_config.keep_going {
-						bail!("Assets build failed.");
-					}
-				}
-
-
-				// finally build with pdc:
-				match pdc::build(config, dependency, locked.as_inner()) {
-					Ok(_) => {
-						config.log()
-						      .status("Finished", format!("assets for {}", dependency.package_id()));
-					},
-					Err(err) => {
-						let message = format!("build with pdc failed: {err}");
-						config.log()
-						      .status_with_color("Error", message, termcolor::Color::Red);
+					if report.has_errors() {
 						if !config.compile_options.build_config.keep_going {
 							bail!("Assets build failed.");
 						}
-					},
+					}
+
+
+					// finally build with pdc:
+					match pdc::build(config, dependency, locked.as_inner(), kind) {
+						Ok(_) => {
+							config.log().status(
+							                    "Finished",
+							                    format!("{kind_prefix}assets for {}", dependency.package_id()),
+							);
+						},
+						Err(err) => {
+							let message = format!("build with pdc failed: {err}");
+							config.log()
+							      .status_with_color("Error", message, termcolor::Color::Red);
+							if !config.compile_options.build_config.keep_going {
+								bail!("Assets build failed.");
+							}
+						},
+					}
+
+					Ok(())
+				};
+
+				// main:
+				let mut main_cache_hit = false;
+				if dependency.package_id() == target_pid {
+					if let Some(plan) = plan.main.take() {
+						if plan.difference.is_same() {
+							config.log().status(
+							                    "Skip",
+							                    format!(
+								"{}, cache state is {:?}",
+								dependency.package_id(),
+								&plan.difference
+							),
+							);
+							main_cache_hit = true;
+							// continue;
+						}
+
+						apply(plan, AssetKind::Package)?;
+					}
+				}
+
+				// dev:
+				if dependency.package_id() == target_pid {
+					if let Some(plan) = plan.dev.take() {
+						if main_cache_hit && plan.difference.is_same() {
+							config.log().status(
+							                    "Skip",
+							                    format!(
+								"{} (dev), cache state is {:?}",
+								dependency.package_id(),
+								&plan.difference
+							),
+							);
+							continue;
+						}
+
+						apply(plan, AssetKind::Dev)?;
+					}
 				}
 			}
 
 			locked.unlock();
 
-			// TODO: if has no errors
 			log::debug!(
 			            "Assets artifact for {} at {}",
 			            package.package_id(),
@@ -268,7 +376,7 @@ fn deps_tree_metadata<'cfg: 'r, 't: 'r, 'r>(package: &'cfg Package,
 
 			let bcx = bcx.get()?;
 
-			// TODO: cache hash of bcx.unit_graph?
+			// TODO: Cache hash of bcx.unit_graph in the assets-build-plan
 
 			// find this package in roots:
 			let root = bcx.unit_graph

@@ -47,7 +47,7 @@ impl<'a, 'cfg> LazyEnvBuilder<'a, 'cfg> {
 			        }
 
 			        let mut env = Env::from_iter(vars.into_iter()).map_err(|err| anyhow::anyhow!("{err}"))?;
-			        // TODO: add invocation environment
+
 			        // add global environment:
 			        for (k, v) in std::env::vars() {
 				        if !env.vars.contains_key(&k) {
@@ -69,24 +69,81 @@ pub fn plan_for<'cfg, 'env, 'l>(config: &'cfg Config,
                                 package: &'cfg Package,
                                 metadata: &TomlMetadata,
                                 env: &'cfg LazyEnvBuilder<'env, 'cfg>,
-                                layout: &'l LockedLayout<'l>)
-                                -> CargoResult<Option<CachedPlan<'env, 'cfg>>> {
+                                layout: &'l LockedLayout<'l>,
+                                with_dev: bool)
+                                -> CargoResult<PackageAssetsPlan<'env, 'cfg>> {
 	let opts = metadata.assets_options();
-	if !metadata.assets.is_empty() {
-		let env = env.get()?;
-		let root = package.manifest_path()
-		                  .parent()
-		                  .ok_or(anyhow!("No parent of manifest-path"))?;
+
+	let has_dev_assets = with_dev && metadata.dev_assets.iter().any(|t| !t.is_empty());
+	let is_empty = metadata.assets.is_empty() && !has_dev_assets;
+
+	if is_empty {
+		return Ok(PackageAssetsPlan { main: None,
+		                              dev: None });
+	}
+
+	let env = env.get()?;
+	let root = package.manifest_path()
+	                  .parent()
+	                  .ok_or(anyhow!("No parent of manifest-path"))?;
+
+	let main = if !metadata.assets.is_empty() {
 		let plan = assets_build_plan(&env, &metadata.assets, opts.as_ref(), Some(root))?;
+
+		// main-assets plan:
 		let path = layout.as_inner().assets_plan_for(config, package);
 		let mut cached = CachedPlan::new(path, plan)?;
 		if config.compile_options.build_config.force_rebuild {
 			cached.difference = Difference::Missing;
 		}
-		Ok(Some(cached))
+
+		Some(cached)
 	} else {
-		Ok(None)
-	}
+		None
+	};
+
+
+	// dev-assets plan:
+	let dev = if has_dev_assets && metadata.dev_assets.is_some() {
+		let assets = metadata.dev_assets.as_ref().unwrap();
+		let dev_plan = assets_build_plan(&env, assets, opts.as_ref(), Some(root))?;
+
+		let path = layout.as_inner().assets_plan_for_dev(config, package);
+		let mut dev_cached = CachedPlan::new(path, dev_plan)?;
+
+		// Inheritance, if main is stale or missing - this one is too:
+		if let Some(main) = main.as_ref() {
+			if !matches!(main.difference, Difference::Same) {
+				dev_cached.difference = main.difference;
+			}
+		}
+
+		dev_cached.into()
+	} else {
+		None
+	};
+
+	Ok(PackageAssetsPlan { main, dev })
+}
+
+
+#[derive(Debug)]
+pub struct PackageAssetsPlan<'t, 'cfg> {
+	/// Main build-plan.
+	///
+	/// Can be empty, so `None`.
+	pub main: Option<CachedPlan<'t, 'cfg>>,
+
+	/// Dev-assets build-plan.
+	///
+	/// Inherited by main `plan`.
+	///
+	/// Can be empty, so `None`.
+	pub dev: Option<CachedPlan<'t, 'cfg>>,
+}
+
+impl<'t, 'cfg> PackageAssetsPlan<'t, 'cfg> {
+	pub fn is_empty(&self) -> bool { self.main.is_none() && self.dev.is_none() }
 }
 
 
@@ -133,16 +190,6 @@ impl<'t, 'cfg> CachedPlan<'t, 'cfg> {
 		          serialized })
 	}
 
-	#[allow(dead_code)]
-	/// Do not forget to save the plan __after__ applying the plan.
-	pub fn save(&self) -> CargoResult<()> {
-		if let Some(data) = &self.serialized {
-			std::fs::write(&self.path, data)?;
-			log::debug!("Cache: saved {}", self.path.display());
-		}
-		Ok(())
-	}
-
 
 	pub fn apply(self,
 	             dest: &Path,
@@ -176,11 +223,12 @@ impl<'t, 'cfg> CachedPlan<'t, 'cfg> {
 	}
 
 
-	pub fn printable_serializable(&self, source: &Package) -> SerializablePlan<'_, 't, 'cfg> {
+	pub fn printable_serializable(&self, source: &Package, kind: AssetKind) -> SerializablePlan<'_, 't, 'cfg> {
 		SerializablePlan { package: source.package_id(),
 		                   plan: &self.plan,
 		                   difference: &self.difference,
-		                   path: &self.path }
+		                   path: &self.path,
+		                   kind }
 	}
 
 
@@ -249,7 +297,7 @@ impl<'t, 'cfg> CachedPlan<'t, 'cfg> {
 }
 
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, Clone, Copy, serde::Serialize)]
 pub enum Difference {
 	Same,
 	Different,
@@ -267,6 +315,8 @@ impl Difference {
 pub struct SerializablePlan<'p, 't, 'cfg> {
 	package: PackageId,
 
+	kind: AssetKind,
+
 	#[serde(rename = "assets")]
 	plan: &'p AssetsPlan<'t, 'cfg>,
 
@@ -275,4 +325,10 @@ pub struct SerializablePlan<'p, 't, 'cfg> {
 
 	#[serde(rename = "plan")]
 	path: &'p Path,
+}
+
+#[derive(Debug, Clone, Copy, serde::Serialize)]
+pub enum AssetKind {
+	Package,
+	Dev,
 }
