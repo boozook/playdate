@@ -125,7 +125,7 @@ workflows:
             # then
             # fi
   test:
-    name: Test
+    name: Tests / All (macos, aarm64)
     max_build_duration: 20
     instance_type: mac_mini_m1
     environment:
