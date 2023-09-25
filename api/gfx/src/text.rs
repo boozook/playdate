@@ -53,13 +53,10 @@ pub fn draw_text_cstr(text: &CStr, encoding: StringEncoding, x: c_int, y: c_int)
 ///
 /// Equivalent to [`sys::ffi::playdate_graphics::getTextWidth`].
 #[doc(alias = "sys::ffi::playdate_graphics::getTextWidth")]
-pub fn get_text_width<S: AsRef<str>>(text: S,
-                                     font: Option<&LCDFont>,
-                                     tracking: c_int)
-                                     -> Result<c_int, NulError> {
+pub fn get_text_width<S: AsRef<str>>(text: S, font: Option<&Font>, tracking: c_int) -> Result<c_int, NulError> {
 	let s = CString::new(text.as_ref())?;
 	let f = *sys::api!(graphics.getTextWidth);
-	let font = font.map(|font| font as *const LCDFont as *mut LCDFont)
+	let font = font.map(|font| unsafe { font.as_raw() })
 	               .unwrap_or(core::ptr::null_mut());
 	let res = unsafe {
 		f(

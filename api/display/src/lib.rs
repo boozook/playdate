@@ -1,7 +1,6 @@
 #![cfg_attr(not(test), no_std)]
 extern crate sys;
 
-use core::ffi::c_char;
 use core::ffi::c_float;
 use core::ffi::c_int;
 use core::ffi::c_uint;
@@ -167,7 +166,6 @@ impl Into<c_uint> for DisplayScale {
 
 
 pub mod api {
-	use core::ffi::c_char;
 	use core::ffi::c_float;
 	use core::ffi::c_int;
 	use core::ffi::c_uint;

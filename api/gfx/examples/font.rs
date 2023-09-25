@@ -98,13 +98,13 @@ impl State {
 				for (i, code) in RUST.into_iter().enumerate() {
 					let mut advance = 0;
 					let (glyph, bitmap_ref) = text::get_page_glyph_with_bitmap(&page, code, &mut advance).unwrap();
-					let mut char = bitmap_ref.into_bitmap();
 
 					let kern = RUST.get(i + 1)
 					               .map(|next| text::get_glyph_kerning(&glyph, code, *next))
 					               .unwrap_or_default();
 
-					let w = char.bitmap_data().map(|bd| bd.width).unwrap();
+					let char = bitmap_ref.into_bitmap();
+					let w = char.size().map(|(w, h)| w).unwrap();
 					let x = OFFSET + i as i32 * w;
 					let y = OFFSET + kern;
 
