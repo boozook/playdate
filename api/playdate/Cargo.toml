@@ -1,6 +1,6 @@
 [package]
 name = "playdate"
-version = "0.1.0"
+version = "0.1.1"
 readme = "README.md"
 description = "High-level Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -36,51 +36,14 @@ default = [
 	"sound/default",
 	"sprite/default",
 	"system/default",
+	"entry-point",
 ]
-lang-items = [
-	"sys/lang-items",
-	"ctrl/lang-items",
-	"display/lang-items",
-	"fs/lang-items",
-	"gfx/lang-items",
-	"menu/lang-items",
-	"sound/lang-items",
-	"sprite/lang-items",
-	"system/lang-items",
-]
-allocator = [
-	"sys/allocator",
-	"ctrl/allocator",
-	"display/allocator",
-	"fs/allocator",
-	"gfx/allocator",
-	"menu/allocator",
-	"sound/allocator",
-	"sprite/allocator",
-	"system/allocator",
-]
-panic-handler = [
-	"sys/panic-handler",
-	"ctrl/panic-handler",
-	"display/panic-handler",
-	"fs/panic-handler",
-	"gfx/panic-handler",
-	"menu/panic-handler",
-	"sound/panic-handler",
-	"sprite/panic-handler",
-	"system/panic-handler",
-]
-eh-personality = [
-	"sys/eh-personality",
-	"ctrl/eh-personality",
-	"display/eh-personality",
-	"fs/eh-personality",
-	"gfx/eh-personality",
-	"menu/eh-personality",
-	"sound/eh-personality",
-	"sprite/eh-personality",
-	"system/eh-personality",
-]
+
+lang-items = ["sys/lang-items"]
+allocator = ["sys/allocator"]
+panic-handler = ["sys/panic-handler"]
+eh-personality = ["sys/eh-personality"]
+entry-point = ["sys/entry-point", "ctrl/entry-point", "system/entry-point"]
 error-ctx = [
 	"sys/error-ctx",
 	"ctrl/error-ctx",
@@ -224,6 +187,27 @@ bindings-documentation = [
 	"sprite/bindings-documentation",
 	"system/bindings-documentation",
 ]
+
+
+[[example]]
+name = "hello-world"
+crate-type = ["dylib", "staticlib"]
+path = "examples/hello-world.rs"
+required-features = ["entry-point"]
+
+# TODO: REMOVE ME!
+[[example]]
+name = "minimal"
+crate-type = ["dylib", "staticlib"]
+path = "examples/minimal.rs"
+required-features = ["entry-point"]
+
+[package.metadata.playdate]
+bundle-id = "rs.playdate.core"
+
+[package.metadata.playdate.dev-assets]
+"examples/ferris.png" = true
+"examples/" = "${PLAYDATE_SDK_PATH}/Examples/Level 1-1/Source/sfx/main_theme.wav"
 
 
 [package.metadata.docs.rs]

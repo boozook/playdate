@@ -243,6 +243,32 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 	}
 
 
+	/// Returns `(width, height)` of the bitmap.
+	///
+	/// Can return error if there is no bitmap-data or any internal error occurred.
+	///
+	/// Calls [`sys::ffi::playdate_graphics::getBitmapData`].
+	#[doc(alias = "sys::ffi::playdate_graphics::getBitmapData")]
+	pub fn size(&self) -> Result<(c_int, c_int), Error> {
+		let mut width: c_int = 0;
+		let mut height: c_int = 0;
+		let mut row_bytes: c_int = 0;
+
+		let f = self.1.get_bitmap_data();
+		unsafe {
+			f(
+			  self.0,
+			  &mut width,
+			  &mut height,
+			  &mut row_bytes,
+			  core::ptr::null_mut(),
+			  core::ptr::null_mut(),
+			)
+		};
+
+		Ok((width, height))
+	}
+
 	/// Returns mutable borrow of bitmap-data by this bitmap.
 	///
 	/// Calls [`sys::ffi::playdate_graphics::getBitmapData`].

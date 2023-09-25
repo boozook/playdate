@@ -2,10 +2,9 @@
 
 Mostly high-level rusty API for the [Playdate handheld gaming system][playdate-website].
 
-Usage with [cargo-playdate][cargo-playdate-crate] is strongly recommended.
+Usage with [cargo-playdate][cargo-playdate] is strongly recommended.
 
 
-[cargo-playdate-crate]: https://crates.io/crates/cargo-playdate
 [playdate-website]: https://play.date/
 
 
@@ -31,14 +30,29 @@ Plus some extensions to make it all more rust-ish.
 - json
 - lua
 
-Also __there is no default entry-point__ (read as event-handler) for your application.
-Not yet, I'm working on it.
-
 
 ## How to start
 
-Currently there is no any beautiful HL examples ready yet.
-It will be in v0.2.0 or little bit earlier as well as default entry-point that mentioned above.
+Look at the [examples][gh-playdate-examples].
+
+
+## Examples
+
+[Here is available examples][gh-playdate-examples].
+You car run it with following command:
+
+```bash
+# Simulator:
+cargo playdate run -p=playdate --example=hello-world --features=entry-point
+# Device:
+cargo playdate run -p=playdate --example=hello-world --features=entry-point --device
+```
+
+More information how to use [cargo-playdate][] in help: `cargo playdate --help`.
+
+
+[gh-playdate-examples]: https://github.com/boozook/playdate/tree/main/api/gfx/examples
+
 
 ### Prerequisites
 
@@ -50,15 +64,10 @@ Follow the instructions for:
 
 ### Hello World
 
-> Note, this is incomplete and not-so production-ready crate.
->
-> As minimum currently you'll need to implement missed entry-point for your program by yourself.
-> But you can find some examples with ugly & primitive entry-point impl,
-> so you'll need to add something like [this code][ugly-entry-point] to your program.
->
-> Here is [list of missed parts that not ready yet](#not-yet-covered-parts).
+There is multiple ways to learn and start.
 
-[ugly-entry-point]: https://github.com/boozook/playdate/blob/main/api/sys/examples/hello-world.rs#L97-L138
+Following two is just a quick introduction.
+In details it all will be explained soon in the wiki.
 
 #### Short Way
 
@@ -83,8 +92,6 @@ Just run `cargo new <your options>` and add do following:
 1. Help this project somehow.
 
 
-❤️‍🔥
-
 
 [sprite-examples]: https://github.com/boozook/playdate/tree/main/api/sprite/examples
 [cargo-playdate]: https://crates.io/crates/cargo-playdate
@@ -92,5 +99,7 @@ Just run `cargo new <your options>` and add do following:
 [playdate metadata format]: https://github.com/boozook/playdate/tree/main/support/build#metadata
 
 - - -
+
+Made with ❤️‍🔥 by [my](https://a.koz.world).
 
 This software is not sponsored or supported by Panic.

@@ -1,6 +1,6 @@
 [package]
 name = "playdate-system"
-version = "0.1.2"
+version = "0.2.0"
 readme = "README.md"
 description = "High-level System API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -19,6 +19,7 @@ lang-items = ["sys/lang-items"]
 allocator = ["sys/allocator"]
 panic-handler = ["sys/panic-handler"]
 eh-personality = ["sys/eh-personality"]
+entry-point = ["sys/entry-point"]
 error-ctx = ["sys/error-ctx"]
 bindgen-runtime = ["sys/bindgen-runtime"]
 bindgen-static = ["sys/bindgen-static"]
@@ -58,3 +59,25 @@ cargo-args = [
 	"-Zrustdoc-scrape-examples",
 	"-Zbuild-std=core,alloc",
 ]
+
+
+[[example]]
+name = "handler-boxed"
+crate-type = ["dylib", "staticlib"]
+path = "examples/handler-boxed.rs"
+required-features = ["sys/entry-point"]
+
+[[example]]
+name = "handler-static"
+crate-type = ["dylib", "staticlib"]
+path = "examples/handler-static.rs"
+required-features = ["sys/entry-point"]
+
+[[example]]
+name = "handler-pinned"
+crate-type = ["dylib", "staticlib"]
+path = "examples/handler-pinned.rs"
+required-features = ["sys/entry-point"]
+
+[package.metadata.playdate]
+bundle-id = "rs.playdate.system"

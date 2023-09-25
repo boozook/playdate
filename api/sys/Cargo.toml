@@ -1,6 +1,6 @@
 [package]
 name = "playdate-sys"
-version = "0.1.10"
+version = "0.1.11"
 build = "src/build.rs"
 readme = "README.md"
 description = "Low-level Playdate API bindings"
@@ -9,7 +9,7 @@ categories = [
 	"external-ffi-bindings",
 	"development-tools::ffi",
 	"game-development",
-	"no-std"
+	"no-std",
 ]
 edition.workspace = true
 license.workspace = true
@@ -23,18 +23,17 @@ default = [
 	"lang-items",
 	"bindgen-runtime",
 	"bindings-derive-debug",
-	# "bindings-documentation", # this should not be default
 ]
-lang-items = ["allocator", "panic-handler", "eh-personality"]
-# lang-items:
-allocator = []      # global allocator
-panic-handler = []  # global panic handler
-eh-personality = [] # eh_personality for sim-targets, dummy empty no-op
+
+lang-items = ["allocator", "panic-handler", "eh-personality"] # lang-items
+allocator = []                                                # global allocator
+panic-handler = []                                            # global panic handler
+eh-personality = []                                           # eh_personality for sim-targets, dummy empty no-op
 
 entry-point = [] # simple minimal proxy entry point
 error-ctx = []   # errors with context (incomplete feature)
 
-# bindings build options:
+
 bindgen-logging = ["bindgen/logging"]
 bindgen-pretty-please = ["bindgen/pretty-please"]
 bindgen-which-rustfmt = ["bindgen/which-rustfmt"]
@@ -43,7 +42,6 @@ bindgen-static = ["bindgen/static"]               # static linking to clang
 # parse docs from the SDK, gen doc-comments
 bindings-documentation = ["bindgen/documentation"] # generate docs for bindings
 
-# derives:
 bindings-derive-default = []      # ask bindgen to derive `Default`
 bindings-derive-eq = []           # ask bindgen to derive `Eq`
 bindings-derive-copy = []         # ask bindgen to derive `Copy`
@@ -99,6 +97,12 @@ cargo-args = [
 name = "hello-world"
 crate-type = ["dylib", "staticlib"]
 path = "examples/hello-world.rs"
+
+[[example]]
+name = "handler"
+crate-type = ["dylib", "staticlib"]
+path = "examples/handler.rs"
+required-features = ["entry-point"]
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.sys"

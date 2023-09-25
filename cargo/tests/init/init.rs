@@ -31,6 +31,8 @@ fn run(crate_name: &str,
 	let output = Tool::init(&crate_path, args)?;
 	assert!(output.status.success());
 	Ok((output, crate_path))
+
+	// TODO: Run `package` after `init`/`run` cmd
 }
 
 
