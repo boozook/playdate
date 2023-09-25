@@ -23,7 +23,6 @@ default = [
 	"lang-items",
 	"bindgen-runtime",
 	"bindings-derive-debug",
-	"entry-point",
 ]
 
 lang-items = ["allocator", "panic-handler", "eh-personality"] # lang-items
