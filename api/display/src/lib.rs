@@ -10,6 +10,14 @@ use core::ffi::c_uint;
 #[derive(Debug, Clone, Copy)]
 pub struct Display<Api = api::Default>(Api);
 
+impl Display<api::Default> {
+	/// Creates default [`Display`] without type parameter requirement.
+	///
+	/// Uses ZST [`api::Default`].
+	#[allow(non_snake_case)]
+	pub fn Default() -> Self { Self(Default::default()) }
+}
+
 impl<Api: Default + api::Api> Default for Display<Api> {
 	fn default() -> Self { Self(Default::default()) }
 }
@@ -23,7 +31,24 @@ impl<Api: api::Api> Display<Api> {
 }
 
 
+impl Display<api::Default> {
+	pub const COLUMNS: u32 = sys::ffi::LCD_COLUMNS;
+	pub const ROWS: u32 = sys::ffi::LCD_ROWS;
+	pub const ROW_SIZE: u32 = sys::ffi::LCD_ROWSIZE;
+	pub const SCREEN_RECT: sys::ffi::LCDRect = sys::ffi::LCDRect { left: 0,
+	                                                               right: 0,
+	                                                               top: Self::COLUMNS as _,
+	                                                               bottom: Self::ROWS as _ };
+}
+
+
 impl<Api: api::Api> Display<Api> {
+	/// Returns the width of the display, taking the current scale into account;
+	///
+	/// e.g., if the scale is `2`, this function returns `200` instead of `400`.
+	///
+	/// See also [`Display::COLUMNS`].
+	///
 	/// Equivalent to [`sys::ffi::playdate_display::getWidth`]
 	#[doc(alias = "sys::ffi::playdate_display::getWidth")]
 	pub fn width(&self) -> c_int {
@@ -31,6 +56,12 @@ impl<Api: api::Api> Display<Api> {
 		unsafe { f() }
 	}
 
+	/// Returns the height of the display, taking the current scale into account;
+	///
+	/// e.g., if the scale is `2`, this function returns `120` instead of `240`.
+	///
+	/// See also [`Display::ROWS`] and [`Display::ROW_SIZE`].
+	///
 	/// Equivalent to [`sys::ffi::playdate_display::getHeight`]
 	#[doc(alias = "sys::ffi::playdate_display::getHeight")]
 	pub fn height(&self) -> c_int {
@@ -38,6 +69,10 @@ impl<Api: api::Api> Display<Api> {
 		unsafe { f() }
 	}
 
+	/// Sets the nominal refresh rate in frames per second.
+	///
+	/// Default is 20 fps, the maximum rate supported by the hardware for full-frame updates.
+	///
 	/// Equivalent to [`sys::ffi::playdate_display::setRefreshRate`]
 	#[doc(alias = "sys::ffi::playdate_display::setRefreshRate")]
 	pub fn set_refresh_rate(&self, rate: c_float) {
@@ -45,6 +80,8 @@ impl<Api: api::Api> Display<Api> {
 		unsafe { f(rate) }
 	}
 
+	/// If `value` is `true`, the frame buffer is drawn inverted—black instead of white, and vice versa.
+	///
 	/// Equivalent to [`sys::ffi::playdate_display::setInverted`]
 	#[doc(alias = "sys::ffi::playdate_display::setInverted")]
 	pub fn set_inverted(&self, value: bool) {
@@ -52,13 +89,37 @@ impl<Api: api::Api> Display<Api> {
 		unsafe { f(value as _) }
 	}
 
+	/// Sets the display scale factor.
+	///
+	/// The top-left corner of the frame buffer is scaled up to fill the display;
+	///
+	/// e.g., if the scale is set to [`DisplayScale::Quad`],
+	/// the pixels in rectangle `[0, 100] x [0, 60]` are drawn on the screen as `4 x 4` squares.
+	///
 	/// Equivalent to [`sys::ffi::playdate_display::setScale`]
 	#[doc(alias = "sys::ffi::playdate_display::setScale")]
-	pub fn set_scale(&self, scale: c_uint) {
+	pub fn set_scale(&self, scale: DisplayScale) { self.set_scale_raw(scale.into()); }
+
+	/// Sets the display scale factor.
+	///
+	/// Valid values for `scale` are `1`, `2`, `4`, and `8`.
+	///
+	/// The top-left corner of the frame buffer is scaled up to fill the display;
+	/// e.g., if the scale is set to `4`, the pixels in rectangle `[0, 100] x [0, 60]` are drawn on the screen as `4 x 4` squares.
+	///
+	/// See also [`Display::set_scale`].
+	///
+	/// Equivalent to [`sys::ffi::playdate_display::setScale`]
+	#[doc(alias = "sys::ffi::playdate_display::setScale")]
+	pub fn set_scale_raw(&self, scale: c_uint) {
 		let f = self.0.set_scale();
 		unsafe { f(scale) }
 	}
 
+	/// Adds a mosaic effect to the display.
+	///
+	/// Valid `x` and `y` values are between `0` and `3`, inclusive.
+	///
 	/// Equivalent to [`sys::ffi::playdate_display::setMosaic`]
 	#[doc(alias = "sys::ffi::playdate_display::setMosaic")]
 	pub fn set_mosaic(&self, x: c_uint, y: c_uint) {
@@ -66,6 +127,8 @@ impl<Api: api::Api> Display<Api> {
 		unsafe { f(x, y) }
 	}
 
+	/// Flips the display on the `x` or `y` axis, or both.
+	///
 	/// Equivalent to [`sys::ffi::playdate_display::setFlipped`]
 	#[doc(alias = "sys::ffi::playdate_display::setFlipped")]
 	pub fn set_flipped(&self, x: bool, y: bool) {
@@ -73,12 +136,33 @@ impl<Api: api::Api> Display<Api> {
 		unsafe { f(x as _, y as _) }
 	}
 
+	/// Offsets the display by the given amount.
+	///
+	/// Areas outside of the displayed area are filled with the current background color.
+	///
+	/// See also [`playdate-graphics::set_background_color`].
+	///
 	/// Equivalent to [`sys::ffi::playdate_display::setOffset`]
 	#[doc(alias = "sys::ffi::playdate_display::setOffset")]
 	pub fn set_offset(&self, x: c_int, y: c_int) {
 		let f = self.0.set_offset();
 		unsafe { f(x, y) }
 	}
+}
+
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DisplayScale {
+	Normal = 1,
+	Double = 2,
+	Quad = 4,
+	Eight = 8,
+}
+
+impl Into<c_uint> for DisplayScale {
+	#[inline(always)]
+	fn into(self) -> c_uint { (self as u8).into() }
 }
 
 
