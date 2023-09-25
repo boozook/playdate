@@ -16,4 +16,5 @@ pub mod prelude {
 	pub use crate::error::Error as SndError;
 
 	pub use crate::player;
+	pub use crate::sample;
 }
