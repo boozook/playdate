@@ -5,17 +5,23 @@ extern crate alloc;
 use core::ffi::c_float;
 use core::ffi::c_int;
 use core::ffi::c_uint;
-use core::ffi::c_void;
-use core::marker::PhantomData;
 use core::time::Duration;
-use core::pin::Pin;
-use alloc::boxed::Box;
 
 pub mod time;
 pub mod lang;
+pub mod update;
+pub mod event;
 
-pub use time::*;
-pub use lang::*;
+pub mod prelude {
+	pub use crate::System;
+	pub use crate::time::*;
+	pub use crate::lang::*;
+	pub use crate::update::*;
+	pub use crate::event::*;
+}
+
+use time::*;
+use lang::*;
 
 
 #[derive(Debug, Clone, Copy)]
@@ -39,107 +45,6 @@ impl<Api: Default + api::Api> System<Api> {
 
 impl<Api: api::Api> System<Api> {
 	pub fn new_with(api: Api) -> Self { Self(api) }
-}
-
-
-/// Pinned wrapper around a function and user data.
-///
-/// On drop, automatically resets system registered update handler.
-pub struct Handler<'t, F, U>(Option<Pin<Box<(F, U)>>>, PhantomData<&'t ()>);
-
-impl<'t, F, U> Drop for Handler<'t, F, U> {
-	fn drop(&mut self) {
-		let get_fn = || sys::api_opt!(system.setUpdateCallback);
-		if self.0.is_some() {
-			if let Some(f) = get_fn() {
-				unsafe {
-					f(None, core::ptr::null_mut());
-				}
-			}
-		}
-	}
-}
-
-
-impl<Api: api::Api> System<Api> {
-	/// Internal update callback proxy function.
-	unsafe extern "C" fn proxy<UD, Fn: FnMut(&mut UD) -> bool>(fn_ud: *mut c_void) -> c_int {
-		if let Some((callback, userdata)) = (fn_ud as *mut (Fn, UD)).as_mut() {
-			callback(userdata).into()
-		} else {
-			panic!("user callback missed");
-		}
-	}
-
-
-	/// Takes __any__ function and `userdata`,
-	/// registers callback in the system and
-	/// returns this function with userdata wrapped into the [`Handler`] with [`Pin`] inside.
-	///
-	/// For register a fn-ptr you could better use [`set_update_callback_static`].
-	///
-	/// Safety is ensured by [`Handler`],
-	/// that resets the system registered update handler when drop.
-	///
-	/// Wrapping [`sys::ffi::playdate_sys::setUpdateCallback`]
-	#[doc(alias = "sys::ffi::playdate_sys::setUpdateCallback")]
-	#[must_use = "Update handler will be unregistered when Handler dropped"]
-	pub fn set_update_callback<'u, U, F>(&self, on_update: F, userdata: U) -> Handler<'u, F, U>
-		where U: 'u,
-		      F: 'u + FnMut(&mut U) -> bool {
-		let f = self.0.set_update_callback();
-		let mut userdata = Box::pin((on_update, userdata));
-		let ptr = unsafe { userdata.as_mut().get_unchecked_mut() } as *mut _ as *mut c_void;
-		unsafe { f(Some(Self::proxy::<U, F>), ptr) };
-		Handler(userdata.into(), PhantomData)
-	}
-
-	/// Consumes and __leaks__ an __any__ function with `userdata` into the `Box`,
-	/// registers callback in the system.
-	///
-	/// For register a fn-ptr you could better use [`set_update_callback_static`].
-	///
-	/// __Safety is guaranteed by the caller.__
-	///
-	/// See also [`System::set_update_callback`], it prevents leaks and more safe.
-	///
-	/// Wrapping [`sys::ffi::playdate_sys::setUpdateCallback`]
-	#[doc(alias = "sys::ffi::playdate_sys::setUpdateCallback")]
-	pub fn set_update_callback_boxed<'u, U, F>(&self, on_update: F, userdata: U)
-		where U: 'u,
-		      F: 'u + FnMut(&mut U) -> bool {
-		let f = self.0.set_update_callback();
-		let ptr = Box::into_raw(Box::new((on_update, userdata)));
-		unsafe { f(Some(Self::proxy::<U, F>), ptr as *mut _) };
-	}
-
-
-	/// Consumes and __leaks__ function `on_update` and `userdata`, wraps it into the `Box`,
-	/// then registers callback.
-	///
-	/// See also [`System::set_update_callback`], it prevents leaks and more safe.
-	///
-	/// Wrapping [`sys::ffi::playdate_sys::setUpdateCallback`]
-	#[doc(alias = "sys::ffi::playdate_sys::setUpdateCallback")]
-	pub fn set_update_callback_static<U: 'static>(&self,
-	                                              on_update: Option<fn(userdata: &mut U) -> bool>,
-	                                              userdata: U) {
-		unsafe extern "C" fn proxy<UD: 'static>(fn_ud: *mut c_void) -> c_int {
-			if let Some((callback, userdata)) = (fn_ud as *mut (fn(userdata: &mut UD) -> bool, UD)).as_mut() {
-				callback(userdata).into()
-			} else {
-				panic!("user callback missed");
-			}
-		}
-
-		let f = self.0.set_update_callback();
-		if let Some(callback) = on_update {
-			let ptr = Box::into_raw(Box::new((callback, userdata)));
-			unsafe { f(Some(proxy::<U>), ptr as *mut _) };
-		} else {
-			unsafe { f(None, core::ptr::null_mut()) };
-		}
-	}
 }
 
 
