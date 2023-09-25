@@ -425,7 +425,8 @@ fn bin(config: &Config, root: &Path, manifest: &mut toml_edit::Document, hl: boo
 	let path = root.join("src").join("main.rs");
 	let name = manifest["package"]["name"].as_str()
 	                                      .unwrap_or("hello-world")
-	                                      .to_owned().replace("-", "_");
+	                                      .to_owned()
+	                                      .replace("-", "_");
 	let src = if config.create_deps_sys_only || !hl {
 		format!(include_str!("bin-ll.rs"), crate_name = name)
 	} else {
