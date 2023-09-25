@@ -66,14 +66,14 @@ pub fn new_or_init<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<()> {
 
 
 	// TODO: add dependencies
-	let deps_to_add = add_dependencies(config, &mut manifest)?;
+	let (deps_to_add, hl) = add_dependencies(config, &mut manifest)?;
 
 
 	// sources:
-	lib(config, &path, &mut manifest)?;
+	lib(config, &path, &mut manifest, hl)?;
 
 	if is_bin {
-		bin(config, &path, &mut manifest)?;
+		bin(config, &path, &mut manifest, hl)?;
 	}
 
 
@@ -84,6 +84,7 @@ pub fn new_or_init<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<()> {
 
 	// cargo config:
 	cargo_config(config, path.join(".cargo").join("config.toml"))?;
+
 
 	// TODO: deps_to_add
 	for dep in deps_to_add {
@@ -231,9 +232,46 @@ fn add_full_metadata(_config: &Config<'_>, manifest: &mut toml_edit::Document) -
 }
 
 
+fn cargo_add<'s>(config: &Config<'_>,
+                 pwd: &Path,
+                 manifest: &Path,
+                 name: &str,
+                 git: bool,
+                 rename: Option<&str>,
+                 features: Option<impl IntoIterator<Item = &'s str>>)
+                 -> CargoResult<()> {
+	let mut cargo = proc::cargo(config.workspace.config().into())?;
+	cargo.current_dir(pwd);
+
+	cargo.arg("add");
+	cargo.arg(name);
+
+	if let Some(name) = rename {
+		cargo.arg("--rename");
+		cargo.arg(name);
+	}
+
+	if let Some(features) = features {
+		let features = features.into_iter().collect::<Vec<_>>().join(",");
+		cargo.arg("--features");
+		cargo.arg(features);
+	}
+
+	// git => --git="URL"
+
+	cargo.arg("manifest-path");
+	cargo.arg(manifest);
+
+	cargo.stderr(Stdio::inherit());
+	cargo.stdout(Stdio::inherit());
+	cargo.status()?.exit_ok()?;
+	Ok(())
+}
+
+
 fn add_dependencies<'cfg>(config: &'cfg Config<'_>,
                           manifest: &mut toml_edit::Document)
-                          -> CargoResult<Vec<Cow<'cfg, str>>> {
+                          -> CargoResult<(Vec<Cow<'cfg, str>>, bool)> {
 	use toml_edit::value;
 	use crate::cli::deps::Dependency as Dep;
 	use crate::cli::deps::DependencyName as Name;
@@ -254,6 +292,8 @@ fn add_dependencies<'cfg>(config: &'cfg Config<'_>,
 		Ok(())
 	}
 
+	let mut add_pd = false;
+
 	if config.create_deps_sys_only {
 		let default = Dep { name: Name::Sys,
 		                    source: Src::CratesIo };
@@ -262,12 +302,13 @@ fn add_dependencies<'cfg>(config: &'cfg Config<'_>,
 		                .find(|d| matches!(d.name, Name::Sys))
 		                .unwrap_or(&default);
 		add_dep(dep, manifest)?;
-		Ok(vec![])
+		Ok((vec![], add_pd))
 	} else {
 		let known = config.create_deps
 		                  .iter()
 		                  .filter(|d| !matches!(d.name, Name::Other(_)));
 		for dep in known {
+			add_pd = matches!(dep.name, Name::Playdate) || add_pd;
 			add_dep(dep, manifest)?;
 		}
 
@@ -278,7 +319,7 @@ fn add_dependencies<'cfg>(config: &'cfg Config<'_>,
 				                                      None
 			                                      }
 		                                      });
-		Ok(others.collect())
+		Ok((others.collect(), add_pd))
 	}
 }
 
@@ -356,7 +397,7 @@ fn cargo_config<P: AsRef<Path>>(config: &Config, path: P) -> CargoResult<()> {
 }
 
 
-fn lib(_config: &Config, root: &Path, manifest: &mut toml_edit::Document) -> CargoResult<()> {
+fn lib(config: &Config, root: &Path, manifest: &mut toml_edit::Document, hl: bool) -> CargoResult<()> {
 	use toml_edit::Document;
 
 	let toml = r#"
@@ -371,16 +412,25 @@ crate-type = [
 	manifest["lib"] = toml.parse::<Document>().expect("invalid doc")["lib"].clone();
 
 	let path = root.join("src").join("lib.rs");
-	std::fs::write(path, include_bytes!("default-lib.rs"))?;
+	let src = if config.create_deps_sys_only || !hl {
+		&include_bytes!("lib-ll.rs")[..]
+	} else {
+		&include_bytes!("lib-hl.rs")[..]
+	};
+	std::fs::write(path, src)?;
 	Ok(())
 }
 
-fn bin(_config: &Config, root: &Path, manifest: &mut toml_edit::Document) -> CargoResult<()> {
+fn bin(config: &Config, root: &Path, manifest: &mut toml_edit::Document, hl: bool) -> CargoResult<()> {
 	let path = root.join("src").join("main.rs");
 	let name = manifest["package"]["name"].as_str()
 	                                      .unwrap_or("hello-world")
-	                                      .to_owned();
-	let src = format!(include_str!("default-bin.rs"), crate_name = name);
+	                                      .to_owned().replace("-", "_");
+	let src = if config.create_deps_sys_only || !hl {
+		format!(include_str!("bin-ll.rs"), crate_name = name)
+	} else {
+		format!(include_str!("bin-hl.rs"), crate_name = name)
+	};
 	std::fs::write(path, src)?;
 	Ok(())
 }

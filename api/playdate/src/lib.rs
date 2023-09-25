@@ -1,12 +1,18 @@
 #![cfg_attr(not(test), no_std)]
-
 extern crate alloc;
-extern crate sys;
 
+#[allow(unused_imports)]
+#[macro_use]
+pub extern crate sys;
 pub extern crate menu;
 pub extern crate display;
 pub extern crate ctrl as controls;
 pub extern crate gfx as graphics;
+
+
+// macro re-export
+pub use sys::{println, ll_symbols, api, api_opt, api_ok};
+
 
 pub mod system {
 	pub use system::*;

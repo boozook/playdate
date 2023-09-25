@@ -8,7 +8,7 @@ extern crate playdate as pd;
 use core::ffi::*;
 use core::ptr::NonNull;
 
-use sys::ffi::PlaydateAPI;
+use pd::sys::ffi::PlaydateAPI;
 use display::Display;
 use gfx::*;
 use gfx::text::*;

@@ -36,6 +36,7 @@ default = [
 	"sound/default",
 	"sprite/default",
 	"system/default",
+	"entry-point",
 ]
 
 lang-items = ["sys/lang-items"]
@@ -192,6 +193,13 @@ bindings-documentation = [
 name = "hello-world"
 crate-type = ["dylib", "staticlib"]
 path = "examples/hello-world.rs"
+required-features = ["entry-point"]
+
+# TODO: REMOVE ME!
+[[example]]
+name = "minimal"
+crate-type = ["dylib", "staticlib"]
+path = "examples/minimal.rs"
 required-features = ["entry-point"]
 
 [package.metadata.playdate]
