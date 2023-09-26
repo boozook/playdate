@@ -68,12 +68,12 @@ pub extern "C" fn eventHandlerShim(api: *const ffi::PlaydateAPI,
                                    arg: u32)
                                    -> core::ffi::c_int {
 	extern "Rust" {
-		fn event_handler(api: *const ffi::PlaydateAPI, event: ffi::PDSystemEvent, arg: u32) -> core::ffi::c_int;
+		fn event_handler(api: *const ffi::PlaydateAPI, event: ffi::PDSystemEvent, arg: u32) -> bool;
 	}
 	if let ffi::PDSystemEvent::kEventInit = event {
 		unsafe { API = api }
 	}
-	unsafe { event_handler(api, event, arg) }
+	unsafe { event_handler(api, event, arg) }.into()
 }
 
 
