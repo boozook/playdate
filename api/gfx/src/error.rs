@@ -1,4 +1,6 @@
 use core::fmt;
+use sys::ffi::{CString, CStr};
+use crate::alloc::borrow::ToOwned;
 
 
 pub type ApiError = sys::error::Error<self::Error>;
@@ -9,6 +11,7 @@ pub enum Error {
 	/// Causes when loading graphics from path fails.
 	/// This occurs when file does not exist or invalid format.
 	Fs(fs::error::Error),
+
 	/// Causes when allocation failed and/or null-ptr returned.
 	Alloc,
 
@@ -18,6 +21,12 @@ pub enum Error {
 	/// Font error.
 	/// This occurs when char or page not found.
 	Font,
+
+	/// Video error.
+	Video(CString),
+
+	/// Unknown error.
+	Unknown,
 }
 
 impl fmt::Display for Error {
@@ -27,6 +36,13 @@ impl fmt::Display for Error {
 			Error::Alloc => write!(f, "Allocation failed"),
 			Error::Font => write!(f, "Font error"),
 			Error::InvalidMask => write!(f, "Mask must be the same size as the target bitmap"),
+			Error::Video(cs) => {
+				match cs.to_str() {
+					Ok(err) => err.fmt(f),
+					Err(_) => f.write_fmt(format_args!("Video error: {cs:?}")),
+				}
+			},
+			Error::Unknown => write!(f, "Unknown error"),
 		}
 	}
 }
@@ -42,3 +58,8 @@ impl Into<ApiError> for Error {
 
 
 impl core::error::Error for Error {}
+
+
+impl Error {
+	pub(crate) fn video_from(c: &CStr) -> Self { Self::Video(c.to_owned()) }
+}

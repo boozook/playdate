@@ -55,7 +55,7 @@ impl<Api: api::Api> BitmapTable<Api, true> {
 	}
 
 
-	/// Allocates and returns a new [`Bitmap`] from the file at `path`.
+	/// Allocates and returns a new [`BitmapTable`] from the file at `path`.
 	///
 	/// If there is no file at `path`, the function returns error.
 	///
@@ -67,7 +67,7 @@ impl<Api: api::Api> BitmapTable<Api, true> {
 		Self::load_with(api, path)
 	}
 
-	/// Allocates and returns a new [`Bitmap`] from the file at `path`.
+	/// Allocates and returns a new [`BitmapTable`] from the file at `path`.
 	///
 	/// If there is no file at `path`, the function returns error.
 	///
@@ -165,27 +165,42 @@ pub mod api {
 	impl Api for Default {}
 
 
+	/// End-point with methods about ops over bitmap-table.
 	pub trait Api {
+		/// Equivalent to [`sys::ffi::playdate_graphics::newBitmapTable`]
+		#[doc(alias = "sys::ffi::playdate_graphics::newBitmapTable")]
 		fn new_bitmap_table(
 			&self)
 			-> unsafe extern "C" fn(count: c_int, width: c_int, height: c_int) -> *mut LCDBitmapTable {
 			*sys::api!(graphics.newBitmapTable)
 		}
 
+
+		/// Equivalent to [`sys::ffi::playdate_graphics::freeBitmapTable`]
+		#[doc(alias = "sys::ffi::playdate_graphics::freeBitmapTable")]
 		fn free_bitmap_table(&self) -> unsafe extern "C" fn(table: *mut LCDBitmapTable) {
 			*sys::api!(graphics.freeBitmapTable)
 		}
 
+
+		/// Equivalent to [`sys::ffi::playdate_graphics::loadBitmapTable`]
+		#[doc(alias = "sys::ffi::playdate_graphics::loadBitmapTable")]
 		fn load_bitmap_table(
 			&self)
 			-> unsafe extern "C" fn(path: *const c_char, out_err: *mut *const c_char) -> *mut LCDBitmapTable {
 			*sys::api!(graphics.loadBitmapTable)
 		}
+
+		/// Equivalent to [`sys::ffi::playdate_graphics::loadIntoBitmapTable`]
+		#[doc(alias = "sys::ffi::playdate_graphics::loadIntoBitmapTable")]
 		fn load_into_bitmap_table(
 			&self)
 			-> unsafe extern "C" fn(path: *const c_char, table: *mut LCDBitmapTable, out_err: *mut *const c_char) {
 			*sys::api!(graphics.loadIntoBitmapTable)
 		}
+
+		/// Equivalent to [`sys::ffi::playdate_graphics::getTableBitmap`]
+		#[doc(alias = "sys::ffi::playdate_graphics::getTableBitmap")]
 		fn get_table_bitmap(&self)
 		                    -> unsafe extern "C" fn(table: *mut LCDBitmapTable, idx: c_int) -> *mut LCDBitmap {
 			*sys::api!(graphics.getTableBitmap)

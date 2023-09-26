@@ -17,6 +17,14 @@ impl Display<api::Default> {
 	pub fn Default() -> Self { Self(Default::default()) }
 }
 
+impl Display<api::Cache> {
+	/// Creates [`Display`] without type parameter requirement.
+	///
+	/// Uses [`api::Cache`].
+	#[allow(non_snake_case)]
+	pub fn Cached() -> Self { Self(Default::default()) }
+}
+
 impl<Api: Default + api::Api> Default for Display<Api> {
 	fn default() -> Self { Self(Default::default()) }
 }
@@ -169,12 +177,95 @@ pub mod api {
 	use core::ffi::c_float;
 	use core::ffi::c_int;
 	use core::ffi::c_uint;
+	use core::ptr::NonNull;
+	use sys::ffi::playdate_display;
 
 
+	/// Default display api end-point, ZST.
+	///
+	/// All calls approximately costs ~3 derefs.
 	#[derive(Debug, Clone, Copy, core::default::Default)]
 	pub struct Default;
-
 	impl Api for Default {}
+
+
+	/// Cached display api end-point.
+	///
+	/// Stores one reference, so size on stack is eq `usize`.
+	///
+	/// All calls approximately costs ~1 deref.
+	#[derive(Clone, Copy)]
+	#[cfg_attr(feature = "bindings-derive-debug", derive(Debug))]
+	pub struct Cache(&'static playdate_display);
+
+	impl core::default::Default for Cache {
+		fn default() -> Self { Self(sys::api!(display)) }
+	}
+
+	impl From<*const playdate_display> for Cache {
+		#[inline(always)]
+		fn from(ptr: *const playdate_display) -> Self { Self(unsafe { ptr.as_ref() }.expect("display")) }
+	}
+
+	impl From<&'static playdate_display> for Cache {
+		#[inline(always)]
+		fn from(r: &'static playdate_display) -> Self { Self(r) }
+	}
+
+	impl From<NonNull<playdate_display>> for Cache {
+		#[inline(always)]
+		fn from(ptr: NonNull<playdate_display>) -> Self { Self(unsafe { ptr.as_ref() }) }
+	}
+
+	impl From<&'_ NonNull<playdate_display>> for Cache {
+		#[inline(always)]
+		fn from(ptr: &NonNull<playdate_display>) -> Self { Self(unsafe { ptr.as_ref() }) }
+	}
+
+
+	impl Api for Cache {
+		/// Equivalent to [`sys::ffi::playdate_display::getWidth`]
+		#[doc(alias = "sys::ffi::playdate_display::getWidth")]
+		#[inline(always)]
+		fn get_width(&self) -> unsafe extern "C" fn() -> c_int { self.0.getWidth.expect("getWidth") }
+
+		/// Equivalent to [`sys::ffi::playdate_display::getHeight`]
+		#[doc(alias = "sys::ffi::playdate_display::getHeight")]
+		#[inline(always)]
+		fn get_height(&self) -> unsafe extern "C" fn() -> c_int { self.0.getHeight.expect("getHeight") }
+
+		/// Equivalent to [`sys::ffi::playdate_display::setRefreshRate`]
+		#[doc(alias = "sys::ffi::playdate_display::setRefreshRate")]
+		#[inline(always)]
+		fn set_refresh_rate(&self) -> unsafe extern "C" fn(rate: c_float) {
+			self.0.setRefreshRate.expect("setRefreshRate")
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_display::setInverted`]
+		#[doc(alias = "sys::ffi::playdate_display::setInverted")]
+		#[inline(always)]
+		fn set_inverted(&self) -> unsafe extern "C" fn(flag: c_int) { self.0.setInverted.expect("setInverted") }
+
+		/// Equivalent to [`sys::ffi::playdate_display::setScale`]
+		#[doc(alias = "sys::ffi::playdate_display::setScale")]
+		#[inline(always)]
+		fn set_scale(&self) -> unsafe extern "C" fn(s: c_uint) { self.0.setScale.expect("setScale") }
+
+		/// Equivalent to [`sys::ffi::playdate_display::setMosaic`]
+		#[doc(alias = "sys::ffi::playdate_display::setMosaic")]
+		#[inline(always)]
+		fn set_mosaic(&self) -> unsafe extern "C" fn(x: c_uint, y: c_uint) { self.0.setMosaic.expect("setMosaic") }
+
+		/// Equivalent to [`sys::ffi::playdate_display::setFlipped`]
+		#[doc(alias = "sys::ffi::playdate_display::setFlipped")]
+		#[inline(always)]
+		fn set_flipped(&self) -> unsafe extern "C" fn(x: c_int, y: c_int) { self.0.setFlipped.expect("setFlipped") }
+
+		/// Equivalent to [`sys::ffi::playdate_display::setOffset`]
+		#[doc(alias = "sys::ffi::playdate_display::setOffset")]
+		#[inline(always)]
+		fn set_offset(&self) -> unsafe extern "C" fn(x: c_int, y: c_int) { self.0.setOffset.expect("setOffset") }
+	}
 
 
 	pub trait Api {

@@ -1,6 +1,6 @@
 [package]
 name = "playdate"
-version = "0.1.1"
+version = "0.1.2"
 readme = "README.md"
 description = "High-level Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -195,11 +195,16 @@ crate-type = ["dylib", "staticlib"]
 path = "examples/hello-world.rs"
 required-features = ["entry-point"]
 
-# TODO: REMOVE ME!
 [[example]]
 name = "minimal"
 crate-type = ["dylib", "staticlib"]
 path = "examples/minimal.rs"
+required-features = ["entry-point"]
+
+[[example]]
+name = "video"
+crate-type = ["dylib", "staticlib"]
+path = "examples/video.rs"
 required-features = ["entry-point"]
 
 [package.metadata.playdate]
@@ -208,6 +213,7 @@ bundle-id = "rs.playdate.core"
 [package.metadata.playdate.dev-assets]
 "examples/ferris.png" = true
 "examples/" = "${PLAYDATE_SDK_PATH}/Examples/Level 1-1/Source/sfx/main_theme.wav"
+"examples/video.pdv" = "${PLAYDATE_SDK_PATH}/Disk/System/Setup.pdx/videos/outro.pdv"
 
 
 [package.metadata.docs.rs]

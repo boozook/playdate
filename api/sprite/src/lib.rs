@@ -36,7 +36,9 @@ pub use sprite::*;
 use crate::api::Api;
 
 
-/// When flag is set to `true`, the given sprite will always redraw.
+/// If set to `true`, causes all sprites to draw each frame, whether or not they have been marked dirty.
+/// This may speed up the performance of your game if the system’s dirty rect tracking is taking up too much time -
+/// for example if there are many sprites moving around on screen at once.
 ///
 /// Equivalent to [`sys::ffi::playdate_sprite::setAlwaysRedraw`]
 #[doc(alias = "sys::ffi::playdate_sprite::setAlwaysRedraw")]

@@ -6,12 +6,15 @@ use core::ffi::c_int;
 use core::marker::PhantomData;
 use alloc::boxed::Box;
 
+use sys::error::OkOrNullFnErr;
 use sys::traits::AsRaw;
 use sys::ffi::CString;
 use sys::ffi::LCDColor;
 use sys::ffi::LCDRect;
 use sys::ffi::LCDBitmap;
 use fs::Path;
+
+use crate::Graphics;
 use crate::error::ApiError;
 use crate::error::Error;
 use super::api;
@@ -83,7 +86,7 @@ impl<Api: api::Api + Default, const FOD: bool> From<*mut LCDBitmap> for Bitmap<A
 
 impl<Api: api::Api + Copy> Bitmap<Api, true> {
 	/// Convert this bitmap into the same bitmap that will not be freed on drop.
-	/// That means that only C-part of the bitmap will be freed.
+	/// That means that only C-part of the bitmap will __not__ be freed.
 	///
 	/// __Safety is guaranteed by the caller.__
 	pub fn into_shared(mut self) -> Bitmap<Api, false> {
@@ -530,48 +533,40 @@ impl<'bitmap> BitmapData<'bitmap> {
 ///
 /// Returns error on device.
 ///
+/// This function is shorthand for [`Graphics::debug_bitmap`],
+/// using default ZST end-point.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::getDebugBitmap`].
 #[doc(alias = "sys::ffi::playdate_graphics::getDebugBitmap")]
-pub fn debug_bitmap() -> Result<Bitmap<api::Default, false>, ApiError> {
-	let f = sys::api_ok!(graphics.getDebugBitmap)?;
-	let ptr = unsafe { f() };
-	if ptr.is_null() {
-		Err(Error::Alloc.into())
-	} else {
-		Ok(Bitmap(ptr, Default::default()))
-	}
-}
+#[inline(always)]
+pub fn debug_bitmap() -> Result<Bitmap<api::Default, false>, ApiError> { Graphics::Default().debug_bitmap() }
 
 /// Returns a bitmap containing the contents of the display buffer.
 ///
 /// __The system owns this bitmap—​do not free it.__
 ///
+/// This function is shorthand for [`Graphics::display_buffer_bitmap`],
+/// using default ZST end-point.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::getDisplayBufferBitmap`].
 #[doc(alias = "sys::ffi::playdate_graphics::getDisplayBufferBitmap")]
+#[inline(always)]
 pub fn display_buffer_bitmap() -> Result<Bitmap<api::Default, false>, Error> {
-	let f = *sys::api!(graphics.getDisplayBufferBitmap);
-	let ptr = unsafe { f() };
-	if ptr.is_null() {
-		Err(Error::Alloc)
-	} else {
-		Ok(Bitmap(ptr, Default::default()))
-	}
+	Graphics::Default().display_buffer_bitmap()
 }
 
 /// Returns a copy the contents of the working frame buffer as a bitmap.
 ///
 /// The caller is responsible for freeing the returned bitmap, it will automatically on drop.
 ///
+/// This function is shorthand for [`Graphics::frame_buffer_bitmap`],
+/// using default ZST end-point.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::copyFrameBufferBitmap`].
 #[doc(alias = "sys::ffi::playdate_graphics::copyFrameBufferBitmap")]
+#[inline(always)]
 pub fn copy_frame_buffer_bitmap() -> Result<Bitmap<api::Default, true>, Error> {
-	let f = *sys::api!(graphics.copyFrameBufferBitmap);
-	let ptr = unsafe { f() };
-	if ptr.is_null() {
-		Err(Error::Alloc)
-	} else {
-		Ok(Bitmap(ptr, Default::default()))
-	}
+	Graphics::Default().frame_buffer_bitmap()
 }
 
 
@@ -581,11 +576,14 @@ pub fn copy_frame_buffer_bitmap() -> Result<Bitmap<api::Default, true>, Error> {
 ///
 /// Tiled stencils must have width equal to a multiple of 32 pixels.
 ///
+/// This function is shorthand for [`Graphics::set_stencil_tiled`],
+/// using default ZST end-point.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::setStencilImage`].
 #[doc(alias = "sys::ffi::playdate_graphics::setStencilImage")]
+#[inline(always)]
 pub fn set_stencil_tiled(image: &impl AnyBitmap, tile: bool) {
-	let f = *sys::api!(graphics.setStencilImage);
-	unsafe { f(image.as_raw(), tile as _) };
+	Graphics::Default().set_stencil_tiled(image, tile)
 }
 
 /// Sets the stencil used for drawing.
@@ -593,23 +591,25 @@ pub fn set_stencil_tiled(image: &impl AnyBitmap, tile: bool) {
 ///
 /// NOTE: Officially deprecated in favor of [`set_stencil_tiled`], which adds a `tile` flag
 ///
+/// This function is shorthand for [`Graphics::set_stencil`],
+/// using default ZST end-point.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::setStencil`].
 #[doc(alias = "sys::ffi::playdate_graphics::setStencil")]
-pub fn set_stencil(image: &impl AnyBitmap) {
-	let f = *sys::api!(graphics.setStencil);
-	unsafe { f(image.as_raw()) };
-}
+#[inline(always)]
+pub fn set_stencil(image: &impl AnyBitmap) { Graphics::Default().set_stencil(image) }
 
 /// Sets the mode used for drawing bitmaps.
 ///
 /// Note that text drawing uses bitmaps, so this affects how fonts are displayed as well.
 ///
+/// This function is shorthand for [`Graphics::set_draw_mode`],
+/// using default ZST end-point.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::setDrawMode`].
 #[doc(alias = "sys::ffi::playdate_graphics::setDrawMode")]
-pub fn set_draw_mode(mode: BitmapDrawMode) {
-	let f = *sys::api!(graphics.setDrawMode);
-	unsafe { f(mode) };
-}
+#[inline(always)]
+pub fn set_draw_mode(mode: BitmapDrawMode) { Graphics::Default().set_draw_mode(mode) }
 
 /// Push a new drawing context for drawing into the given bitmap.
 ///
@@ -618,30 +618,157 @@ pub fn set_draw_mode(mode: BitmapDrawMode) {
 ///
 /// To clear entire context use [`clear_context`].
 ///
+/// This function is shorthand for [`Graphics::push_context`],
+/// using default ZST end-point.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::pushContext`].
 #[doc(alias = "sys::ffi::playdate_graphics::pushContext")]
-pub fn push_context(target: &impl AnyBitmap) {
-	let f = *sys::api!(graphics.pushContext);
-	unsafe { f(target.as_raw()) };
-}
+#[inline(always)]
+pub fn push_context(target: &impl AnyBitmap) { Graphics::Default().push_context(target) }
 
 /// Resets drawing context for drawing into the system display framebuffer.
 ///
 /// So drawing functions will use the display framebuffer.
 ///
+/// This function is shorthand for [`Graphics::clear_context`],
+/// using default ZST end-point.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::pushContext`].
 #[doc(alias = "sys::ffi::playdate_graphics::pushContext")]
-pub fn clear_context() {
-	let f = *sys::api!(graphics.pushContext);
-	unsafe { f(core::ptr::null_mut()) };
-}
+#[inline(always)]
+pub fn clear_context() { Graphics::Default().clear_context() }
 
 /// Pops a context off the stack (if any are left),
 /// restoring the drawing settings from before the context was pushed.
 ///
+/// This function is shorthand for [`Graphics::pop_context`],
+/// using default ZST end-point.
+///
 /// Equivalent to [`sys::ffi::playdate_graphics::popContext`].
 #[doc(alias = "sys::ffi::playdate_graphics::popContext")]
-pub fn pop_context() {
-	let f = *sys::api!(graphics.popContext);
-	unsafe { f() };
+#[inline(always)]
+pub fn pop_context() { Graphics::Default().pop_context() }
+
+
+impl<Api: crate::api::Api> Graphics<Api> {
+	/// Only valid in the Simulator,
+	/// returns the debug framebuffer as a bitmap.
+	///
+	/// Returns error on device.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::getDebugBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::getDebugBitmap")]
+	pub fn debug_bitmap(&self) -> Result<Bitmap<api::Default, false>, ApiError> {
+		let f = self.0.get_debug_bitmap().ok_or_null()?;
+		let ptr = unsafe { f() };
+		if ptr.is_null() {
+			Err(Error::Alloc.into())
+		} else {
+			Ok(Bitmap(ptr, Default::default()))
+		}
+	}
+
+	/// Returns a bitmap containing the contents of the display buffer.
+	///
+	/// __The system owns this bitmap—​do not free it.__
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::getDisplayBufferBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::getDisplayBufferBitmap")]
+	pub fn display_buffer_bitmap(&self) -> Result<Bitmap<api::Default, false>, Error> {
+		let f = self.0.get_display_buffer_bitmap();
+		let ptr = unsafe { f() };
+		if ptr.is_null() {
+			Err(Error::Alloc)
+		} else {
+			Ok(Bitmap(ptr, Default::default()))
+		}
+	}
+
+	/// Returns a __copy__ the contents of the working frame buffer as a bitmap.
+	///
+	/// The caller is responsible for freeing the returned bitmap, it will automatically on drop.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::copyFrameBufferBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::copyFrameBufferBitmap")]
+	pub fn frame_buffer_bitmap(&self) -> Result<Bitmap<api::Default, true>, Error> {
+		let f = self.0.copy_frame_buffer_bitmap();
+		let ptr = unsafe { f() };
+		if ptr.is_null() {
+			Err(Error::Alloc)
+		} else {
+			Ok(Bitmap(ptr, Default::default()))
+		}
+	}
+
+
+	/// Sets the stencil used for drawing.
+	///
+	/// If the `tile` is `true` the stencil image will be tiled.
+	///
+	/// Tiled stencils must have width equal to a multiple of 32 pixels.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::setStencilImage`].
+	#[doc(alias = "sys::ffi::playdate_graphics::setStencilImage")]
+	pub fn set_stencil_tiled(&self, image: &impl AnyBitmap, tile: bool) {
+		let f = self.0.set_stencil_image();
+		unsafe { f(image.as_raw(), tile as _) };
+	}
+
+	/// Sets the stencil used for drawing.
+	/// For a tiled stencil, use [`set_stencil_tiled`] instead.
+	///
+	/// NOTE: Officially deprecated in favor of [`set_stencil_tiled`], which adds a `tile` flag
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::setStencil`].
+	#[doc(alias = "sys::ffi::playdate_graphics::setStencil")]
+	pub fn set_stencil(&self, image: &impl AnyBitmap) {
+		let f = self.0.set_stencil();
+		unsafe { f(image.as_raw()) };
+	}
+
+	/// Sets the mode used for drawing bitmaps.
+	///
+	/// Note that text drawing uses bitmaps, so this affects how fonts are displayed as well.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::setDrawMode`].
+	#[doc(alias = "sys::ffi::playdate_graphics::setDrawMode")]
+	pub fn set_draw_mode(&self, mode: BitmapDrawMode) {
+		let f = self.0.set_draw_mode();
+		unsafe { f(mode) };
+	}
+
+	/// Push a new drawing context for drawing into the given bitmap.
+	///
+	/// If underlying ptr in the `target` is `null`, the drawing functions will use the display framebuffer.
+	/// This mostly should not happen, just for note.
+	///
+	/// To clear entire context use [`clear_context`].
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::pushContext`].
+	#[doc(alias = "sys::ffi::playdate_graphics::pushContext")]
+	pub fn push_context(&self, target: &impl AnyBitmap) {
+		let f = self.0.push_context();
+		unsafe { f(target.as_raw()) };
+	}
+
+	/// Resets drawing context for drawing into the system display framebuffer.
+	///
+	/// So drawing functions will use the display framebuffer.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::pushContext`].
+	#[doc(alias = "sys::ffi::playdate_graphics::pushContext")]
+	pub fn clear_context(&self) {
+		let f = self.0.push_context();
+		unsafe { f(core::ptr::null_mut()) };
+	}
+
+	/// Pops a context off the stack (if any are left),
+	/// restoring the drawing settings from before the context was pushed.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::popContext`].
+	#[doc(alias = "sys::ffi::playdate_graphics::popContext")]
+	pub fn pop_context(&self) {
+		let f = self.0.pop_context();
+		unsafe { f() };
+	}
 }

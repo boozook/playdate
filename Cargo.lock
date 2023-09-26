@@ -387,7 +387,7 @@ dependencies = [
  "target",
  "termcolor",
  "toml",
- "toml_edit 0.20.0",
+ "toml_edit 0.20.1",
  "try-lazy-init",
  "walkdir",
  "zip",
@@ -2507,7 +2507,7 @@ checksum = "26072860ba924cbfa98ea39c8c19b4dd6a4a25423dbdf219c1eca91aa0cf6964"
 
 [[package]]
 name = "playdate"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "playdate-controls",
  "playdate-display",
@@ -2579,7 +2579,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-display"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "playdate-sys",
 ]
@@ -2593,7 +2593,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-graphics"
-version = "0.2.3"
+version = "0.3.0"
 dependencies = [
  "playdate-color",
  "playdate-fs",
@@ -2617,7 +2617,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-sprite"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "playdate-graphics",
  "playdate-sys",
@@ -2634,7 +2634,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-system"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "playdate-sys",
 ]
@@ -3057,9 +3057,9 @@ checksum = "ae1a47186c03a32177042e55dbc5fd5aee900b8e0069a8d70fba96a9375cd012"
 
 [[package]]
 name = "sha2"
-version = "0.10.7"
+version = "0.10.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "479fb9d862239e610720565ca91403019f2f00410f1864c5aa7479b950a76ed8"
+checksum = "793db75ad2bcafc3ffa7c68b215fee268f537982cd901d132f89c6343f3a3dc8"
 dependencies = [
  "cfg-if",
  "cpufeatures",
@@ -3415,9 +3415,9 @@ dependencies = [
 
 [[package]]
 name = "toml_edit"
-version = "0.20.0"
+version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ff63e60a958cefbb518ae1fd6566af80d9d4be430a33f3723dfc47d1d411d95"
+checksum = "ca676d9ba1a322c1b64eb8045a5ec5c0cfb0c9d08e15e9ff622589ad5221c8fe"
 dependencies = [
  "indexmap 2.0.0",
  "serde",
