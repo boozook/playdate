@@ -21,7 +21,7 @@ repository = "https://github.com/boozook/playdate.git"
 [workspace.dependencies]
 color = { version = "0.1", path = "api/color", package = "playdate-color", default-features = false }
 ctrl = { version = "0.1", path = "api/ctrl", package = "playdate-controls", default-features = false }
-display = { version = "0.2", path = "api/display", package = "playdate-display", default-features = false }
+display = { version = "0.3", path = "api/display", package = "playdate-display", default-features = false }
 fs = { version = "0.1", path = "api/fs", package = "playdate-fs", default-features = false }
 gfx = { version = "0.2", path = "api/gfx", package = "playdate-graphics", default-features = false }
 menu = { version = "0.1", path = "api/menu", package = "playdate-menu", default-features = false }
