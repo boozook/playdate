@@ -40,7 +40,7 @@ pub mod ext {
 
 
 	pub trait PlaydateAPIExt {
-		// fn system() -> system::System;
+		fn system(&self) -> system::System<system::api::Cache>;
 		// fn file() -> file::File;
 		// fn graphics() -> graphics::Graphics;
 		// fn sprite() -> sprite::Sprite;
@@ -53,12 +53,20 @@ pub mod ext {
 
 
 	impl PlaydateAPIExt for NonNull<sys::ffi::PlaydateAPI> {
+		fn system(&self) -> system::System<system::api::Cache> {
+			system::System::new_with(system::api::Cache::from(unsafe { self.as_ref() }.system))
+		}
+
 		fn display(&self) -> display::Display<display::api::Cache> {
 			display::Display::new_with(display::api::Cache::from(unsafe { self.as_ref() }.display))
 		}
 	}
 
 	impl PlaydateAPIExt for *const sys::ffi::PlaydateAPI {
+		fn system(&self) -> system::System<system::api::Cache> {
+			system::System::new_with(system::api::Cache::from(unsafe { self.as_ref() }.expect("api").system))
+		}
+
 		fn display(&self) -> display::Display<display::api::Cache> {
 			display::Display::new_with(display::api::Cache::from(unsafe { self.as_ref() }.expect("api").display))
 		}

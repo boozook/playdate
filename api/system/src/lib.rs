@@ -199,16 +199,164 @@ pub mod api {
 	use core::ffi::c_int;
 	use core::ffi::c_uint;
 	use core::ffi::c_void;
+	use core::ptr::NonNull;
 
 	use sys::ffi::PDCallbackFunction;
 	use sys::ffi::PDDateTime;
 	use sys::ffi::PDLanguage;
+	use sys::ffi::playdate_sys;
 
 
+	/// Default system api end-point, ZST.
+	///
+	/// All calls approximately costs ~3 derefs.
 	#[derive(Debug, Clone, Copy, core::default::Default)]
 	pub struct Default;
-
 	impl Api for Default {}
+
+
+	/// Cached system api end-point.
+	///
+	/// Stores one reference, so size on stack is eq `usize`.
+	///
+	/// All calls approximately costs ~1 deref.
+	#[derive(Debug, Clone, Copy)]
+	pub struct Cache(&'static playdate_sys);
+
+	impl core::default::Default for Cache {
+		fn default() -> Self { Self(sys::api!(system)) }
+	}
+
+	impl From<*const playdate_sys> for Cache {
+		#[inline(always)]
+		fn from(ptr: *const playdate_sys) -> Self { Self(unsafe { ptr.as_ref() }.expect("system")) }
+	}
+
+	impl From<&'static playdate_sys> for Cache {
+		#[inline(always)]
+		fn from(r: &'static playdate_sys) -> Self { Self(r) }
+	}
+
+	impl From<NonNull<playdate_sys>> for Cache {
+		#[inline(always)]
+		fn from(ptr: NonNull<playdate_sys>) -> Self { Self(unsafe { ptr.as_ref() }) }
+	}
+
+	impl From<&'_ NonNull<playdate_sys>> for Cache {
+		#[inline(always)]
+		fn from(ptr: &NonNull<playdate_sys>) -> Self { Self(unsafe { ptr.as_ref() }) }
+	}
+
+
+	impl Api for Cache {
+		/// Equivalent to [`sys::ffi::playdate_sys::getLanguage`]
+		#[doc(alias = "sys::ffi::playdate_sys::getLanguage")]
+		#[inline(always)]
+		fn get_language(&self) -> unsafe extern "C" fn() -> PDLanguage { self.0.getLanguage.expect("getLanguage") }
+
+		/// Equivalent to [`sys::ffi::playdate_sys::getCurrentTimeMilliseconds`]
+		#[doc(alias = "sys::ffi::playdate_sys::getCurrentTimeMilliseconds")]
+		#[inline(always)]
+		fn get_current_time_milliseconds(&self) -> unsafe extern "C" fn() -> c_uint {
+			self.0
+			    .getCurrentTimeMilliseconds
+			    .expect("getCurrentTimeMilliseconds")
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::getSecondsSinceEpoch`]
+		#[doc(alias = "sys::ffi::playdate_sys::getSecondsSinceEpoch")]
+		#[inline(always)]
+		fn get_seconds_since_epoch(&self) -> unsafe extern "C" fn(milliseconds: *mut c_uint) -> c_uint {
+			self.0.getSecondsSinceEpoch.expect("getSecondsSinceEpoch")
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::drawFPS`]
+		#[doc(alias = "sys::ffi::playdate_sys::drawFPS")]
+		#[inline(always)]
+		fn draw_fps(&self) -> unsafe extern "C" fn(x: c_int, y: c_int) { self.0.drawFPS.expect("drawFPS") }
+
+		/// Equivalent to [`sys::ffi::playdate_sys::setUpdateCallback`]
+		#[doc(alias = "sys::ffi::playdate_sys::setUpdateCallback")]
+		#[inline(always)]
+		fn set_update_callback(&self) -> unsafe extern "C" fn(update: PDCallbackFunction, userdata: *mut c_void) {
+			self.0.setUpdateCallback.expect("setUpdateCallback")
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::getFlipped`]
+		#[doc(alias = "sys::ffi::playdate_sys::getFlipped")]
+		#[inline(always)]
+		fn get_flipped(&self) -> unsafe extern "C" fn() -> c_int { self.0.getFlipped.expect("getFlipped") }
+
+		/// Equivalent to [`sys::ffi::playdate_sys::setAutoLockDisabled`]
+		#[doc(alias = "sys::ffi::playdate_sys::setAutoLockDisabled")]
+		#[inline(always)]
+		fn set_auto_lock_disabled(&self) -> unsafe extern "C" fn(disable: c_int) {
+			self.0.setAutoLockDisabled.expect("setAutoLockDisabled")
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::getReduceFlashing`]
+		#[doc(alias = "sys::ffi::playdate_sys::getReduceFlashing")]
+		#[inline(always)]
+		fn get_reduce_flashing(&self) -> unsafe extern "C" fn() -> c_int {
+			self.0.getReduceFlashing.expect("getReduceFlashing")
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::getElapsedTime`]
+		#[doc(alias = "sys::ffi::playdate_sys::getElapsedTime")]
+		#[inline(always)]
+		fn get_elapsed_time(&self) -> unsafe extern "C" fn() -> c_float {
+			self.0.getElapsedTime.expect("getElapsedTime")
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::resetElapsedTime`]
+		#[doc(alias = "sys::ffi::playdate_sys::resetElapsedTime")]
+		#[inline(always)]
+		fn reset_elapsed_time(&self) -> unsafe extern "C" fn() {
+			self.0.resetElapsedTime.expect("resetElapsedTime")
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::getBatteryPercentage`]
+		#[doc(alias = "sys::ffi::playdate_sys::getBatteryPercentage")]
+		#[inline(always)]
+		fn get_battery_percentage(&self) -> unsafe extern "C" fn() -> c_float {
+			self.0.getBatteryPercentage.expect("getBatteryPercentage")
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::getBatteryVoltage`]
+		#[doc(alias = "sys::ffi::playdate_sys::getBatteryVoltage")]
+		#[inline(always)]
+		fn get_battery_voltage(&self) -> unsafe extern "C" fn() -> c_float {
+			self.0.getBatteryVoltage.expect("getBatteryVoltage")
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::getTimezoneOffset`]
+		#[doc(alias = "sys::ffi::playdate_sys::getTimezoneOffset")]
+		#[inline(always)]
+		fn get_timezone_offset(&self) -> unsafe extern "C" fn() -> i32 {
+			self.0.getTimezoneOffset.expect("getTimezoneOffset")
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::shouldDisplay24HourTime`]
+		#[doc(alias = "sys::ffi::playdate_sys::shouldDisplay24HourTime")]
+		#[inline(always)]
+		fn should_display_24_hour_time(&self) -> unsafe extern "C" fn() -> c_int {
+			self.0.shouldDisplay24HourTime.expect("shouldDisplay24HourTime")
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::convertEpochToDateTime`]
+		#[doc(alias = "sys::ffi::playdate_sys::convertEpochToDateTime")]
+		#[inline(always)]
+		fn convert_epoch_to_date_time(&self) -> unsafe extern "C" fn(epoch: u32, datetime: *mut PDDateTime) {
+			self.0.convertEpochToDateTime.expect("convertEpochToDateTime")
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::convertDateTimeToEpoch`]
+		#[doc(alias = "sys::ffi::playdate_sys::convertDateTimeToEpoch")]
+		#[inline(always)]
+		fn convert_date_time_to_epoch(&self) -> unsafe extern "C" fn(datetime: *mut PDDateTime) -> u32 {
+			self.0.convertDateTimeToEpoch.expect("convertDateTimeToEpoch")
+		}
+	}
 
 
 	pub trait Api {
