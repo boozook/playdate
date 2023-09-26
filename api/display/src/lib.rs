@@ -194,7 +194,8 @@ pub mod api {
 	/// Stores one reference, so size on stack is eq `usize`.
 	///
 	/// All calls approximately costs ~1 deref.
-	#[derive(Debug, Clone, Copy)]
+	#[derive(Clone, Copy)]
+	#[cfg_attr(feature = "bindings-derive-debug", derive(Debug))]
 	pub struct Cache(&'static playdate_display);
 
 	impl core::default::Default for Cache {
