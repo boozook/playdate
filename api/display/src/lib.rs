@@ -17,6 +17,14 @@ impl Display<api::Default> {
 	pub fn Default() -> Self { Self(Default::default()) }
 }
 
+impl Display<api::Cache> {
+	/// Creates [`Display`] without type parameter requirement.
+	///
+	/// Uses [`api::Cache`].
+	#[allow(non_snake_case)]
+	pub fn Cached() -> Self { Self(Default::default()) }
+}
+
 impl<Api: Default + api::Api> Default for Display<Api> {
 	fn default() -> Self { Self(Default::default()) }
 }

@@ -35,6 +35,14 @@ impl System<api::Default> {
 	pub fn Default() -> Self { Self(Default::default()) }
 }
 
+impl System<api::Cache> {
+	/// Creates [`System`] without type parameter requirement.
+	///
+	/// Uses [`api::Cache`].
+	#[allow(non_snake_case)]
+	pub fn Cached() -> Self { Self(Default::default()) }
+}
+
 impl<Api: Default + api::Api> Default for System<Api> {
 	fn default() -> Self { Self(Default::default()) }
 }

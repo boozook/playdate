@@ -42,7 +42,7 @@ pub mod ext {
 	pub trait PlaydateAPIExt {
 		fn system(&self) -> system::System<system::api::Cache>;
 		// fn file() -> file::File;
-		// fn graphics() -> graphics::Graphics;
+		fn graphics(&self) -> graphics::Graphics<graphics::api::Cache>;
 		// fn sprite() -> sprite::Sprite;
 		fn display(&self) -> display::Display<display::api::Cache>;
 		// fn sound() -> sound::Sound;
@@ -57,6 +57,10 @@ pub mod ext {
 			system::System::new_with(system::api::Cache::from(unsafe { self.as_ref() }.system))
 		}
 
+		fn graphics(&self) -> graphics::Graphics<graphics::api::Cache> {
+			graphics::Graphics::new_with(graphics::api::Cache::from(unsafe { self.as_ref() }.graphics))
+		}
+
 		fn display(&self) -> display::Display<display::api::Cache> {
 			display::Display::new_with(display::api::Cache::from(unsafe { self.as_ref() }.display))
 		}
@@ -65,6 +69,10 @@ pub mod ext {
 	impl PlaydateAPIExt for *const sys::ffi::PlaydateAPI {
 		fn system(&self) -> system::System<system::api::Cache> {
 			system::System::new_with(system::api::Cache::from(unsafe { self.as_ref() }.expect("api").system))
+		}
+
+		fn graphics(&self) -> graphics::Graphics<graphics::api::Cache> {
+			graphics::Graphics::new_with(graphics::api::Cache::from(unsafe { self.as_ref() }.expect("api").graphics))
 		}
 
 		fn display(&self) -> display::Display<display::api::Cache> {

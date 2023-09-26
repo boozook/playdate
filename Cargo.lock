@@ -2617,7 +2617,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-sprite"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "playdate-graphics",
  "playdate-sys",
