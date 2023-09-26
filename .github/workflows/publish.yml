@@ -51,7 +51,9 @@ jobs:
       - name: Publish
         uses: katyo/publish-crates@v2
         with:
-          dry-run: ${{ github.event.inputs.dry-run == 'true' }}
+          # From docs: `github.head_ref` is only available when the event that triggers
+          #            a workflow run is either `pull_request` or `pull_request_target`.
+          dry-run: ${{ github.event.inputs.dry-run == 'true' || github.head_ref }}
           check-repo: ${{ (github.event.inputs && github.event.inputs.check-repo == 'true') || true }}
           ignore-unpublished-changes: true
           registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
