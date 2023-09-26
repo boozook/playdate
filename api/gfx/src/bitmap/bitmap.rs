@@ -86,7 +86,7 @@ impl<Api: api::Api + Default, const FOD: bool> From<*mut LCDBitmap> for Bitmap<A
 
 impl<Api: api::Api + Copy> Bitmap<Api, true> {
 	/// Convert this bitmap into the same bitmap that will not be freed on drop.
-	/// That means that only C-part of the bitmap will be freed.
+	/// That means that only C-part of the bitmap will __not__ be freed.
 	///
 	/// __Safety is guaranteed by the caller.__
 	pub fn into_shared(mut self) -> Bitmap<Api, false> {

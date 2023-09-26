@@ -83,6 +83,19 @@ impl<Api: api::Api, const FOD: bool> Drop for VideoPlayer<Api, FOD> {
 }
 
 
+impl<Api: api::Api + Copy> VideoPlayer<Api, true> {
+	/// Convert this video player into the same but that will not be freed on drop.
+	/// That means that only C-part of the player will __not__ be freed.
+	///
+	/// __Safety is guaranteed by the caller.__
+	pub fn into_shared(mut self) -> VideoPlayer<Api, false> {
+		let res = VideoPlayer(self.0, self.1);
+		self.0 = core::ptr::null_mut();
+		res
+	}
+}
+
+
 impl<Api: api::Api> VideoPlayer<Api, true> {
 	/// Opens the `pdv` file at path and returns a new video player object for rendering its frames.
 	///
@@ -123,7 +136,7 @@ impl<Api: api::Api, const FOD: bool> VideoPlayer<Api, FOD> {
 	#[doc(alias = "sys::ffi::playdate_video::setContext")]
 	pub fn set_context<'a, 'b: 'a>(&'a self, bitmap: &'b impl AnyBitmap) -> Result<(), Error> {
 		let f = self.1.set_context();
-		if unsafe { f(self.0, bitmap.as_raw()) } == 0 {
+		if unsafe { f(self.0, bitmap.as_raw()) } != 0 {
 			Ok(())
 		} else {
 			Err(self.get_error().unwrap_or(Error::Unknown))
@@ -163,7 +176,7 @@ impl<Api: api::Api, const FOD: bool> VideoPlayer<Api, FOD> {
 	#[doc(alias = "sys::ffi::playdate_video::renderFrame")]
 	pub fn render_frame(&self, n: c_int) -> Result<(), Error> {
 		let f = self.1.render_frame();
-		if unsafe { f(self.0, n) } == 0 {
+		if unsafe { f(self.0, n) } != 0 {
 			Ok(())
 		} else {
 			Err(self.get_error().unwrap_or(Error::Unknown))
@@ -255,11 +268,11 @@ impl<Api: api::Api, const FOD: bool> VideoPlayer<Api, FOD> {
 
 #[derive(Debug, Clone, Default)]
 pub struct VideoPlayerOutInfo {
-	width: c_int,
-	height: c_int,
-	frame_rate: c_float,
-	frame_count: c_int,
-	current_frame: c_int,
+	pub width: c_int,
+	pub height: c_int,
+	pub frame_rate: c_float,
+	pub frame_count: c_int,
+	pub current_frame: c_int,
 }
 
 

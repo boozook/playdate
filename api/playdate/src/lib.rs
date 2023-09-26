@@ -39,12 +39,21 @@ pub mod ext {
 	use core::ptr::NonNull;
 
 
+	/// Main Playdate API entry point.
 	pub trait PlaydateAPIExt {
+		/// Playdate System API.
 		fn system(&self) -> system::System<system::api::Cache>;
+
 		// fn file() -> file::File;
+
+		/// Playdate Graphics API.
 		fn graphics(&self) -> graphics::Graphics<graphics::api::Cache>;
+
 		// fn sprite() -> sprite::Sprite;
+
+		/// Playdate Display API.
 		fn display(&self) -> display::Display<display::api::Cache>;
+
 		// fn sound() -> sound::Sound;
 		// fn lua() -> lua::Lua;
 		// fn json() -> json::Json;
