@@ -1,8 +1,7 @@
 use alloc::borrow::ToOwned;
 use sys::ffi::FileOptions;
 
-use crate::FileSystem;
-use crate::Fs;
+use crate::api;
 use crate::Path;
 use crate::error::ApiError;
 
@@ -10,6 +9,7 @@ use crate::error::ApiError;
 /// Extension for [`sys::ffi::FileOptions`] make it looks like [`std::fs::OpenOptions`].
 #[const_trait]
 pub trait FileOptionsExt: Into<FileOptions> {
+	/// Creates new empty file options.
 	fn new() -> Self;
 
 	fn read(self, read: bool) -> Self;
@@ -29,19 +29,28 @@ pub trait FileOptionsExt: Into<FileOptions> {
 }
 
 pub trait OpenOptions: Into<FileOptions> {
-	fn open<P: AsRef<Path>>(&self, path: P) -> Result<crate::file::File, ApiError>;
-	fn open_using<P: AsRef<Path>>(&self, path: P, fs: &Fs) -> Result<crate::file::File, ApiError>;
+	/// Open file with this options.
+	fn open<P: AsRef<Path>>(&self, path: P) -> Result<crate::file::File<api::Cache>, ApiError>;
+
+	/// Open file with this options, using given `api`.
+	fn open_using<Api: api::Api, P: AsRef<Path>>(&self,
+	                                             api: Api,
+	                                             path: P)
+	                                             -> Result<crate::file::File<Api>, ApiError>;
 }
 
 impl OpenOptions for FileOptions {
 	#[inline(always)]
-	fn open<P: AsRef<Path>>(&self, path: P) -> Result<crate::file::File, ApiError> {
-		Fs::new()?.open(path, self.to_owned())
+	fn open<P: AsRef<Path>>(&self, path: P) -> Result<crate::file::File<api::Cache>, ApiError> {
+		crate::ops::open(api::Cache::default(), path, self.to_owned())
 	}
 
 	#[inline(always)]
-	fn open_using<P: AsRef<Path>>(&self, path: P, fs: &Fs) -> Result<crate::file::File, ApiError> {
-		fs.open(path, self.to_owned())
+	fn open_using<Api: api::Api, P: AsRef<Path>>(&self,
+	                                             api: Api,
+	                                             path: P)
+	                                             -> Result<crate::file::File<Api>, ApiError> {
+		crate::ops::open(api, path, self.to_owned())
 	}
 }
 

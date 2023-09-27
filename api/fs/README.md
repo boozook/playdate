@@ -2,7 +2,7 @@
 
 High-level interface to file-system on-top of `playdate-sys` crate.
 
-🚨 Before the version `0.3` API is highly unstable and subject to change. After that old versions will yanked.
+⚠️ Until the version `0.3` API is unstable and can be changed partially.
 
 
 

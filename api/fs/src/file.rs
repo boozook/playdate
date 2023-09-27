@@ -1,12 +1,11 @@
 use core::ffi::c_uint;
 use alloc::vec::Vec;
 
-use sys::error::OkOrNullFnErr;
 use sys::ffi::FileOptions;
 use sys::ffi::SDFile;
+use sys::traits::AsRaw;
 
-use crate::FileSystem;
-use crate::Fs;
+use crate::api;
 use crate::Path;
 use crate::ApiError;
 use crate::error::Error;
@@ -15,51 +14,26 @@ use crate::options::OpenOptions;
 use crate::seek::SeekFrom;
 
 
-#[must_use = "File will closed on drop"]
+pub trait AnyFile: AsRaw<Type = SDFile> {}
+impl<T: AsRaw<Type = SDFile>> AnyFile for T {}
+
+
+#[must_use = "File will be closed on drop"]
 #[cfg_attr(feature = "bindings-derive-debug", derive(Debug))]
-pub struct File(pub(crate) *mut SDFile);
+pub struct File<Api: api::Api = api::Default>(pub(crate) *mut SDFile, pub(crate) Api);
 
-impl File {
-	// Ensure the inner pointer is valid (not null).
-	pub fn valid(&self) -> bool { !self.0.is_null() }
+// impl<Api: api::Api> File<Api> {
+// 	pub type Default = File<api::Default>;
+// 	pub type Cached = File<api::Cached>;
+// }
 
-	/// Attempts to open a file in read-only mode.
-	///
-	/// See the [`OpenOptions::open`] method for more details.
-	///
-	/// https://sdk.play.date/2.0.1/Inside%20Playdate%20with%20C.html#f-file.open
-	#[must_use]
-	pub fn open<P: AsRef<Path>>(path: P, data_dir: bool) -> Result<File, ApiError> {
-		Fs::new()?.open(path, FileOptions::new().read(true).read_data(data_dir))
-	}
-
-	/// Reads up to `len` bytes from the file into the buffer `buf`.
-	/// Returns the number of bytes read (0 indicating end of file).
-	pub fn read(&mut self, to: &mut Vec<u8>, len: c_uint) -> Result<c_uint, ApiError> {
-		Fs::new()?.read(self, to, len)
-	}
-
-	/// Writes the buffer of bytes buf to the file. Returns the number of bytes written.
-	pub fn write(&mut self, from: &[u8]) -> Result<c_uint, ApiError> { Fs::new()?.write(self, from) }
-
-	/// Flushes the output buffer of file immediately. Returns the number of bytes written.
-	pub fn flush(&mut self) -> Result<c_uint, ApiError> { Fs::new()?.flush(self) }
-
-	/// Returns the current read/write offset in the given file handle.
-	#[must_use]
-	pub fn tell(&mut self) -> Result<c_uint, ApiError> { Fs::new()?.tell(self) }
-
-	/// Sets the read/write offset in the given file handle to pos, relative to the `whence`.
-	/// `Whence::Set` is relative to the beginning of the file,
-	/// `Whence::Cur` is relative to the current position of the file pointer, and
-	/// `Whence::End` is relative to the end of the file.
-	/// Returns 0 on success.
-	pub fn seek(&mut self, pos: SeekFrom) -> Result<c_uint, ApiError> { Fs::new()?.seek(self, pos) }
-
-	/// Closes the this file handle.
-	pub fn close(self) -> Result<(), ApiError> { Fs::new()?.close(self) }
+impl<Api: api::Api> AsRaw for File<Api> {
+	type Type = SDFile;
+	unsafe fn as_raw(&self) -> *mut Self::Type { self.0 }
+}
 
 
+impl File<api::Default> {
 	/// Creates a blank new set of options ready for configuration.
 	/// All options are initially set to false.
 	///
@@ -68,27 +42,104 @@ impl File {
 	pub fn options() -> impl OpenOptions + FileOptionsExt { FileOptions::new() }
 }
 
-impl Drop for File {
+
+impl<Api: api::Api> File<Api> {
+	/// Attempts to open a file in read-only mode.
+	///
+	/// See the [`OpenOptions::open`] method and [official docs][docs] for more details.
+	///
+	/// [docs]: https://sdk.play.date/Inside%20Playdate%20with%20C.html#f-file.open
+	///
+	/// Equivalent to [`sys::ffi::playdate_file::open`]
+	#[doc(alias = "sys::ffi::playdate_file::open")]
+	#[must_use]
+	pub fn open<P: AsRef<Path>>(path: P, data_dir: bool) -> Result<File<Api>, ApiError>
+		where Api: Default {
+		let api = Default::default();
+		crate::ops::open(api, path, FileOptions::new().read(true).read_data(data_dir))
+	}
+
+	/// Attempts to open a file in read-only mode, using the given `api`.
+	///
+	/// See the [`OpenOptions::open`] method and [official docs][docs] for more details.
+	///
+	/// [docs]: https://sdk.play.date/Inside%20Playdate%20with%20C.html#f-file.open
+	///
+	/// Equivalent to [`sys::ffi::playdate_file::open`]
+	#[doc(alias = "sys::ffi::playdate_file::open")]
+	#[must_use]
+	pub fn open_with<P: AsRef<Path>>(api: Api, path: P, data_dir: bool) -> Result<File<Api>, ApiError> {
+		crate::ops::open(api, path, FileOptions::new().read(true).read_data(data_dir))
+	}
+
+	/// Reads up to `len` bytes from the file into the buffer `buf`.
+	///
+	/// Returns the number of bytes read (0 indicating end of file).
+	///
+	/// Equivalent to [`sys::ffi::playdate_file::read`]
+	#[doc(alias = "sys::ffi::playdate_file::read")]
+	#[must_use]
+	#[inline(always)]
+	pub fn read(&mut self, to: &mut Vec<u8>, len: c_uint) -> Result<c_uint, Error> {
+		crate::ops::read(self, to, len)
+	}
+
+	/// Writes the buffer of bytes buf to the file.
+	///
+	/// Returns the number of bytes written.
+	///
+	/// Equivalent to [`sys::ffi::playdate_file::write`]
+	#[doc(alias = "sys::ffi::playdate_file::write")]
+	#[must_use]
+	#[inline(always)]
+	pub fn write(&mut self, from: &[u8]) -> Result<c_uint, Error> { crate::ops::write(self, from) }
+
+	/// Flushes the output buffer of file immediately.
+	///
+	/// Returns the number of bytes written.
+	///
+	/// Equivalent to [`sys::ffi::playdate_file::flush`]
+	#[doc(alias = "sys::ffi::playdate_file::flush")]
+	#[inline(always)]
+	pub fn flush(&mut self) -> Result<c_uint, Error> { crate::ops::flush(self) }
+
+	/// Returns the current read/write offset in the given file handle.
+	///
+	/// Equivalent to [`sys::ffi::playdate_file::tell`]
+	#[doc(alias = "sys::ffi::playdate_file::tell")]
+	#[must_use]
+	#[inline(always)]
+	pub fn tell(&mut self) -> Result<c_uint, Error> { crate::ops::tell(self) }
+
+	/// Sets the read/write offset in the file to `pos`.
+	///
+	/// Equivalent to [`sys::ffi::playdate_file::seek`]
+	#[doc(alias = "sys::ffi::playdate_file::seek")]
+	#[inline(always)]
+	pub fn seek(&mut self, pos: SeekFrom) -> Result<(), Error> {
+		let (whence, pos) = pos.into_parts();
+		crate::ops::seek(self, pos, whence)
+	}
+
+	/// Closes this file.
+	///
+	/// Equivalent to [`sys::ffi::playdate_file::close`]
+	#[doc(alias = "sys::ffi::playdate_file::close")]
+	#[inline(always)]
+	pub fn close(self) -> Result<(), Error> { crate::ops::close(self) }
+}
+
+impl<Api: api::Api> Drop for File<Api> {
 	fn drop(&mut self) {
-		if self.valid() {
-			fn print_err<E: core::fmt::Display>(err: E) { println!("Err on file-drop: {err}") }
-			let _ = Fs::new().map(|fs| {
-				                 let _ = fs.0
-				                           .close
-				                           .ok_or_null()
-				                           .map(|f| {
-					                           let result = unsafe { f(self.0) };
-					                           self.0 = core::ptr::null_mut();
-					                           match Error::ok_from_code(result) {
-						                           Ok(_) => (),
-					                              Err(err) => print_err(err),
-					                           }
-				                           })
-				                           .map_err(|err| print_err(err))
-				                           .ok();
-			                 })
-			                 .map_err(|err| print_err(err))
-			                 .ok();
+		if !self.0.is_null() {
+			let f = self.1.close();
+			let result = unsafe { f(self.0) };
+			self.0 = core::ptr::null_mut();
+
+			match Error::ok_from_code_with(result, &self.1) {
+				Ok(_) => (),
+				Err(err) => println!("Err on file-drop: {err}"),
+			}
 		}
 	}
 }

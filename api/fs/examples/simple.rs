@@ -9,15 +9,12 @@ use core::ffi::*;
 use core::ptr::null_mut;
 use alloc::string::String;
 
-use fs::FileSystem;
 use sys::ffi::*;
-use fs::options::FileOptionsExt;
-use fs::options::OpenOptions;
-use fs::Path;
+use fs::prelude::*;
 
 
 fn list_bundle_dir() -> Result<(), fs::error::ApiError> {
-	let fs = fs::Fs::new()?;
+	let fs = Fs::Default();
 	let include_hidden = true;
 	println!("Listing root dir...");
 	fs.read_dir("/", |path| println!("  {path}"), include_hidden)?;
@@ -30,7 +27,7 @@ const FILE: &Path = "temp/temp-file";
 
 
 fn write_file() -> Result<(), fs::error::ApiError> {
-	let fs = fs::Fs::new()?;
+	let fs = Fs::Cached();
 
 	let exists = fs.metadata(FILE).is_ok();
 
@@ -46,7 +43,7 @@ fn write_file() -> Result<(), fs::error::ApiError> {
 	let text = "Hello, World!";
 	println!("writing '{text}' to '{FILE}'");
 
-	let mut file = FileOptions::new().write(true).open_using(FILE, &fs)?;
+	let mut file = fs.open(FILE, FileOptions::new().write(true))?;
 	let bytes_written = fs.write(&mut file, text.as_bytes())?;
 	println!("written {bytes_written} bytes");
 
@@ -55,7 +52,7 @@ fn write_file() -> Result<(), fs::error::ApiError> {
 
 
 fn read_file() -> Result<(), fs::error::ApiError> {
-	let fs = fs::Fs::new()?;
+	let fs = Fs::Cached();
 
 	println!("reading file metadata");
 	let info = fs.metadata(&FILE)?;
@@ -66,9 +63,7 @@ fn read_file() -> Result<(), fs::error::ApiError> {
 	println!("preparing buffer for {} bytes", info.size);
 	let mut buf = vec![0_u8; info.size as usize];
 
-	let mut file = FileOptions::new().read(true)
-	                                 .read_data(true)
-	                                 .open_using(FILE, &fs)?;
+	let mut file = fs.open(FILE, FileOptions::new().read(true).read_data(true))?;
 
 	println!("reading '{FILE}'");
 	let bytes_read = file.read(&mut buf, info.size)?;
