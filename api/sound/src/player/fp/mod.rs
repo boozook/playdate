@@ -6,66 +6,47 @@ use core::ffi::c_void;
 use sys::ffi::CString;
 use sys::ffi::FilePlayer;
 use sys::ffi::sndCallbackProc;
-use sys::ffi::playdate_sound_fileplayer as Endpoint;
 
 use fs::Path;
 
 use super::Repeat;
-use crate::error::Error;
 use crate::error::ApiError;
+use crate::error::Error;
 
-mod cached;
 mod api;
-
-#[cfg(feature = "bindings-derive-cache")]
-use cached as api;
-use api::*;
 
 
 #[cfg_attr(feature = "bindings-derive-debug", derive(Debug))]
-pub struct Player<Api: FilePlayerApi = CachedEndpoint>(*mut FilePlayer, Api);
+pub struct Player<Api: api::Api = api::Default>(*mut FilePlayer, Api);
 
 
 // ctor //
 
-impl<Api> Player<Api>
-	where Api: FilePlayerApi,
-	      ApiError: From<<Api as FilePlayerApi>::Error>
-{
-	pub fn try_new() -> Result<Player<Api>, ApiError>
-		where Api: TryFrom<&'static Endpoint>,
-		      ApiError: From<<Api as TryFrom<&'static Endpoint>>::Error> {
-		let api = Api::try_from(sys::api_ok!(sound.fileplayer)?)?;
-		let new_player = api.try_new_player()?;
-		let player = unsafe { new_player() };
-		if player.is_null() {
-			panic!("new player is null");
-		}
-		Ok(Player(player, api))
+impl<Api> Player<Api> where Api: api::Api {
+	pub fn new() -> Result<Player<Api>, Error>
+		where Api: Default {
+		let api = Api::default();
+		Self::new_with(api)
 	}
 
-
-	pub fn try_new_with(api: Api) -> Result<Player<Api>, ApiError> {
-		let new_player = api.try_new_player()?;
-		let player = unsafe { new_player() };
+	pub fn new_with(api: Api) -> Result<Player<Api>, Error> {
+		let f = api.new_player();
+		let player = unsafe { f() };
 		if player.is_null() {
-			panic!("new player is null");
+			Err(Error::Alloc)
+		} else {
+			Ok(Player(player, api))
 		}
-		Ok(Player(player, api))
 	}
 }
 
 
-impl<Api: FilePlayerApi> Drop for Player<Api> {
+impl<Api: api::Api> Drop for Player<Api> {
 	fn drop(&mut self) {
 		if !self.0.is_null() {
-			match self.api().try_free_player() {
-				Ok(f) => {
-					unsafe { f(self.0) }
-					self.0 = core::ptr::null_mut();
-				},
-				Err(err) => println!("SP on drop: {err}"),
-			}
+			let f = self.api().free_player();
+			unsafe { f(self.0) }
+			self.0 = core::ptr::null_mut();
 		}
 	}
 }
@@ -73,16 +54,8 @@ impl<Api: FilePlayerApi> Drop for Player<Api> {
 
 // utils //
 
-impl<Api: FilePlayerApi + Default> Default for Player<Api> {
-	fn default() -> Self {
-		let api = Api::default();
-		let player = unsafe { api.try_new_player().expect("try_new_player")() };
-		Self(player, api)
-	}
-}
 
-
-impl<Api: FilePlayerApi> Player<Api> {
+impl<Api: api::Api> Player<Api> {
 	#[inline(always)]
 	pub fn api(&self) -> &Api { &self.1 }
 }
@@ -90,18 +63,16 @@ impl<Api: FilePlayerApi> Player<Api> {
 
 // impl //
 
-impl<Api> Player<Api>
-	where Api: FilePlayerApi,
-	      ApiError: From<<Api as FilePlayerApi>::Error>
-{
-	/// Prepares player to stream the file at path. Returns 1 if the file exists, otherwise 0.
+impl<Api> Player<Api> where Api: api::Api {
+	/// Prepares player to stream the file at path.
 	///
-	/// See also [`loadIntoPlayer`](playdate_sys::ffi::playdate_sound_fileplayer::loadIntoPlayer).
-	pub fn try_load_into_player<P: AsRef<Path>>(&self, path: P) -> Result<(), ApiError> {
+	/// Equivalent to [loadIntoPlayer](sys::ffi::playdate_sound_fileplayer::loadIntoPlayer)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::loadIntoPlayer")]
+	pub fn load_into_player<P: AsRef<Path>>(&self, path: P) -> Result<(), ApiError> {
 		let path_cs = CString::new(path.as_ref())?;
 		let path_ptr = path_cs.as_ptr() as *mut c_char;
 
-		let f = self.api().try_load_into_player()?;
+		let f = self.api().load_into_player();
 		let code = unsafe { f(self.0, path_ptr) };
 		if code == 1 {
 			Ok(())
@@ -110,163 +81,188 @@ impl<Api> Player<Api>
 		}
 	}
 
-	/// Sets the buffer length of player to bufferLen seconds.
+	/// Sets the buffer length of player to `len` seconds.
 	///
-	/// See also [`setBufferLength`](playdate_sys::ffi::playdate_sound_fileplayer::setBufferLength).
-	pub fn try_set_buffer_length(&self, len: c_float) -> Result<(), ApiError> {
-		let f = self.api().try_set_buffer_length()?;
-		Ok(unsafe { f(self.0, len) })
+	/// Equivalent to [setBufferLength](sys::ffi::playdate_sound_fileplayer::setBufferLength)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setBufferLength")]
+	pub fn set_buffer_length(&self, len: c_float) {
+		let f = self.api().set_buffer_length();
+		unsafe { f(self.0, len) }
 	}
 
 
-	/// Returns `true` if player is playing a sample, `false` if not.
+	/// Returns `true` if player is playing.
 	///
-	/// See also [`isPlaying`](playdate_sys::ffi::playdate_sound_fileplayer::isPlaying).
-	pub fn try_is_playing(&self) -> Result<bool, ApiError> {
-		let f = self.api().try_is_playing()?;
-		Ok(unsafe { f(self.0) == 1 })
+	/// Equivalent to [isPlaying](sys::ffi::playdate_sound_fileplayer::isPlaying)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::isPlaying")]
+	pub fn is_playing(&self) -> bool {
+		let f = self.api().is_playing();
+		unsafe { f(self.0) == 1 }
 	}
 
 
-	/// Starts playing the sample in player.
-	/// Sets the playback rate for the sample. 1.0 is normal speed, 0.5 is down an octave, 2.0 is up an octave, etc.
+	/// Starts playing the file player.
 	///
-	/// See also [`play`](playdate_sys::ffi::playdate_sound_fileplayer::play).
-	pub fn try_play(&self, repeat: Repeat) -> Result<c_int, ApiError> {
-		let f = self.api().try_play()?;
-		Ok(unsafe { f(self.0, repeat.into()) })
+	/// Equivalent to [play](sys::ffi::playdate_sound_fileplayer::play)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::play")]
+	pub fn play(&self, repeat: Repeat) -> c_int {
+		let f = self.api().play();
+		unsafe { f(self.0, repeat.into()) }
 	}
 
-	/// Stops playing the sample.
+	/// Stops playing the file.
 	///
-	/// See also [`stop`](playdate_sys::ffi::playdate_sound_fileplayer::stop).
-	pub fn try_stop(&self) -> Result<(), ApiError> {
-		let f = self.api().try_stop()?;
-		Ok(unsafe { f(self.0) })
+	/// Equivalent to [stop](sys::ffi::playdate_sound_fileplayer::stop)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::stop")]
+	pub fn stop(&self) {
+		let f = self.api().stop();
+		unsafe { f(self.0) }
 	}
 
 
-	/// Gets the current left and right channel volume of the player.
+	/// Gets the left and right channel playback volume for player.
 	///
-	/// See also [`getVolume`](playdate_sys::ffi::playdate_sound_fileplayer::getVolume).
-	pub fn try_get_volume(&self) -> Result<(c_float, c_float), ApiError> {
+	/// Equivalent to [getVolume](sys::ffi::playdate_sound_fileplayer::getVolume)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::getVolume")]
+	pub fn get_volume(&self) -> (c_float, c_float) {
 		let (mut left, mut right) = (0.0, 0.0);
-		let f = self.api().try_get_volume()?;
+		let f = self.api().get_volume();
 		unsafe { f(self.0, &mut left, &mut right) };
-		Ok((left, right))
+		(left, right)
 	}
 
-	/// Sets the playback volume for left and right channels.
+	/// Sets the playback volume for left and right channels of player.
 	///
-	/// See also [`setVolume`](playdate_sys::ffi::playdate_sound_fileplayer::setVolume).
-	pub fn try_set_volume(&self, left: c_float, right: c_float) -> Result<(), ApiError> {
-		let f = self.api().try_set_volume()?;
-		Ok(unsafe { f(self.0, left, right) })
+	/// Equivalent to [setVolume](sys::ffi::playdate_sound_fileplayer::setVolume)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setVolume")]
+	pub fn set_volume(&self, left: c_float, right: c_float) {
+		let f = self.api().set_volume();
+		unsafe { f(self.0, left, right) }
 	}
 
-	/// Returns the length, in seconds, of the sample assigned to player.
+	/// Returns the length, in seconds, of the file loaded into player.
 	///
-	/// See also [`getLength`](playdate_sys::ffi::playdate_sound_fileplayer::getLength).
-	pub fn try_get_length(&self) -> Result<c_float, ApiError> {
-		let f = self.api().try_get_length()?;
-		Ok(unsafe { f(self.0) })
+	/// Equivalent to [getLength](sys::ffi::playdate_sound_fileplayer::getLength)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::getLength")]
+	pub fn get_length(&self) -> c_float {
+		let f = self.api().get_length();
+		unsafe { f(self.0) }
 	}
 
 	/// Gets the current offset in seconds for player.
 	///
-	/// See also [`getOffset`](playdate_sys::ffi::playdate_sound_fileplayer::getOffset).
-	pub fn try_get_offset(&self) -> Result<c_float, ApiError> {
-		let f = self.api().try_get_offset()?;
-		Ok(unsafe { f(self.0) })
+	/// Equivalent to [getOffset](sys::ffi::playdate_sound_fileplayer::getOffset)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::getOffset")]
+	pub fn get_offset(&self) -> c_float {
+		let f = self.api().get_offset();
+		unsafe { f(self.0) }
 	}
 
-	/// Sets the current offset of the player, in seconds.
+	/// Sets the current offset in seconds.
 	///
-	/// See also [`setOffset`](playdate_sys::ffi::playdate_sound_fileplayer::setOffset).
-	pub fn try_set_offset(&self, offset: c_float) -> Result<(), ApiError> {
-		let f = self.api().try_set_offset()?;
-		Ok(unsafe { f(self.0, offset) })
+	/// Equivalent to [setOffset](sys::ffi::playdate_sound_fileplayer::setOffset)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setOffset")]
+	pub fn set_offset(&self, offset: c_float) {
+		let f = self.api().set_offset();
+		unsafe { f(self.0, offset) }
 	}
 
 	/// Gets the playback rate for player.
 	///
-	/// See also [`getRate`](playdate_sys::ffi::playdate_sound_fileplayer::getRate).
-	pub fn try_get_rate(&self) -> Result<c_float, ApiError> {
-		let f = self.api().try_get_rate()?;
-		Ok(unsafe { f(self.0) })
+	/// Equivalent to [getRate](sys::ffi::playdate_sound_fileplayer::getRate)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::getRate")]
+	pub fn get_rate(&self) -> c_float {
+		let f = self.api().get_rate();
+		unsafe { f(self.0) }
 	}
 
-	/// Sets the playback rate for the player. 1.0 is normal speed, 0.5 is down an octave, 2.0 is up an octave, etc. A negative rate produces backwards playback for PCM files, but does not work for ADPCM-encoded files.
+	/// Sets the playback rate for the player.
 	///
-	/// See also [`setRate`](playdate_sys::ffi::playdate_sound_fileplayer::setRate).
-	pub fn try_set_rate(&self, rate: c_float) -> Result<(), ApiError> {
-		let f = self.api().try_set_rate()?;
-		Ok(unsafe { f(self.0, rate) })
+	/// `1.0` is normal speed, `0.5` is down an octave, `2.0` is up an octave, etc.
+	///
+	/// Unlike [`SamplePlayer`](crate::player::SamplePlayer),
+	/// [`FilePlayer`](crate::player::FilePlayer)s can’t play in reverse (i.e., rate < 0).
+	///
+	/// Equivalent to [setRate](sys::ffi::playdate_sound_fileplayer::setRate)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setRate")]
+	pub fn set_rate(&self, rate: c_float) {
+		let f = self.api().set_rate();
+		unsafe { f(self.0, rate) }
 	}
 
-	/// When used with a [`Repeat::PingPong`], does ping-pong looping, with a `start` and `end` position in frames.
+	/// Sets the `start` and `end` of the loop region for playback, in seconds.
 	///
-	/// See also [`setLoopRange`](playdate_sys::ffi::playdate_sound_fileplayer::setLoopRange).
-	pub fn try_set_loop_range(&self, start: c_float, end: c_float) -> Result<(), ApiError> {
-		let f = self.api().try_set_loop_range()?;
-		Ok(unsafe { f(self.0, start, end) })
+	/// If end is omitted, the end of the file is used.
+	///
+	/// Equivalent to [setLoopRange](sys::ffi::playdate_sound_fileplayer::setLoopRange)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setLoopRange")]
+	pub fn set_loop_range(&self, start: c_float, end: c_float) {
+		let f = self.api().set_loop_range();
+		unsafe { f(self.0, start, end) }
 	}
 
 	/// Returns `true` if player has underrun, `false` if not.
-	pub fn try_did_underrun(&self) -> Result<bool, ApiError> {
-		let f = self.api().try_did_underrun()?;
-		Ok(unsafe { f(self.0) } == 1)
+	///
+	/// Equivalent to [didUnderrun](sys::ffi::playdate_sound_fileplayer::didUnderrun)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::didUnderrun")]
+	pub fn did_underrun(&self) -> bool {
+		let f = self.api().did_underrun();
+		unsafe { f(self.0) == 1 }
 	}
 
 	/// If value is `true`, the player will restart playback (after an audible stutter) as soon as data is available.
-	pub fn try_set_stop_on_underrun(&self, value: bool) -> Result<(), ApiError> {
-		let f = self.api().try_set_stop_on_underrun()?;
-		Ok(unsafe { f(self.0, value as _) })
+	///
+	/// Equivalent to [setStopOnUnderrun](sys::ffi::playdate_sound_fileplayer::setStopOnUnderrun)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setStopOnUnderrun")]
+	pub fn set_stop_on_underrun(&self, value: bool) {
+		let f = self.api().set_stop_on_underrun();
+		unsafe { f(self.0, value as _) }
 	}
 
 
 	// callbacks //
 
-	/// Sets a function to be called when playback has completed. See sndCallbackProc.
+	// TODO: rustify this functions
+
+	/// Sets a function to be called when playback has completed.
 	///
-	/// See also [`setFinishCallback`](playdate_sys::ffi::playdate_sound_fileplayer::setFinishCallback).
-	// TODO: rustify this function
-	pub fn try_set_finish_callback(&self, callback: sndCallbackProc) -> Result<(), ApiError> {
-		let f = self.api().try_set_finish_callback()?;
-		Ok(unsafe { f(self.0, callback) })
+	/// This is an alias for [`sys::ffi::playdate_sound_source::setFinishCallback`].
+	///
+	/// Equivalent to [setFinishCallback](sys::ffi::playdate_sound_fileplayer::setFinishCallback)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setFinishCallback")]
+	pub fn set_finish_callback(&self, callback: sndCallbackProc) {
+		let f = self.api().set_finish_callback();
+		unsafe { f(self.0, callback) }
 	}
 
-	// TODO: rustify this function
-	/// See also [`setLoopCallback`](playdate_sys::ffi::playdate_sound_fileplayer::setLoopCallback).
-	pub fn try_set_loop_callback(&self, callback: sndCallbackProc) -> Result<(), ApiError> {
-		let f = self.api().try_set_loop_callback()?;
-		Ok(unsafe { f(self.0, callback) })
+	/// Equivalent to [setLoopCallback](sys::ffi::playdate_sound_fileplayer::setLoopCallback)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setLoopCallback")]
+	pub fn set_loop_callback(&self, callback: sndCallbackProc) {
+		let f = self.api().set_loop_callback();
+		unsafe { f(self.0, callback) }
 	}
 
-	// TODO: rustify this function
-	pub fn try_fade_volume(&self,
-	                       left: c_float,
-	                       right: c_float,
-	                       len: i32,
-	                       finish_callback: sndCallbackProc)
-	                       -> Result<(), ApiError> {
-		let f = self.api().try_fade_volume()?;
-		Ok(unsafe { f(self.0, left, right, len, finish_callback) })
+	/// Changes the volume of the [`Player`] to `left` and `right` over a length of `len` sample frames,
+	/// then calls the provided `callback` (if set).
+	///
+	/// Equivalent to [fadeVolume](sys::ffi::playdate_sound_fileplayer::fadeVolume)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::fadeVolume")]
+	// Probably here we can use just FnOnce, because it will dropped after call by proxy.
+	pub fn fade_volume(&self, left: c_float, right: c_float, len: i32, finish_callback: sndCallbackProc) {
+		let f = self.api().fade_volume();
+		unsafe { f(self.0, left, right, len, finish_callback) }
 	}
 
-	// TODO: rustify this function
-	pub fn try_set_mp3_stream_source(&self,
-	                                 source: Option<unsafe extern "C" fn(data: *mut u8,
-	                                                             bytes: c_int,
-	                                                             userdata: *mut c_void)
-	                                                             -> c_int>,
-	                                 userdata: *mut c_void,
-	                                 buffer_len: c_float)
-	                                 -> Result<(), ApiError> {
-		let f = self.api().try_set_mp3_stream_source()?;
-		Ok(unsafe { f(self.0, source, userdata, buffer_len) })
+	/// Equivalent to [setMP3StreamSource](sys::ffi::playdate_sound_fileplayer::setMP3StreamSource)
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setMP3StreamSource")]
+	pub fn set_mp3_stream_source(&self,
+	                             source: Option<unsafe extern "C" fn(data: *mut u8,
+	                                                         bytes: c_int,
+	                                                         userdata: *mut c_void)
+	                                                         -> c_int>,
+	                             userdata: *mut c_void,
+	                             buffer_len: c_float) {
+		let f = self.api().set_mp3_stream_source();
+		unsafe { f(self.0, source, userdata, buffer_len) }
 	}
-
-
-	// TODO: try_set_mp3_stream_source
 }

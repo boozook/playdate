@@ -1,6 +1,6 @@
 [package]
 name = "playdate-sound"
-version = "0.1.6"
+version = "0.2.0"
 readme = "README.md"
 description = "High-level sound API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -43,12 +43,6 @@ fs = { workspace = true, default-features = false }
 name = "sp-simple"
 crate-type = ["dylib", "staticlib"]
 path = "examples/sp-simple.rs"
-
-# [[example]]
-# name = "sp-cached"
-# crate-type = ["dylib", "staticlib"]
-# path = "examples/sp-cached.rs"
-# required-features = ["bindings-derive-cache"]
 
 [[example]]
 name = "fp-simple"

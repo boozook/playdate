@@ -2,13 +2,14 @@
 #![feature(error_in_core)]
 #![feature(const_trait_impl)]
 
-#[macro_use]
 extern crate sys;
 extern crate alloc;
 
 pub mod error;
 pub mod player;
 pub mod sample;
+
+// TODO: sound: channel, synth, sequence, effect, lfo, envelope, source!, etc..
 
 
 pub mod prelude {

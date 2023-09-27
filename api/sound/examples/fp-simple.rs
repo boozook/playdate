@@ -34,8 +34,8 @@ impl State {
 	/// Updates the state
 	fn update(&mut self) -> Option<()> {
 		let text: Cow<str> = if let Some(player) = self.player.as_ref() {
-			let offset = player.try_get_offset().ok()?;
-			let length = player.try_get_length().ok()?;
+			let offset = player.get_offset();
+			let length = player.get_length();
 			format!("{:.2} / {:.2}", offset, length).into()
 		} else {
 			"no player".into()
@@ -76,15 +76,15 @@ impl State {
 				(*(*sys::API).display).setRefreshRate?(60.0);
 
 				// create player
-				self.player = Player::try_new().ok()?.into();
+				self.player = Player::new().ok()?.into();
 				let player = self.player.as_ref()?;
 
 				// load sound
 				const SOUND_PATH: &Path = "sfx/main_theme.pda";
-				player.try_load_into_player(SOUND_PATH).ok()?;
+				player.load_into_player(SOUND_PATH).ok()?;
 
 				// start playback
-				player.try_play(Repeat::LoopsEndlessly).ok()?;
+				player.play(Repeat::LoopsEndlessly);
 			},
 			_ => {},
 		}

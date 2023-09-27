@@ -100,6 +100,6 @@ Just run `cargo new <your options>` and add do following:
 
 - - -
 
-Made with ❤️‍🔥 by [my](https://a.koz.world).
+Made with ❤️‍🔥 by [me](https://a.koz.world).
 
 This software is not sponsored or supported by Panic.
