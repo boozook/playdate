@@ -11,10 +11,9 @@ use std::{println as info, println as warn, eprintln as error};
 
 #[cfg(not(feature = "log"))]
 #[macro_export(local_inner_macros)]
-macro_rules! no_op { ($($arg:tt)+) => ((/* no-op */)); }
+macro_rules! no_op { ($($arg:tt)+) => (( { core::format_args!($($arg)+); } /* no-op */)); }
 #[cfg(not(feature = "log"))]
 use self::{no_op as trace, no_op as debug};
-
 
 pub mod compile;
 pub mod consts;

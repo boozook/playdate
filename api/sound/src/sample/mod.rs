@@ -39,9 +39,7 @@ impl Sample {
 	/// __Does not loads a file.__
 	pub fn new_for_file<P: AsRef<Path>>(path: P) -> Self {
 		let size = {
-			use fs::FileSystem;
-			let fs = ::fs::Fs::new().unwrap();
-			fs.metadata(path).unwrap().size
+			fs::metadata(path).expect("fs metadata").size
 		};
 
 		Self::new_with_size(size as _)

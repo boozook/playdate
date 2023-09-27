@@ -188,6 +188,7 @@ impl<UD: Sized, Api: api::Api, const REM: bool> MenuItem<kind::Options, UD, Api,
 	                                              callback: Option<MenuItemCallback<UD>>,
 	                                              userdata: UD)
 	                                              -> Result<Self, ApiError> {
+		#[allow(unused_imports)]
 		use alloc::vec::Vec;
 
 
