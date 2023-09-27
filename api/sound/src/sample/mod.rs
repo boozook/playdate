@@ -38,9 +38,7 @@ impl Sample {
 	///
 	/// __Does not loads a file.__
 	pub fn new_for_file<P: AsRef<Path>>(path: P) -> Self {
-		let size = {
-			fs::metadata(path).expect("fs metadata").size
-		};
+		let size = { fs::metadata(path).expect("fs metadata").size };
 
 		Self::new_with_size(size as _)
 	}
