@@ -45,7 +45,7 @@ You car run it with following command:
 # Simulator:
 cargo playdate run -p=playdate --example=hello-world --features=entry-point
 # Device:
-cargo playdate run -p=playdate --example=hello-world --features=entry-point --device
+cargo playdate run -p=playdate --example=video --features=entry-point --device
 ```
 
 More information how to use [cargo-playdate][] in help: `cargo playdate --help`.

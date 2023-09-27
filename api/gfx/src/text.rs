@@ -410,7 +410,7 @@ impl<Api: crate::api::Api> Graphics<Api> {
 
 		if ptr.is_null() {
 			err = unsafe { Box::from_raw(out_err) };
-			if let Some(err) = fs::error::Error::from_ptr(*err).map_err(ApiError::from_err)? {
+			if let Some(err) = fs::error::Error::from_ptr(*err) {
 				Err(Error::Fs(err).into())
 			} else {
 				Err(Error::Alloc.into())

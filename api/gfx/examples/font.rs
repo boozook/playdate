@@ -104,7 +104,7 @@ impl State {
 					               .unwrap_or_default();
 
 					let char = bitmap_ref.into_bitmap();
-					let w = char.size().map(|(w, h)| w).unwrap();
+					let w = char.size().map(|(w, _h)| w).unwrap();
 					let x = OFFSET + i as i32 * w;
 					let y = OFFSET + kern;
 

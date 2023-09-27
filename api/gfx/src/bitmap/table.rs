@@ -83,7 +83,7 @@ impl<Api: api::Api> BitmapTable<Api, true> {
 		let ptr = unsafe { f(path.as_ptr() as *mut c_char, out_err as _) };
 		if ptr.is_null() {
 			err = unsafe { Box::from_raw(out_err) };
-			if let Some(err) = fs::error::Error::from_ptr(*err).map_err(ApiError::from_err)? {
+			if let Some(err) = fs::error::Error::from_ptr(*err) {
 				Err(Error::Fs(err).into())
 			} else {
 				Err(Error::Alloc.into())
@@ -108,7 +108,7 @@ impl<Api: api::Api, const FOD: bool> BitmapTable<Api, FOD> {
 		let f = self.1.load_into_bitmap_table();
 		unsafe { f(path.as_ptr() as *mut c_char, self.0, out_err as _) };
 		err = unsafe { Box::from_raw(out_err) };
-		if let Some(err) = fs::error::Error::from_ptr(*err).map_err(ApiError::from_err)? {
+		if let Some(err) = fs::error::Error::from_ptr(*err) {
 			Err(Error::Fs(err).into())
 		} else {
 			Ok(())
