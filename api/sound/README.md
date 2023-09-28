@@ -2,14 +2,12 @@
 
 High-level sound API built on-top of [playdate-sys][].
 
-Covered parts the sound API:
+Covered parts of the sound API:
 - File Player
 - Sample Player
   - Sample
 - Sound Source
-- Headphones and microphone (incomplete) 🤏
-
-⚠️ __Incomplete__, WiP.
+- Headphones and microphone (incomplete)
 
 Not covered things:
 - channel
@@ -20,7 +18,7 @@ Not covered things:
 - envelope
 - callbacks
 
-Before the version `0.3` API is unstable and can be changed.
+⚠️ Prior to the version `0.3` API is unstable and can be changed without deprecation period.
 
 
 ## Prerequisites
@@ -32,6 +30,7 @@ Before the version `0.3` API is unstable and can be changed.
 
 [sdk]: https://play.date/dev/#cardSDK
 [doc-prerequisites]: https://sdk.play.date/Inside%20Playdate%20with%20C.html#_prerequisites
+
 
 ## Usage
 
