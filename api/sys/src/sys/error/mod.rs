@@ -21,7 +21,6 @@ pub enum Error<T = ()> {
 	NullPtrCtx(null::ctx::NullPtrError),
 }
 
-// impl<T: CoreError> fmt::Display for Error<T> {
 impl<T: fmt::Display> fmt::Display for Error<T> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match &self {

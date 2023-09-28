@@ -102,7 +102,15 @@ impl<Api: api::Api> Sample<Api> {
 	pub fn new_for_file_with<P: AsRef<Path>>(api: Api, path: P) -> Result<Self, ApiError> {
 		let size = match fs::metadata(path) {
 			Ok(stats) => stats.size,
-			Err(err) => return Err(ApiError::from_err(err)),
+			Err(err) => {
+				return match err {
+					fs::error::ApiError::Api(err) => Err(ApiError::Api(err.into())),
+					fs::error::ApiError::Utf8(err) => Err(ApiError::Utf8(err)),
+					fs::error::ApiError::FromUtf8(err) => Err(ApiError::FromUtf8(err)),
+					fs::error::ApiError::CStr(err) => Err(ApiError::CStr(err)),
+					fs::error::ApiError::NullPtr(_) => Err(ApiError::NullPtr(sys::error::NullPtrError)),
+				}
+			}, // Err(err) => return Err(ApiError::from_err(err)),
 		};
 
 		Self::new_with_size_with(api, size as _).map_err(Into::into)
