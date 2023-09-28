@@ -55,7 +55,9 @@ pub mod ext {
 		/// Playdate Display API.
 		fn display(&self) -> display::Display<display::api::Cache>;
 
-		// fn sound() -> sound::Sound;
+		/// Playdate Sound API.
+		fn sound(&self) -> sound::Sound<sound::api::Cache>;
+
 		// fn lua() -> lua::Lua;
 		// fn json() -> json::Json;
 		// fn scoreboards() -> scoreboards::Scoreboards;
@@ -78,6 +80,10 @@ pub mod ext {
 		fn display(&self) -> display::Display<display::api::Cache> {
 			display::Display::new_with(display::api::Cache::from(unsafe { self.as_ref() }.display))
 		}
+
+		fn sound(&self) -> sound::Sound<sound::api::Cache> {
+			sound::Sound::new_with(sound::api::Cache::from(unsafe { self.as_ref() }.sound))
+		}
 	}
 
 	impl PlaydateAPIExt for *const sys::ffi::PlaydateAPI {
@@ -95,6 +101,10 @@ pub mod ext {
 
 		fn display(&self) -> display::Display<display::api::Cache> {
 			display::Display::new_with(display::api::Cache::from(unsafe { self.as_ref() }.expect("api").display))
+		}
+
+		fn sound(&self) -> sound::Sound<sound::api::Cache> {
+			sound::Sound::new_with(sound::api::Cache::from(unsafe { self.as_ref() }.expect("api").sound))
 		}
 	}
 }

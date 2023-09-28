@@ -46,26 +46,27 @@ fn event_handler(api: NonNull<PlaydateAPI>, event: SystemEvent, _sim_key_code: u
 	player.use_screen_context();
 
 	// Register update handler
-	api.system().set_update_callback_boxed(
-	                                       |state| {
-		                                       // Draw current frame of the player
-		                                       state.player.render_frame(state.current).unwrap();
+	let system = api.system();
+	system.set_update_callback_boxed(
+	                                 move |state| {
+		                                 // Draw current frame of the player
+		                                 state.player.render_frame(state.current).unwrap();
 
-		                                       // Advance to the next frame
-		                                       state.current += 1;
-		                                       if state.current >= state.length {
-			                                       state.current = 0;
-		                                       }
+		                                 // Advance to the next frame
+		                                 state.current += 1;
+		                                 if state.current >= state.length {
+			                                 state.current = 0;
+		                                 }
 
-		                                       // Draw FPS on-top of the player's render
-		                                       System::Default().draw_fps(0, 0);
+		                                 // Draw FPS on-top of the player's render
+		                                 system.draw_fps(0, 0);
 
-		                                       // Continue
-		                                       true
-	                                       },
-	                                       State { length: player.info().frame_count,
-	                                               current: 0,
-	                                               player, },
+		                                 // Continue
+		                                 true
+	                                 },
+	                                 State { length: player.info().frame_count,
+	                                         current: 0,
+	                                         player, },
 	);
 
 	true
