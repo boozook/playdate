@@ -8,7 +8,7 @@ use crate::error::Error;
 use super::Repeat;
 
 
-mod api;
+pub mod api;
 
 
 #[cfg_attr(feature = "bindings-derive-debug", derive(Debug))]

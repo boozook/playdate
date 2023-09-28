@@ -7,12 +7,12 @@ extern crate playdate as pd;
 use core::ffi::*;
 use core::ptr::NonNull;
 use pd::ext::PlaydateAPIExt;
+use pd::sys::EventLoopCtrl;
 use pd::sys::ffi::PlaydateAPI;
 use pd::graphics::video::VideoPlayer;
-
-use fs::Path;
-use pd::graphics::*;
 use pd::system::prelude::*;
+use pd::graphics::*;
+use pd::fs::Path;
 
 
 const VIDEO_PATH: &Path = "examples/video.pdv";
@@ -31,10 +31,10 @@ struct State {
 
 /// Entry point
 #[no_mangle]
-fn event_handler(api: NonNull<PlaydateAPI>, event: SystemEvent, _sim_key_code: u32) -> bool {
+fn event_handler(api: NonNull<PlaydateAPI>, event: SystemEvent, _sim_key_code: u32) -> EventLoopCtrl {
 	// Ignore any other events, just for this minimalistic example
 	if !matches!(event, SystemEvent::Init) {
-		return true;
+		return EventLoopCtrl::Continue;
 	}
 
 	// Set FPS
@@ -61,15 +61,14 @@ fn event_handler(api: NonNull<PlaydateAPI>, event: SystemEvent, _sim_key_code: u
 		                                 // Draw FPS on-top of the player's render
 		                                 system.draw_fps(0, 0);
 
-		                                 // Continue
-		                                 true
+		                                 UpdateCtrl::Continue
 	                                 },
 	                                 State { length: player.info().frame_count,
 	                                         current: 0,
 	                                         player, },
 	);
 
-	true
+	EventLoopCtrl::Continue
 }
 
 

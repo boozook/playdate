@@ -21,7 +21,6 @@ pub struct Sample<Api: api::Api = api::Default>(pub(super) *mut AudioSample, Api
 impl<Api: api::Api> Drop for Sample<Api> {
 	fn drop(&mut self) {
 		if !self.0.is_null() {
-			// TODO: use inner api instead
 			let f = self.1.free_sample();
 			unsafe { f(self.0) };
 			self.0 = core::ptr::null_mut();

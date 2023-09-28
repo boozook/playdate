@@ -29,7 +29,7 @@ impl<'t, F, U> Drop for Handler<'t, F, U> {
 
 impl<Api: api::Api> System<Api> {
 	/// Internal update callback proxy function.
-	unsafe extern "C" fn proxy<UD, Fn: FnMut(&mut UD) -> bool>(fn_ud: *mut c_void) -> c_int {
+	unsafe extern "C" fn proxy<UD, Fn: FnMut(&mut UD) -> UpdateCtrl>(fn_ud: *mut c_void) -> c_int {
 		if let Some((callback, userdata)) = (fn_ud as *mut (Fn, UD)).as_mut() {
 			callback(userdata).into()
 		} else {
@@ -52,7 +52,7 @@ impl<Api: api::Api> System<Api> {
 	#[must_use = "Update handler will be unregistered when Handler dropped"]
 	pub fn set_update_callback<'u, U, F>(&self, on_update: F, userdata: U) -> Handler<'u, F, U>
 		where U: 'u,
-		      F: 'u + FnMut(&mut U) -> bool {
+		      F: 'u + FnMut(&mut U) -> UpdateCtrl {
 		let f = self.0.set_update_callback();
 		let mut userdata = Box::pin((on_update, userdata));
 		let ptr = unsafe { userdata.as_mut().get_unchecked_mut() } as *mut _ as *mut c_void;
@@ -73,7 +73,7 @@ impl<Api: api::Api> System<Api> {
 	#[doc(alias = "sys::ffi::playdate_sys::setUpdateCallback")]
 	pub fn set_update_callback_boxed<'u, U, F>(&self, on_update: F, userdata: U)
 		where U: 'u,
-		      F: 'u + FnMut(&mut U) -> bool {
+		      F: 'u + FnMut(&mut U) -> UpdateCtrl {
 		let f = self.0.set_update_callback();
 		let ptr = Box::into_raw(Box::new((on_update, userdata)));
 		unsafe { f(Some(Self::proxy::<U, F>), ptr as *mut _) };
@@ -88,10 +88,10 @@ impl<Api: api::Api> System<Api> {
 	/// Wrapping [`sys::ffi::playdate_sys::setUpdateCallback`]
 	#[doc(alias = "sys::ffi::playdate_sys::setUpdateCallback")]
 	pub fn set_update_callback_static<U: 'static>(&self,
-	                                              on_update: Option<fn(userdata: &mut U) -> bool>,
+	                                              on_update: Option<fn(userdata: &mut U) -> UpdateCtrl>,
 	                                              userdata: U) {
 		unsafe extern "C" fn proxy<UD: 'static>(fn_ud: *mut c_void) -> c_int {
-			if let Some((callback, userdata)) = (fn_ud as *mut (fn(userdata: &mut UD) -> bool, UD)).as_mut() {
+			if let Some((callback, userdata)) = (fn_ud as *mut (fn(userdata: &mut UD) -> UpdateCtrl, UD)).as_mut() {
 				callback(userdata).into()
 			} else {
 				panic!("user callback missed");
@@ -127,7 +127,7 @@ impl<Api: api::Api> System<Api> {
 /// Implementable stateful update handler
 /// with default implementation for adapter and register functions.
 pub trait Update: Sized {
-	fn update(&mut self) -> bool;
+	fn update(&mut self) -> UpdateCtrl;
 
 	/// Register a callback function [`Self::update`] in the system,
 	/// using [`Default`](api::Default) `api`.
@@ -157,6 +157,54 @@ pub trait Update: Sized {
 			Self::update(handler).into()
 		} else {
 			panic!("user callback missed");
+		}
+	}
+}
+
+
+#[repr(i32)]
+pub enum UpdateCtrl {
+	Stop = 0,
+	Continue = 1,
+}
+
+impl UpdateCtrl {
+	pub const fn into(self) -> c_int { self as _ }
+}
+
+impl From<bool> for UpdateCtrl {
+	fn from(value: bool) -> Self {
+		if value {
+			Self::Continue
+		} else {
+			Self::Stop
+		}
+	}
+}
+
+impl<T, E> From<Result<T, E>> for UpdateCtrl {
+	fn from(res: Result<T, E>) -> Self {
+		if res.is_ok() {
+			Self::Continue
+		} else {
+			Self::Stop
+		}
+	}
+}
+
+#[cfg(feature = "try-trait-v2")]
+mod impl_trait_v2 {
+	use super::*;
+	use core::convert::Infallible;
+	use core::ops::FromResidual;
+
+	impl<E> FromResidual<Result<Infallible, E>> for UpdateCtrl {
+		fn from_residual(residual: Result<Infallible, E>) -> Self {
+			if residual.is_ok() {
+				Self::Continue
+			} else {
+				Self::Stop
+			}
 		}
 	}
 }

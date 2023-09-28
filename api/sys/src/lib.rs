@@ -12,6 +12,7 @@
 #![cfg_attr(feature = "allocator", feature(alloc_layout_extra))]
 // error
 #![feature(error_in_core)]
+#![cfg_attr(feature = "try-trait-v2", feature(try_trait_v2))]
 // experimental features
 #![cfg_attr(feature = "bindings-derive-constparamty",
             feature(adt_const_params),
@@ -68,12 +69,67 @@ pub extern "C" fn eventHandlerShim(api: *const ffi::PlaydateAPI,
                                    arg: u32)
                                    -> core::ffi::c_int {
 	extern "Rust" {
-		fn event_handler(api: *const ffi::PlaydateAPI, event: ffi::PDSystemEvent, arg: u32) -> bool;
+		fn event_handler(api: *const ffi::PlaydateAPI, event: ffi::PDSystemEvent, arg: u32) -> EventLoopCtrl;
 	}
 	if let ffi::PDSystemEvent::kEventInit = event {
 		unsafe { API = api }
 	}
 	unsafe { event_handler(api, event, arg) }.into()
+}
+
+#[cfg(feature = "entry-point")]
+pub use entry_point_ctrl::*;
+#[cfg(feature = "entry-point")]
+mod entry_point_ctrl {
+	use core::ffi::c_int;
+
+
+	#[repr(i32)]
+	pub enum EventLoopCtrl {
+		Continue = 0,
+		Stop = 1,
+	}
+
+	impl EventLoopCtrl {
+		pub const fn into(self) -> c_int { self as _ }
+	}
+
+	impl From<bool> for EventLoopCtrl {
+		fn from(value: bool) -> Self {
+			if value {
+				Self::Continue
+			} else {
+				Self::Stop
+			}
+		}
+	}
+
+	impl<T, E> From<Result<T, E>> for EventLoopCtrl {
+		fn from(res: Result<T, E>) -> Self {
+			if res.is_ok() {
+				Self::Continue
+			} else {
+				Self::Stop
+			}
+		}
+	}
+
+	#[cfg(feature = "try-trait-v2")]
+	mod impl_trait_v2 {
+		use super::*;
+		use core::convert::Infallible;
+		use core::ops::FromResidual;
+
+		impl<E> FromResidual<Result<Infallible, E>> for EventLoopCtrl {
+			fn from_residual(residual: Result<Infallible, E>) -> Self {
+				if residual.is_ok() {
+					Self::Continue
+				} else {
+					Self::Stop
+				}
+			}
+		}
+	}
 }
 
 

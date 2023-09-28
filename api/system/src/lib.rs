@@ -1,4 +1,6 @@
 #![cfg_attr(not(test), no_std)]
+#![cfg_attr(feature = "try-trait-v2", feature(try_trait_v2))]
+
 extern crate sys;
 extern crate alloc;
 

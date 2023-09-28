@@ -6,8 +6,9 @@ extern crate playdate as pd;
 
 use core::ffi::*;
 use core::ptr::NonNull;
+use pd::sys::EventLoopCtrl;
 use pd::sys::ffi::PlaydateAPI;
-
+use pd::system::update::UpdateCtrl;
 use pd::display::Display;
 use pd::graphics::*;
 use pd::graphics::text::*;
@@ -34,7 +35,7 @@ impl State {
 
 
 	/// System event handler
-	fn event(&'static mut self, event: SystemEvent) -> bool {
+	fn event(&'static mut self, event: SystemEvent) -> EventLoopCtrl {
 		match event {
 			// Initial setup
 			SystemEvent::Init => {
@@ -49,14 +50,14 @@ impl State {
 			// TODO: React to other events
 			_ => {},
 		}
-		true
+		EventLoopCtrl::Continue
 	}
 }
 
 
 impl Update for State {
 	/// Updates the state
-	fn update(&mut self) -> bool {
+	fn update(&mut self) -> UpdateCtrl {
 		clear(Color::WHITE);
 
 
@@ -65,14 +66,14 @@ impl Update for State {
 
 		System::Default().draw_fps(0, 0);
 
-		true
+		UpdateCtrl::Continue
 	}
 }
 
 
 /// Entry point
 #[no_mangle]
-pub fn event_handler(_api: NonNull<PlaydateAPI>, event: SystemEvent, _sim_key_code: u32) -> bool {
+pub fn event_handler(_api: NonNull<PlaydateAPI>, event: SystemEvent, _sim_key_code: u32) -> EventLoopCtrl {
 	// Unsafe static storage for our state.
 	// Usually it's safe because there's only one thread.
 	pub static mut STATE: Option<State> = None;

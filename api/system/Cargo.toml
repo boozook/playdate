@@ -1,6 +1,6 @@
 [package]
 name = "playdate-system"
-version = "0.3.0"
+version = "0.3.1"
 readme = "README.md"
 description = "High-level System API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -14,7 +14,10 @@ repository.workspace = true
 
 [features]
 default = ["sys/default"]
+try-trait-v2 = ["sys/try-trait-v2"] # impl `FromResidual` for `UpdateCtrl`
+
 # sys- features:
+
 lang-items = ["sys/lang-items"]
 allocator = ["sys/allocator"]
 panic-handler = ["sys/panic-handler"]

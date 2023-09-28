@@ -9,12 +9,13 @@ use alloc::boxed::Box;
 
 #[macro_use]
 extern crate playdate_sys as pd;
+use pd::EventLoopCtrl;
 use pd::ffi::*;
 
 
 /// Entry point / event handler
 #[no_mangle]
-fn event_handler(api: NonNull<PlaydateAPI>, event: PDSystemEvent, arg: u32) -> bool {
+fn event_handler(api: NonNull<PlaydateAPI>, event: PDSystemEvent, arg: u32) -> EventLoopCtrl {
 	println!("Init");
 
 	// Do something good with `api` here...
@@ -27,9 +28,7 @@ fn event_handler(api: NonNull<PlaydateAPI>, event: PDSystemEvent, arg: u32) -> b
 		unsafe { api!(system.setUpdateCallback)(Some(update_handler), state as *mut _) };
 	}
 
-
-	// Continue event-loop:
-	true
+	EventLoopCtrl::Continue
 }
 
 
