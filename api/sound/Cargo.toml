@@ -58,8 +58,8 @@ sys = { workspace = true, default-features = false }
 fs = { workspace = true, default-features = false }
 
 [dev-dependencies]
-gfx = { workspace = true }
-system = { workspace = true, features = ["try-trait-v2"] }
+gfx = { workspace = true, default-features = false }
+system = { workspace = true, default-features = false , features = ["try-trait-v2"] }
 
 [[example]]
 name = "sp"
