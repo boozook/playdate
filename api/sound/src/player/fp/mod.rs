@@ -124,7 +124,7 @@ impl<Api> Player<Api> where Api: api::Api {
 	///
 	/// Equivalent to [getVolume](sys::ffi::playdate_sound_fileplayer::getVolume)
 	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::getVolume")]
-	pub fn get_volume(&self) -> (c_float, c_float) {
+	pub fn volume(&self) -> (c_float, c_float) {
 		let (mut left, mut right) = (0.0, 0.0);
 		let f = self.api().get_volume();
 		unsafe { f(self.0, &mut left, &mut right) };
@@ -144,7 +144,7 @@ impl<Api> Player<Api> where Api: api::Api {
 	///
 	/// Equivalent to [getLength](sys::ffi::playdate_sound_fileplayer::getLength)
 	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::getLength")]
-	pub fn get_length(&self) -> c_float {
+	pub fn length(&self) -> c_float {
 		let f = self.api().get_length();
 		unsafe { f(self.0) }
 	}
@@ -153,7 +153,7 @@ impl<Api> Player<Api> where Api: api::Api {
 	///
 	/// Equivalent to [getOffset](sys::ffi::playdate_sound_fileplayer::getOffset)
 	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::getOffset")]
-	pub fn get_offset(&self) -> c_float {
+	pub fn offset(&self) -> c_float {
 		let f = self.api().get_offset();
 		unsafe { f(self.0) }
 	}
@@ -171,7 +171,7 @@ impl<Api> Player<Api> where Api: api::Api {
 	///
 	/// Equivalent to [getRate](sys::ffi::playdate_sound_fileplayer::getRate)
 	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::getRate")]
-	pub fn get_rate(&self) -> c_float {
+	pub fn rate(&self) -> c_float {
 		let f = self.api().get_rate();
 		unsafe { f(self.0) }
 	}

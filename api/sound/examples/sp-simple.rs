@@ -35,8 +35,8 @@ impl State {
 	/// Updates the state
 	fn update(&mut self) -> Option<()> {
 		let text: Cow<str> = if let Some(player) = self.player.as_ref() {
-			let offset = player.get_offset();
-			let length = player.get_length();
+			let offset = player.offset();
+			let length = player.length();
 			format!("{:.2} / {:.2}", offset, length).into()
 		} else {
 			"no player".into()
