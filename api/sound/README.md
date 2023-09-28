@@ -2,7 +2,7 @@
 
 High-level sound API built on-top of [playdate-sys][].
 
-Covered components:
+Covered parts the sound API:
 - File Player
 - Sample Player
   - Sample
@@ -10,6 +10,15 @@ Covered components:
 - Headphones and microphone (incomplete) 🤏
 
 ⚠️ __Incomplete__, WiP.
+
+Not covered things:
+- channel
+- synth
+- sequence
+- effect
+- lfo
+- envelope
+- callbacks
 
 Before the version `0.3` API is unstable and can be changed.
 
@@ -24,20 +33,25 @@ Before the version `0.3` API is unstable and can be changed.
 [sdk]: https://play.date/dev/#cardSDK
 [doc-prerequisites]: https://sdk.play.date/Inside%20Playdate%20with%20C.html#_prerequisites
 
-<!-- ## Usage -->
+## Usage
 
-<!-- ... -->
+```rust
+use playdate_sound::sample::*;
+use playdate_sound::player::sp::*;
+use playdate_sound::player::Repeat;
 
-<!-- See more in [examples][playdate-sound-examples]. -->
+let player = Player::<api::Cache>::new()?;
+let sample = Sample::new_from_file("game_main_theme.pda")?;
 
+player.set_sample(&sample);
+player.play(Repeat::LoopsEndlessly, 1.0);
+```
 
+See more in [examples][playdate-sound-examples].
 
 
 [playdate-sys]: https://crates.io/crates/playdate-sys
-[playdate-sound-examples]: https://github.com/boozook/playdate#//TODO:PATH-TO-EXAMPLES
-
-
-
+[playdate-sound-examples]: https://github.com/boozook/playdate/tree/main/api/sound/examples
 
 
 

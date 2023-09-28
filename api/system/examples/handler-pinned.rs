@@ -10,12 +10,14 @@ use core::ptr::NonNull;
 use alloc::boxed::Box;
 
 use sys::ffi::*;
+use sys::EventLoopCtrl;
 use system::System;
+use system::update::UpdateCtrl;
 
 
 /// Entry point
 #[no_mangle]
-fn event_handler(api: NonNull<PlaydateAPI>, event: PDSystemEvent, arg: u32) -> bool {
+fn event_handler(api: NonNull<PlaydateAPI>, event: PDSystemEvent, arg: u32) -> EventLoopCtrl {
 	println!("Init");
 
 	// Do something good with `api` here...
@@ -40,7 +42,7 @@ fn event_handler(api: NonNull<PlaydateAPI>, event: PDSystemEvent, arg: u32) -> b
 			                                        }
 
 			                                        // Continue updates:
-			                                        true
+			                                        UpdateCtrl::Continue
 		                                        },
 		                                        42,
 		);
@@ -49,7 +51,7 @@ fn event_handler(api: NonNull<PlaydateAPI>, event: PDSystemEvent, arg: u32) -> b
 
 
 	// Continue event-loop:
-	true
+	EventLoopCtrl::Continue
 }
 
 

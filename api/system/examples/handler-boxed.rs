@@ -8,12 +8,14 @@ extern crate playdate_system as system;
 use core::ptr::NonNull;
 
 use sys::ffi::*;
+use sys::EventLoopCtrl;
 use system::System;
+use system::update::UpdateCtrl;
 
 
 /// Entry point, event handler
 #[no_mangle]
-fn event_handler(api: NonNull<PlaydateAPI>, event: PDSystemEvent, arg: u32) -> bool {
+fn event_handler(api: NonNull<PlaydateAPI>, event: PDSystemEvent, arg: u32) -> EventLoopCtrl {
 	println!("Init");
 
 	// Do something good with `api` here...
@@ -35,13 +37,13 @@ fn event_handler(api: NonNull<PlaydateAPI>, event: PDSystemEvent, arg: u32) -> b
 		                                 }
 
 		                                 // Continue updates:
-		                                 true
+		                                 UpdateCtrl::Continue
 	                                 },
 	                                 42,
 	);
 
 	// Continue event-loop:
-	true
+	EventLoopCtrl::Continue
 }
 
 

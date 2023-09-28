@@ -13,7 +13,7 @@ use super::Repeat;
 use crate::error::ApiError;
 use crate::error::Error;
 
-mod api;
+pub mod api;
 
 
 #[cfg_attr(feature = "bindings-derive-debug", derive(Debug))]
