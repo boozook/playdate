@@ -3,13 +3,15 @@
 High-level sound API built on-top of [playdate-sys][].
 
 Covered components:
-- FilePlayer
-- SamplePlayer
+- File Player
+- Sample Player
   - Sample
+- Sound Source
+- Headphones and microphone (incomplete) 🤏
 
 ⚠️ __Incomplete__, WiP.
 
-🚨 Before the version `0.3` API is highly unstable and subject to change. After that old versions will yanked.
+Before the version `0.3` API is unstable and can be changed.
 
 
 ## Prerequisites
