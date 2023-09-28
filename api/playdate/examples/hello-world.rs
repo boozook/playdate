@@ -104,14 +104,14 @@ impl State {
 		// Background music
 
 		// Create player
-		let player = SamplePlayer::try_new().unwrap();
+		let player = SamplePlayer::new().unwrap();
 
 		// load sound
-		let sample = Sample::new_from_file(SOUND_PATH);
-		player.try_set_sample(&sample).unwrap();
+		let sample = Sample::new_from_file(SOUND_PATH).unwrap();
+		player.set_sample(&sample);
 
 		// start playback
-		player.try_play(Repeat::LoopsEndlessly, 1.0).unwrap();
+		player.play(Repeat::LoopsEndlessly, 1.0);
 
 		// Finally store it all in the state
 		Self { location: Point::new(CENTER_X as _, CENTER_Y as _),

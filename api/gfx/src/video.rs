@@ -213,6 +213,16 @@ impl<Api: api::Api, const FOD: bool> VideoPlayer<Api, FOD> {
 
 	/// Retrieves information about the video, by passing optional mutable references.
 	///
+	/// Example:
+	/// ```no_run
+	/// let mut frame_count = Some(0);
+	/// let mut current_frame = Some(0);
+	/// player.info_raw(None, None, None,
+	///                 frame_count.as_mut(),
+	///                 current_frame.as_mut()
+	///                );
+	/// println!( "{}/{}", current_frame.unwrap(), frame_count.unwrap());
+	/// ```
 	/// Calls [`sys::ffi::playdate_video::renderFrame`].
 	#[doc(alias = "sys::ffi::playdate_video::renderFrame")]
 	pub fn info_raw(&self,

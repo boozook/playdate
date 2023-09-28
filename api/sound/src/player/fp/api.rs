@@ -1,94 +1,167 @@
-#![cfg(not(feature = "bindings-derive-cache"))]
-
 use core::ffi::c_char;
 use core::ffi::c_float;
 use core::ffi::c_int;
 use core::ffi::c_void;
+use core::ptr::NonNull;
 
 use sys::ffi::FilePlayer;
 use sys::ffi::sndCallbackProc;
-use sys::error::NullPtrError as Error;
-use sys::error::OkOrNullFnErr;
-use super::Endpoint;
+use sys::ffi::playdate_sound_fileplayer;
 
 
-/// Default cached sample-player api.
-pub type CachedEndpoint = Ref<'static>;
+/// Default file player api end-point, ZST.
+///
+/// All calls approximately costs ~4 derefs.
+#[derive(Debug, Clone, Copy, core::default::Default)]
+pub struct Default;
+impl Api for Default {}
 
 
-pub trait FilePlayerApi {
-	type Error: core::error::Error;
-
-	fn try_new_player(&self) -> Result<&FnNewPlayer, Self::Error>;
-	fn try_free_player(&self) -> Result<&FnFreePlayer, Self::Error>;
-	fn try_load_into_player(&self) -> Result<&FnLoadIntoPlayer, Self::Error>;
-	fn try_set_buffer_length(&self) -> Result<&FnSetBufferLength, Self::Error>;
-	fn try_play(&self) -> Result<&FnPlay, Self::Error>;
-	fn try_is_playing(&self) -> Result<&FnIsPlaying, Self::Error>;
-	fn try_stop(&self) -> Result<&FnStop, Self::Error>;
-	fn try_set_volume(&self) -> Result<&FnSetVolume, Self::Error>;
-	fn try_get_volume(&self) -> Result<&FnGetVolume, Self::Error>;
-	fn try_get_length(&self) -> Result<&FnGetLength, Self::Error>;
-	fn try_set_offset(&self) -> Result<&FnSetOffset, Self::Error>;
-	fn try_set_rate(&self) -> Result<&FnSetRate, Self::Error>;
-	fn try_set_loop_range(&self) -> Result<&FnSetLoopRange, Self::Error>;
-	fn try_did_underrun(&self) -> Result<&FnDidUnderrun, Self::Error>;
-	fn try_set_stop_on_underrun(&self) -> Result<&FnSetStopOnUnderrun, Self::Error>;
-	fn try_set_finish_callback(&self) -> Result<&FnSetFinishCallback, Self::Error>;
-	fn try_set_loop_callback(&self) -> Result<&FnSetLoopCallback, Self::Error>;
-	fn try_get_offset(&self) -> Result<&FnGetOffset, Self::Error>;
-	fn try_get_rate(&self) -> Result<&FnGetRate, Self::Error>;
-	fn try_fade_volume(&self) -> Result<&FnFadeVolume, Self::Error>;
-	fn try_set_mp3_stream_source(&self) -> Result<&FnSetMP3StreamSource, Self::Error>;
-}
-
-
+/// Cached file player api end-point.
+///
+/// Stores one reference, so size on stack is eq `usize`.
+///
+/// All calls approximately costs ~1 deref.
 #[derive(Clone, Copy)]
 #[cfg_attr(feature = "bindings-derive-debug", derive(Debug))]
-pub struct Ref<'t: 'static>(&'t Endpoint);
+pub struct Cache(&'static playdate_sound_fileplayer);
 
+impl core::default::Default for Cache {
+	fn default() -> Self { Self(sys::api!(sound.fileplayer)) }
+}
 
-impl<'t> From<&'t Endpoint> for Ref<'t> {
-	fn from(api: &'t Endpoint) -> Self { Self(api) }
+impl From<*const playdate_sound_fileplayer> for Cache {
+	#[inline(always)]
+	fn from(ptr: *const playdate_sound_fileplayer) -> Self { Self(unsafe { ptr.as_ref() }.expect("sp")) }
+}
+
+impl From<&'static playdate_sound_fileplayer> for Cache {
+	#[inline(always)]
+	fn from(r: &'static playdate_sound_fileplayer) -> Self { Self(r) }
+}
+
+impl From<NonNull<playdate_sound_fileplayer>> for Cache {
+	#[inline(always)]
+	fn from(ptr: NonNull<playdate_sound_fileplayer>) -> Self { Self(unsafe { ptr.as_ref() }) }
+}
+
+impl From<&'_ NonNull<playdate_sound_fileplayer>> for Cache {
+	#[inline(always)]
+	fn from(ptr: &NonNull<playdate_sound_fileplayer>) -> Self { Self(unsafe { ptr.as_ref() }) }
 }
 
 
-impl<'t> FilePlayerApi for Ref<'t> {
-	type Error = self::Error;
+impl Api for Cache {
+	fn new_player(&self) -> FnNewPlayer { self.0.newPlayer.expect("newPlayer") }
+	fn free_player(&self) -> FnFreePlayer { self.0.freePlayer.expect("freePlayer") }
+	fn load_into_player(&self) -> FnLoadIntoPlayer { self.0.loadIntoPlayer.expect("loadIntoPlayer") }
+	fn set_buffer_length(&self) -> FnSetBufferLength { self.0.setBufferLength.expect("setBufferLength") }
+	fn play(&self) -> FnPlay { self.0.play.expect("play") }
+	fn is_playing(&self) -> FnIsPlaying { self.0.isPlaying.expect("isPlaying") }
+	fn stop(&self) -> FnStop { self.0.stop.expect("stop") }
+	fn set_volume(&self) -> FnSetVolume { self.0.setVolume.expect("setVolume") }
+	fn get_volume(&self) -> FnGetVolume { self.0.getVolume.expect("getVolume") }
+	fn get_length(&self) -> FnGetLength { self.0.getLength.expect("getLength") }
+	fn set_offset(&self) -> FnSetOffset { self.0.setOffset.expect("setOffset") }
+	fn set_rate(&self) -> FnSetRate { self.0.setRate.expect("setRate") }
+	fn set_loop_range(&self) -> FnSetLoopRange { self.0.setLoopRange.expect("setLoopRange") }
+	fn did_underrun(&self) -> FnDidUnderrun { self.0.didUnderrun.expect("didUnderrun") }
+	fn set_stop_on_underrun(&self) -> FnSetStopOnUnderrun { self.0.setStopOnUnderrun.expect("setStopOnUnderrun") }
+	fn set_finish_callback(&self) -> FnSetFinishCallback { self.0.setFinishCallback.expect("setFinishCallback") }
+	fn set_loop_callback(&self) -> FnSetLoopCallback { self.0.setLoopCallback.expect("setLoopCallback") }
+	fn get_offset(&self) -> FnGetOffset { self.0.getOffset.expect("getOffset") }
+	fn get_rate(&self) -> FnGetRate { self.0.getRate.expect("getRate") }
+	fn fade_volume(&self) -> FnFadeVolume { self.0.fadeVolume.expect("fadeVolume") }
+	fn set_mp3_stream_source(&self) -> FnSetMP3StreamSource {
+		self.0.setMP3StreamSource.expect("setMP3StreamSource")
+	}
+}
 
-	fn try_new_player(&self) -> Result<&FnNewPlayer, Error> { self.0.newPlayer.as_ref().ok_or_null() }
-	fn try_free_player(&self) -> Result<&FnFreePlayer, Error> { self.0.freePlayer.as_ref().ok_or_null() }
-	fn try_load_into_player(&self) -> Result<&FnLoadIntoPlayer, Error> {
-		self.0.loadIntoPlayer.as_ref().ok_or_null()
-	}
-	fn try_set_buffer_length(&self) -> Result<&FnSetBufferLength, Error> {
-		self.0.setBufferLength.as_ref().ok_or_null()
-	}
-	fn try_play(&self) -> Result<&FnPlay, Error> { self.0.play.as_ref().ok_or_null() }
-	fn try_is_playing(&self) -> Result<&FnIsPlaying, Error> { self.0.isPlaying.as_ref().ok_or_null() }
-	fn try_stop(&self) -> Result<&FnStop, Error> { self.0.stop.as_ref().ok_or_null() }
-	fn try_set_volume(&self) -> Result<&FnSetVolume, Error> { self.0.setVolume.as_ref().ok_or_null() }
-	fn try_get_volume(&self) -> Result<&FnGetVolume, Error> { self.0.getVolume.as_ref().ok_or_null() }
-	fn try_get_length(&self) -> Result<&FnGetLength, Error> { self.0.getLength.as_ref().ok_or_null() }
-	fn try_set_offset(&self) -> Result<&FnSetOffset, Error> { self.0.setOffset.as_ref().ok_or_null() }
-	fn try_set_rate(&self) -> Result<&FnSetRate, Error> { self.0.setRate.as_ref().ok_or_null() }
-	fn try_set_loop_range(&self) -> Result<&FnSetLoopRange, Error> { self.0.setLoopRange.as_ref().ok_or_null() }
-	fn try_did_underrun(&self) -> Result<&FnDidUnderrun, Error> { self.0.didUnderrun.as_ref().ok_or_null() }
-	fn try_set_stop_on_underrun(&self) -> Result<&FnSetStopOnUnderrun, Error> {
-		self.0.setStopOnUnderrun.as_ref().ok_or_null()
-	}
-	fn try_set_finish_callback(&self) -> Result<&FnSetFinishCallback, Error> {
-		self.0.setFinishCallback.as_ref().ok_or_null()
-	}
-	fn try_set_loop_callback(&self) -> Result<&FnSetLoopCallback, Error> {
-		self.0.setLoopCallback.as_ref().ok_or_null()
-	}
-	fn try_get_offset(&self) -> Result<&FnGetOffset, Error> { self.0.getOffset.as_ref().ok_or_null() }
-	fn try_get_rate(&self) -> Result<&FnGetRate, Error> { self.0.getRate.as_ref().ok_or_null() }
-	fn try_fade_volume(&self) -> Result<&FnFadeVolume, Error> { self.0.fadeVolume.as_ref().ok_or_null() }
-	fn try_set_mp3_stream_source(&self) -> Result<&FnSetMP3StreamSource, Error> {
-		self.0.setMP3StreamSource.as_ref().ok_or_null()
-	}
+
+pub trait Api {
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::newPlayer`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::newPlayer")]
+	fn new_player(&self) -> FnNewPlayer { *sys::api!(sound.fileplayer.newPlayer) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::freePlayer`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::freePlayer")]
+	fn free_player(&self) -> FnFreePlayer { *sys::api!(sound.fileplayer.freePlayer) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::loadIntoPlayer`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::loadIntoPlayer")]
+	fn load_into_player(&self) -> FnLoadIntoPlayer { *sys::api!(sound.fileplayer.loadIntoPlayer) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::setBufferLength`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setBufferLength")]
+	fn set_buffer_length(&self) -> FnSetBufferLength { *sys::api!(sound.fileplayer.setBufferLength) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::play`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::play")]
+	fn play(&self) -> FnPlay { *sys::api!(sound.fileplayer.play) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::isPlaying`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::isPlaying")]
+	fn is_playing(&self) -> FnIsPlaying { *sys::api!(sound.fileplayer.isPlaying) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::stop`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::stop")]
+	fn stop(&self) -> FnStop { *sys::api!(sound.fileplayer.stop) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::setVolume`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setVolume")]
+	fn set_volume(&self) -> FnSetVolume { *sys::api!(sound.fileplayer.setVolume) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::getVolume`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::getVolume")]
+	fn get_volume(&self) -> FnGetVolume { *sys::api!(sound.fileplayer.getVolume) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::getLength`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::getLength")]
+	fn get_length(&self) -> FnGetLength { *sys::api!(sound.fileplayer.getLength) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::setOffset`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setOffset")]
+	fn set_offset(&self) -> FnSetOffset { *sys::api!(sound.fileplayer.setOffset) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::setRate`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setRate")]
+	fn set_rate(&self) -> FnSetRate { *sys::api!(sound.fileplayer.setRate) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::setLoopRange`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setLoopRange")]
+	fn set_loop_range(&self) -> FnSetLoopRange { *sys::api!(sound.fileplayer.setLoopRange) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::didUnderrun`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::didUnderrun")]
+	fn did_underrun(&self) -> FnDidUnderrun { *sys::api!(sound.fileplayer.didUnderrun) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::setStopOnUnderrun`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setStopOnUnderrun")]
+	fn set_stop_on_underrun(&self) -> FnSetStopOnUnderrun { *sys::api!(sound.fileplayer.setStopOnUnderrun) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::setFinishCallback`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setFinishCallback")]
+	fn set_finish_callback(&self) -> FnSetFinishCallback { *sys::api!(sound.fileplayer.setFinishCallback) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::setLoopCallback`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setLoopCallback")]
+	fn set_loop_callback(&self) -> FnSetLoopCallback { *sys::api!(sound.fileplayer.setLoopCallback) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::getOffset`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::getOffset")]
+	fn get_offset(&self) -> FnGetOffset { *sys::api!(sound.fileplayer.getOffset) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::getRate`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::getRate")]
+	fn get_rate(&self) -> FnGetRate { *sys::api!(sound.fileplayer.getRate) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::fadeVolume`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::fadeVolume")]
+	fn fade_volume(&self) -> FnFadeVolume { *sys::api!(sound.fileplayer.fadeVolume) }
+
+	/// Returns [`sys::ffi::playdate_sound_fileplayer::setMP3StreamSource`]
+	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setMP3StreamSource")]
+	fn set_mp3_stream_source(&self) -> FnSetMP3StreamSource { *sys::api!(sound.fileplayer.setMP3StreamSource) }
 }
 
 
