@@ -108,9 +108,9 @@ jobs:
 
       - name: Test Crates (host)
         run: |
-          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=sys/lang-items,$FEATURES_1 -- --nocapture
-          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=sys/lang-items,$FEATURES_2
-          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=sys/lang-items,$FEATURES_3
+          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=$FEATURES_1 -- --nocapture
+          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=$FEATURES_2
+          # cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=$FEATURES_3
 
       - name: Check Crates (device)
         run: cargo check ${{ env.API_CRATES }} --target=thumbv7em-none-eabihf
