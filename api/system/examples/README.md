@@ -4,10 +4,11 @@
 # How to run
 
 ```bash
-# Simulator:
-cargo playdate run -p=playdate-system --example=handler-static --features=entry-point
-# Device:
-cargo playdate run -p=playdate-system --example=handler-boxed --features=entry-point --device
+cargo playdate run -p=playdate-system --example=handler-static --features=sys/lang-items,sys/entry-point
+
+cargo playdate run -p=playdate-system --example=handler-boxed --features=sys/lang-items,sys/entry-point
+
+cargo playdate run -p=playdate-system --example=handler-pinned --features=sys/lang-items,sys/entry-point
 ```
 
 More information how to use [cargo-playdate][] in help: `cargo playdate --help`.

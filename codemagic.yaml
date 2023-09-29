@@ -132,6 +132,13 @@ workflows:
       groups:
         - github_credentials
       vars:
+        CARGO_INCREMENTAL: 1
+        CARGO_NET_RETRY: 10
+        RUSTUP_MAX_RETRIES: 10
+        CARGO_TERM_COLOR: always
+        CARGO_TERM_PROGRESS_WHEN: never
+        RUST_LOG: trace
+        CARGO_PLAYDATE_LOG: trace
         FEATURES_MIN: >-
           bindgen-runtime
           bindings-derive-debug
@@ -167,12 +174,27 @@ workflows:
       - *rustup_full
       - *install_sdk
 
-      - name: Default features
+      - name: Test (sys, host)
+        script: |
+          source "$HOME/.cargo/env"
+
+          cargo test -p=playdate-sys --features=lang-items -- --nocapture
+          cargo test -p=playdate-sys --features="lang-items ${FEATURES_MIN?}"
+          cargo test -p=playdate-sys --features="lang-items ${FEATURES_MAX?}"
+
+      - name: Build (sys, device)
+        script: |
+          source "$HOME/.cargo/env"
+
+          cargo build -p=playdate-sys -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
+          cargo build -p=playdate-sys --features="lang-items ${FEATURES_MIN?}" --examples -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
+          cargo build -p=playdate-sys --features="lang-items ${FEATURES_MAX?}" --examples -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
+
+      - name: Test Crates (host)
         script: |
           source "$HOME/.cargo/env"
 
           cargo test \
-            -p=playdate-sys \
             -p=playdate-fs \
             -p=playdate-sound \
             -p=playdate-color \
@@ -185,33 +207,22 @@ workflows:
             -p=playdate \
             --lib --no-default-features --features="${FEATURES_MIN?}" -- --nocapture
 
-      - name: All features
+      - name: Build Examples (device)
         script: |
           source "$HOME/.cargo/env"
 
-          cargo test \
-            -p=playdate-sys \
-            -p=playdate-fs \
-            -p=playdate-sound \
+          cargo build --features="sys/lang-items ${FEATURES_MIN?}" -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf \
             -p=playdate-color \
             -p=playdate-controls \
-            -p=playdate-menu \
-            -p=playdate-graphics \
             -p=playdate-display \
-            -p=playdate-system \
+            -p=playdate-fs \
+            -p=playdate-graphics \
+            -p=playdate-menu \
+            -p=playdate-sound \
             -p=playdate-sprite \
+            -p=playdate-system \
             -p=playdate \
-            --lib --no-default-features --features="${FEATURES_MAX?}" -- --nocapture
-
-      - name: Build Examples
-        script: |
-          source "$HOME/.cargo/env"
-          cargo build --target=thumbv7em-none-eabihf -p=playdate-fs --examples --features="${FEATURES_MIN?}" -Zbuild-std
-          cargo build --target=thumbv7em-none-eabihf -p=playdate-controls --examples --features="${FEATURES_MIN?}" -Zbuild-std
-          cargo build --target=thumbv7em-none-eabihf -p=playdate-color --examples --features="${FEATURES_MIN?}" -Zbuild-std
-          cargo build --target=thumbv7em-none-eabihf -p=playdate-sound --examples --features="${FEATURES_MIN?}" -Zbuild-std
-          cargo build --target=thumbv7em-none-eabihf -p=playdate-menu --examples --features="${FEATURES_MIN?}" -Zbuild-std
-          cargo build --target=thumbv7em-none-eabihf -p=playdate-graphics --examples --features="${FEATURES_MIN?}" -Zbuild-std
+            --examples --lib
 
       - name: Check Tool
         script: |
@@ -224,7 +235,7 @@ workflows:
           cargo test -p=cargo-playdate -- --nocapture
           rm -rf ./target/tmp
 
-      - name: Executions
+      - name: Execution
         script: |
           source "$HOME/.cargo/env"
           RUSTFLAGS="--cfg exec_tests" cargo test -p=cargo-playdate run -- --nocapture
@@ -240,14 +251,23 @@ workflows:
 
       - name: Pack Examples
         script: |
+          set -e
           source "$HOME/.cargo/env"
-          cargo playdate package --simulator --device -p=playdate-sys --examples --features="${FEATURES_MIN?}"
-          cargo playdate package --simulator --device -p=playdate-fs --examples --features="${FEATURES_MIN?}"
-          cargo playdate package --simulator --device -p=playdate-controls --examples --features="${FEATURES_MIN?}"
-          cargo playdate package --simulator --device -p=playdate-color --examples --features="${FEATURES_MIN?}"
-          cargo playdate package --simulator --device -p=playdate-sound --examples --features="${FEATURES_MIN?}"
-          cargo playdate package --simulator --device -p=playdate-menu --examples --features="${FEATURES_MIN?}"
-          cargo playdate package --simulator --device -p=playdate-graphics --examples --features="${FEATURES_MIN?}"
+          cargo playdate package --features=lang-items     --examples --device --simulator   -p=playdate-sys
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-color
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-controls
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-display
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-fs
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-graphics
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-menu
+          cargo playdate package --features=sys/lang-items --example=fp --device --simulator -p=playdate-sound
+          cargo playdate package --features=sys/lang-items,sys/entry-point --example=sp --device --simulator -p=playdate-sound
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-sprite
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-system
+          cargo playdate package --features=lang-items     --examples --device --simulator   -p=playdate
+
+          cargo playdate package --features=lang-items     --examples --device               -p=playdate
+          cargo playdate package --features=lang-items     --examples                        -p=playdate
 
       - name: Clean
         script: |

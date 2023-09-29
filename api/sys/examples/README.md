@@ -6,10 +6,9 @@
 # How to run
 
 ```bash
-# Simulator:
-cargo playdate run -p=playdate-sys --example=hello-world --features=bindgen-runtime,bindings-derive-debug
-# Device:
-cargo playdate run -p=playdate-sys --example=hello-world --features=bindgen-runtime,bindings-derive-debug --device
+cargo playdate run -p=playdate-sys --example=hello-world --features=lang-items
+
+cargo playdate run -p=playdate-sys --example=handler --features=lang-items,entry-point
 ```
 
 More information how to use [cargo-playdate][] in help: `cargo playdate --help`.

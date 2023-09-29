@@ -15,7 +15,6 @@ env:
   CARGO_PLAYDATE_LOG: trace
   # crates lists:
   API_CRATES: >-
-    -p=playdate-sys
     -p=playdate-fs
     -p=playdate-sound
     -p=playdate-color
@@ -30,6 +29,11 @@ env:
 jobs:
   api:
     name: API
+    env:
+      FEATURES_1: bindgen-runtime
+      FEATURES_2: bindgen-runtime,bindings-derive-debug
+      FEATURES_3: bindgen-runtime,bindings-derive-debug,sys/bindings-documentation,sys/error-ctx
+      BUILD_STD_ARGS: -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
     defaults:
       run:
         shell: bash
@@ -90,33 +94,32 @@ jobs:
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
 
-      - name: Test Crates
+      - name: Test Sys (host)
         run: |
-          FEATURES_1=bindgen-runtime
-          FEATURES_2=bindgen-runtime,bindings-derive-debug,bindings-documentation,error-ctx
+          cargo test -p=playdate-sys --features=lang-items -- --nocapture
+          cargo test -p=playdate-sys --features=lang-items,$FEATURES_1
+          cargo test -p=playdate-sys --features=lang-items,$FEATURES_2
 
-          cargo test -p=playdate-sys --features=$FEATURES_1 -- --nocapture
-          cargo test -p=playdate-sys --features=$FEATURES_2 -- --nocapture
+      - name: Build Sys (device)
+        run: |
+          cargo build -p=playdate-sys ${{ env.BUILD_STD_ARGS }}
+          cargo build -p=playdate-sys --features=lang-items,$FEATURES_1 ${{ env.BUILD_STD_ARGS }} --examples
+          cargo build -p=playdate-sys --features=lang-items,$FEATURES_2 ${{ env.BUILD_STD_ARGS }} --examples
 
+      - name: Test Crates (host)
+        run: |
           cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=$FEATURES_1 -- --nocapture
-          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=$FEATURES_2 -- --nocapture
+          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=$FEATURES_2
+          # cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=$FEATURES_3
 
-      - name: Check device target
+      - name: Check Crates (device)
+        run: cargo check ${{ env.API_CRATES }} --target=thumbv7em-none-eabihf
+
+      - name: Build Crates (device)
         run: |
-          # should we check with -Zbuild-std ?
-          cargo check ${{ env.API_CRATES }} --target=thumbv7em-none-eabihf
-
-      - name: Examples
-        run: |
-          FEATURES=bindgen-runtime,bindings-derive-debug
-
-          # TODO: use ${{ env.API_CRATES }} when all crates will have example
-          cargo build --target=thumbv7em-none-eabihf -p=playdate-fs --examples --features=$FEATURES -Zbuild-std
-          cargo build --target=thumbv7em-none-eabihf -p=playdate-controls --examples --features=$FEATURES -Zbuild-std
-          cargo build --target=thumbv7em-none-eabihf -p=playdate-color --examples --features=$FEATURES -Zbuild-std
-          cargo build --target=thumbv7em-none-eabihf -p=playdate-sound --examples --features=$FEATURES -Zbuild-std
-          cargo build --target=thumbv7em-none-eabihf -p=playdate-menu --examples --features=$FEATURES -Zbuild-std
-          cargo build --target=thumbv7em-none-eabihf -p=playdate-graphics --examples --features=$FEATURES -Zbuild-std
+          cargo build ${{ env.API_CRATES }} --features=sys/lang-items,$FEATURES_1 ${{ env.BUILD_STD_ARGS }} --examples --lib
+          cargo build ${{ env.API_CRATES }} --features=sys/lang-items,$FEATURES_2 ${{ env.BUILD_STD_ARGS }} --examples --lib
+          cargo build ${{ env.API_CRATES }} --features=sys/lang-items,$FEATURES_3 ${{ env.BUILD_STD_ARGS }} --examples --lib
 
       # Imitate docs.rs environment
       - name: Test in no-sdk environment
@@ -125,7 +128,7 @@ jobs:
           PLAYDATE_SDK_PATH: 0
           IGNORE_EXISTING_PLAYDATE_SDK: 1
         run: |
-          cargo doc -p=playdate-sys -v --target=thumbv7em-none-eabihf --features=bindings-documentation,bindings-derive-default,bindings-derive-eq,bindings-derive-copy,bindings-derive-debug,bindings-derive-hash,bindings-derive-ord,bindings-derive-partialeq,bindings-derive-partialord
+          cargo doc -p=playdate-sys --target=thumbv7em-none-eabihf --features=bindings-documentation,bindings-derive-default,bindings-derive-eq,bindings-derive-copy,bindings-derive-debug,bindings-derive-hash,bindings-derive-ord,bindings-derive-partialeq,bindings-derive-partialord
 
   utils:
     name: Utils
@@ -268,13 +271,14 @@ jobs:
           cargo test -p=cargo-playdate -- --nocapture
           rm -rf ./target/tmp
 
-      # This test is flickering on CI 🤷🏻‍♂️
+      # This test is flickering on GH CI 🤷🏻‍♂️
       - name: Execution
         if: runner.os == 'macOS' && contains(github.event.head_commit.message, 'execution')
         env:
           RUSTFLAGS: --cfg exec_tests
         run: |
           cargo test -p=cargo-playdate run -- --nocapture --test-threads=1
+          sudo killall "Playdate Simulator" || true
           rm -rf ./target/tmp
 
   use-tool:
@@ -349,16 +353,19 @@ jobs:
 
       - name: Examples
         run: |
-          FEATURES=bindgen-runtime,bindings-derive-debug
+          cargo playdate package --features=lang-items     --examples --device --simulator   -p=playdate-sys
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-color
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-controls
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-display
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-fs
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-graphics
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-menu
+          cargo playdate package --features=sys/lang-items --example=fp --device --simulator -p=playdate-sound
+          cargo playdate package --features=sys/lang-items,sys/entry-point --example=sp --device --simulator -p=playdate-sound
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-sprite
+          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-system
+          cargo playdate package --features=lang-items     --examples --device --simulator   -p=playdate
 
-          # TODO: use ${{ env.API_CRATES }} when all crates will have example
-          cargo playdate package --simulator --device -p=playdate-sys --examples --features=$FEATURES
-          cargo playdate package --simulator --device -p=playdate-fs --examples --features=$FEATURES
-          cargo playdate package --simulator --device -p=playdate-controls --examples --features=$FEATURES
-          cargo playdate package --simulator --device -p=playdate-color --examples --features=$FEATURES
-          cargo playdate package --simulator --device -p=playdate-sound --examples --features=$FEATURES
-          cargo playdate package --simulator --device -p=playdate-menu --examples --features=$FEATURES
-          cargo playdate package --simulator --device -p=playdate-graphics --examples --features=$FEATURES
 
       # TODO: build crankstart with examples for compatibility test
 

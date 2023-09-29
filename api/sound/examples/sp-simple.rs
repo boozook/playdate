@@ -54,7 +54,7 @@ fn event_handler(_: NonNull<PlaydateAPI>, event: PDSystemEvent, _: u32) -> Event
 		                                 let text = {
 			                                 let offset = player.offset();
 			                                 let length = player.length();
-			                                 format!("> {:.2} / {:.2}", offset, length)
+			                                 format!("{:.2} / {:.2}", offset, length)
 		                                 };
 
 		                                 gfx::clear(Color::WHITE);

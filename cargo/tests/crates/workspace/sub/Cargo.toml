@@ -5,8 +5,6 @@ edition = "2021"
 publish = false
 
 
-# libraries:
-
 [lib]
 path = "../../simple/lib.rs"
 crate-type = ["dylib", "staticlib"]
@@ -25,3 +23,4 @@ path = "../bin.rs"
 [dependencies.pd]
 package = "playdate-sys"
 path = "../../../../../api/sys"
+features = ["lang-items"]

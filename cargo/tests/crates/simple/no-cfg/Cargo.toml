@@ -31,6 +31,7 @@ path = "../bin.rs"
 [dependencies.pd]
 package = "playdate-sys"
 path = "../../../../../api/sys"
+features = ["lang-items"]
 
 
 [profile.dev]
