@@ -14,8 +14,8 @@ on:
         description: "Source SHA used to build bindings. Uses `github.sha`` by default."
         required: false
 
-  push:
-    branches: [main, master]
+  # push:
+  #   branches: [main, master]
 
   schedule:
     - cron: "0 0 * * 1"
