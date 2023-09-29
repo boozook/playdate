@@ -108,9 +108,9 @@ jobs:
 
       - name: Test Crates (host)
         run: |
-          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=$FEATURES_1 -- --nocapture
-          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=$FEATURES_2
-          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=$FEATURES_3
+          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=sys/lang-items,$FEATURES_1 -- --nocapture
+          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=sys/lang-items,$FEATURES_2
+          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=sys/lang-items,$FEATURES_3
 
       - name: Check Crates (device)
         run: cargo check ${{ env.API_CRATES }} --target=thumbv7em-none-eabihf
@@ -360,7 +360,8 @@ jobs:
           cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-fs
           cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-graphics
           cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-menu
-          cargo playdate package --features=sys/lang-items,sys/entry-point --examples --device --simulator -p=playdate-sound
+          cargo playdate package --features=sys/lang-items --example=fp --device --simulator -p=playdate-sound
+          cargo playdate package --features=sys/lang-items,sys/entry-point --example=sp --device --simulator -p=playdate-sound
           cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-sprite
           cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-system
           cargo playdate package --features=lang-items     --examples --device --simulator   -p=playdate

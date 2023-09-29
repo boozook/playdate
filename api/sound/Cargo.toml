@@ -33,13 +33,13 @@ fs = { workspace = true, default-features = false }
 [dev-dependencies]
 gfx = { workspace = true, default-features = false }
 system = { workspace = true, default-features = false, features = [ "try-trait-v2" ] }
-sys = { workspace = true, default-features = false, features = ["entry-point", "try-trait-v2"] }
+# sys = { workspace = true, default-features = false, features = ["entry-point", "try-trait-v2"] }
 
 [[example]]
 name = "sp"
 crate-type = ["dylib", "staticlib"]
 path = "examples/sp-simple.rs"
-required-features = ["sys/entry-point", "sys/lang-items"]
+required-features = ["sys/lang-items", "sys/entry-point"]
 
 [[example]]
 name = "fp"

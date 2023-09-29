@@ -260,7 +260,8 @@ workflows:
           cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-fs
           cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-graphics
           cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-menu
-          cargo playdate package --features=sys/lang-items,sys/entry-point --examples --device --simulator -p=playdate-sound
+          cargo playdate package --features=sys/lang-items --example=fp --device --simulator -p=playdate-sound
+          cargo playdate package --features=sys/lang-items,sys/entry-point --example=sp --device --simulator -p=playdate-sound
           cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-sprite
           cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-system
           cargo playdate package --features=lang-items     --examples --device --simulator   -p=playdate
