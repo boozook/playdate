@@ -180,15 +180,15 @@ workflows:
 
           cargo test -p=playdate-sys --features=lang-items -- --nocapture
           cargo test -p=playdate-sys --features="lang-items ${FEATURES_MIN?}"
-          cargo test -p=playdate-sys --features="lang-items $${FEATURES_MAX?}"
+          cargo test -p=playdate-sys --features="lang-items ${FEATURES_MAX?}"
 
       - name: Build (sys, device)
         script: |
           source "$HOME/.cargo/env"
 
-          cargo build -p=playdate-sys --examples                                           -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
-          cargo build -p=playdate-sys --features="lang-items ${FEATURES_MIN?}"  --examples -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
-          cargo build -p=playdate-sys --features="lang-items $${FEATURES_MAX?}" --examples -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
+          cargo build -p=playdate-sys -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
+          cargo build -p=playdate-sys --features="lang-items ${FEATURES_MIN?}" --examples -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
+          cargo build -p=playdate-sys --features="lang-items ${FEATURES_MAX?}" --examples -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
 
       - name: Test Crates (host)
         script: |

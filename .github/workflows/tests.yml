@@ -102,7 +102,7 @@ jobs:
 
       - name: Build Sys (device)
         run: |
-          cargo build -p=playdate-sys ${{ env.BUILD_STD_ARGS }} --examples
+          cargo build -p=playdate-sys ${{ env.BUILD_STD_ARGS }}
           cargo build -p=playdate-sys --features=lang-items,$FEATURES_1 ${{ env.BUILD_STD_ARGS }} --examples
           cargo build -p=playdate-sys --features=lang-items,$FEATURES_2 ${{ env.BUILD_STD_ARGS }} --examples
 
