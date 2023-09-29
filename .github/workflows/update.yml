@@ -250,8 +250,8 @@ jobs:
         #   IGNORE_EXISTING_PLAYDATE_SDK: 1
         #   PLAYDATE_USE_PREBUILT_VERSION: ${{ steps.sdk.outputs.version }}
         run: |
-          cargo test -p=playdate-sys --features="${{ matrix.features.v }}"
-          cargo test -p=playdate-sys --features="${{ matrix.features.v }}" --release
+          cargo test -p=playdate-sys --features="lang-items ${{ matrix.features.v }}"
+          cargo test -p=playdate-sys --features="lang-items ${{ matrix.features.v }}" --release
 
       - name: Test (device)
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -259,8 +259,8 @@ jobs:
         #   IGNORE_EXISTING_PLAYDATE_SDK: 1
         #   PLAYDATE_USE_PREBUILT_VERSION: ${{ steps.sdk.outputs.version }}
         run: |
-          cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc
-          cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc --release
+          cargo build -p=playdate-sys --features="lang-items ${{ matrix.features.v }}" --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc
+          cargo build -p=playdate-sys --features="lang-items ${{ matrix.features.v }}" --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc --release
 
       - name: Commit
         id: commit
