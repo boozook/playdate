@@ -1,6 +1,6 @@
 [package]
 name = "playdate-sound"
-version = "0.2.3"
+version = "0.2.5"
 readme = "README.md"
 description = "High-level sound API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -13,43 +13,16 @@ repository.workspace = true
 
 
 [features]
-default = ["sys/default"]
-# sys- features:
-lang-items = ["sys/lang-items", "fs/lang-items"]
-allocator = ["sys/allocator", "fs/allocator"]
-panic-handler = ["sys/panic-handler", "fs/panic-handler"]
-eh-personality = ["sys/eh-personality", "fs/eh-personality"]
-entry-point = ["sys/entry-point"]
-error-ctx = ["sys/error-ctx", "fs/error-ctx"]
+default = ["sys/default", "fs/default"]
+
+# playdate-sys features, should be shared because it's build configuration:
+
 bindgen-runtime = ["sys/bindgen-runtime", "fs/bindgen-runtime"]
 bindgen-static = ["sys/bindgen-static", "fs/bindgen-static"]
-bindings-derive-default = [
-	"sys/bindings-derive-default",
-	"fs/bindings-derive-default",
-]
-bindings-derive-eq = ["sys/bindings-derive-eq", "fs/bindings-derive-eq"]
-bindings-derive-copy = ["sys/bindings-derive-copy", "fs/bindings-derive-copy"]
+
 bindings-derive-debug = [
 	"sys/bindings-derive-debug",
 	"fs/bindings-derive-debug",
-]
-bindings-derive-hash = ["sys/bindings-derive-hash", "fs/bindings-derive-hash"]
-bindings-derive-ord = ["sys/bindings-derive-ord", "fs/bindings-derive-ord"]
-bindings-derive-partialeq = [
-	"sys/bindings-derive-partialeq",
-	"fs/bindings-derive-partialeq",
-]
-bindings-derive-partialord = [
-	"sys/bindings-derive-partialord",
-	"fs/bindings-derive-partialord",
-]
-bindings-derive-constparamty = [
-	"sys/bindings-derive-constparamty",
-	"fs/bindings-derive-constparamty",
-]
-bindings-documentation = [
-	"sys/bindings-documentation",
-	"fs/bindings-documentation",
 ]
 
 
@@ -59,18 +32,20 @@ fs = { workspace = true, default-features = false }
 
 [dev-dependencies]
 gfx = { workspace = true, default-features = false }
-system = { workspace = true, default-features = false , features = ["try-trait-v2"] }
+system = { workspace = true, default-features = false, features = [ "try-trait-v2" ] }
+sys = { workspace = true, default-features = false, features = ["entry-point", "try-trait-v2"] }
 
 [[example]]
 name = "sp"
 crate-type = ["dylib", "staticlib"]
 path = "examples/sp-simple.rs"
-required-features = ["entry-point"]
+required-features = ["sys/entry-point", "sys/lang-items"]
 
 [[example]]
 name = "fp"
 crate-type = ["dylib", "staticlib"]
 path = "examples/fp-simple.rs"
+required-features = ["sys/lang-items"]
 
 
 [package.metadata.playdate]
@@ -83,14 +58,14 @@ bundle-id = "rs.playdate.sound"
 [package.metadata.docs.rs]
 all-features = false
 features = [
-	"bindings-derive-default",
-	"bindings-derive-eq",
-	"bindings-derive-copy",
+	"sys/bindings-derive-default",
+	"sys/bindings-derive-eq",
+	"sys/bindings-derive-copy",
 	"bindings-derive-debug",
-	"bindings-derive-hash",
-	"bindings-derive-ord",
-	"bindings-derive-partialeq",
-	"bindings-derive-partialord",
+	"sys/bindings-derive-hash",
+	"sys/bindings-derive-ord",
+	"sys/bindings-derive-partialeq",
+	"sys/bindings-derive-partialord",
 ]
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"

@@ -1,6 +1,6 @@
 [package]
 name = "playdate-sprite"
-version = "0.1.3"
+version = "0.2.0"
 readme = "README.md"
 description = "High-level sprite API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -20,41 +20,14 @@ repository.workspace = true
 
 [features]
 default = ["sys/default", "gfx/default"]
-# sys- features:
-lang-items = ["sys/lang-items", "gfx/lang-items"]
-allocator = ["sys/allocator", "gfx/allocator"]
-panic-handler = ["sys/panic-handler", "gfx/panic-handler"]
-eh-personality = ["sys/eh-personality", "gfx/eh-personality"]
-error-ctx = ["sys/error-ctx", "gfx/error-ctx"]
+
+# playdate-sys features, should be shared because it's build configuration:
+
 bindgen-runtime = ["sys/bindgen-runtime", "gfx/bindgen-runtime"]
 bindgen-static = ["sys/bindgen-static", "gfx/bindgen-static"]
-bindings-derive-default = [
-	"sys/bindings-derive-default",
-	"gfx/bindings-derive-default",
-]
-bindings-derive-eq = ["sys/bindings-derive-eq", "gfx/bindings-derive-eq"]
-bindings-derive-copy = ["sys/bindings-derive-copy", "gfx/bindings-derive-copy"]
 bindings-derive-debug = [
 	"sys/bindings-derive-debug",
 	"gfx/bindings-derive-debug",
-]
-bindings-derive-hash = ["sys/bindings-derive-hash", "gfx/bindings-derive-hash"]
-bindings-derive-ord = ["sys/bindings-derive-ord", "gfx/bindings-derive-ord"]
-bindings-derive-partialeq = [
-	"sys/bindings-derive-partialeq",
-	"gfx/bindings-derive-partialeq",
-]
-bindings-derive-partialord = [
-	"sys/bindings-derive-partialord",
-	"gfx/bindings-derive-partialord",
-]
-bindings-derive-constparamty = [
-	"sys/bindings-derive-constparamty",
-	"gfx/bindings-derive-constparamty",
-]
-bindings-documentation = [
-	"sys/bindings-documentation",
-	"gfx/bindings-documentation",
 ]
 
 
@@ -67,11 +40,13 @@ gfx = { workspace = true, default-features = false }
 name = "simple"
 crate-type = ["dylib", "staticlib"]
 path = "examples/simple.rs"
+required-features = ["sys/lang-items"]
 
 [[example]]
 name = "handler"
 crate-type = ["dylib", "staticlib"]
 path = "examples/handler.rs"
+required-features = ["sys/lang-items"]
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.sprite"
@@ -80,14 +55,14 @@ bundle-id = "rs.playdate.sprite"
 [package.metadata.docs.rs]
 all-features = false
 features = [
-	"bindings-derive-default",
-	"bindings-derive-eq",
-	"bindings-derive-copy",
+	"sys/bindings-derive-default",
+	"sys/bindings-derive-eq",
+	"sys/bindings-derive-copy",
 	"bindings-derive-debug",
-	"bindings-derive-hash",
-	"bindings-derive-ord",
-	"bindings-derive-partialeq",
-	"bindings-derive-partialord",
+	"sys/bindings-derive-hash",
+	"sys/bindings-derive-ord",
+	"sys/bindings-derive-partialeq",
+	"sys/bindings-derive-partialord",
 ]
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"

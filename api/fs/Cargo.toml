@@ -1,6 +1,6 @@
 [package]
 name = "playdate-fs"
-version = "0.2.1"
+version = "0.2.3"
 readme = "README.md"
 description = "High-level file-system API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -14,24 +14,12 @@ repository.workspace = true
 
 [features]
 default = ["sys/default"]
-# sys- features:
-lang-items = ["sys/lang-items"]
-allocator = ["sys/allocator"]
-panic-handler = ["sys/panic-handler"]
-eh-personality = ["sys/eh-personality"]
-error-ctx = ["sys/error-ctx"]
+
+# playdate-sys features, should be shared because it's build configuration:
+
 bindgen-runtime = ["sys/bindgen-runtime"]
 bindgen-static = ["sys/bindgen-static"]
-bindings-derive-default = ["sys/bindings-derive-default"]
-bindings-derive-eq = ["sys/bindings-derive-eq"]
-bindings-derive-copy = ["sys/bindings-derive-copy"]
 bindings-derive-debug = ["sys/bindings-derive-debug"]
-bindings-derive-hash = ["sys/bindings-derive-hash"]
-bindings-derive-ord = ["sys/bindings-derive-ord"]
-bindings-derive-partialeq = ["sys/bindings-derive-partialeq"]
-bindings-derive-partialord = ["sys/bindings-derive-partialord"]
-bindings-derive-constparamty = ["sys/bindings-derive-constparamty"]
-bindings-documentation = ["sys/bindings-documentation"]
 
 
 [dependencies.sys]
@@ -43,6 +31,7 @@ default-features = false
 name = "simple"
 crate-type = ["dylib", "staticlib"]
 path = "examples/simple.rs"
+required-features = ["sys/lang-items"]
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.fs"
@@ -51,14 +40,14 @@ bundle-id = "rs.playdate.fs"
 [package.metadata.docs.rs]
 all-features = false
 features = [
-	"bindings-derive-default",
-	"bindings-derive-eq",
-	"bindings-derive-copy",
+	"sys/bindings-derive-default",
+	"sys/bindings-derive-eq",
+	"sys/bindings-derive-copy",
 	"bindings-derive-debug",
-	"bindings-derive-hash",
-	"bindings-derive-ord",
-	"bindings-derive-partialeq",
-	"bindings-derive-partialord",
+	"sys/bindings-derive-hash",
+	"sys/bindings-derive-ord",
+	"sys/bindings-derive-partialeq",
+	"sys/bindings-derive-partialord",
 ]
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"

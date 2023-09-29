@@ -1,6 +1,6 @@
 [package]
 name = "playdate"
-version = "0.1.5"
+version = "0.1.6"
 readme = "README.md"
 description = "High-level Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -24,10 +24,10 @@ system = { workspace = true, default-features = false }
 sys = { workspace = true, default-features = false }
 
 
-# I have to do something with this ugly thing #
 [features]
 default = [
 	"sys/default",
+	"sys/lang-items",
 	"ctrl/default",
 	"display/default",
 	"fs/default",
@@ -43,18 +43,11 @@ lang-items = ["sys/lang-items"]
 allocator = ["sys/allocator"]
 panic-handler = ["sys/panic-handler"]
 eh-personality = ["sys/eh-personality"]
-entry-point = ["sys/entry-point", "ctrl/entry-point", "system/entry-point"]
-error-ctx = [
-	"sys/error-ctx",
-	"ctrl/error-ctx",
-	"display/error-ctx",
-	"fs/error-ctx",
-	"gfx/error-ctx",
-	"menu/error-ctx",
-	"sound/error-ctx",
-	"sprite/error-ctx",
-	"system/error-ctx",
-]
+entry-point = ["sys/entry-point"]
+error-ctx = ["sys/error-ctx"]
+
+# playdate-sys features, bindings build configuration:
+
 bindgen-runtime = [
 	"sys/bindgen-runtime",
 	"ctrl/bindgen-runtime",
@@ -77,39 +70,9 @@ bindgen-static = [
 	"sprite/bindgen-static",
 	"system/bindgen-static",
 ]
-bindings-derive-default = [
-	"sys/bindings-derive-default",
-	"ctrl/bindings-derive-default",
-	"display/bindings-derive-default",
-	"fs/bindings-derive-default",
-	"gfx/bindings-derive-default",
-	"menu/bindings-derive-default",
-	"sound/bindings-derive-default",
-	"sprite/bindings-derive-default",
-	"system/bindings-derive-default",
-]
-bindings-derive-eq = [
-	"sys/bindings-derive-eq",
-	"ctrl/bindings-derive-eq",
-	"display/bindings-derive-eq",
-	"fs/bindings-derive-eq",
-	"gfx/bindings-derive-eq",
-	"menu/bindings-derive-eq",
-	"sound/bindings-derive-eq",
-	"sprite/bindings-derive-eq",
-	"system/bindings-derive-eq",
-]
-bindings-derive-copy = [
-	"sys/bindings-derive-copy",
-	"ctrl/bindings-derive-copy",
-	"display/bindings-derive-copy",
-	"fs/bindings-derive-copy",
-	"gfx/bindings-derive-copy",
-	"menu/bindings-derive-copy",
-	"sound/bindings-derive-copy",
-	"sprite/bindings-derive-copy",
-	"system/bindings-derive-copy",
-]
+bindings-derive-default = ["sys/bindings-derive-default"]
+bindings-derive-eq = ["sys/bindings-derive-eq"]
+bindings-derive-copy = ["sys/bindings-derive-copy"]
 bindings-derive-debug = [
 	"sys/bindings-derive-debug",
 	"ctrl/bindings-derive-debug",
@@ -121,85 +84,25 @@ bindings-derive-debug = [
 	"sprite/bindings-derive-debug",
 	"system/bindings-derive-debug",
 ]
-bindings-derive-hash = [
-	"sys/bindings-derive-hash",
-	"ctrl/bindings-derive-hash",
-	"display/bindings-derive-hash",
-	"fs/bindings-derive-hash",
-	"gfx/bindings-derive-hash",
-	"menu/bindings-derive-hash",
-	"sound/bindings-derive-hash",
-	"sprite/bindings-derive-hash",
-	"system/bindings-derive-hash",
-]
-bindings-derive-ord = [
-	"sys/bindings-derive-ord",
-	"ctrl/bindings-derive-ord",
-	"display/bindings-derive-ord",
-	"fs/bindings-derive-ord",
-	"gfx/bindings-derive-ord",
-	"menu/bindings-derive-ord",
-	"sound/bindings-derive-ord",
-	"sprite/bindings-derive-ord",
-	"system/bindings-derive-ord",
-]
-bindings-derive-partialeq = [
-	"sys/bindings-derive-partialeq",
-	"ctrl/bindings-derive-partialeq",
-	"display/bindings-derive-partialeq",
-	"fs/bindings-derive-partialeq",
-	"gfx/bindings-derive-partialeq",
-	"menu/bindings-derive-partialeq",
-	"sound/bindings-derive-partialeq",
-	"sprite/bindings-derive-partialeq",
-	"system/bindings-derive-partialeq",
-]
-bindings-derive-partialord = [
-	"sys/bindings-derive-partialord",
-	"ctrl/bindings-derive-partialord",
-	"display/bindings-derive-partialord",
-	"fs/bindings-derive-partialord",
-	"gfx/bindings-derive-partialord",
-	"menu/bindings-derive-partialord",
-	"sound/bindings-derive-partialord",
-	"sprite/bindings-derive-partialord",
-	"system/bindings-derive-partialord",
-]
-bindings-derive-constparamty = [
-	"sys/bindings-derive-constparamty",
-	"ctrl/bindings-derive-constparamty",
-	"display/bindings-derive-constparamty",
-	"fs/bindings-derive-constparamty",
-	"gfx/bindings-derive-constparamty",
-	"menu/bindings-derive-constparamty",
-	"sound/bindings-derive-constparamty",
-	"sprite/bindings-derive-constparamty",
-	"system/bindings-derive-constparamty",
-]
-bindings-documentation = [
-	"sys/bindings-documentation",
-	"ctrl/bindings-documentation",
-	"display/bindings-documentation",
-	"fs/bindings-documentation",
-	"gfx/bindings-documentation",
-	"menu/bindings-documentation",
-	"sound/bindings-documentation",
-	"sprite/bindings-documentation",
-	"system/bindings-documentation",
-]
+bindings-derive-hash = ["sys/bindings-derive-hash"]
+bindings-derive-ord = ["sys/bindings-derive-ord"]
+bindings-derive-partialeq = ["sys/bindings-derive-partialeq"]
+bindings-derive-partialord = ["sys/bindings-derive-partialord"]
+bindings-derive-constparamty = ["sys/bindings-derive-constparamty"]
+bindings-documentation = ["sys/bindings-documentation"]
 
 
 [[example]]
 name = "hello-world"
 crate-type = ["dylib", "staticlib"]
 path = "examples/hello-world.rs"
-required-features = ["entry-point"]
+required-features = ["entry-point", "lang-items"]
 
 [[example]]
 name = "video"
 crate-type = ["dylib", "staticlib"]
 path = "examples/video.rs"
-required-features = ["entry-point"]
+required-features = ["entry-point", "lang-items"]
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.core"
@@ -213,14 +116,14 @@ bundle-id = "rs.playdate.core"
 [package.metadata.docs.rs]
 all-features = false
 features = [
-	"bindings-derive-default",
-	"bindings-derive-eq",
-	"bindings-derive-copy",
+	"sys/bindings-derive-default",
+	"sys/bindings-derive-eq",
+	"sys/bindings-derive-copy",
 	"bindings-derive-debug",
-	"bindings-derive-hash",
-	"bindings-derive-ord",
-	"bindings-derive-partialeq",
-	"bindings-derive-partialord",
+	"sys/bindings-derive-hash",
+	"sys/bindings-derive-ord",
+	"sys/bindings-derive-partialeq",
+	"sys/bindings-derive-partialord",
 ]
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"

@@ -8,11 +8,11 @@ Here is two examples:
 # How to run
 
 ```bash
-# Simulator:
-cargo playdate run -p=playdate-sound --example=fp
-# Device:
-cargo playdate run -p=playdate-sound --example=sp --features=entry-point --device
+cargo playdate run -p=playdate-sound --example=fp --features=sys/lang-items
+
+cargo playdate run -p=playdate-sound --example=sp --features=sys/lang-items
 ```
+
 
 More information how to use [cargo-playdate][] in help: `cargo playdate --help`.
 
