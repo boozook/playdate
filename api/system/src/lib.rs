@@ -258,6 +258,11 @@ pub mod api {
 		fn from(ptr: &NonNull<playdate_sys>) -> Self { Self(unsafe { ptr.as_ref() }) }
 	}
 
+	impl Cache {
+		#[inline(always)]
+		pub fn as_inner(&self) -> &'static playdate_sys { self.0 }
+	}
+
 
 	impl Api for Cache {
 		/// Equivalent to [`sys::ffi::playdate_sys::getLanguage`]

@@ -18,7 +18,6 @@ use display::Display;
 use gfx::color::Color;
 use sys::EventLoopCtrl;
 use sys::ffi::PlaydateAPI;
-use sys::error::NullPtrError;
 use system::prelude::*;
 
 
@@ -54,15 +53,16 @@ fn event_handler(_: NonNull<PlaydateAPI>, event: SystemEvent, _: u32) -> EventLo
 	// Create cached end-points that we using every update
 	let system = system::System::Cached();
 	let graphics = gfx::Graphics::Cached();
+	let buttons = Buttons::Cached();
 
 	// Register update handler
 	// Just to draw current playback position
 	system.set_update_callback_boxed(
-	                                 move |pos| {
+	                                 move |(pos, buttons)| {
 		                                 graphics.clear(Color::WHITE);
 
 		                                 // Get buttons state
-		                                 let buttons = Buttons::get().ok_or(NullPtrError)?;
+		                                 let buttons = buttons.get();
 
 		                                 // Render buttons state to string
 		                                 let text: Cow<str> = if buttons.current.is_empty() {
@@ -108,7 +108,7 @@ fn event_handler(_: NonNull<PlaydateAPI>, event: SystemEvent, _: u32) -> EventLo
 
 		                                 UpdateCtrl::Continue
 	                                 },
-	                                 pos,
+	                                 (pos, buttons),
 	);
 
 	EventLoopCtrl::Continue

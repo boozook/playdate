@@ -11,7 +11,6 @@ use controls::peripherals::Accelerometer;
 
 use display::Display;
 use gfx::color::Color;
-use sys::error::NullPtrError;
 use sys::ffi::PlaydateAPI;
 use sys::EventLoopCtrl;
 use system::prelude::*;
@@ -50,7 +49,7 @@ fn init() -> EventLoopCtrl {
 		                                 graphics.clear(Color::WHITE);
 
 		                                 // get accelerometer data
-		                                 let (x, y, z) = Accelerometer::get().ok_or(NullPtrError)?;
+		                                 let (x, y, z) = Accelerometer::Default().get();
 
 		                                 // render state to string
 		                                 let text = format!("[{x:.2},{y:.2},{z:.2}]");
@@ -93,18 +92,18 @@ fn event_handler(_: NonNull<PlaydateAPI>, event: SystemEvent, _: u32) -> EventLo
 	match event {
 		SystemEvent::Init => {
 			// turn on the accelerometer
-			Accelerometer::enable().ok_or(NullPtrError)?;
+			Accelerometer::Default().enable();
 			return init();
 		},
 
 		SystemEvent::Resume | SystemEvent::Unlock => {
 			// turn on the accelerometer
-			Accelerometer::enable().ok_or(NullPtrError)?;
+			Accelerometer::Default().enable();
 		},
 
 		SystemEvent::Terminate | SystemEvent::Pause | SystemEvent::Lock => {
 			// turn off the accelerometer
-			Accelerometer::disable().ok_or(NullPtrError)?;
+			Accelerometer::Default().disable();
 		},
 
 		// Ignore any other events, just for this minimalistic example
