@@ -1,5 +1,4 @@
 #![no_std]
-#[macro_use]
 extern crate alloc;
 
 #[macro_use]
@@ -7,168 +6,81 @@ extern crate sys;
 extern crate playdate_menu as menu;
 
 use core::ffi::*;
-use alloc::boxed::Box;
+use core::ptr::NonNull;
 
 use sys::ffi::*;
+use sys::EventLoopCtrl;
+use system::prelude::*;
+use gfx::color::Color;
+
 use menu::*;
 
 
 const INITIAL_X: u32 = LCD_COLUMNS / 2;
 const INITIAL_Y: u32 = (LCD_ROWS - TEXT_HEIGHT) / 2;
 const TEXT_HEIGHT: u32 = 16;
+const LABEL: &str = "Use System Menu";
 
-
-const MAX_CLICKS: u32 = 3;
 
 /// App state
 struct State {
 	first: Option<SimpleMenuItem<u32>>,
-	second: Option<CheckMenuItem<Option<&'static Self>>>,
+	second: Option<CheckMenuItem<u32>>,
 	third: Option<OptionsMenuItem>,
 }
 
-impl State {
-	const fn new() -> Self {
-		Self { first: None,
-		       second: None,
-		       third: None }
+
+fn update(state: &mut State) -> UpdateCtrl {
+	// remove third menu item if requested
+	if let Some((_, value)) = state.third.as_ref().map(|item| (item, item.selected_option())) {
+		if value != 0 {
+			state.third.take();
+			println!("Third menu item removed.")
+		}
 	}
 
 
-	/// Updates the state
-	fn update(&mut self) -> Option<()> {
-		// remove first menu item if limit reached
-		if let Some((_item, value)) = self.first
-		                                  .as_ref()
-		                                  .map(|item| item.get_userdata().map(|val| (item, val)))
-		                                  .flatten()
-		{
-			if *value >= MAX_CLICKS {
-				let item = self.first.take().unwrap();
-				let value = item.remove();
-				println!("First item removed on click {value:?}");
-			}
-		}
+	let graphics = gfx::Graphics::Cached();
+	graphics.clear(Color::WHITE);
 
-		// remove third menu item if requested
-		if let Some((_item, value)) = self.third.as_ref().map(|item| (item, item.selected_option())) {
-			if value != 0 {
-				self.third.take();
-			}
-		}
+	// Get width (screen-size) of text
+	let font = Default::default();
+	let text_width = graphics.get_text_width(LABEL, font, 0)?;
+	// render text
+	graphics.draw_text(
+	                   LABEL,
+	                   INITIAL_X as c_int - text_width / 2,
+	                   INITIAL_Y.try_into().unwrap(),
+	)?;
 
-
-		const LABEL_DEF: &str = "Use System Menu\0";
-
-		let cstr = CStr::from_bytes_with_nul(LABEL_DEF.as_bytes()).unwrap();
-
-		unsafe {
-			let graphics = (*sys::API).graphics;
-			(*graphics).clear?(LCDSolidColor::kColorWhite as LCDColor);
-
-			// get width (screen-size) of text
-			let text_width = (*graphics).getTextWidth?(
-			                                           core::ptr::null_mut(),
-			                                           cstr.as_ptr() as *const _,
-			                                           LABEL_DEF.len(),
-			                                           PDStringEncoding::kUTF8Encoding,
-			                                           0,
-			);
-			// render text
-			(*graphics).drawText?(
-			                      cstr.as_ptr() as *const _,
-			                      LABEL_DEF.len(),
-			                      PDStringEncoding::kUTF8Encoding,
-			                      INITIAL_X as c_int - text_width / 2,
-			                      INITIAL_Y.try_into().unwrap(),
-			);
-		}
-		Some(())
-	}
-
-
-	/// Event handler
-	fn event(&'static mut self, event: PDSystemEvent) -> Option<()> {
-		match event {
-			// initial setup
-			PDSystemEvent::kEventInit => unsafe {
-				(*(*sys::API).display).setRefreshRate?(20.0);
-
-				fn callback(userdata: &mut u32) {
-					println!("Check menu item clicked {userdata} times.");
-					*userdata += 1;
-				}
-				self.first = SimpleMenuItem::new("Check Me", Some(callback), 0).unwrap().into();
-
-
-				fn change_first(state: &mut Option<&'static State>) {
-					if let Some(state) = state {
-						if let Some(item) = state.first.as_ref() {
-							if let Some(value) = item.get_userdata() {
-								item.set_title(format!("Clicked: {value}/{MAX_CLICKS}")).unwrap();
-							} else {
-								println!("No user-data")
-							}
-						} else {
-							println!("No menu item")
-						}
-					} else {
-						println!("No state")
-					}
-				}
-				self.second = CheckMenuItem::new("Change^", false, Some(change_first), None).unwrap()
-				                                                                            .into();
-				let second = self.second.as_ref().unwrap();
-				second.set_userdata(Some(self));
-
-
-				self.third = OptionsMenuItem::new("Remove?", ["No", "Yes"], None, ()).unwrap()
-				                                                                     .into();
-			},
-			_ => {},
-		}
-		Some(())
-	}
+	UpdateCtrl::Continue
 }
 
 
+/// Entry point / event handler
 #[no_mangle]
-/// Proxy event handler, calls `State::event`
-pub extern "C" fn eventHandlerShim(api: *const PlaydateAPI, event: PDSystemEvent, _arg: u32) -> c_int {
-	static mut STATE: Option<Box<State>> = None;
-
-	match event {
-		PDSystemEvent::kEventInit => unsafe {
-			// register the API entry point
-			sys::API = api;
-
-			// create game state
-			if STATE.is_none() {
-				STATE = Some(Box::new(State::new()));
-			}
-			let state = STATE.as_mut().unwrap().as_mut() as *mut State;
-
-			// get `setUpdateCallback` fn
-			let f = (*(*api).system).setUpdateCallback.expect("setUpdateCallback");
-			// register update callback with user-data = our state
-			f(Some(on_update), state.cast());
-		},
-		_ => {},
+fn event_handler(_: NonNull<PlaydateAPI>, event: SystemEvent, _: u32) -> EventLoopCtrl {
+	// Ignore any other events, just for this minimalistic example
+	if !matches!(event, SystemEvent::Init) {
+		return EventLoopCtrl::Continue;
 	}
 
-	if let Some(state) = unsafe { STATE.as_mut() } {
-		state.event(event).and(Some(0)).unwrap_or(1)
-	} else {
-		1
+
+	fn on_change(userdata: &mut u32) {
+		println!("Menu item changed {userdata} times.");
+		*userdata += 1;
 	}
-}
 
+	let first = SimpleMenuItem::new("Check Me", Some(on_change), 0)?.into();
+	let second = CheckMenuItem::new("Check", false, Some(on_change), 0)?.into();
+	let third = OptionsMenuItem::new("Del me?", ["No", "Yes"], None, ())?.into();
 
-/// Proxy update callback, calls `State::update`
-unsafe extern "C" fn on_update(state: *mut c_void) -> i32 {
-	let ptr: *mut State = state.cast();
-	let state = ptr.as_mut().expect("missed state");
-	state.update().and(Some(1)).unwrap_or_default()
+	let state = State { first, second, third };
+
+	// Set no-op update callback
+	system::System::Default().set_update_callback_boxed(update, state);
+
+	EventLoopCtrl::Continue
 }
 
 

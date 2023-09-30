@@ -1,6 +1,6 @@
 # Examples
 
-⚠️ All of the examples here are very low-level, except for the parts that directly demonstrate the functionality of this package.
+These examples additionally uses other crates with parts of Playdate API to minimize the amount of code.
 
 
 # How to run
