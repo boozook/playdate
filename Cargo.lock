@@ -2589,9 +2589,10 @@ dependencies = [
 
 [[package]]
 name = "playdate-fs"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "playdate-sys",
+ "playdate-system",
 ]
 
 [[package]]

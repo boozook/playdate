@@ -1,6 +1,6 @@
 [package]
 name = "playdate-fs"
-version = "0.2.3"
+version = "0.2.4"
 readme = "README.md"
 description = "High-level file-system API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -26,12 +26,14 @@ bindings-derive-debug = ["sys/bindings-derive-debug"]
 workspace = true
 default-features = false
 
+[dev-dependencies]
+system = { workspace = true, default-features = false, features = [ "try-trait-v2" ] }
 
 [[example]]
 name = "simple"
 crate-type = ["dylib", "staticlib"]
 path = "examples/simple.rs"
-required-features = ["sys/lang-items"]
+required-features = ["sys/lang-items", "sys/entry-point"]
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.fs"

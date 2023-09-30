@@ -5,12 +5,13 @@ extern crate alloc;
 extern crate sys;
 extern crate playdate_fs as fs;
 
-use core::ffi::*;
-use core::ptr::null_mut;
+use core::ptr::NonNull;
 use alloc::string::String;
 
+use sys::EventLoopCtrl;
 use sys::ffi::*;
 use fs::prelude::*;
+use system::prelude::*;
 
 
 fn list_bundle_dir() -> Result<(), fs::error::ApiError> {
@@ -36,7 +37,7 @@ fn write_file() -> Result<(), fs::error::ApiError> {
 	} else {
 		println!("file doesn't exists, creating new");
 
-		// create dir:
+		// Create dir:
 		fs.create_dir(DIR)?;
 	}
 
@@ -59,7 +60,7 @@ fn read_file() -> Result<(), fs::error::ApiError> {
 	println!("info: {info:?}");
 
 
-	// prepare prefilled buffer:
+	// Prepare prefilled buffer:
 	println!("preparing buffer for {} bytes", info.size);
 	let mut buf = vec![0_u8; info.size as usize];
 
@@ -83,32 +84,25 @@ fn read_package_info() -> Result<(), fs::error::ApiError> {
 }
 
 
+/// Entry point / event handler
 #[no_mangle]
-/// Proxy event handler, calls `State::event`
-pub extern "C" fn eventHandlerShim(api: *const PlaydateAPI, event: PDSystemEvent, _arg: u32) -> c_int {
-	match event {
-		PDSystemEvent::kEventInit => unsafe {
-			// register the API entry point
-			sys::API = api;
-
-			// get `setUpdateCallback` fn
-			let f = api!(system.setUpdateCallback);
-
-			/// no-op update callback
-			unsafe extern "C" fn on_update(_: *mut c_void) -> i32 { 0 }
-
-			// register update callback with user-data = our state
-			f(Some(on_update), null_mut());
-
-			list_bundle_dir().expect("list_bundle_dir");
-			write_file().expect("write_file");
-			read_file().expect("read_file");
-			read_package_info().expect("read_package_info");
-		},
-		_ => {},
+fn event_handler(_: NonNull<PlaydateAPI>, event: SystemEvent, _: u32) -> EventLoopCtrl {
+	// Ignore any other events, just for this minimalistic example
+	if !matches!(event, SystemEvent::Init) {
+		return EventLoopCtrl::Continue;
 	}
-	0
+
+	list_bundle_dir().expect("list_bundle_dir");
+	write_file().expect("write_file");
+	read_file().expect("read_file");
+	read_package_info().expect("read_package_info");
+
+	// Set no-op update callback
+	system::System::Default().set_update_callback_boxed(|_| UpdateCtrl::Continue, ());
+
+	EventLoopCtrl::Continue
 }
+
 
 // Needed for debug build
 ll_symbols!();
