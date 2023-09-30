@@ -7,14 +7,18 @@ extern crate gfx;
 extern crate playdate_sprite as sprite;
 
 use core::ffi::*;
-use alloc::boxed::Box;
+use core::ptr::NonNull;
 
+use sys::EventLoopCtrl;
 use sys::ffi::*;
 use gfx::*;
 use gfx::color::*;
 use gfx::bitmap::Bitmap;
+use display::Display;
 use sprite::prelude::*;
 use sprite::callback::update::*;
+use system::event::*;
+use system::update::*;
 
 use self::updater::*;
 
@@ -23,66 +27,71 @@ const CENTER_X: u32 = LCD_COLUMNS / 2;
 const CENTER_Y: u32 = LCD_ROWS / 2;
 
 
-/// App state
-struct State {
+/// Game state
+struct Game {
 	rotation: c_float,
-	bitmap: Option<Bitmap>,
-	sprite: Option<Handle<true, Sprite<UpdState>, Upd>>,
+	bitmap: Bitmap,
+	sprite: Handle<true, Sprite<UpdState>, Upd>,
 }
 
-impl State {
-	const fn new() -> Self {
+impl Game {
+	fn new() -> Self {
+		let bitmap = Bitmap::new(50, 50, Color::BLACK).expect("bitmap");
+		let sprite = Sprite::new().into_update_handler::<Upd>();
+
+		sprite.set_draw_mode(BitmapDrawMode::Copy);
+		sprite.set_image(&bitmap, BitmapFlip::Unflipped);
+		sprite.move_to(CENTER_X as _, CENTER_Y as _);
+		sprite.add();
+
+		sprite.set_userdata(UpdState::new());
+
 		Self { rotation: 0.,
-		       bitmap: None,
-		       sprite: None }
-	}
-
-
-	/// Updates the state
-	fn update(&mut self) -> Option<()> {
-		sprite::update_and_draw_sprites();
-
-		// reuse bitmap:
-		if let Some(bitmap) = self.bitmap.as_ref() {
-			self.rotation += 1.0;
-			if self.rotation > 360.0 {
-				self.rotation = 0.0;
-			}
-
-			bitmap.draw_rotated(CENTER_X as _, CENTER_Y as _, self.rotation, 0.5, 0.5, 1.0, 1.0);
-		}
-
-		Some(())
+		       bitmap,
+		       sprite }
 	}
 
 
 	/// Event handler
-	fn event(&'static mut self, event: PDSystemEvent) -> Option<()> {
+	fn event(&'static mut self, event: SystemEvent) -> EventLoopCtrl {
 		match event {
-			// initial setup
-			PDSystemEvent::kEventInit => {
-				unsafe { (*(*sys::API).display).setRefreshRate?(60.0) };
+			// Initial setup
+			SystemEvent::Init => {
+				// Set FPS to maximum possible
+				Display::Default().set_refresh_rate(0.);
 
-				let bitmap = Bitmap::new(50, 50, Color::BLACK).expect("bitmap");
-				let sprite = Sprite::new().into_update_handler::<Upd>();
-
-				sprite.set_draw_mode(BitmapDrawMode::Copy);
-				sprite.set_image(&bitmap, BitmapFlip::Unflipped);
-				sprite.move_to(CENTER_X as _, CENTER_Y as _);
-				sprite.add();
-
-				sprite.set_userdata(UpdState::new());
-
-				self.sprite = Some(sprite);
-				self.bitmap = Some(bitmap);
+				// Register our update handler that defined below
+				self.set_update_handler();
 			},
 			_ => {},
 		}
-		Some(())
+
+		EventLoopCtrl::Continue
 	}
 }
 
 
+impl Update for Game {
+	/// Updates the state
+	fn update(&mut self) -> UpdateCtrl {
+		sprite::update_and_draw_sprites();
+
+		// Reuse bitmap:
+		self.rotation += 1.0;
+		if self.rotation > 360.0 {
+			self.rotation = 0.0;
+		}
+
+		// Draw bitmap rotated
+		self.bitmap
+		    .draw_rotated(CENTER_X as _, CENTER_Y as _, self.rotation, 0.5, 0.5, 1.0, 1.0);
+
+		UpdateCtrl::Continue
+	}
+}
+
+
+/// Here is our "update sprite" behavior.
 mod updater {
 	use core::ffi::c_float;
 
@@ -95,34 +104,6 @@ mod updater {
 
 
 	pub struct Upd<UD = UpdState, T: AnySprite = SpriteRef>(Sprite<UD, T::Api, false>);
-
-	impl<T: AnySprite, UD> AsRef<Sprite<UD, T::Api, false>> for Upd<UD, T> {
-		fn as_ref(&self) -> &Sprite<UD, T::Api, false> { &self.0 }
-	}
-
-	impl<T: AnySprite, UD> From<T> for Upd<UD, T> where Sprite<UD, T::Api, false>: From<T> {
-		fn from(ptr: T) -> Self { Self(Sprite::from(ptr)) }
-	}
-
-	impl<T: AnySprite, UD> TypedSprite for Upd<UD, T> {
-		type Userdata = UD;
-		const FREE_ON_DROP: bool = false;
-	}
-	impl<T: AnySprite, UD> AsRaw for Upd<UD, T> {
-		type Type = <T as AsRaw>::Type;
-		unsafe fn as_raw(&self) -> *mut Self::Type { self.0.as_raw() }
-	}
-	impl<T: AnySprite, UD> SpriteApi for Upd<UD, T> {
-		type Api = <T as SpriteApi>::Api;
-
-		fn api(&self) -> Self::Api
-			where Self::Api: Copy {
-			self.0.api()
-		}
-
-		fn api_ref(&self) -> &Self::Api { self.0.api_ref() }
-	}
-
 
 	impl<T, UD> SpriteUpdate for Upd<UD, T>
 		where T: AnySprite,
@@ -141,8 +122,41 @@ mod updater {
 					velocity.y = -velocity.y;
 				}
 
+				// Move sprite
 				sprite.move_by(velocity.x, velocity.y);
 			}
+		}
+	}
+
+
+	mod impls_needed_to_combine_handlers {
+		use super::*;
+
+		impl<T: AnySprite, UD> AsRef<Sprite<UD, T::Api, false>> for Upd<UD, T> {
+			fn as_ref(&self) -> &Sprite<UD, T::Api, false> { &self.0 }
+		}
+
+		impl<T: AnySprite, UD> From<T> for Upd<UD, T> where Sprite<UD, T::Api, false>: From<T> {
+			fn from(ptr: T) -> Self { Self(Sprite::from(ptr)) }
+		}
+
+		impl<T: AnySprite, UD> TypedSprite for Upd<UD, T> {
+			type Userdata = UD;
+			const FREE_ON_DROP: bool = false;
+		}
+		impl<T: AnySprite, UD> AsRaw for Upd<UD, T> {
+			type Type = <T as AsRaw>::Type;
+			unsafe fn as_raw(&self) -> *mut Self::Type { self.0.as_raw() }
+		}
+		impl<T: AnySprite, UD> SpriteApi for Upd<UD, T> {
+			type Api = <T as SpriteApi>::Api;
+
+			fn api(&self) -> Self::Api
+				where Self::Api: Copy {
+				self.0.api()
+			}
+
+			fn api_ref(&self) -> &Self::Api { self.0.api_ref() }
 		}
 	}
 
@@ -172,43 +186,19 @@ mod updater {
 }
 
 
+/// Entry point / event handler
 #[no_mangle]
-/// Proxy event handler, calls `State::event`
-pub extern "C" fn eventHandlerShim(api: *const PlaydateAPI, event: PDSystemEvent, _arg: u32) -> c_int {
-	static mut STATE: Option<Box<State>> = None;
-
-	match event {
-		PDSystemEvent::kEventInit => unsafe {
-			// register the API entry point
-			sys::API = api;
-
-			// create game state
-			if STATE.is_none() {
-				STATE = Some(Box::new(State::new()));
-			}
-			let state = STATE.as_mut().unwrap().as_mut() as *mut State;
-
-			// get `setUpdateCallback` fn
-			let f = (*(*api).system).setUpdateCallback.expect("setUpdateCallback");
-			// register update callback with user-data = our state
-			f(Some(on_update), state.cast());
-		},
-		_ => {},
+fn event_handler(_: NonNull<PlaydateAPI>, event: SystemEvent, _: u32) -> EventLoopCtrl {
+	// Unsafe static storage for our state.
+	// Usually it's safe because there's only one thread.
+	pub static mut GAME: Option<Game> = None;
+	if unsafe { GAME.is_none() } {
+		let state = Game::new();
+		unsafe { GAME = Some(state) }
 	}
 
-	if let Some(state) = unsafe { STATE.as_mut() } {
-		state.event(event).and(Some(0)).unwrap_or(1)
-	} else {
-		1
-	}
-}
-
-
-/// Proxy update callback, calls `State::update`
-unsafe extern "C" fn on_update(state: *mut c_void) -> i32 {
-	let ptr: *mut State = state.cast();
-	let state = ptr.as_mut().expect("missed state");
-	state.update().and(Some(1)).unwrap_or_default()
+	// Call state.event
+	unsafe { GAME.as_mut() }.expect("impossible").event(event)
 }
 
 
