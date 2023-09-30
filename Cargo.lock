@@ -2572,9 +2572,12 @@ dependencies = [
 
 [[package]]
 name = "playdate-controls"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
+ "playdate-display",
+ "playdate-graphics",
  "playdate-sys",
+ "playdate-system",
 ]
 
 [[package]]
