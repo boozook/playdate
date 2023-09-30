@@ -195,15 +195,16 @@ workflows:
           source "$HOME/.cargo/env"
 
           cargo test \
-            -p=playdate-fs \
-            -p=playdate-sound \
             -p=playdate-color \
             -p=playdate-controls \
-            -p=playdate-menu \
-            -p=playdate-graphics \
             -p=playdate-display \
-            -p=playdate-system \
+            -p=playdate-fs \
+            -p=playdate-graphics \
+            -p=playdate-menu \
+            -p=playdate-scoreboards \
+            -p=playdate-sound \
             -p=playdate-sprite \
+            -p=playdate-system \
             -p=playdate \
             --lib --no-default-features --features="${FEATURES_MIN?}" -- --nocapture
 
@@ -218,6 +219,7 @@ workflows:
             -p=playdate-fs \
             -p=playdate-graphics \
             -p=playdate-menu \
+            -p=playdate-scoreboards \
             -p=playdate-sound \
             -p=playdate-sprite \
             -p=playdate-system \
@@ -261,6 +263,7 @@ workflows:
           cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-fs
           cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-graphics
           cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-menu
+          cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-scoreboards
           cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-sound
           cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-sprite
           cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-system
