@@ -15,15 +15,16 @@ env:
   CARGO_PLAYDATE_LOG: trace
   # crates lists:
   API_CRATES: >-
-    -p=playdate-fs
-    -p=playdate-sound
     -p=playdate-color
     -p=playdate-controls
-    -p=playdate-menu
-    -p=playdate-graphics
     -p=playdate-display
-    -p=playdate-system
+    -p=playdate-fs
+    -p=playdate-graphics
+    -p=playdate-menu
+    -p=playdate-scoreboards
+    -p=playdate-sound
     -p=playdate-sprite
+    -p=playdate-system
     -p=playdate
 
 jobs:
@@ -361,11 +362,11 @@ jobs:
           cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-fs
           cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-graphics
           cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-menu
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-scoreboards
           cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-sound
           cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-sprite
           cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-system
           cargo playdate package --features=lang-items,entry-point --examples --device --simulator -p=playdate
-
 
       # TODO: build crankstart with examples for compatibility test
 
