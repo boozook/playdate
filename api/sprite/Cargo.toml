@@ -1,6 +1,6 @@
 [package]
 name = "playdate-sprite"
-version = "0.2.1"
+version = "0.2.2"
 readme = "README.md"
 description = "High-level sprite API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -21,7 +21,7 @@ repository.workspace = true
 [features]
 default = ["sys/default", "gfx/default"]
 
-sdk_2_1 = []
+sdk_2_1 = ["gfx/sdk_2_1"]
 
 # playdate-sys features, should be shared because it's build configuration:
 
@@ -37,18 +37,22 @@ bindings-derive-debug = [
 sys = { workspace = true, default-features = false }
 gfx = { workspace = true, default-features = false }
 
+[dev-dependencies]
+display = { workspace = true, default-features = false }
+system = { workspace = true, default-features = false, features = [ "try-trait-v2" ] }
+
 
 [[example]]
 name = "simple"
 crate-type = ["dylib", "staticlib"]
 path = "examples/simple.rs"
-required-features = ["sys/lang-items"]
+required-features = ["sys/lang-items", "sys/entry-point"]
 
 [[example]]
 name = "handler"
 crate-type = ["dylib", "staticlib"]
 path = "examples/handler.rs"
-required-features = ["sys/lang-items"]
+required-features = ["sys/lang-items", "sys/entry-point"]
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.sprite"
@@ -65,6 +69,7 @@ features = [
 	"sys/bindings-derive-ord",
 	"sys/bindings-derive-partialeq",
 	"sys/bindings-derive-partialord",
+	"sdk_2_1"
 ]
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
