@@ -2617,7 +2617,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-sound"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "playdate-fs",
  "playdate-graphics",
