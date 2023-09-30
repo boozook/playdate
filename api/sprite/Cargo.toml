@@ -1,6 +1,6 @@
 [package]
 name = "playdate-sprite"
-version = "0.2.0"
+version = "0.2.1"
 readme = "README.md"
 description = "High-level sprite API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -20,6 +20,8 @@ repository.workspace = true
 
 [features]
 default = ["sys/default", "gfx/default"]
+
+sdk_2_1 = []
 
 # playdate-sys features, should be shared because it's build configuration:
 

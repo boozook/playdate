@@ -217,6 +217,18 @@ pub fn set_text_leading(line_height_adjustment: c_int) {
 pub fn set_text_tracking(tracking: c_int) { Graphics::Default().set_text_tracking(tracking) }
 
 
+/// Gets the tracking used when drawing text.
+///
+/// This function is shorthand for [`Graphics::set_text_tracking`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_graphics::getTextTracking`].
+#[doc(alias = "sys::ffi::playdate_graphics::getTextTracking")]
+#[inline(always)]
+#[cfg(feature = "sdk_2_1")]
+pub fn get_text_tracking() -> c_int { Graphics::Default().get_text_tracking() }
+
+
 impl<Api: crate::api::Api> Graphics<Api> {
 	/// Draws the given `text` using the provided coords `x`, `y`.
 	///
@@ -460,6 +472,16 @@ impl<Api: crate::api::Api> Graphics<Api> {
 		let f = self.0.set_text_tracking();
 		unsafe { f(tracking) }
 	}
+
+	/// Sets the tracking to use when drawing text.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::getTextTracking`].
+	#[doc(alias = "sys::ffi::playdate_graphics::getTextTracking")]
+	#[cfg(feature = "sdk_2_1")]
+	pub fn get_text_tracking(&self) -> c_int {
+		let f = self.0.get_text_tracking();
+		unsafe { f() }
+	}
 }
 
 
@@ -560,6 +582,12 @@ pub mod api {
 		fn set_text_tracking(&self) -> unsafe extern "C" fn(tracking: c_int) {
 			*sys::api!(graphics.setTextTracking)
 		}
+
+		/// Equivalent to [`sys::ffi::playdate_graphics::getTextTracking`]
+		#[doc(alias = "sys::ffi::playdate_graphics::getTextTracking")]
+		#[inline(always)]
+		#[cfg(feature = "sdk_2_1")]
+		fn get_text_tracking(&self) -> unsafe extern "C" fn() -> c_int { *sys::api!(graphics.getTextTracking) }
 
 		/// Equivalent to [`sys::ffi::playdate_graphics::getGlyphKerning`]
 		#[doc(alias = "sys::ffi::playdate_graphics::getGlyphKerning")]

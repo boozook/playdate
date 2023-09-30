@@ -616,6 +616,37 @@ impl<Userdata, Api: api::Api, const FOD: bool> Sprite<Userdata, Api, FOD> {
 		unsafe { f(self.0) }
 	}
 
+	/// Sets the sprite’s drawing center as a fraction (ranging from `0.0` to `1.0`) of the height and width.
+	///
+	/// Default is `0.5, 0.5` (the center of the sprite).
+	///
+	/// This means that when you call [`Sprite::move_to`]`(x, y)`,
+	/// the center of your sprite will be positioned at `x, y`.
+	///
+	/// If you want `x` and `y` to represent the upper left corner of your sprite, specify the center as `0, 0`.
+	///
+	/// Equivalent to [`sys::ffi::playdate_sprite::setCenter`].
+	#[doc(alias = "sys::ffi::playdate_sprite::setCenter")]
+	#[inline(always)]
+	#[cfg(feature = "sdk_2_1")]
+	fn set_center(&self, x: c_float, y: c_float) {
+		let f = self.1.set_center();
+		unsafe { f(self.0, x, y) }
+	}
+
+	/// Returns the sprite’s drawing center as a fraction (ranging from `0.0` to `1.0`) of the height and width.
+	///
+	/// Equivalent to [`sys::ffi::playdate_sprite::getCenter`].
+	#[doc(alias = "sys::ffi::playdate_sprite::getCenter")]
+	#[inline(always)]
+	#[cfg(feature = "sdk_2_1")]
+	fn center(&self) -> (c_float, c_float) {
+		let (mut x, mut y) = (0.0, 0.0);
+		let f = self.1.get_center();
+		unsafe { f(self.0, &mut x, &mut y) };
+		(x, y)
+	}
+
 
 	/// Sets custom data to the sprite.
 	///

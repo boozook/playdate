@@ -508,4 +508,20 @@ pub trait Api {
 	                     -> unsafe extern "C" fn(sprite: *mut LCDSprite, stencil: *mut LCDBitmap, tile: c_int) {
 		*sys::api!(sprite.setStencilImage)
 	}
+
+	/// Returns [`sys::ffi::playdate_sprite::setCenter`].
+	#[doc(alias = "sys::ffi::playdate_sprite::setCenter")]
+	#[inline(always)]
+	#[cfg(feature = "sdk_2_1")]
+	fn set_center(&self) -> unsafe extern "C" fn(s: *mut LCDSprite, x: c_float, y: c_float) {
+		*sys::api!(sprite.setCenter)
+	}
+
+	/// Returns [`sys::ffi::playdate_sprite::getCenter`].
+	#[doc(alias = "sys::ffi::playdate_sprite::getCenter")]
+	#[inline(always)]
+	#[cfg(feature = "sdk_2_1")]
+	fn get_center(&self) -> unsafe extern "C" fn(s: *mut LCDSprite, x: *mut c_float, y: *mut c_float) {
+		*sys::api!(sprite.getCenter)
+	}
 }
