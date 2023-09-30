@@ -1,6 +1,6 @@
 [package]
 name = "playdate"
-version = "0.1.10"
+version = "0.1.11"
 readme = "README.md"
 description = "High-level Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -18,6 +18,7 @@ display = { workspace = true, default-features = false }
 fs = { workspace = true, default-features = false }
 gfx = { workspace = true, default-features = false }
 menu = { workspace = true, default-features = false }
+scoreboards = { workspace = true, default-features = false }
 sound = { workspace = true, default-features = false }
 sprite = { workspace = true, default-features = false }
 system = { workspace = true, default-features = false }
@@ -33,6 +34,7 @@ default = [
 	"fs/default",
 	"gfx/default",
 	"menu/default",
+	"scoreboards/default",
 	"sound/default",
 	"sprite/default",
 	"system/default",
@@ -40,7 +42,7 @@ default = [
 ]
 
 # SDK v2.1 compatibility
-sdk_2_1= ["gfx/sdk_2_1", "sprite/sdk_2_1"]
+sdk_2_1 = ["gfx/sdk_2_1", "sprite/sdk_2_1"]
 
 lang-items = ["sys/lang-items"]
 allocator = ["sys/allocator"]
@@ -58,6 +60,7 @@ bindgen-runtime = [
 	"fs/bindgen-runtime",
 	"gfx/bindgen-runtime",
 	"menu/bindgen-runtime",
+	"scoreboards/bindgen-runtime",
 	"sound/bindgen-runtime",
 	"sprite/bindgen-runtime",
 	"system/bindgen-runtime",
@@ -69,6 +72,7 @@ bindgen-static = [
 	"fs/bindgen-static",
 	"gfx/bindgen-static",
 	"menu/bindgen-static",
+	"scoreboards/bindgen-static",
 	"sound/bindgen-static",
 	"sprite/bindgen-static",
 	"system/bindgen-static",
@@ -83,6 +87,7 @@ bindings-derive-debug = [
 	"fs/bindings-derive-debug",
 	"gfx/bindings-derive-debug",
 	"menu/bindings-derive-debug",
+	"scoreboards/bindings-derive-debug",
 	"sound/bindings-derive-debug",
 	"sprite/bindings-derive-debug",
 	"system/bindings-derive-debug",

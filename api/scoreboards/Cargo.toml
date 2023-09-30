@@ -1,0 +1,62 @@
+[package]
+name = "playdate-scoreboards"
+version = "0.1.0"
+readme = "README.md"
+description = "High-level Scoreboards API built on-top of Playdate API"
+keywords = ["playdate", "sdk", "api", "gamedev"]
+categories = ["game-development", "api-bindings", "no-std"]
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+
+[features]
+default = ["sys/default"]
+
+# playdate-sys features, should be shared because it's build configuration:
+
+bindgen-runtime = ["sys/bindgen-runtime"]
+bindgen-static = ["sys/bindgen-static"]
+bindings-derive-debug = ["sys/bindings-derive-debug"]
+
+
+[dependencies]
+sys = { workspace = true, default-features = false }
+erased_set = "0.7.0"
+
+
+[dev-dependencies]
+system = { workspace = true, default-features = false, features = [ "try-trait-v2" ] }
+
+
+[[example]]
+name = "boards"
+crate-type = ["dylib", "staticlib"]
+path = "examples/boards.rs"
+required-features = ["sys/lang-items", "sys/entry-point"]
+
+[package.metadata.playdate]
+bundle-id = "rs.playdate.scoreboards"
+
+
+[package.metadata.docs.rs]
+all-features = false
+features = [
+	"bindings-derive-default",
+	"bindings-derive-eq",
+	"bindings-derive-copy",
+	"bindings-derive-debug",
+	"bindings-derive-hash",
+	"bindings-derive-ord",
+	"bindings-derive-partialeq",
+	"bindings-derive-partialord",
+]
+rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
+default-target = "thumbv7em-none-eabihf"
+cargo-args = [
+	"-Zunstable-options",
+	"-Zrustdoc-scrape-examples",
+	"-Zbuild-std=core,alloc",
+]
