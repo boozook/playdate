@@ -353,18 +353,18 @@ jobs:
 
       - name: Examples
         run: |
-          cargo playdate package --features=lang-items     --examples --device --simulator   -p=playdate-sys
-          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-color
-          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-controls
-          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-display
-          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-fs
-          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-graphics
-          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-menu
-          cargo playdate package --features=sys/lang-items --example=fp --device --simulator -p=playdate-sound
-          cargo playdate package --features=sys/lang-items,sys/entry-point --example=sp --device --simulator -p=playdate-sound
-          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-sprite
-          cargo playdate package --features=sys/lang-items --examples --device --simulator   -p=playdate-system
-          cargo playdate package --features=lang-items     --examples --device --simulator   -p=playdate
+          FEATURES=sys/lang-items,sys/entry-point
+          cargo playdate package --features=lang-items --examples --device --simulator -p=playdate-sys
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-color
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-controls
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-display
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-fs
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-graphics
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-menu
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-sound
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-sprite
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-system
+          cargo playdate package --features=lang-items,entry-point --examples --device --simulator -p=playdate
 
 
       # TODO: build crankstart with examples for compatibility test
