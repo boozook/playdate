@@ -1,6 +1,6 @@
 [package]
 name = "playdate-sound"
-version = "0.2.5"
+version = "0.2.6"
 readme = "README.md"
 description = "High-level sound API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -33,7 +33,6 @@ fs = { workspace = true, default-features = false }
 [dev-dependencies]
 gfx = { workspace = true, default-features = false }
 system = { workspace = true, default-features = false, features = [ "try-trait-v2" ] }
-# sys = { workspace = true, default-features = false, features = ["entry-point", "try-trait-v2"] }
 
 [[example]]
 name = "sp"
@@ -45,7 +44,7 @@ required-features = ["sys/lang-items", "sys/entry-point"]
 name = "fp"
 crate-type = ["dylib", "staticlib"]
 path = "examples/fp-simple.rs"
-required-features = ["sys/lang-items"]
+required-features = ["sys/lang-items", "sys/entry-point"]
 
 
 [package.metadata.playdate]

@@ -42,9 +42,9 @@ dependencies = [
 
 [[package]]
 name = "anstream"
-version = "0.6.1"
+version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6cd65a4b849ace0b7f6daeebcc1a1d111282227ca745458c61dbf670e52a597"
+checksum = "2ab91ebe16eb252986481c5b62f6098f3b698a45e34b5b98200cf20dd2484a44"
 dependencies = [
  "anstyle",
  "anstyle-parse",
@@ -80,9 +80,9 @@ dependencies = [
 
 [[package]]
 name = "anstyle-wincon"
-version = "3.0.0"
+version = "3.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0238ca56c96dfa37bdf7c373c8886dd591322500aceeeccdb2216fe06dc2f796"
+checksum = "f0699d10d2f4d628a98ee7b57b289abbc98ff3bad977cb3152709d4bf2330628"
 dependencies = [
  "anstyle",
  "windows-sys 0.48.0",
@@ -1869,9 +1869,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "2.0.1"
+version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad227c3af19d4914570ad36d30409928b75967c298feb9ea1969db3a610bb14e"
+checksum = "8adf3ddd720272c6ea8bf59463c04e0f93d0bbf7c5439b691bca2987e0270897"
 dependencies = [
  "equivalent",
  "hashbrown 0.14.1",
@@ -2572,9 +2572,12 @@ dependencies = [
 
 [[package]]
 name = "playdate-controls"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
+ "playdate-display",
+ "playdate-graphics",
  "playdate-sys",
+ "playdate-system",
 ]
 
 [[package]]
@@ -2586,30 +2589,35 @@ dependencies = [
 
 [[package]]
 name = "playdate-fs"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "playdate-sys",
+ "playdate-system",
 ]
 
 [[package]]
 name = "playdate-graphics"
-version = "0.3.6"
+version = "0.3.7"
 dependencies = [
  "playdate-color",
+ "playdate-display",
  "playdate-fs",
  "playdate-sys",
+ "playdate-system",
 ]
 
 [[package]]
 name = "playdate-menu"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
+ "playdate-graphics",
  "playdate-sys",
+ "playdate-system",
 ]
 
 [[package]]
 name = "playdate-sound"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "playdate-fs",
  "playdate-graphics",
@@ -2913,9 +2921,9 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "0.38.14"
+version = "0.38.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "747c788e9ce8e92b12cd485c49ddf90723550b654b32508f979b71a7b1ecda4f"
+checksum = "d2f9da0cbd88f9f09e7814e388301c8414c51c62aa6ce1e4b5c551d49d96e531"
 dependencies = [
  "bitflags 2.4.0",
  "errno",
@@ -3410,7 +3418,7 @@ version = "0.19.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b5bb770da30e5cbfde35a2d7b9b8a2c4b8ef89548a7a6aeab5c9a576e3e7421"
 dependencies = [
- "indexmap 2.0.1",
+ "indexmap 2.0.2",
  "serde",
  "serde_spanned",
  "toml_datetime",
@@ -3423,7 +3431,7 @@ version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca676d9ba1a322c1b64eb8045a5ec5c0cfb0c9d08e15e9ff622589ad5221c8fe"
 dependencies = [
- "indexmap 2.0.1",
+ "indexmap 2.0.2",
  "serde",
  "serde_spanned",
  "toml_datetime",

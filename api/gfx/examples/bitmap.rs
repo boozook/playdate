@@ -6,12 +6,16 @@ extern crate sys;
 extern crate playdate_graphics as gfx;
 
 use core::ffi::*;
-use alloc::boxed::Box;
+use core::ptr::NonNull;
 
+use sys::EventLoopCtrl;
 use sys::ffi::*;
+use system::prelude::*;
+
+use gfx::Graphics;
+use gfx::bitmap::Bitmap;
+use gfx::text::StringEncoding;
 use gfx::color::*;
-use gfx::bitmap;
-use gfx::text;
 use gfx::text::StringEncodingExt;
 
 
@@ -23,103 +27,84 @@ const TEXT_HEIGHT: u32 = 16;
 /// App state
 struct State {
 	rotation: c_float,
-	image: Option<bitmap::Bitmap>,
+	image: Bitmap,
 }
 
 impl State {
-	const fn new() -> Self {
-		Self { rotation: 0.,
-		       image: None }
+	fn new() -> Self {
+		let image = Bitmap::new(100, 100, Color::BLACK).unwrap();
+		Self { rotation: 0., image }
 	}
 
+	/// Event handler
+	fn event(&'static mut self, event: SystemEvent) -> EventLoopCtrl {
+		match event {
+			// initial setup
+			SystemEvent::Init => {
+				display::Display::Default().set_refresh_rate(0.);
 
+				// Register our update handler that defined below
+				self.set_update_handler();
+			},
+			_ => {},
+		}
+
+		EventLoopCtrl::Continue
+	}
+}
+
+impl Update for State {
 	/// Updates the state
-	fn update(&mut self) -> Option<()> {
+	fn update(&mut self) -> UpdateCtrl {
 		const LABEL_DEF: &str = "Just rotating bitmap:\0";
-		const ENC: text::StringEncoding = text::StringEncoding::ASCII;
+		const ENC: StringEncoding = StringEncoding::ASCII;
 
 		let cstr = CStr::from_bytes_with_nul(LABEL_DEF.as_bytes()).unwrap();
 
-		gfx::clear(Color::WHITE);
+		// Create cached api end-point
+		let gfx = Graphics::Cached();
+
+		gfx.clear(Color::WHITE);
 
 		// get width (screen-size) of text
-		let text_width = gfx::text::get_text_width_cstr(cstr, ENC, None, 0);
+		let font = Default::default();
+		let text_width = gfx.get_text_width_cstr(cstr, ENC, font, 0);
 
 		// render text
-		gfx::text::draw_text_cstr(
-		                          cstr,
-		                          ENC,
-		                          CENTER_X as c_int - text_width / 2,
-		                          TEXT_HEIGHT.try_into().unwrap(),
+		gfx.draw_text_cstr(
+		                   cstr,
+		                   ENC,
+		                   CENTER_X as c_int - text_width / 2,
+		                   TEXT_HEIGHT.try_into().unwrap(),
 		);
 
 		// draw bitmap
-		if let Some(image) = self.image.as_ref() {
-			image.draw_rotated(CENTER_X as _, CENTER_Y as _, self.rotation, 0.5, 0.5, 1.0, 1.0);
-		}
+		self.image
+		    .draw_rotated(CENTER_X as _, CENTER_Y as _, self.rotation, 0.5, 0.5, 1.0, 1.0);
 
 		self.rotation += 1.0;
 		if self.rotation > 360.0 {
 			self.rotation = 0.0;
 		}
 
-		Some(())
-	}
-
-
-	/// Event handler
-	fn event(&'static mut self, event: PDSystemEvent) -> Option<()> {
-		match event {
-			// initial setup
-			PDSystemEvent::kEventInit => {
-				unsafe { (*(*sys::API).display).setRefreshRate?(60.0) };
-
-				self.image = Some(bitmap::Bitmap::new(100, 100, color::Color::BLACK).unwrap());
-			},
-			_ => {},
-		}
-		Some(())
+		UpdateCtrl::Continue
 	}
 }
 
 
+/// Entry point / event handler
 #[no_mangle]
-/// Proxy event handler, calls `State::event`
-pub extern "C" fn eventHandlerShim(api: *const PlaydateAPI, event: PDSystemEvent, _arg: u32) -> c_int {
-	static mut STATE: Option<Box<State>> = None;
-
-	match event {
-		PDSystemEvent::kEventInit => unsafe {
-			// register the API entry point
-			sys::API = api;
-
-			// create game state
-			if STATE.is_none() {
-				STATE = Some(Box::new(State::new()));
-			}
-			let state = STATE.as_mut().unwrap().as_mut() as *mut State;
-
-			// get `setUpdateCallback` fn
-			let f = (*(*api).system).setUpdateCallback.expect("setUpdateCallback");
-			// register update callback with user-data = our state
-			f(Some(on_update), state.cast());
-		},
-		_ => {},
+fn event_handler(_: NonNull<PlaydateAPI>, event: SystemEvent, _: u32) -> EventLoopCtrl {
+	// Unsafe static storage for our state.
+	// Usually it's safe because there's only one thread.
+	pub static mut STATE: Option<State> = None;
+	if unsafe { STATE.is_none() } {
+		let state = State::new();
+		unsafe { STATE = Some(state) }
 	}
 
-	if let Some(state) = unsafe { STATE.as_mut() } {
-		state.event(event).and(Some(0)).unwrap_or(1)
-	} else {
-		1
-	}
-}
-
-
-/// Proxy update callback, calls `State::update`
-unsafe extern "C" fn on_update(state: *mut c_void) -> i32 {
-	let ptr: *mut State = state.cast();
-	let state = ptr.as_mut().expect("missed state");
-	state.update().and(Some(1)).unwrap_or_default()
+	// Call state.event
+	unsafe { STATE.as_mut() }.expect("impossible").event(event)
 }
 
 

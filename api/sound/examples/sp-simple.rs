@@ -34,20 +34,20 @@ fn event_handler(_: NonNull<PlaydateAPI>, event: PDSystemEvent, _: u32) -> Event
 		return EventLoopCtrl::Continue;
 	}
 
-	// create player
+	// Create player
 	let player = Player::<api::Cache>::new()?;
 
-	// load sound
+	// Load sound
 	const SOUND_PATH: &Path = "sfx/main_theme.pda";
 	let sample = Sample::new_from_file(SOUND_PATH)?;
 	player.set_sample(&sample);
 
-	// start playback
+	// Start playback
 	player.play(Repeat::LoopsEndlessly, 1.0);
 
 
 	// Register update handler
-	// just to draw current playback position
+	// Just to draw current playback position
 	let system = system::System::Default();
 	system.set_update_callback_boxed(
 	                                 move |player| {
@@ -59,10 +59,10 @@ fn event_handler(_: NonNull<PlaydateAPI>, event: PDSystemEvent, _: u32) -> Event
 
 		                                 gfx::clear(Color::WHITE);
 
-		                                 // get width (screen-size) of text
+		                                 // Get width (screen-size) of text
 		                                 let text_width = gfx::text::get_text_width(&text, None, 0)?;
 
-		                                 // render text with current player position
+		                                 // Render text with current player position
 		                                 let x = INITIAL_X as c_int - text_width / 2;
 		                                 let y = INITIAL_Y as _;
 		                                 gfx::text::draw_text(text, x, y)?;
