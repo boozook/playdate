@@ -1,6 +1,6 @@
 [package]
 name = "playdate-graphics"
-version = "0.3.4"
+version = "0.3.5"
 readme = "README.md"
 description = "High-level graphics API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -14,6 +14,8 @@ repository.workspace = true
 
 [features]
 default = ["sys/default", "color/default", "fs/default"]
+
+sdk_2_1 = []
 
 # playdate-sys features, should be shared because it's build configuration:
 

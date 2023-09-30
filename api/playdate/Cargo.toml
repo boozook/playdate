@@ -1,6 +1,6 @@
 [package]
 name = "playdate"
-version = "0.1.7"
+version = "0.1.8"
 readme = "README.md"
 description = "High-level Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -38,6 +38,9 @@ default = [
 	"system/default",
 	"entry-point",
 ]
+
+# SDK v2.1 compatibility
+sdk_2_1= ["gfx/sdk_2_1", "sprite/sdk_2_1"]
 
 lang-items = ["sys/lang-items"]
 allocator = ["sys/allocator"]
