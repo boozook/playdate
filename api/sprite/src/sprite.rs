@@ -148,7 +148,7 @@ impl<UD, Api: api::Api + Copy> Sprite<UD, Api, true> {
 impl<UD, Api: Default + api::Api, const FOD: bool> Sprite<UD, Api, FOD> {
 	/// Allocates and returns a new Sprite with [`default`](api::Default) api access-point.
 	///
-	/// To create a sprite with a custom api access-point, use [`with_api`](Sprite::with_api).
+	/// To create a sprite with a custom api access-point, use [`new_with`](Sprite::new_with).
 	///
 	/// See also [`sys::ffi::playdate_sprite::newSprite`]
 	#[doc(alias = "sys::ffi::playdate_sprite::newSprite")]
@@ -234,7 +234,7 @@ impl<Userdata, Api: api::Api, const FOD: bool> Sprite<Userdata, Api, FOD> {
 	/// ⚠️ Caution: Using with draw function, call this method __before__ set callback.
 	/// Setting image __after__ setting draw callback is mostly crashes with SIGBUS.
 	///
-	/// See also [`set_opaque`].
+	/// See also [`set_opaque`](Sprite::set_opaque).
 	///
 	/// Equivalent to [`sys::ffi::playdate_sprite::setImage`]
 	#[doc(alias = "sys::ffi::playdate_sprite::setImage")]
@@ -259,7 +259,7 @@ impl<Userdata, Api: api::Api, const FOD: bool> Sprite<Userdata, Api, FOD> {
 
 
 	/// Sets the size.
-	/// The size is used to set the sprite’s bounds when calling [`move_to`].
+	/// The size is used to set the sprite’s bounds when calling [`move_to`](Sprite::move_to).
 	///
 	/// Equivalent to [`sys::ffi::playdate_sprite::setSize`]
 	#[doc(alias = "sys::ffi::playdate_sprite::setSize")]
@@ -371,7 +371,9 @@ impl<Userdata, Api: api::Api, const FOD: bool> Sprite<Userdata, Api, FOD> {
 	///
 	/// Set to `true` by default.
 	///
-	/// See also [`set_collide_rect`], [`get_collide_rect`], [`clear_collide_rect`].
+	/// See also [`collide_rect`](Sprite::collide_rect),
+	/// [`set_collide_rect`](Sprite::set_collide_rect),
+	/// [`clear_collide_rect`](Sprite::clear_collide_rect).
 	///
 	/// Equivalent to [`sys::ffi::playdate_sprite::setCollisionsEnabled`]
 	#[doc(alias = "sys::ffi::playdate_sprite::setCollisionsEnabled")]
@@ -459,7 +461,7 @@ impl<Userdata, Api: api::Api, const FOD: bool> Sprite<Userdata, Api, FOD> {
 	/// and should not be used on sprites being used for collisions,
 	/// which will still happen in world-space.
 	///
-	/// See also [`playdate_graphics::set_draw_offset`].
+	/// See also [`gfx::set_draw_offset`].
 	///
 	/// Equivalent to [`sys::ffi::playdate_sprite::setIgnoresDrawOffset`]
 	#[doc(alias = "sys::ffi::playdate_sprite::setIgnoresDrawOffset")]
@@ -471,7 +473,8 @@ impl<Userdata, Api: api::Api, const FOD: bool> Sprite<Userdata, Api, FOD> {
 
 	/// Sets `x` and `y` to the current position of sprite.
 	///
-	/// Equivalent to [`get_position_to`] and [`sys::ffi::playdate_sprite::getPosition`]
+	/// Equivalent to [`get_position_to`](Sprite::position_to) and [`sys::ffi::playdate_sprite::getPosition`]
+	///
 	#[doc(alias = "sys::ffi::playdate_sprite::getPosition")]
 	pub fn position(&self) -> (c_float, c_float) {
 		let (mut x, mut y) = Default::default();
