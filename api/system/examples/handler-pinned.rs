@@ -17,10 +17,10 @@ use system::update::UpdateCtrl;
 
 /// Entry point
 #[no_mangle]
-fn event_handler(api: NonNull<PlaydateAPI>, event: PDSystemEvent, arg: u32) -> EventLoopCtrl {
+fn event_handler(_api: NonNull<PlaydateAPI>, _event: PDSystemEvent, _: u32) -> EventLoopCtrl {
 	println!("Init");
 
-	// Do something good with `api` here...
+	// Do something good with `_api` here...
 
 
 	// Registering update-callback with user-data.

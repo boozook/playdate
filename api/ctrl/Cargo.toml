@@ -1,6 +1,6 @@
 [package]
 name = "playdate-controls"
-version = "0.2.1"
+version = "0.3.0"
 readme = "README.md"
 description = "High-level controls API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -22,9 +22,9 @@ bindgen-static = ["sys/bindgen-static"]
 bindings-derive-debug = ["sys/bindings-derive-debug"]
 
 
-[dependencies.sys]
-workspace = true
-default-features = false
+[dependencies]
+sys = { workspace = true, default-features = false }
+system = { workspace = true, default-features = false }
 
 [dev-dependencies]
 gfx = { workspace = true, default-features = false }

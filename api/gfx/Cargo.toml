@@ -1,6 +1,6 @@
 [package]
 name = "playdate-graphics"
-version = "0.3.7"
+version = "0.3.8"
 readme = "README.md"
 description = "High-level graphics API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -60,7 +60,7 @@ features = [
 	"sys/bindings-derive-ord",
 	"sys/bindings-derive-partialeq",
 	"sys/bindings-derive-partialord",
-	"sdk_2_1"
+	# "sdk_2_1"
 ]
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
