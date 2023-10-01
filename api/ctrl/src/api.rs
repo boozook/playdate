@@ -6,7 +6,7 @@ use sys::ffi::PDButtons;
 use sys::ffi::PDPeripherals;
 use sys::ffi::playdate_sys;
 
-/// Default system api end-point, ZST.
+/// Default system peripherals api end-point, ZST.
 ///
 /// All calls approximately costs ~3 derefs.
 #[derive(Debug, Clone, Copy, core::default::Default)]
@@ -14,7 +14,7 @@ pub struct Default;
 impl Api for Default {}
 
 
-/// Cached system api end-point.
+/// Cached system peripherals api end-point.
 ///
 /// Stores one reference, so size on stack is eq `usize`.
 ///
