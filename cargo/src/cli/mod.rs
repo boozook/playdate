@@ -32,6 +32,7 @@ use self::target::{PlaydateTarget, NeedToReplace};
 pub mod target;
 pub mod opts;
 pub mod deps;
+pub mod ide;
 pub mod cmd;
 
 
@@ -252,6 +253,11 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 			create_deps.dedup();
 			create_deps
 		};
+		let ide = matches._contains("ide")
+		                 .then(|| matches.get_one::<ide::Ide>("ide"))
+		                 .flatten()
+		                 .cloned()
+		                 .unwrap_or_default();
 
 		// TODO: mb. decrease verbosity for underlying cargo by 1.
 
@@ -289,6 +295,7 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 		                      create_full_metadata,
 		                      create_deps_sys_only,
 		                      create_deps,
+		                      ide,
 		                      workspace,
 		                      host_target,
 		                      compile_options,

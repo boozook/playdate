@@ -64,6 +64,7 @@ pub fn special_args_for(cmd: &Cmd) -> Vec<Arg> {
 			     flag_create_full_metadata(),
 			     flag_create_deps_sys_only(),
 			     flag_create_deps_list(),
+			     ide_template(),
 			]
 		},
 		Cmd::Init => special_args_for(&Cmd::New),
@@ -345,6 +346,17 @@ fn flag_create_deps_list() -> Arg {
 	arg.long_help(long)
 }
 
+fn ide_template() -> Arg {
+	let name = "ide";
+	let help = r#"Add configuration files for given IDE."#;
+	Arg::new(&name).long(&name)
+	               .help(help)
+	               .num_args(1)
+	               .required(false)
+	               .action(ArgAction::Set)
+	               .value_hint(clap::ValueHint::Other)
+	               .value_parser(value_parser!(super::ide::Ide))
+}
 
 fn set_aliases(cmd: Command, aliases: Option<&HashMap<impl Into<Str> + Clone, impl AsRef<str>>>) -> Command {
 	if let Some(aliases) = aliases {

@@ -15,6 +15,7 @@ use cargo::util::{CargoResult, Rustc};
 use crate::build::rustflags::Rustflags;
 use crate::cli::cmd::Cmd;
 use crate::cli::deps::Dependency;
+use crate::cli::ide::Ide;
 use crate::utils::LazyBuildContext;
 
 
@@ -50,6 +51,7 @@ pub struct Config<'cfg> {
 	pub create_full_metadata: bool,
 	pub create_deps_sys_only: bool,
 	pub create_deps: Vec<Dependency<'static>>,
+	pub ide: Ide,
 
 	pub workspace: Workspace<'cfg>,
 	pub host_target: CompileTarget,
@@ -87,6 +89,7 @@ impl<'cfg> Config<'cfg> {
 	           create_full_metadata: bool,
 	           create_deps_sys_only: bool,
 	           create_deps: Vec<Dependency<'static>>,
+	           ide: Ide,
 	           workspace: Workspace<'cfg>,
 	           host_target: CompileTarget,
 	           compile_options: CompileOptions,
@@ -112,6 +115,7 @@ impl<'cfg> Config<'cfg> {
 		       create_full_metadata,
 		       create_deps_sys_only,
 		       create_deps,
+		       ide,
 		       workspace,
 		       host_target,
 		       rustc,

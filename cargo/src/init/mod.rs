@@ -100,6 +100,10 @@ pub fn new_or_init<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<()> {
 	}
 
 
+	// ide configs:
+	ide(config, path)?;
+
+
 	Ok(())
 }
 
@@ -119,16 +123,17 @@ fn reformat_metadata(_config: &Config, manifest: &mut toml_edit::Document) -> Ca
 	// TODO: Add comment https://sdk.play.date/Inside%20Playdate.html#pdxinfo
 	//       Or better to playdate-build crate documentation.
 	let mut raw_metadata_lines = vec![
-	                                  "\n".to_owned(),
-	                                  "# doc: // TODO: https://github.com/boozook/playdate/#configuration".to_owned(),
-	                                  format!("[package.metadata.{METADATA_FIELD}]"),
-	];
+		     Cow::Borrowed("\n"),
+		     "# See more about playdate metadata:".into(),
+		     "# https://github.com/boozook/playdate/blob/main/support/build/README.md#assets".into(),
+		     format!("[package.metadata.{METADATA_FIELD}]").into(),
+		];
 
 	if let Some(table) = metadata.as_table_like() {
 		let mut keys = Vec::new();
 		for (key, value) in table.iter() {
 			keys.push(key.to_owned());
-			raw_metadata_lines.push(format!("{key} = {}", value.to_string()));
+			raw_metadata_lines.push(format!("{key} = {}", value.to_string()).into());
 		}
 	}
 
@@ -159,14 +164,17 @@ fn add_min_metadata(_config: &Config<'_>, manifest: &mut toml_edit::Document) ->
 	let name = manifest["package"]["name"].as_str()
 	                                      .unwrap_or("hello-world")
 	                                      .to_owned();
-	let bundle_id = name.replace("_", ".").replace("-", ".");
+	let bundle_id = name.replace("_", ".")
+	                    .replace("-", ".")
+	                    .replace("..", ".")
+	                    .replace("..", ".");
 	let has_description = manifest["package"].as_table()
 	                                         .map(|t| t.contains_key("description"))
 	                                         .unwrap_or(false);
 
 	let meta = &mut manifest["package"]["metadata"][METADATA_FIELD];
 
-	meta["bundle-id"] = value(format!("com.{bundle_id}"));
+	meta["bundle-id"] = value(format!("com.{}", bundle_id.strip_prefix('.').unwrap_or(&bundle_id)));
 	if !has_description {
 		meta["description"] = value(format!("Description of {name} program."));
 	}
@@ -433,6 +441,27 @@ fn bin(config: &Config, root: &Path, manifest: &mut toml_edit::Document, hl: boo
 		format!(include_str!("bin-hl.rs"), crate_name = name)
 	};
 	std::fs::write(path, src)?;
+	Ok(())
+}
+
+
+fn ide<P: AsRef<Path>>(config: &Config, path: P) -> CargoResult<()> {
+	match config.ide {
+		crate::cli::ide::Ide::None => return Ok(()),
+		crate::cli::ide::Ide::Vscode => (),
+	};
+
+	let cfg_dir = path.as_ref().join(".vscode");
+	if cfg_dir.try_exists().ok() == Some(true) {
+		config.log().warn("IDE configuration directory already exists.");
+		return Ok(());
+	}
+
+	std::fs::create_dir_all(&cfg_dir)?;
+
+	let extensions = cfg_dir.join("extensions.json");
+	std::fs::write(extensions, include_bytes!("ide/vsc/extensions.json"))?;
+
 	Ok(())
 }
 
