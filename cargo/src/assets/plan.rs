@@ -38,13 +38,10 @@ impl<'a, 'cfg> LazyEnvBuilder<'a, 'cfg> {
 	pub fn get(&'a self) -> CargoResult<&'a Env> {
 		self.env.try_get_or_create(move || {
 			        let root = self.package.root().display().to_string();
-			        let mut vars = vec![
-			                            ("CARGO_PKG_NAME", self.package.name().to_string()),
-			                            ("CARGO_MANIFEST_DIR", root.to_string()),
+			        let vars = vec![
+			                        ("CARGO_PKG_NAME", self.package.name().to_string()),
+			                        ("CARGO_MANIFEST_DIR", root.to_string()),
 			];
-			        if let Some(path) = self.config.sdk_path.as_ref() {
-				        vars.push((SDK_ENV_VAR, path.display().to_string()));
-			        }
 
 			        let mut env = Env::from_iter(vars.into_iter()).map_err(|err| anyhow::anyhow!("{err}"))?;
 
@@ -53,6 +50,10 @@ impl<'a, 'cfg> LazyEnvBuilder<'a, 'cfg> {
 				        if !env.vars.contains_key(&k) {
 					        env.vars.insert(k, v);
 				        }
+			        }
+
+			        if let Some(path) = self.config.sdk_path.as_ref() {
+				        env.vars.insert(SDK_ENV_VAR.into(), path.display().to_string());
 			        }
 
 			        Ok::<_, anyhow::Error>(env)

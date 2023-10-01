@@ -4,6 +4,7 @@ use std::path::*;
 use std::env;
 use std::process::Command;
 
+use build::consts::SDK_ENV_VAR;
 use cargo::CargoResult;
 use cargo::Config as CargoConfig;
 
@@ -17,6 +18,10 @@ pub fn cargo_proxy_cmd(cfg: &Config, cmd: &Cmd) -> CargoResult<std::process::Com
 	proc.arg(cmd.as_ref());
 	proc.args(&cfg.args);
 	proc.args(&rustflags);
+
+	if let Some(path) = cfg.sdk_path.as_deref() {
+		proc.env(SDK_ENV_VAR, path);
+	}
 
 	Ok(proc)
 }
