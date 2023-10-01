@@ -1,6 +1,6 @@
 [package]
 name = "playdate-menu"
-version = "0.2.1"
+version = "0.2.2"
 readme = "README.md"
 description = "High-level system menu API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -26,6 +26,8 @@ bindings-derive-debug = ["sys/bindings-derive-debug"]
 workspace = true
 default-features = false
 
+[dependencies]
+system = { workspace = true, default-features = false }
 
 [dev-dependencies]
 gfx = { workspace = true, default-features = false }
