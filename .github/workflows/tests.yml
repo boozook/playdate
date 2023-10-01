@@ -48,7 +48,9 @@ jobs:
           - ubuntu-latest
           - windows-latest
         sdk:
+          - beta
           - latest
+          - 2.0.1
 
     steps:
       - uses: actions/checkout@v4
@@ -91,6 +93,7 @@ jobs:
         uses: pd-rs/get-playdate-sdk@main
         with:
           version: ${{ matrix.sdk }}
+          custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
 
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
@@ -202,7 +205,9 @@ jobs:
           - ubuntu-latest
           # - windows-latest
         sdk:
+          - beta
           - latest
+          - 2.0.1
 
     steps:
       - uses: actions/checkout@v4
@@ -253,6 +258,7 @@ jobs:
         uses: pd-rs/get-playdate-sdk@main
         with:
           version: ${{ matrix.sdk }}
+          custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
 
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
@@ -297,7 +303,9 @@ jobs:
           - ubuntu-latest
           # - windows-latest
         sdk:
+          - beta
           - latest
+          - 2.0.1
 
     steps:
       - uses: actions/checkout@v4
@@ -345,6 +353,7 @@ jobs:
         uses: pd-rs/get-playdate-sdk@main
         with:
           version: ${{ matrix.sdk }}
+          custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
 
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
