@@ -15,8 +15,6 @@ use pd::graphics::text::*;
 use pd::graphics::bitmap::*;
 use pd::system::prelude::*;
 use pd::sound::prelude::*;
-use sample::Sample;
-use player::*;
 use pd::fs::Path;
 
 
