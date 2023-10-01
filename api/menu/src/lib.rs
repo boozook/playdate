@@ -1,6 +1,7 @@
 #![cfg_attr(not(test), no_std)]
 #![feature(error_in_core)]
 
+#[macro_use]
 extern crate sys;
 extern crate alloc;
 
@@ -37,11 +38,19 @@ pub struct MenuItem<Kind, UserData = (), Api= api::Default, const REMOVE_ON_DROP
 
 
 impl<UD, K: kind::Kind, Api: api::Api, const REM: bool> MenuItem<K, UD, Api, REM> {
-	pub fn get_title(&self) -> Cow<'_, str> {
+	/// Gets the display title of the menu item.
+	///
+	/// Returns [`sys::ffi::playdate_sys::getMenuItemTitle`]
+	#[doc(alias = "sys::ffi::playdate_sys::getMenuItemTitle")]
+	pub fn title(&self) -> Cow<'_, str> {
 		let f = self.1.get_menu_item_title();
 		unsafe { CStr::from_ptr(f(self.0) as _) }.to_string_lossy()
 	}
 
+	/// Sets the display title of the menu item.
+	///
+	/// Returns [`sys::ffi::playdate_sys::setMenuItemTitle`]
+	#[doc(alias = "sys::ffi::playdate_sys::setMenuItemTitle")]
 	pub fn set_title<S: AsRef<str>>(&self, title: S) -> Result<(), NulError> {
 		let f = self.1.set_menu_item_title();
 		let s = CString::new(title.as_ref())?;
@@ -56,7 +65,7 @@ impl<UD, K: kind::Kind, Api: api::Api, const REM: bool> MenuItem<K, UD, Api, REM
 		let f = self.1.get_menu_item_userdata();
 		let ptr = unsafe { f(self.0) };
 		if ptr.is_null()
-		/* TODO: or miss-aligned */
+		/* TODO: check ptr is miss-aligned */
 		{
 			return None;
 		}
@@ -64,20 +73,36 @@ impl<UD, K: kind::Kind, Api: api::Api, const REM: bool> MenuItem<K, UD, Api, REM
 		unsafe { (ptr as *mut CallbackUserData<UD>).as_mut() }
 	}
 
+	/// Set `userdata`, replace and return old userdata.
 	pub fn set_userdata(&self, userdata: UD) -> Option<UD> {
 		if let Some(existing) = self.get_userdata() {
-			// *ud = userdata
 			core::mem::replace(existing, userdata).into()
 		} else {
 			todo!()
 		}
 	}
 
-	pub fn get_value(&self) -> c_int {
+	/// Gets the integer value of the menu item.
+	///
+	/// See also [`MenuItem::set_value`].
+	///
+	/// Equivalent to [`sys::ffi::playdate_sys::getMenuItemValue`]
+	#[doc(alias = "sys::ffi::playdate_sys::getMenuItemValue")]
+	pub fn value(&self) -> c_int {
 		let f = self.1.get_menu_item_value();
 		unsafe { f(self.0) }
 	}
 
+	/// Sets the integer value of the menu item.
+	///
+	/// For checkmark menu items ([`CheckMenuItem`]), `1` means checked, `0` unchecked.
+	///
+	/// For option menu items ([`OptionsMenuItem`]), the value indicates the array index of the currently selected option.
+	///
+	/// See also [`CheckMenuItem::is_checked`], [`OptionsMenuItem::selected_option`].
+	///
+	/// Equivalent to [`sys::ffi::playdate_sys::setMenuItemValue`]
+	#[doc(alias = "sys::ffi::playdate_sys::setMenuItemValue")]
 	pub fn set_value(&self, value: c_int) {
 		let f = self.1.set_menu_item_value();
 		unsafe { f(self.0, value) }
@@ -259,15 +284,20 @@ fn proxy_menu_parts<UD: Sized, F: FnMut(&mut UD)>(cb: Option<F>,
 
 
 impl<UD, Api: api::Api, const REM: bool> MenuItem<kind::Check, UD, Api, REM> {
+	/// Equivalent to [`sys::ffi::playdate_sys::getMenuItemValue`]
+	#[doc(alias = "sys::ffi::playdate_sys::getMenuItemValue")]
 	#[inline(always)]
-	pub fn is_checked(&self) -> bool { self.get_value() == 1 }
+	pub fn is_checked(&self) -> bool { self.value() == 1 }
 }
 
 
 impl<UD, Api: api::Api, const REM: bool> MenuItem<kind::Options, UD, Api, REM> {
-	#[inline(always)]
 	/// The array index of the currently selected option.
-	pub fn selected_option(&self) -> i32 { self.get_value() }
+	///
+	/// Equivalent to [`sys::ffi::playdate_sys::getMenuItemValue`]
+	#[doc(alias = "sys::ffi::playdate_sys::getMenuItemValue")]
+	#[inline(always)]
+	pub fn selected_option(&self) -> i32 { self.value() }
 }
 
 
@@ -296,10 +326,36 @@ impl<UD, K: kind::Kind, Api: api::Api, const REM: bool> MenuItem<K, UD, Api, REM
 }
 
 
-pub fn remove_all_menu_items() {
-	use api::Api;
-	let f = api::Default::default().remove_all_menu_items();
+/// Removes all custom menu items from the system menu.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::removeAllMenuItems`]
+#[doc(alias = "sys::ffi::playdate_sys::removeAllMenuItems")]
+#[inline(always)]
+pub fn remove_all_menu_items() { remove_all_menu_items_with(api::Default::default()) }
+
+/// Removes all custom menu items from the system menu.
+///
+/// Uses given `api`.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::removeAllMenuItems`]
+#[doc(alias = "sys::ffi::playdate_sys::removeAllMenuItems")]
+pub fn remove_all_menu_items_with<Api: api::Api>(api: Api) {
+	let f = api.remove_all_menu_items();
 	unsafe { f() };
+}
+
+
+pub trait SystemMenu<Api: api::Api + Copy> {
+	/// Removes all custom menu items from the system menu.
+	///
+	/// Equivalent to [`sys::ffi::playdate_sys::removeAllMenuItems`]
+	#[doc(alias = "sys::ffi::playdate_sys::removeAllMenuItems")]
+	fn remove_all_menu_items(&self);
+}
+
+impl<Api: system::api::Api + api::Api + Copy> SystemMenu<Api> for system::System<Api> {
+	#[inline(always)]
+	fn remove_all_menu_items(&self) { remove_all_menu_items_with(self.inner()) }
 }
 
 
@@ -330,17 +386,201 @@ pub mod api {
 	use core::ffi::c_char;
 	use core::ffi::c_int;
 	use core::ffi::c_void;
+	use core::ptr::NonNull;
 	use sys::ffi::PDMenuItem;
 	use sys::ffi::PDMenuItemCallbackFunction;
+	use sys::ffi::playdate_sys;
 
 
+	/// Default system menu api end-point, ZST.
+	///
+	/// All calls approximately costs ~3 derefs.
 	#[derive(Debug, Clone, Copy, core::default::Default)]
 	pub struct Default;
-
 	impl Api for Default {}
 
 
+	/// Cached system menu api end-point.
+	///
+	/// Stores one reference, so size on stack is eq `usize`.
+	///
+	/// All calls approximately costs ~1 deref.
+	#[derive(Clone, Copy)]
+	#[cfg_attr(feature = "bindings-derive-debug", derive(Debug))]
+	pub struct Cache(&'static playdate_sys);
+
+	impl core::default::Default for Cache {
+		fn default() -> Self { Self(api!(system)) }
+	}
+
+	impl From<*const playdate_sys> for Cache {
+		#[inline(always)]
+		fn from(ptr: *const playdate_sys) -> Self { Self(unsafe { ptr.as_ref() }.expect("system")) }
+	}
+
+	impl From<&'static playdate_sys> for Cache {
+		#[inline(always)]
+		fn from(r: &'static playdate_sys) -> Self { Self(r) }
+	}
+
+	impl From<NonNull<playdate_sys>> for Cache {
+		#[inline(always)]
+		fn from(ptr: NonNull<playdate_sys>) -> Self { Self(unsafe { ptr.as_ref() }) }
+	}
+
+	impl From<&'_ NonNull<playdate_sys>> for Cache {
+		#[inline(always)]
+		fn from(ptr: &NonNull<playdate_sys>) -> Self { Self(unsafe { ptr.as_ref() }) }
+	}
+
+	impl From<system::api::Cache> for Cache {
+		#[inline(always)]
+		fn from(api: system::api::Cache) -> Self { Self(api.as_inner()) }
+	}
+
+	impl Api for system::api::Default {}
+
+	impl Api for system::api::Cache {
+		#[inline(always)]
+		fn add_menu_item(
+			&self)
+			-> unsafe extern "C" fn(title: *const c_char,
+			                        callback: PDMenuItemCallbackFunction,
+			                        userdata: *mut c_void) -> *mut PDMenuItem {
+			self.as_inner().addMenuItem.expect("addMenuItem")
+		}
+
+		#[inline(always)]
+		fn add_checkmark_menu_item(
+			&self)
+			-> unsafe extern "C" fn(title: *const c_char,
+			                        value: c_int,
+			                        callback: PDMenuItemCallbackFunction,
+			                        userdata: *mut c_void) -> *mut PDMenuItem {
+			self.as_inner()
+			    .addCheckmarkMenuItem
+			    .expect("addCheckmarkMenuItem")
+		}
+
+		#[inline(always)]
+		fn add_options_menu_item(
+			&self)
+			-> unsafe extern "C" fn(title: *const c_char,
+			                        optionTitles: *mut *const c_char,
+			                        optionsCount: c_int,
+			                        f: PDMenuItemCallbackFunction,
+			                        userdata: *mut c_void) -> *mut PDMenuItem {
+			self.as_inner().addOptionsMenuItem.expect("addOptionsMenuItem")
+		}
+
+		#[inline(always)]
+		fn remove_menu_item(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem) {
+			self.as_inner().removeMenuItem.expect("removeMenuItem")
+		}
+
+		#[inline(always)]
+		fn get_menu_item_value(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem) -> c_int {
+			self.as_inner().getMenuItemValue.expect("getMenuItemValue")
+		}
+
+		#[inline(always)]
+		fn set_menu_item_value(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem, value: c_int) {
+			self.as_inner().setMenuItemValue.expect("setMenuItemValue")
+		}
+
+		#[inline(always)]
+		fn get_menu_item_title(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem) -> *const c_char {
+			self.as_inner().getMenuItemTitle.expect("getMenuItemTitle")
+		}
+
+		#[inline(always)]
+		fn set_menu_item_title(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem, title: *const c_char) {
+			self.as_inner().setMenuItemTitle.expect("setMenuItemTitle")
+		}
+
+		#[inline(always)]
+		fn get_menu_item_userdata(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem) -> *mut c_void {
+			self.as_inner().getMenuItemUserdata.expect("getMenuItemUserdata")
+		}
+
+		#[inline(always)]
+		fn remove_all_menu_items(&self) -> unsafe extern "C" fn() {
+			self.as_inner().removeAllMenuItems.expect("removeAllMenuItems")
+		}
+	}
+
+
+	impl Api for Cache {
+		#[inline(always)]
+		fn add_menu_item(
+			&self)
+			-> unsafe extern "C" fn(title: *const c_char,
+			                        callback: PDMenuItemCallbackFunction,
+			                        userdata: *mut c_void) -> *mut PDMenuItem {
+			self.0.addMenuItem.expect("addMenuItem")
+		}
+
+		#[inline(always)]
+		fn add_checkmark_menu_item(
+			&self)
+			-> unsafe extern "C" fn(title: *const c_char,
+			                        value: c_int,
+			                        callback: PDMenuItemCallbackFunction,
+			                        userdata: *mut c_void) -> *mut PDMenuItem {
+			self.0.addCheckmarkMenuItem.expect("addCheckmarkMenuItem")
+		}
+
+		#[inline(always)]
+		fn add_options_menu_item(
+			&self)
+			-> unsafe extern "C" fn(title: *const c_char,
+			                        optionTitles: *mut *const c_char,
+			                        optionsCount: c_int,
+			                        f: PDMenuItemCallbackFunction,
+			                        userdata: *mut c_void) -> *mut PDMenuItem {
+			self.0.addOptionsMenuItem.expect("addOptionsMenuItem")
+		}
+
+		#[inline(always)]
+		fn remove_menu_item(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem) {
+			self.0.removeMenuItem.expect("removeMenuItem")
+		}
+
+		#[inline(always)]
+		fn get_menu_item_value(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem) -> c_int {
+			self.0.getMenuItemValue.expect("getMenuItemValue")
+		}
+
+		#[inline(always)]
+		fn set_menu_item_value(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem, value: c_int) {
+			self.0.setMenuItemValue.expect("setMenuItemValue")
+		}
+
+		#[inline(always)]
+		fn get_menu_item_title(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem) -> *const c_char {
+			self.0.getMenuItemTitle.expect("getMenuItemTitle")
+		}
+
+		#[inline(always)]
+		fn set_menu_item_title(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem, title: *const c_char) {
+			self.0.setMenuItemTitle.expect("setMenuItemTitle")
+		}
+
+		#[inline(always)]
+		fn get_menu_item_userdata(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem) -> *mut c_void {
+			self.0.getMenuItemUserdata.expect("getMenuItemUserdata")
+		}
+
+		#[inline(always)]
+		fn remove_all_menu_items(&self) -> unsafe extern "C" fn() {
+			self.0.removeAllMenuItems.expect("removeAllMenuItems")
+		}
+	}
+
+
 	pub trait Api {
+		/// Returns [`sys::ffi::playdate_sys::addMenuItem`]
+		#[doc(alias = "sys::ffi::playdate_sys::addMenuItem")]
 		fn add_menu_item(
 			&self)
 			-> unsafe extern "C" fn(title: *const c_char,
@@ -349,6 +589,8 @@ pub mod api {
 			*sys::api!(system.addMenuItem)
 		}
 
+		/// Returns [`sys::ffi::playdate_sys::addCheckmarkMenuItem`]
+		#[doc(alias = "sys::ffi::playdate_sys::addCheckmarkMenuItem")]
 		fn add_checkmark_menu_item(
 			&self)
 			-> unsafe extern "C" fn(title: *const c_char,
@@ -358,6 +600,8 @@ pub mod api {
 			*sys::api!(system.addCheckmarkMenuItem)
 		}
 
+		/// Returns [`sys::ffi::playdate_sys::addOptionsMenuItem`]
+		#[doc(alias = "sys::ffi::playdate_sys::addOptionsMenuItem")]
 		fn add_options_menu_item(
 			&self)
 			-> unsafe extern "C" fn(title: *const c_char,
@@ -368,30 +612,44 @@ pub mod api {
 			*sys::api!(system.addOptionsMenuItem)
 		}
 
+		/// Returns [`sys::ffi::playdate_sys::removeMenuItem`]
+		#[doc(alias = "sys::ffi::playdate_sys::removeMenuItem")]
 		fn remove_menu_item(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem) {
 			*sys::api!(system.removeMenuItem)
 		}
 
+		/// Returns [`sys::ffi::playdate_sys::getMenuItemValue`]
+		#[doc(alias = "sys::ffi::playdate_sys::getMenuItemValue")]
 		fn get_menu_item_value(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem) -> c_int {
 			*sys::api!(system.getMenuItemValue)
 		}
 
+		/// Returns [`sys::ffi::playdate_sys::setMenuItemValue`]
+		#[doc(alias = "sys::ffi::playdate_sys::setMenuItemValue")]
 		fn set_menu_item_value(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem, value: c_int) {
 			*sys::api!(system.setMenuItemValue)
 		}
 
+		/// Returns [`sys::ffi::playdate_sys::getMenuItemTitle`]
+		#[doc(alias = "sys::ffi::playdate_sys::getMenuItemTitle")]
 		fn get_menu_item_title(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem) -> *const c_char {
 			*sys::api!(system.getMenuItemTitle)
 		}
 
+		/// Returns [`sys::ffi::playdate_sys::setMenuItemTitle`]
+		#[doc(alias = "sys::ffi::playdate_sys::setMenuItemTitle")]
 		fn set_menu_item_title(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem, title: *const c_char) {
 			*sys::api!(system.setMenuItemTitle)
 		}
 
+		/// Returns [`sys::ffi::playdate_sys::getMenuItemUserdata`]
+		#[doc(alias = "sys::ffi::playdate_sys::getMenuItemUserdata")]
 		fn get_menu_item_userdata(&self) -> unsafe extern "C" fn(menuItem: *mut PDMenuItem) -> *mut c_void {
 			*sys::api!(system.getMenuItemUserdata)
 		}
 
+		/// Returns [`sys::ffi::playdate_sys::removeAllMenuItems`]
+		#[doc(alias = "sys::ffi::playdate_sys::removeAllMenuItems")]
 		fn remove_all_menu_items(&self) -> unsafe extern "C" fn() { *sys::api!(system.removeAllMenuItems) }
 	}
 }
