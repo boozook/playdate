@@ -33,13 +33,13 @@ impl<Api: Default + api::Api> Peripherals<Api> {
 }
 
 impl<Api: api::Api> Peripherals<Api> {
-	pub fn new_with(api: Api) -> Self { Self(api) }
+	pub const fn new_with(api: Api) -> Self { Self(api) }
 }
 
 impl<Api: api::Api> Peripherals<Api> where Api: Copy {
-	pub fn accelerometer(&self) -> Accelerometer<Api> { Accelerometer(self.0) }
-	pub fn buttons(&self) -> Buttons<Api> { Buttons(self.0) }
-	pub fn crank(&self) -> Crank<Api> { Crank(self.0) }
+	pub const fn accelerometer(&self) -> Accelerometer<Api> { Accelerometer(self.0) }
+	pub const fn buttons(&self) -> Buttons<Api> { Buttons(self.0) }
+	pub const fn crank(&self) -> Crank<Api> { Crank(self.0) }
 }
 
 impl<Api: api::Api> Peripherals<Api> {
@@ -86,6 +86,22 @@ impl Peripherals<api::Default> {
 }
 
 
+#[const_trait]
+pub trait SystemExt<Api: api::Api + Copy> {
+	fn peripherals(&self) -> Peripherals<Api>;
+	fn accelerometer(&self) -> Accelerometer<Api>;
+	fn buttons(&self) -> Buttons<Api>;
+	fn crank(&self) -> Crank<Api>;
+}
+
+impl<Api: system::api::Api + api::Api + Copy> const SystemExt<Api> for system::System<Api> {
+	fn peripherals(&self) -> Peripherals<Api> { Peripherals::new_with(self.inner()) }
+	fn accelerometer(&self) -> Accelerometer<Api> { Accelerometer::new_with(self.inner()) }
+	fn buttons(&self) -> Buttons<Api> { Buttons::new_with(self.inner()) }
+	fn crank(&self) -> Crank<Api> { Crank::new_with(self.inner()) }
+}
+
+
 /// Accelerometer
 #[derive(Debug, Clone, Copy)]
 pub struct Accelerometer<Api = api::Default>(Api);
@@ -115,7 +131,7 @@ impl<Api: Default + api::Api> Accelerometer<Api> {
 }
 
 impl<Api: api::Api> Accelerometer<Api> {
-	pub fn new_with(api: Api) -> Self { Self(api) }
+	pub const fn new_with(api: Api) -> Self { Self(api) }
 }
 
 impl<Api: api::Api> Accelerometer<Api> {
@@ -199,7 +215,7 @@ impl<Api: Default + api::Api> Buttons<Api> {
 }
 
 impl<Api: api::Api> Buttons<Api> {
-	pub fn new_with(api: Api) -> Self { Self(api) }
+	pub const fn new_with(api: Api) -> Self { Self(api) }
 }
 
 impl<Api: api::Api> Buttons<Api> {
@@ -272,7 +288,7 @@ impl<Api: api::Api> Buttons<Api> {
 	#[doc(alias = "sys::ffi::playdate_sys::getButtonState")]
 	///
 	/// Requests & returns only `current` part of state, see [Self::released]
-	pub fn get_released(&self) -> PDButtons {
+	pub fn released(&self) -> PDButtons {
 		use core::ptr::null_mut;
 
 		let mut released = PDButtons(0);
@@ -318,6 +334,35 @@ impl core::fmt::Debug for State {
 /// Crank
 #[derive(Debug, Clone, Copy)]
 pub struct Crank<Api = api::Default>(Api);
+
+impl Crank<api::Default> {
+	/// Creates default [`Crank`] without type parameter requirement.
+	///
+	/// Uses ZST [`api::Default`].
+	#[allow(non_snake_case)]
+	pub fn Default() -> Self { Self(Default::default()) }
+}
+
+impl Crank<api::Cache> {
+	/// Creates [`Crank`] without type parameter requirement.
+	///
+	/// Uses [`api::Cache`].
+	#[allow(non_snake_case)]
+	pub fn Cached() -> Self { Self(Default::default()) }
+}
+
+impl<Api: Default + api::Api> Default for Crank<Api> {
+	fn default() -> Self { Self(Default::default()) }
+}
+
+impl<Api: Default + api::Api> Crank<Api> {
+	pub fn new() -> Self { Self(Default::default()) }
+}
+
+impl<Api: api::Api> Crank<Api> {
+	pub const fn new_with(api: Api) -> Self { Self(api) }
+}
+
 impl<Api: api::Api> Crank<Api> {
 	/// Returns boolean indicating whether or not the crank is folded into the unit.
 	///

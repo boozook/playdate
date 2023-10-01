@@ -55,6 +55,12 @@ impl<Api: Default + api::Api> System<Api> {
 
 impl<Api: api::Api> System<Api> {
 	pub fn new_with(api: Api) -> Self { Self(api) }
+
+	#[inline(always)]
+	pub const fn inner(&self) -> Api
+		where Api: Copy {
+		self.0
+	}
 }
 
 
