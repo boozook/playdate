@@ -172,6 +172,17 @@ impl Into<c_uint> for DisplayScale {
 	fn into(self) -> c_uint { (self as u8).into() }
 }
 
+impl core::fmt::Display for DisplayScale {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result { write!(f, "{}", *self as u8) }
+}
+
+impl DisplayScale {
+	#[inline(always)]
+	pub const fn as_u8(self) -> u8 { self as u8 }
+	#[inline(always)]
+	pub const fn as_int(self) -> c_int { self as u8 as _ }
+}
+
 
 pub mod api {
 	use core::ffi::c_float;

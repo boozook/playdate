@@ -3,13 +3,13 @@
 
 use core::panic::PanicInfo;
 use core::fmt::Write;
-use heapless::String;
+use arrayvec::ArrayString;
 use super::proc::error;
 
 
 #[panic_handler]
 fn panic(#[allow(unused)] panic_info: &PanicInfo) -> ! {
-	let mut output = String::<1024>::new();
+	let mut output = ArrayString::<1024>::new();
 	let payload = if let Some(payload) = panic_info.payload().downcast_ref::<&str>() {
 		payload
 	} else {

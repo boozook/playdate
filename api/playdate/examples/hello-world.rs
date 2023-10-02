@@ -72,7 +72,7 @@ impl State {
 		// Load ferris the crab and draw
 		let ferris = Bitmap::<bitmap::api::Default>::load(IMG_PATH).expect("missed bitmap");
 		gfx::set_draw_mode(BitmapDrawMode::Inverted);
-		let (ferris_width, ferris_height) = ferris.size().expect("impossible");
+		let (ferris_width, ferris_height) = ferris.size();
 		ferris.draw(BOX_WIDTH / 2 - ferris_width / 2, 0, BitmapFlip::Unflipped);
 
 		// Load system font

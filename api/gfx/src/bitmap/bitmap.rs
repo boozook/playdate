@@ -252,7 +252,7 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 	///
 	/// Calls [`sys::ffi::playdate_graphics::getBitmapData`].
 	#[doc(alias = "sys::ffi::playdate_graphics::getBitmapData")]
-	pub fn size(&self) -> Result<(c_int, c_int), Error> {
+	pub fn size(&self) -> (c_int, c_int) {
 		let mut width: c_int = 0;
 		let mut height: c_int = 0;
 		let mut row_bytes: c_int = 0;
@@ -269,14 +269,14 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 			)
 		};
 
-		Ok((width, height))
+		(width, height)
 	}
 
 	/// Returns mutable borrow of bitmap-data by this bitmap.
 	///
 	/// Calls [`sys::ffi::playdate_graphics::getBitmapData`].
 	#[doc(alias = "sys::ffi::playdate_graphics::getBitmapData")]
-	pub fn bitmap_data<'bitmap>(&'bitmap mut self) -> Result<BitmapData<'bitmap>, Error> {
+	pub fn bitmap_data<'bitmap>(&'bitmap mut self) -> BitmapData<'bitmap> {
 		let mut width: c_int = 0;
 		let mut height: c_int = 0;
 		let mut row_bytes: c_int = 0;
@@ -313,12 +313,11 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 		};
 		let data = unsafe { core::slice::from_raw_parts_mut::<u8>(*boxed_data, len as usize) };
 
-
-		Ok(BitmapData { width,
-		                height,
-		                row_bytes,
-		                mask,
-		                data })
+		BitmapData { width,
+		             height,
+		             row_bytes,
+		             mask,
+		             data }
 	}
 
 
@@ -770,5 +769,82 @@ impl<Api: crate::api::Api> Graphics<Api> {
 	pub fn pop_context(&self) {
 		let f = self.0.pop_context();
 		unsafe { f() };
+	}
+}
+
+
+impl<Api: crate::api::Api> Graphics<Api> {
+	/// Draws `self` with its upper-left corner at location `x`, `y`,
+	/// using the given `flip` orientation.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::drawBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::drawBitmap")]
+	#[inline(always)]
+	pub fn draw(&self, bitmap: &impl AnyBitmap, x: c_int, y: c_int, flip: BitmapFlip) {
+		let f = self.0.draw_bitmap();
+		unsafe { f(bitmap.as_raw(), x, y, flip) }
+	}
+
+	/// Draws `self` with its upper-left corner at location `x`, `y`
+	/// __tiled inside a `width` by `height` rectangle__.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::tileBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::tileBitmap")]
+	#[inline(always)]
+	pub fn draw_tiled(&self,
+	                  bitmap: &impl AnyBitmap,
+	                  x: c_int,
+	                  y: c_int,
+	                  width: c_int,
+	                  height: c_int,
+	                  flip: BitmapFlip) {
+		let f = self.0.tile_bitmap();
+		unsafe { f(bitmap.as_raw(), x, y, width, height, flip) }
+	}
+
+	/// Draws the *bitmap* scaled to `x_scale` and `y_scale`
+	/// then rotated by `degrees` with its center as given by proportions `center_x` and `center_y` at `x`, `y`;
+	///
+	/// that is:
+	/// * if `center_x` and `center_y` are both 0.5 the center of the image is at (`x`,`y`),
+	/// * if `center_x` and `center_y` are both 0 the top left corner of the image (before rotation) is at (`x`,`y`), etc.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::drawRotatedBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::drawRotatedBitmap")]
+	#[inline(always)]
+	pub fn draw_rotated(&self,
+	                    bitmap: &impl AnyBitmap,
+	                    x: c_int,
+	                    y: c_int,
+	                    degrees: c_float,
+	                    center_x: c_float,
+	                    center_y: c_float,
+	                    x_scale: c_float,
+	                    y_scale: c_float) {
+		let f = self.0.draw_rotated_bitmap();
+		unsafe {
+			f(
+			  bitmap.as_raw(),
+			  x,
+			  y,
+			  degrees,
+			  center_x,
+			  center_y,
+			  x_scale,
+			  y_scale,
+			)
+		}
+	}
+
+	/// Draws this bitmap scaled to `x_scale` and `y_scale` with its upper-left corner at location `x`, `y`.
+	///
+	/// Note that flip is not available when drawing scaled bitmaps but negative scale values will achieve the same effect.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::drawScaledBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::drawScaledBitmap")]
+	#[inline(always)]
+	pub fn draw_scaled(&self, bitmap: &impl AnyBitmap, x: c_int, y: c_int, x_scale: c_float, y_scale: c_float) {
+		let f = self.0.draw_scaled_bitmap();
+		unsafe { f(bitmap.as_raw(), x, y, x_scale, y_scale) }
 	}
 }

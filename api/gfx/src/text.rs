@@ -536,6 +536,19 @@ pub mod api {
 	use sys::ffi::PDStringEncoding;
 
 
+	/// Default graphics text api end-point, ZST.
+	///
+	/// All calls approximately costs ~3 derefs.
+	pub type Default = crate::api::Default;
+
+	/// Cached graphics text api end-point.
+	///
+	/// Stores one reference, so size on stack is eq `usize`.
+	///
+	/// All calls approximately costs ~1 deref.
+	pub type Cache = crate::api::Cache;
+
+
 	/// End-point with methods about ops with text.
 	pub trait Api {
 		/// Equivalent to [`sys::ffi::playdate_graphics::drawText`]

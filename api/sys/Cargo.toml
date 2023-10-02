@@ -1,6 +1,6 @@
 [package]
 name = "playdate-sys"
-version = "0.2.4"
+version = "0.2.5"
 build = "src/build.rs"
 readme = "README.md"
 description = "Low-level Playdate API bindings"
@@ -23,7 +23,7 @@ default = ["bindgen-runtime", "bindings-derive-debug"]
 
 lang-items = ["allocator", "panic-handler", "eh-personality"] # lang-items
 allocator = []                                                # global allocator
-panic-handler = []                                            # global panic handler
+panic-handler = ["arrayvec"]                                  # global panic handler
 eh-personality = []                                           # eh_personality for sim-targets, dummy empty no-op
 
 entry-point = []  # simple minimal proxy entry point
@@ -53,7 +53,7 @@ bindings-derive-constparamty = [] # derive `ConstParamTy`
 
 
 [dependencies]
-heapless = "0.7"
+arrayvec = { version = "0.7.4", default-features = false, optional = true }
 
 
 [build-dependencies]
@@ -98,12 +98,13 @@ cargo-args = [
 name = "hello-world"
 crate-type = ["dylib", "staticlib"]
 path = "examples/hello-world.rs"
+required-features = ["lang-items"]
 
 [[example]]
 name = "handler"
 crate-type = ["dylib", "staticlib"]
 path = "examples/handler.rs"
-required-features = ["entry-point"]
+required-features = ["lang-items", "entry-point"]
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.sys"

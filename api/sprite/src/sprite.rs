@@ -632,7 +632,7 @@ impl<Userdata, Api: api::Api, const FOD: bool> Sprite<Userdata, Api, FOD> {
 	#[doc(alias = "sys::ffi::playdate_sprite::setCenter")]
 	#[inline(always)]
 	#[cfg(feature = "sdk_2_1")]
-	fn set_center(&self, x: c_float, y: c_float) {
+	pub fn set_center(&self, x: c_float, y: c_float) {
 		let f = self.1.set_center();
 		unsafe { f(self.0, x, y) }
 	}
@@ -643,7 +643,7 @@ impl<Userdata, Api: api::Api, const FOD: bool> Sprite<Userdata, Api, FOD> {
 	#[doc(alias = "sys::ffi::playdate_sprite::getCenter")]
 	#[inline(always)]
 	#[cfg(feature = "sdk_2_1")]
-	fn center(&self) -> (c_float, c_float) {
+	pub fn center(&self) -> (c_float, c_float) {
 		let (mut x, mut y) = (0.0, 0.0);
 		let f = self.1.get_center();
 		unsafe { f(self.0, &mut x, &mut y) };
