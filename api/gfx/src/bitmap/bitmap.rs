@@ -3,10 +3,12 @@
 use core::ffi::c_char;
 use core::ffi::c_float;
 use core::ffi::c_int;
+use core::fmt::Write;
 use core::marker::PhantomData;
 use alloc::boxed::Box;
 
 use sys::error::OkOrNullFnErr;
+use sys::ffi::LCDPattern;
 use sys::traits::AsRaw;
 use sys::ffi::CString;
 use sys::ffi::LCDColor;
@@ -306,11 +308,6 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 		};
 
 		// get data:
-		let len = if mask.is_some() {
-			row_bytes * height
-		} else {
-			(row_bytes * height) * 2
-		};
 		let data = unsafe { core::slice::from_raw_parts_mut::<u8>(*boxed_data, len as usize) };
 
 		BitmapData { width,
@@ -488,8 +485,30 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 	}
 
 
+	/// Returns pattern `8 x 8` from this bitmap.
+	///
+	/// `x, y` indicates the top left corner of the 8 x 8 pattern in bitmap's coordinates.
+	///
+	/// Returned pattern is owned by rust and can be dropped freely.
+	///
+	/// Uses [`sys::ffi::playdate_graphics::setColorToPattern`].
+	#[doc(alias = "sys::ffi::playdate_graphics::setColorToPattern")]
+	pub fn pattern_at(&self, x: c_int, y: c_int) -> LCDPattern {
+		let mut color = LCDColor::default();
+		let f = self.1.set_color_to_pattern();
+
+		unsafe {
+			f(core::ptr::addr_of_mut!(color), self.0, x, y);
+			*(color as *mut u8 as *mut LCDPattern)
+		}
+	}
+
 	/// Sets `color` to an `8 x 8` pattern using this bitmap.
+	///
 	/// `x, y` indicates the top left corner of the 8 x 8 pattern.
+	///
+	/// After this operation inner pointer is owned by the system.
+	/// To get owned pattern use [`Bitmap::pattern_at`].
 	///
 	/// Equivalent to [`sys::ffi::playdate_graphics::setColorToPattern`].
 	#[doc(alias = "sys::ffi::playdate_graphics::setColorToPattern")]
@@ -513,13 +532,56 @@ pub struct BitmapData<'bitmap> {
 }
 
 impl<'bitmap> BitmapData<'bitmap> {
-	pub fn width(&self) -> c_int { self.width }
-	pub fn height(&self) -> c_int { self.height }
-	pub fn row_bytes(&self) -> c_int { self.row_bytes }
+	pub const fn width(&self) -> c_int { self.width }
+	pub const fn height(&self) -> c_int { self.height }
+	pub const fn row_bytes(&self) -> c_int { self.row_bytes }
 	pub fn mask(&self) -> Option<&[u8]> { self.mask.as_deref() }
 	pub fn mask_mut(&mut self) -> Option<&mut [u8]> { self.mask.as_deref_mut() }
-	pub fn data(&self) -> &[u8] { self.data }
+	pub const fn data(&self) -> &[u8] { self.data }
 	pub fn data_mut(&mut self) -> &mut [u8] { self.data }
+}
+
+impl core::fmt::Display for BitmapData<'_> {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		write!(f, "BitmapData({}, {}", self.width(), self.height())?;
+		if self.mask.is_some() {
+			write!(f, ", masked)")
+		} else {
+			write!(f, ")")
+		}
+	}
+}
+
+impl core::fmt::Debug for BitmapData<'_> {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		let alternate = f.alternate();
+		if alternate {
+			let fmt_bd = |f: &mut core::fmt::Formatter<'_>, data: &[u8], row_len: c_int| {
+				for (i, b) in data.iter().enumerate() {
+					if i % row_len as usize == 0 {
+						f.write_char('\n')?;
+						f.write_char('\t')?;
+					}
+					f.write_fmt(format_args!("{b:08b} "))?;
+				}
+				Ok(())
+			};
+
+			write!(f, "BitmapData({}, {}", self.width(), self.height())?;
+			if self.mask.is_some() {
+				write!(f, ", masked")?;
+			}
+			write!(f, ", data:")?;
+			fmt_bd(f, self.data, self.row_bytes)?;
+			write!(f, ")")
+		} else {
+			let mut res = f.debug_struct("BitmapData");
+			res.field("width", &self.width)
+			   .field("height", &self.height)
+			   .field("row_bytes", &self.row_bytes);
+			res.field("data", &self.data).field("mask", &self.mask).finish()
+		}
+	}
 }
 
 
