@@ -508,10 +508,11 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 	/// `x, y` indicates the top left corner of the 8 x 8 pattern.
 	///
 	/// After this operation inner pointer is owned by the system.
+	/// To get owned pattern use [`Bitmap::pattern_at`].
 	///
 	/// Equivalent to [`sys::ffi::playdate_graphics::setColorToPattern`].
 	#[doc(alias = "sys::ffi::playdate_graphics::setColorToPattern")]
-	pub fn set_color_to_pattern_to(&self, color: &mut LCDColor, x: c_int, y: c_int) {
+	pub fn set_color_to_pattern(&self, color: &mut LCDColor, x: c_int, y: c_int) {
 		let f = self.1.set_color_to_pattern();
 		unsafe { f(color as _, self.0, x, y) }
 	}
