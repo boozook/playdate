@@ -12,23 +12,24 @@ use sys::ffi::LCDSolidColor;
 #[cfg_attr(feature = "bindings-derive-debug", derive(Debug))]
 pub enum Color<'t> {
 	Solid(LCDSolidColor),
-	PatternRef(&'t LCDPattern),
-	Pattern(LCDPattern),
+	Pattern(&'t LCDPattern),
 }
 
-impl Color<'static> {
+impl Color<'_> {
 	pub const WHITE: Self = Self::Solid(LCDSolidColor::kColorWhite);
 	pub const BLACK: Self = Self::Solid(LCDSolidColor::kColorBlack);
 	pub const CLEAR: Self = Self::Solid(LCDSolidColor::kColorClear);
 	pub const XOR: Self = Self::Solid(LCDSolidColor::kColorXOR);
 }
 
-impl From<Color<'_>> for LCDColor {
+impl<'t> From<Color<'t>> for LCDColor
+	where Self: 't,
+	      LCDColor: 't
+{
 	fn from(color: Color) -> Self {
 		match color {
 			Color::Solid(color) => color as LCDColor,
-			Color::Pattern(ref pattern) => (pattern as *const u8) as LCDColor,
-			Color::PatternRef(pattern) => (pattern as *const u8) as LCDColor,
+			Color::Pattern(pattern) => (pattern as *const u8) as LCDColor,
 		}
 	}
 }
@@ -84,7 +85,7 @@ impl const IntoLCDColor for LCDSolidColor {
 	fn into_color(self) -> LCDColor { self as LCDColor }
 }
 
-impl<'t> IntoLCDColor for &'t LCDPattern {
+impl<'t> IntoLCDColor for &'t LCDPattern where LCDColor: 't {
 	#[inline(always)]
 	fn into_color(self) -> LCDColor { self as *const u8 as _ }
 }
