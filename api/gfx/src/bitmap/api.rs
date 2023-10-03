@@ -8,9 +8,17 @@ use sys::ffi::LCDBitmapFlip;
 use sys::ffi::LCDRect;
 
 
-#[derive(Debug, Clone, Copy, core::default::Default)]
-pub struct Default;
-impl Api for Default {}
+/// Default graphics bitmap api end-point, ZST.
+///
+/// All calls approximately costs ~3 derefs.
+pub type Default = crate::api::Default;
+
+/// Cached graphics bitmap api end-point.
+///
+/// Stores one reference, so size on stack is eq `usize`.
+///
+/// All calls approximately costs ~1 deref.
+pub type Cache = crate::api::Cache;
 
 
 /// End-point with methods about ops over bitmap.

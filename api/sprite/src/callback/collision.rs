@@ -130,7 +130,7 @@ impl<const FOD: bool, T, H> Handle<FOD, T, H>
 }
 
 
-pub(crate) mod l2 {
+pub mod l2 {
 	use core::ops::Deref;
 	use core::marker::PhantomData;
 

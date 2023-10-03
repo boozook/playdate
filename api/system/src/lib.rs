@@ -77,9 +77,14 @@ impl<Api: api::Api> System<Api> {
 	#[doc(alias = "sys::ffi::playdate_sys::getCurrentTimeMilliseconds")]
 	#[inline(always)]
 	pub fn current_time_milliseconds(&self) -> Duration {
+		Duration::from_millis(self.current_time_milliseconds_raw().into())
+	}
+
+	/// Equivalent to [`sys::ffi::playdate_sys::getCurrentTimeMilliseconds`]
+	#[doc(alias = "sys::ffi::playdate_sys::getCurrentTimeMilliseconds")]
+	pub fn current_time_milliseconds_raw(&self) -> c_uint {
 		let f = self.0.get_current_time_milliseconds();
-		let t = unsafe { f() };
-		Duration::from_millis(t.into())
+		unsafe { f() }
 	}
 
 	/// Equivalent to [`sys::ffi::playdate_sys::getSecondsSinceEpoch`]

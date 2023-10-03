@@ -12,9 +12,9 @@ use crate::api::{self, Api};
 impl<UD, Api: api::Api, const FOD: bool> Sprite<UD, Api, FOD> {
 	/// Sets the draw function for the this sprite.
 	///
-	/// ⚠️ Caution: Using with [`Sprite::set_image`],
-	/// do not forget to set image __before__ setting draw function,
-	/// but not __after__.
+	/// ⚠️ Caution:
+	/// Do not forget to set [`bounds`](Sprite::set_bounds) __before__ setting draw function,
+	/// default zero bounds causes UB in the system.
 	pub fn into_draw_handler<T: SpriteDraw<Userdata = UD>>(self) -> Handle<FOD, Self, T>
 		where T::Api: Default {
 		Handle::new(self)
@@ -130,7 +130,7 @@ impl<const FOD: bool, T, H> Handle<FOD, T, H>
 }
 
 
-pub(crate) mod l2 {
+pub mod l2 {
 	use core::ops::Deref;
 	use core::marker::PhantomData;
 
@@ -153,9 +153,9 @@ pub(crate) mod l2 {
 	{
 		/// Sets the draw function for the this sprite.
 		///
-		/// ⚠️ Caution: Using with [`Sprite::set_image`],
-		/// Do not forget to set image __before__ setting draw function,
-		/// but not __after__.
+		/// ⚠️ Caution:
+		/// Do not forget to set [`bounds`](Sprite::set_bounds) __before__ setting draw function,
+		/// default zero bounds causes UB in the system.
 		pub fn into_draw_handler<T: SpriteDraw<Userdata = UD>>(self) -> Handle<FOD, Sprite<UD, Api, FOD>, Self, T>
 			where T::Api: Default {
 			Handle::new(self)
@@ -168,9 +168,9 @@ pub(crate) mod l2 {
 	{
 		/// Sets the draw function for the this sprite.
 		///
-		/// ⚠️ Caution: Using with [`Sprite::set_image`],
-		/// Do not forget to set image __before__ setting draw function,
-		/// but not __after__.
+		/// ⚠️ Caution:
+		/// Do not forget to set [`bounds`](Sprite::set_bounds) __before__ setting draw function,
+		/// default zero bounds causes UB in the system.
 		pub fn into_draw_handler<T: SpriteDraw<Userdata = UD>>(self) -> Handle<FOD, Sprite<UD, Api, FOD>, Self, T>
 			where T::Api: Default {
 			Handle::new(self)
@@ -185,9 +185,9 @@ pub(crate) mod l2 {
 	{
 		/// Sets the draw function for the this sprite.
 		///
-		/// ⚠️ Caution: Using with [`Sprite::set_image`],
-		/// Do not forget to set image __before__ setting draw function,
-		/// but not __after__.
+		/// ⚠️ Caution:
+		/// Do not forget to set [`bounds`](Sprite::set_bounds) __before__ setting draw function,
+		/// default zero bounds causes UB in the system.
 		pub fn into_draw_handler<T: SpriteDraw<Userdata = UD>>(self) -> Handle<FOD, Sprite<UD, Api, FOD>, Self, T>
 			where T::Api: Default {
 			Handle::new(self)
@@ -202,9 +202,9 @@ pub(crate) mod l2 {
 	{
 		/// Sets the draw function for the this sprite.
 		///
-		/// ⚠️ Caution: Using with [`Sprite::set_image`],
-		/// Do not forget to set image __before__ setting draw function,
-		/// but not __after__.
+		/// ⚠️ Caution:
+		/// Do not forget to set [`bounds`](Sprite::set_bounds) __before__ setting draw function,
+		/// default zero bounds causes UB in the system.
 		pub fn into_draw_handler<T: SpriteDraw<Userdata = UD>>(self) -> Handle<FOD, Sprite<UD, Api, FOD>, Self, T>
 			where T::Api: Default {
 			Handle::new(self)
