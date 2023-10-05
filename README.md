@@ -12,9 +12,15 @@ This project allows you to create games for the [Playdate handheld gaming system
 * [Modular low- & high- level API][api-dir]
   - with [examples][ctrl-examples-dir]
 * __All the parts of API are accumulated in [One Crate][playdate-crate]__ ([git][playdate-crate-git])
+* UI components
+  - [crank-indicator][crank-indicator-gh] (port from [lua version][crank-indicator-lua]), requires SDK 2.1
 
 Welcome to [discussions][] and [issues][] for any questions and suggestions.
 Take a look at [videos](#demo) or [do something great](#usage).
+
+
+[crank-indicator-gh]: https://github.com/boozook/playdate/tree/main/components/crank-indicator
+[crank-indicator-lua]: https://sdk.play.date/Inside%20Playdate.html#C-ui.crankIndicator
 
 
 ## Prerequisites

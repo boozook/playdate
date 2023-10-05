@@ -4,7 +4,7 @@ members = [
 	"cargo",
 	"api/*",
 	"support/*",
-	# "components/*"
+	"components/*"
 ]
 default-members = ["cargo", "support/tool", "support/bindgen"]
 exclude = ["cargo/tests/crates/**/*"]
