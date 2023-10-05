@@ -93,9 +93,7 @@ workflows:
           source "$HOME/.cargo/env"
 
           cargo build -p=playdate-sys --features="${FEATURES_MIN?}"
-          cargo build -p=playdate-sys --features="${FEATURES_MIN?}" --release
           cargo build -p=playdate-sys --features="${FEATURES_MAX?}"
-          cargo build -p=playdate-sys --features="${FEATURES_MAX?}" --release
 
       - name: Status
         script: git status -u

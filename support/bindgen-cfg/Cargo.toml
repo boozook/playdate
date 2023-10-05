@@ -1,0 +1,22 @@
+[package]
+name = "playdate-bindgen-cfg"
+version = "0.1.0"
+readme = "README.md"
+description = "Minimal configuration for playdate-bindgen."
+keywords = ["playdate", "bindings", "ffi", "code-generation"]
+categories = ["development-tools::ffi", "development-tools::build-utils"]
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+
+[dependencies.clap]
+features = ["std", "env", "derive", "help"]
+workspace = true
+optional = true
+
+
+[features]
+default = []

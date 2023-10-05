@@ -2,14 +2,14 @@ use utils::toolchain::gcc::ArmToolchain;
 use utils::toolchain::sdk::Sdk;
 
 
-pub struct Config {
+pub struct Cfg {
 	pub sdk: Option<Sdk>,
 	pub gcc: Option<ArmToolchain>,
 
 	pub derive: Derive,
 }
 
-impl Default for Config {
+impl Default for Cfg {
 	fn default() -> Self {
 		Self { sdk: None,
 		       gcc: None,

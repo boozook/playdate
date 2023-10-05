@@ -39,6 +39,13 @@ impl From<GccError> for Error {
 	fn from(err: GccError) -> Self { Self::Gcc(err) }
 }
 
+impl From<VarError> for Error {
+	fn from(err: VarError) -> Self {
+		Self::Env { err,
+		            ctx: Default::default() }
+	}
+}
+
 #[cfg(feature = "extra-codegen")]
 impl From<syn::Error> for Error {
 	fn from(err: syn::Error) -> Self { Self::Syn(err) }

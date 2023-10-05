@@ -89,7 +89,7 @@ impl<T> ::core::default::Default for __BindgenUnionField<T> {
 }
 impl<T> ::core::clone::Clone for __BindgenUnionField<T> {
 	#[inline]
-	fn clone(&self) -> Self { Self::new() }
+	fn clone(&self) -> Self { *self }
 }
 impl<T> ::core::marker::Copy for __BindgenUnionField<T> {}
 impl<T> ::core::fmt::Debug for __BindgenUnionField<T> {
@@ -622,8 +622,6 @@ pub struct playdate_graphics {
 	pub makeFontFromData: ::core::option::Option<unsafe extern "C" fn(data: *mut LCDFontData,
 	                                                                  wide: core::ffi::c_int)
 	                                                                  -> *mut LCDFont>,
-	#[doc = "`int playdate->graphics->getTextTracking(void);`\n\nGets the tracking used when drawing text.\n\nEquivalent to [`playdate.graphics.font:getTracking()`](./Inside%20Playdate.html#m-graphics.font.getTracking) in the Lua API."]
-	pub getTextTracking: ::core::option::Option<unsafe extern "C" fn() -> core::ffi::c_int>,
 }
 #[test]
 fn bindgen_test_layout_playdate_graphics() {
@@ -631,7 +629,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_graphics>(),
-	           240usize,
+	           236usize,
 	           concat!("Size of: ", stringify!(playdate_graphics))
 	);
 	assert_eq!(
@@ -1227,16 +1225,6 @@ fn bindgen_test_layout_playdate_graphics() {
 		stringify!(playdate_graphics),
 		"::",
 		stringify!(makeFontFromData)
-	)
-	);
-	assert_eq!(
-	           unsafe { ::core::ptr::addr_of!((*ptr).getTextTracking) as usize - ptr as usize },
-	           236usize,
-	           concat!(
-		"Offset of field: ",
-		stringify!(playdate_graphics),
-		"::",
-		stringify!(getTextTracking)
 	)
 	);
 }
@@ -3966,14 +3954,6 @@ pub struct playdate_sprite {
 	pub setStencilImage: ::core::option::Option<unsafe extern "C" fn(sprite: *mut LCDSprite,
 	                                                                 stencil: *mut LCDBitmap,
 	                                                                 tile: core::ffi::c_int)>,
-	#[doc = "`void playdate->sprite->setCenter(LCDSprite *sprite, float x, float y);`\n\nSets the sprite’s drawing center as a fraction (ranging from 0.0 to 1.0) of the height and width. Default is 0.5, 0.5 (the center of the sprite). This means that when you call [sprite→moveTo(sprite, x, y)](#f-sprite.moveTo), the center of your sprite will be positioned at *x*, *y*. If you want x and y to represent the upper left corner of your sprite, specify the center as 0, 0."]
-	pub setCenter: ::core::option::Option<unsafe extern "C" fn(s: *mut LCDSprite,
-	                                                           x: core::ffi::c_float,
-	                                                           y: core::ffi::c_float)>,
-	#[doc = "`void playdate->sprite->getCenter(LCDSprite *sprite, float *outx, float *outy);`\n\nSets the values in `outx` and `outy` to the sprite’s drawing center as a fraction (ranging from 0.0 to 1.0) of the height and width."]
-	pub getCenter: ::core::option::Option<unsafe extern "C" fn(s: *mut LCDSprite,
-	                                                           x: *mut core::ffi::c_float,
-	                                                           y: *mut core::ffi::c_float)>,
 }
 #[test]
 fn bindgen_test_layout_playdate_sprite() {
@@ -3981,7 +3961,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sprite>(),
-	           252usize,
+	           244usize,
 	           concat!("Size of: ", stringify!(playdate_sprite))
 	);
 	assert_eq!(
@@ -4597,26 +4577,6 @@ fn bindgen_test_layout_playdate_sprite() {
 		stringify!(playdate_sprite),
 		"::",
 		stringify!(setStencilImage)
-	)
-	);
-	assert_eq!(
-	           unsafe { ::core::ptr::addr_of!((*ptr).setCenter) as usize - ptr as usize },
-	           244usize,
-	           concat!(
-		"Offset of field: ",
-		stringify!(playdate_sprite),
-		"::",
-		stringify!(setCenter)
-	)
-	);
-	assert_eq!(
-	           unsafe { ::core::ptr::addr_of!((*ptr).getCenter) as usize - ptr as usize },
-	           248usize,
-	           concat!(
-		"Offset of field: ",
-		stringify!(playdate_sprite),
-		"::",
-		stringify!(getCenter)
 	)
 	);
 }
@@ -5451,14 +5411,14 @@ pub struct PDSynthLFO {
 #[repr(C)]
 #[derive(Debug)]
 #[must_use]
-pub struct playdate_sound_lfo { # [doc = "`PDSynthLFO* playdate->sound->newLFO(LFOType type)`\n\nReturns a new LFO object, which can be used to modulate sounds. The *type* argument is one of the following values:\n\nLFOType\n\n```cpp\ntypedef enum\n{\n\tkLFOTypeSquare,\n\tkLFOTypeTriangle,\n\tkLFOTypeSine,\n\tkLFOTypeSampleAndHold,\n\tkLFOTypeSawtoothUp,\n\tkLFOTypeSawtoothDown,\n\tkLFOTypeArpeggiator,\n\tkLFOTypeFunction\n} LFOType;\n```"] pub newLFO : :: core :: option :: Option < unsafe extern "C" fn (type_ : LFOType) -> * mut PDSynthLFO > , # [doc = "`void playdate->sound->lfo->freeLFO(PDSynthLFO* lfo)`\n\nFrees the LFO."] pub freeLFO : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO) > , # [doc = "`void playdate->sound->lfo->setType(PDSynthLFO* lfo, LFOType type)`\n\nSets the LFO shape to one of the values given above."] pub setType : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , type_ : LFOType) > , # [doc = "`void playdate->sound->lfo->setRate(PDSynthLFO* lfo, float rate)`\n\nSets the LFO’s rate, in cycles per second."] pub setRate : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , rate : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setPhase(PDSynthLFO* lfo, float phase)`\n\nSets the LFO’s phase, from 0 to 1."] pub setPhase : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , phase : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setCenter(PDSynthLFO* lfo, float center)`"] pub setCenter : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , center : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setDepth(PDSynthLFO* lfo, float depth)`\n\nSets the center or depth of the LFO."] pub setDepth : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , depth : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setArpeggiation(PDSynthLFO* lfo, int nSteps, float* steps)`\n\nSets the LFO type to arpeggio, where the given values are in half-steps from the center note. For example, the sequence (0, 4, 7, 12) plays the notes of a major chord."] pub setArpeggiation : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , nSteps : core :: ffi :: c_int , steps : * mut core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setFunction(PDSynthLFO* lfo, float (*lfoFunc)(PDSynthLFO* lfo, void* userdata), void* userdata, int interpolate)`\n\nProvides a custom function for LFO values."] pub setFunction : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , lfoFunc : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , userdata : * mut core :: ffi :: c_void) -> core :: ffi :: c_float > , userdata : * mut core :: ffi :: c_void , interpolate : core :: ffi :: c_int) > , # [doc = "`void playdate->sound->lfo->setDelay(PDSynthLFO* lfo, float holdoff, float ramptime)`\n\nSets an initial holdoff time for the LFO where the LFO remains at its center value, and a ramp time where the value increases linearly to its maximum depth. Values are in seconds."] pub setDelay : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , holdoff : core :: ffi :: c_float , ramptime : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setRetrigger(PDSynthLFO* lfo, int flag)`\n\nIf retrigger is on, the LFO’s phase is reset to its initial phase (default 0) when a synth using the LFO starts playing a note."] pub setRetrigger : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , flag : core :: ffi :: c_int) > , # [doc = "`float playdate->sound->lfo->getValue(PDSynthLFO* lfo)`\n\nReturn the current output value of the LFO."] pub getValue : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO) -> core :: ffi :: c_float > , # [doc = "`float playdate->sound->lfo->setGlobal(PDSynthLFO* lfo, int global)`\n\nIf *global* is set, the LFO is continuously updated whether or not it’s currently in use."] pub setGlobal : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , global : core :: ffi :: c_int) > , # [doc = "`void playdate->sound->lfo->setStartPhase(PDSynthLFO* lfo, float phase)`\n\nSets the LFO’s initial phase, from 0 to 1."] pub setStartPhase : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , phase : core :: ffi :: c_float) > , }
+pub struct playdate_sound_lfo { # [doc = "`PDSynthLFO* playdate->sound->newLFO(LFOType type)`\n\nReturns a new LFO object, which can be used to modulate sounds. The *type* argument is one of the following values:\n\nLFOType\n\n```cpp\ntypedef enum\n{\n\tkLFOTypeSquare,\n\tkLFOTypeTriangle,\n\tkLFOTypeSine,\n\tkLFOTypeSampleAndHold,\n\tkLFOTypeSawtoothUp,\n\tkLFOTypeSawtoothDown,\n\tkLFOTypeArpeggiator,\n\tkLFOTypeFunction\n} LFOType;\n```"] pub newLFO : :: core :: option :: Option < unsafe extern "C" fn (type_ : LFOType) -> * mut PDSynthLFO > , # [doc = "`void playdate->sound->lfo->freeLFO(PDSynthLFO* lfo)`\n\nFrees the LFO."] pub freeLFO : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO) > , # [doc = "`void playdate->sound->lfo->setType(PDSynthLFO* lfo, LFOType type)`\n\nSets the LFO shape to one of the values given above."] pub setType : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , type_ : LFOType) > , # [doc = "`void playdate->sound->lfo->setRate(PDSynthLFO* lfo, float rate)`\n\nSets the LFO’s rate, in cycles per second."] pub setRate : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , rate : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setPhase(PDSynthLFO* lfo, float phase)`\n\nSets the LFO’s phase."] pub setPhase : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , phase : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setCenter(PDSynthLFO* lfo, float center)`"] pub setCenter : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , center : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setDepth(PDSynthLFO* lfo, float depth)`\n\nSets the center or depth of the LFO."] pub setDepth : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , depth : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setArpeggiation(PDSynthLFO* lfo, int nSteps, float* steps)`\n\nSets the LFO type to arpeggio, where the given values are in half-steps from the center note. For example, the sequence (0, 4, 7, 12) plays the notes of a major chord."] pub setArpeggiation : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , nSteps : core :: ffi :: c_int , steps : * mut core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setFunction(PDSynthLFO* lfo, float (*lfoFunc)(PDSynthLFO* lfo, void* userdata), void* userdata, int interpolate)`\n\nProvides a custom function for LFO values."] pub setFunction : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , lfoFunc : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , userdata : * mut core :: ffi :: c_void) -> core :: ffi :: c_float > , userdata : * mut core :: ffi :: c_void , interpolate : core :: ffi :: c_int) > , # [doc = "`void playdate->sound->lfo->setDelay(PDSynthLFO* lfo, float holdoff, float ramptime)`\n\nSets an initial holdoff time for the LFO where the LFO remains at its center value, and a ramp time where the value increases linearly to its maximum depth. Values are in seconds."] pub setDelay : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , holdoff : core :: ffi :: c_float , ramptime : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setRetrigger(PDSynthLFO* lfo, int flag)`\n\nIf retrigger is on, the LFO’s phase is reset to 0 when a synth using the LFO starts playing a note."] pub setRetrigger : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , flag : core :: ffi :: c_int) > , # [doc = "`float playdate->sound->lfo->getValue(PDSynthLFO* lfo)`\n\nReturn the current output value of the LFO."] pub getValue : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO) -> core :: ffi :: c_float > , # [doc = "`float playdate->sound->lfo->setGlobal(PDSynthLFO* lfo, int global)`\n\nIf *global* is set, the LFO is continuously updated whether or not it’s currently in use."] pub setGlobal : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , global : core :: ffi :: c_int) > , }
 #[test]
 fn bindgen_test_layout_playdate_sound_lfo() {
 	const UNINIT: ::core::mem::MaybeUninit<playdate_sound_lfo> = ::core::mem::MaybeUninit::uninit();
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_lfo>(),
-	           56usize,
+	           52usize,
 	           concat!("Size of: ", stringify!(playdate_sound_lfo))
 	);
 	assert_eq!(
@@ -5594,16 +5554,6 @@ fn bindgen_test_layout_playdate_sound_lfo() {
 		stringify!(playdate_sound_lfo),
 		"::",
 		stringify!(setGlobal)
-	)
-	);
-	assert_eq!(
-	           unsafe { ::core::ptr::addr_of!((*ptr).setStartPhase) as usize - ptr as usize },
-	           52usize,
-	           concat!(
-		"Offset of field: ",
-		stringify!(playdate_sound_lfo),
-		"::",
-		stringify!(setStartPhase)
 	)
 	);
 }
@@ -5889,7 +5839,7 @@ pub struct playdate_sound_synth {
 	pub setParameterModulator: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth,
 	                                                                       parameter: core::ffi::c_int,
 	                                                                       mod_: *mut PDSynthSignalValue)>,
-	#[doc = "`PDSynthSignalValue* playdate->sound->synth->getParameterModulator(PDSynth* synth, int num)`\n\nSets or gets a [signal](#C-sound.signal) to modulate the parameter at index *num*."]
+	#[doc = "`PDSynthSignalValue* playdate->sound->synth->newSynth(PDSynth* synth, int num)`\n\nSets or gets a [signal](#C-sound.signal) to modulate the parameter at index *num*."]
 	pub getParameterModulator: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth,
 	                                                                       parameter: core::ffi::c_int)
 	                                                                       -> *mut PDSynthSignalValue>,
@@ -5920,13 +5870,6 @@ pub struct playdate_sound_synth {
 	pub isPlaying: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth) -> core::ffi::c_int>,
 	#[doc = "`PDSynthEnvelope* playdate->sound->synth->getEnvelope(PDSynth* synth)`\n\nReturns the synth’s envelope. The PDSynth object owns this envelope, so it must not be freed."]
 	pub getEnvelope: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth) -> *mut PDSynthEnvelope>,
-	#[doc = "`int playdate->sound->synth->setWavetable(PDSynth* synth, AudioSample* sample, int log2size, int rowwidth)`\n\nSets a wavetable for the synth to play. Sample data must be 16-bit mono uncompressed. `log2size` is the base 2 logarithm of the number of samples in each waveform \"cell\" in the table. `xsize` is the number of cells across the wavetable. If the wavetable is two-dimensional, `ysize` gives the number of cells in the y direction.\n\nThe function returns 1 on success, or 0 if the given dimensions don’t match the sample size.\n\nThe synth’s \"position\" in the wavetable is set manually with [setParameter()](#f-sound.synth.setParameter) or automated with [setParameterModulator()](#f-sound.synth.setParameterModulator). In some cases it’s easier to use a parameter that matches the waveform position in the table, in others (notably when using envelopes and lfos) it’s more convenient to use a 0-1 scale, so there’s some redundancy here. Parameters are\n\n* 1: x position, values are from 0 to the table width\n\n* 2: x position, values are from 0 to 1, parameter is scaled up to table width\n\nFor 2-D tables (`rowwidth` \\> 0):\n\n* 3: y position, values are from 0 to the table height\n\n* 4: y position, values are from 0 to 1, parameter is scaled up to table height"]
-	pub setWavetable: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth,
-	                                                              sample: *mut AudioSample,
-	                                                              log2size: core::ffi::c_int,
-	                                                              columns: core::ffi::c_int,
-	                                                              rows: core::ffi::c_int)
-	                                                              -> core::ffi::c_int>,
 }
 #[test]
 fn bindgen_test_layout_playdate_sound_synth() {
@@ -5934,7 +5877,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_synth>(),
-	           108usize,
+	           104usize,
 	           concat!("Size of: ", stringify!(playdate_sound_synth))
 	);
 	assert_eq!(
@@ -6200,16 +6143,6 @@ fn bindgen_test_layout_playdate_sound_synth() {
 		stringify!(playdate_sound_synth),
 		"::",
 		stringify!(getEnvelope)
-	)
-	);
-	assert_eq!(
-	           unsafe { ::core::ptr::addr_of!((*ptr).setWavetable) as usize - ptr as usize },
-	           104usize,
-	           concat!(
-		"Offset of field: ",
-		stringify!(playdate_sound_synth),
-		"::",
-		stringify!(setWavetable)
 	)
 	);
 }
@@ -6803,9 +6736,9 @@ pub struct playdate_sound_sequence {
 	                                                          loops: core::ffi::c_int)>,
 	#[doc = "`int playdate->sound->sequence->getTempo(SoundSequence* sequence)`"]
 	pub getTempo: ::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence) -> core::ffi::c_int>,
-	#[doc = "`void playdate->sound->sequence->setTempo(SoundSequence* sequence, float stepsPerSecond)`\n\nSets or gets the tempo of the sequence, in steps per second."]
+	#[doc = "`void playdate->sound->sequence->setTempo(SoundSequence* sequence, int stepsPerSecond)`\n\nSets or gets the tempo of the sequence, in steps per second."]
 	pub setTempo:
-		::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence, stepsPerSecond: core::ffi::c_float)>,
+		::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence, stepsPerSecond: core::ffi::c_int)>,
 	#[doc = "`int playdate->sound->sequence->getTrackCount(SoundSequence* sequence)`\n\nReturns the number of tracks in the sequence."]
 	pub getTrackCount: ::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence) -> core::ffi::c_int>,
 	#[doc = "`SequenceTrack* playdate->sound->sequence->addTrack(SoundSequence* sequence)`\n\nAdds the given [playdate.sound.track](#C-sound.track) to the sequence."]
@@ -8214,14 +8147,14 @@ pub type RecordCallback = ::core::option::Option<unsafe extern "C" fn(context: *
 #[repr(C)]
 #[derive(Debug)]
 #[must_use]
-pub struct playdate_sound { pub channel : * const playdate_sound_channel , pub fileplayer : * const playdate_sound_fileplayer , pub sample : * const playdate_sound_sample , pub sampleplayer : * const playdate_sound_sampleplayer , pub synth : * const playdate_sound_synth , pub sequence : * const playdate_sound_sequence , pub effect : * const playdate_sound_effect , pub lfo : * const playdate_sound_lfo , pub envelope : * const playdate_sound_envelope , pub source : * const playdate_sound_source , pub controlsignal : * const playdate_control_signal , pub track : * const playdate_sound_track , pub instrument : * const playdate_sound_instrument , # [doc = "`uint32_t playdate->sound->getCurrentTime(void)`\n\nReturns the sound engine’s current time value, in units of sample frames, 44,100 per second.\n\nEquivalent to [`playdate.sound.getCurrentTime()`](./Inside%20Playdate.html#f-sound.getCurrentTime) in the Lua API."] pub getCurrentTime : :: core :: option :: Option < unsafe extern "C" fn () -> u32 > , # [doc = "`SoundSource* playdate->sound->addSource(AudioSourceFunction* callback, void* context, int stereo)`\n\nThe *callback* function you pass in will be called every audio render cycle.\n\nAudioSourceFunction\n\n```cpp\nint AudioSourceFunction(void* context, int16_t* left, int16_t* right, int len)\n```\n\nThis function should fill the passed-in *left* buffer (and *right* if it’s a stereo source) with *len* samples each and return 1, or return 0 if the source is silent through the cycle."] pub addSource : :: core :: option :: Option < unsafe extern "C" fn (callback : AudioSourceFunction , context : * mut core :: ffi :: c_void , stereo : core :: ffi :: c_int) -> * mut SoundSource > , # [doc = "`SoundChannel* playdate->sound->getDefaultChannel(void)`\n\nReturns the default channel, where sound sources play if they haven’t been explicity assigned to a different channel."] pub getDefaultChannel : :: core :: option :: Option < unsafe extern "C" fn () -> * mut SoundChannel > , # [doc = "`int playdate->sound->addChannel(SoundChannel* channel)`\n\nAdds the given channel to the sound engine. Returns 1 if the channel was added, 0 if it was already in the engine."] pub addChannel : :: core :: option :: Option < unsafe extern "C" fn (channel : * mut SoundChannel) -> core :: ffi :: c_int > , # [doc = "`int playdate->sound->removeChannel(SoundChannel* channel)`\n\nRemoves the given channel from the sound engine. Returns 1 if the channel was successfully removed, 0 if the channel is the default channel or hadn’t been previously added."] pub removeChannel : :: core :: option :: Option < unsafe extern "C" fn (channel : * mut SoundChannel) -> core :: ffi :: c_int > , # [doc = "`void playdate->sound->setMicCallback(AudioInputFunction* callback, void* context, int forceInternal)`\n\nThe *callback* you pass in will be called every audio cycle.\n\nAudioInputFunction\n\n```cpp\nint AudioInputFunction(void* context, int16_t* data, int len)\n```\n\nYour input callback will be called with the recorded audio data, a monophonic stream of samples. The function should return 1 to continue recording, 0 to stop recording. If *forceInternal* is set, the device microphone is used regardless of whether the headset has a microphone."] pub setMicCallback : :: core :: option :: Option < unsafe extern "C" fn (callback : RecordCallback , context : * mut core :: ffi :: c_void , forceInternal : core :: ffi :: c_int) > , # [doc = "`void playdate->sound->getHeadphoneState(int* headphone, int* mic, int (*changeCallback)(int headphone, int mic))`\n\nIf *headphone* contains a pointer to an int, the value is set to 1 if headphones are currently plugged in. Likewise, *mic* is set if the headphones include a microphone. If *changeCallback* is provided, it will be called when the headset or mic status changes, and audio output will **not** automatically switch from speaker to headphones when headphones are plugged in (and vice versa). In this case, the callback should use `playdate→sound→setOutputsActive()` to change the output if needed.\n\nEquivalent to [`playdate.sound.getHeadphoneState()`](./Inside%20Playdate.html#f-sound.getHeadphoneState) in the Lua API."] pub getHeadphoneState : :: core :: option :: Option < unsafe extern "C" fn (headphone : * mut core :: ffi :: c_int , headsetmic : * mut core :: ffi :: c_int , changeCallback : :: core :: option :: Option < unsafe extern "C" fn (headphone : core :: ffi :: c_int , mic : core :: ffi :: c_int) >) > , # [doc = "`void playdate->sound->setOutputsActive(int headphone, int speaker)`\n\nForce audio output to the given outputs, regardless of headphone status.\n\nEquivalent to [`playdate.sound.setOutputsActive()`](./Inside%20Playdate.html#f-sound.setOutputsActive) in the Lua API."] pub setOutputsActive : :: core :: option :: Option < unsafe extern "C" fn (headphone : core :: ffi :: c_int , speaker : core :: ffi :: c_int) > , # [doc = "`int playdate->sound->removeSource(SoundSource* source)`\n\nRemoves the given [SoundSource](#f-sound.source) object from its channel, whether it’s in the default channel or a channel created with [playdate→sound→addChannel()](#f-sound.addChannel). Returns 1 if a source was removed, 0 if the source wasn’t in a channel."] pub removeSource : :: core :: option :: Option < unsafe extern "C" fn (source : * mut SoundSource) -> core :: ffi :: c_int > , pub signal : * const playdate_sound_signal , pub getError : :: core :: option :: Option < unsafe extern "C" fn () -> * const core :: ffi :: c_char > , }
+pub struct playdate_sound { pub channel : * const playdate_sound_channel , pub fileplayer : * const playdate_sound_fileplayer , pub sample : * const playdate_sound_sample , pub sampleplayer : * const playdate_sound_sampleplayer , pub synth : * const playdate_sound_synth , pub sequence : * const playdate_sound_sequence , pub effect : * const playdate_sound_effect , pub lfo : * const playdate_sound_lfo , pub envelope : * const playdate_sound_envelope , pub source : * const playdate_sound_source , pub controlsignal : * const playdate_control_signal , pub track : * const playdate_sound_track , pub instrument : * const playdate_sound_instrument , # [doc = "`uint32_t playdate->sound->getCurrentTime(void)`\n\nReturns the sound engine’s current time value, in units of sample frames, 44,100 per second.\n\nEquivalent to [`playdate.sound.getCurrentTime()`](./Inside%20Playdate.html#f-sound.getCurrentTime) in the Lua API."] pub getCurrentTime : :: core :: option :: Option < unsafe extern "C" fn () -> u32 > , # [doc = "`SoundSource* playdate->sound->addSource(AudioSourceFunction* callback, void* context, int stereo)`\n\nThe *callback* function you pass in will be called every audio render cycle.\n\nAudioSourceFunction\n\n```cpp\nint AudioSourceFunction(void* context, int16_t* left, int16_t* right, int len)\n```\n\nThis function should fill the passed-in *left* buffer (and *right* if it’s a stereo source) with *len* samples each and return 1, or return 0 if the source is silent through the cycle."] pub addSource : :: core :: option :: Option < unsafe extern "C" fn (callback : AudioSourceFunction , context : * mut core :: ffi :: c_void , stereo : core :: ffi :: c_int) -> * mut SoundSource > , # [doc = "`SoundChannel* playdate->sound->getDefaultChannel(void)`\n\nReturns the default channel, where sound sources play if they haven’t been explicity assigned to a different channel."] pub getDefaultChannel : :: core :: option :: Option < unsafe extern "C" fn () -> * mut SoundChannel > , # [doc = "`int playdate->sound->addChannel(SoundChannel* channel)`\n\nAdds the given channel to the sound engine. Returns 1 if the channel was added, 0 if it was already in the engine."] pub addChannel : :: core :: option :: Option < unsafe extern "C" fn (channel : * mut SoundChannel) -> core :: ffi :: c_int > , # [doc = "`int playdate->sound->removeChannel(SoundChannel* channel)`\n\nRemoves the given channel from the sound engine. Returns 1 if the channel was successfully removed, 0 if the channel is the default channel or hadn’t been previously added."] pub removeChannel : :: core :: option :: Option < unsafe extern "C" fn (channel : * mut SoundChannel) -> core :: ffi :: c_int > , # [doc = "`void playdate->sound->setMicCallback(AudioInputFunction* callback, void* context, int forceInternal)`\n\nThe *callback* you pass in will be called every audio cycle.\n\nAudioInputFunction\n\n```cpp\nint AudioInputFunction(void* context, int16_t* data, int len)\n```\n\nYour input callback will be called with the recorded audio data, a monophonic stream of samples. The function should return 1 to continue recording, 0 to stop recording. If *forceInternal* is set, the device microphone is used regardless of whether the headset has a microphone."] pub setMicCallback : :: core :: option :: Option < unsafe extern "C" fn (callback : RecordCallback , context : * mut core :: ffi :: c_void , forceInternal : core :: ffi :: c_int) > , # [doc = "`void playdate->sound->getHeadphoneState(int* headphone, int* mic, int (*changeCallback)(int headphone, int mic))`\n\nIf *headphone* contains a pointer to an int, the value is set to 1 if headphones are currently plugged in. Likewise, *mic* is set if the headphones include a microphone. If *changeCallback* is provided, it will be called when the headset or mic status changes, and audio output will **not** automatically switch from speaker to headphones when headphones are plugged in (and vice versa). In this case, the callback should use `playdate→sound→setOutputsActive()` to change the output if needed.\n\nEquivalent to [`playdate.sound.getHeadphoneState()`](./Inside%20Playdate.html#f-sound.getHeadphoneState) in the Lua API."] pub getHeadphoneState : :: core :: option :: Option < unsafe extern "C" fn (headphone : * mut core :: ffi :: c_int , headsetmic : * mut core :: ffi :: c_int , changeCallback : :: core :: option :: Option < unsafe extern "C" fn (headphone : core :: ffi :: c_int , mic : core :: ffi :: c_int) >) > , # [doc = "`void playdate->sound->setOutputsActive(int headphone, int speaker)`\n\nForce audio output to the given outputs, regardless of headphone status.\n\nEquivalent to [`playdate.sound.setOutputsActive()`](./Inside%20Playdate.html#f-sound.setOutputsActive) in the Lua API."] pub setOutputsActive : :: core :: option :: Option < unsafe extern "C" fn (headphone : core :: ffi :: c_int , speaker : core :: ffi :: c_int) > , # [doc = "`int playdate->sound->removeSource(SoundSource* source)`\n\nRemoves the given [SoundSource](#f-sound.source) object from its channel, whether it’s in the default channel or a channel created with [playdate→sound→addChannel()](#f-sound.addChannel). Returns 1 if a source was removed, 0 if the source wasn’t in a channel."] pub removeSource : :: core :: option :: Option < unsafe extern "C" fn (source : * mut SoundSource) -> core :: ffi :: c_int > , pub signal : * const playdate_sound_signal , }
 #[test]
 fn bindgen_test_layout_playdate_sound() {
 	const UNINIT: ::core::mem::MaybeUninit<playdate_sound> = ::core::mem::MaybeUninit::uninit();
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound>(),
-	           96usize,
+	           92usize,
 	           concat!("Size of: ", stringify!(playdate_sound))
 	);
 	assert_eq!(
@@ -8457,16 +8390,6 @@ fn bindgen_test_layout_playdate_sound() {
 		stringify!(playdate_sound),
 		"::",
 		stringify!(signal)
-	)
-	);
-	assert_eq!(
-	           unsafe { ::core::ptr::addr_of!((*ptr).getError) as usize - ptr as usize },
-	           92usize,
-	           concat!(
-		"Offset of field: ",
-		stringify!(playdate_sound),
-		"::",
-		stringify!(getError)
 	)
 	);
 }
