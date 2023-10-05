@@ -310,4 +310,3 @@ jobs:
           PULL_REQUEST_IS_DRAFT: false
           CONTENT_COMPARISON: true
           REVIEWERS: '["boozook"]'
-          LABELS: '["pre-built bindings"]'
