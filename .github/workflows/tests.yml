@@ -26,6 +26,7 @@ env:
     -p=playdate-sprite
     -p=playdate-system
     -p=playdate
+  PD_BUILD_BINDINGS_ONCE: 1
 
 jobs:
   api:
