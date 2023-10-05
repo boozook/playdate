@@ -11,7 +11,11 @@ pub mod docs;
 
 
 #[allow(unused_variables)]
-pub fn engage(source: &bindgen::Bindings, sdk: &Sdk, root: Option<&str>) -> Result<Bindings> {
+pub fn engage(source: &bindgen::Bindings,
+              features: &crate::cfg::Features,
+              sdk: &Sdk,
+              root: Option<&str>)
+              -> Result<Bindings> {
 	let root_struct_name = root.unwrap_or("PlaydateAPI");
 
 	#[allow(unused_mut)]
@@ -19,13 +23,12 @@ pub fn engage(source: &bindgen::Bindings, sdk: &Sdk, root: Option<&str>) -> Resu
 
 	#[allow(unused_assignments)]
 	#[cfg(feature = "documentation")]
-	let docset = {
-		// TODO: if feature/option: !docs-parse =>
-		// 		take docset path from configuration
-
+	let docset = if features.documentation {
 		let docset_new = docs::parser::parse(sdk)?;
 		docs::gen::engage(&mut bindings, &root_struct_name, &docset_new)?;
 		Some(docset_new)
+	} else {
+		None
 	};
 
 	let mut module = TokenStream::new();

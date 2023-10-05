@@ -5,14 +5,16 @@ use std::env;
 use std::path::{Path, PathBuf};
 use bindgen::callbacks::DeriveInfo;
 use bindgen::{EnumVariation, RustTarget, Builder, MacroTypeVariation};
+use cfg::Filename;
 use utils::consts::*;
-use utils::toolchain::gcc::ArmToolchain;
+use utils::toolchain::gcc::{ArmToolchain, Gcc};
 use utils::toolchain::sdk::Sdk;
+pub use bindgen_cfg as cfg;
 
 
 pub mod error;
 pub mod gen;
-pub mod cfg;
+
 
 type Result<T, E = error::Error> = std::result::Result<T, E>;
 
@@ -63,54 +65,6 @@ impl std::fmt::Display for Bindings {
 }
 
 
-/// Bindings output filename components.
-#[derive(Debug, Clone)]
-pub struct Filename {
-	/// Version of the Playdate SDK.
-	pub sdk: semver::Version,
-	/// Version of the bindings generator.
-	pub gen: semver::Version,
-	/// String representation of enabled features/derives.
-	pub mask: DerivesMask,
-	/// Rust target-triple.
-	pub target: String,
-	/// Cargo profile
-	pub profile: String,
-}
-
-impl Filename {
-	pub fn new<T: Into<DerivesMask>>(sdk: semver::Version, derives: T) -> Result<Self> {
-		Self::new_for(sdk, env_var("TARGET")?, env_var("PROFILE")?, derives)
-	}
-
-	#[inline(never)]
-	pub fn new_for<T: Into<DerivesMask>>(sdk: semver::Version,
-	                                     target: String,
-	                                     profile: String,
-	                                     derives: T)
-	                                     -> Result<Self> {
-		Ok(Self { sdk,
-		          gen: semver::Version::parse(env!("CARGO_PKG_VERSION"))?,
-		          mask: derives.into(),
-		          target,
-		          profile })
-	}
-}
-
-
-impl std::fmt::Display for Filename {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		let derives = &self.mask;
-		let profile = &self.profile;
-		let target = &self.target;
-		let sdk = &self.sdk;
-		let gen = format!("{}.{}", self.gen.major, self.gen.minor);
-
-		write!(f, "pd{sdk}-gen{gen}-{profile}-{target}-{derives}.rs")
-	}
-}
-
-
 pub struct Generator {
 	/// Playdate SDK.
 	pub sdk: Sdk,
@@ -127,12 +81,12 @@ pub struct Generator {
 
 	// configuration
 	pub derives: cfg::Derive,
+	pub features: cfg::Features,
 }
 
 
 impl Generator {
-	pub fn new(cfg: cfg::Config) -> Result<Self> { create_generator(cfg) }
-
+	pub fn new(cfg: cfg::Cfg) -> Result<Self> { create_generator(cfg) }
 
 	pub fn generate(mut self) -> Result<Bindings> {
 		// disable formatting if we gonna extra work:
@@ -147,14 +101,12 @@ impl Generator {
 		return Ok(bindings).map(Bindings::Bindgen);
 
 		#[cfg(feature = "extra-codegen")]
-		gen::engage(&bindings, &self.sdk, None).map(Bindings::Engaged)
+		gen::engage(&bindings, &self.features, &self.sdk, None).map(Bindings::Engaged)
 	}
-
-	// fn filename() -> Filename
 }
 
 
-fn create_generator(cfg: cfg::Config) -> Result<Generator, error::Error> {
+fn create_generator(cfg: cfg::Cfg) -> Result<Generator, error::Error> {
 	println!("cargo:rerun-if-env-changed=TARGET");
 	let cargo_target_triple = env::var("TARGET").expect("TARGET cargo env var");
 
@@ -162,7 +114,9 @@ fn create_generator(cfg: cfg::Config) -> Result<Generator, error::Error> {
 	let cargo_profile = env::var("PROFILE").expect("PROFILE cargo env var");
 	let is_debug = cargo_profile == "debug" || env_cargo_feature("DEBUG");
 
-	let sdk = cfg.sdk.map(Result::Ok).unwrap_or_else(|| Sdk::try_new())?;
+	let sdk = cfg.sdk
+	             .map(|p| Sdk::try_new_exact(p).or_else(|_| Sdk::try_new()))
+	             .unwrap_or_else(|| Sdk::try_new())?;
 	let version_path = sdk.version_file();
 	let version_raw = sdk.read_version()?;
 	let version = check_sdk_version(&version_raw)?;
@@ -177,26 +131,25 @@ fn create_generator(cfg: cfg::Config) -> Result<Generator, error::Error> {
 
 	// builder:
 	let gcc = cfg.gcc
-	             .map(Result::Ok)
+	             .map(|p| {
+		             Gcc::try_from_path(p).and_then(ArmToolchain::try_new_with)
+		                                  .or_else(|_| ArmToolchain::try_new())
+	             })
 	             .unwrap_or_else(|| ArmToolchain::try_new())?;
 	let mut builder = create_builder(&cargo_target_triple, &sdk_c_api, &main_header, &cfg.derive);
 	builder = apply_profile(builder, is_debug);
 	builder = apply_target(builder, &cargo_target_triple, &gcc);
 
 
-	let filename = Filename::new_for(
-	                                 version.to_owned(),
-	                                 cargo_target_triple,
-	                                 cargo_profile,
-	                                 &cfg.derive,
-	)?;
+	let filename = Filename::new(version.to_owned(), &cfg.derive)?;
 
 	Ok(Generator { sdk,
 	               gcc,
 	               version,
 	               filename,
 	               builder,
-	               derives: cfg.derive })
+	               derives: cfg.derive,
+	               features: cfg.features })
 }
 
 
@@ -216,44 +169,6 @@ pub fn env_var(name: &'static str) -> Result<String> {
 }
 
 pub fn env_cargo_feature(feature: &str) -> bool { env::var(format!("CARGO_FEATURE_{feature}")).is_ok() }
-
-
-#[derive(Debug, Clone)]
-pub struct DerivesMask {
-	inner: Vec<bool>,
-}
-
-impl DerivesMask {
-	pub fn push(&mut self, value: bool) { self.inner.push(value) }
-}
-
-
-impl From<cfg::Derive> for DerivesMask {
-	fn from(values: cfg::Derive) -> Self {
-		// Caution: do not change the order of the features.
-		Self { inner: vec![
-		                   values.default,
-		                   values.eq,
-		                   values.copy,
-		                   values.debug,
-		                   values.hash,
-		                   values.ord,
-		                   values.partialeq,
-		                   values.partialord,
-		] }
-	}
-}
-
-impl From<&'_ cfg::Derive> for DerivesMask {
-	fn from(value: &'_ cfg::Derive) -> Self { (*value).into() }
-}
-
-impl std::fmt::Display for DerivesMask {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		let iter = self.inner.iter().map(|v| if *v { "1" } else { "0" });
-		write!(f, "{}", iter.collect::<String>())
-	}
-}
 
 
 fn create_builder(_target: &str, capi: &Path, header: &Path, derive: &cfg::Derive) -> Builder {
@@ -328,6 +243,9 @@ fn create_builder(_target: &str, capi: &Path, header: &Path, derive: &cfg::Deriv
 	builder = builder.parse_callbacks(Box::new(bindgen::CargoCallbacks));
 	if !derive.copy {
 		builder = builder.parse_callbacks(Box::new(DeriveCopyToPrimitives));
+	}
+	if derive.constparamty {
+		builder = builder.parse_callbacks(Box::new(DeriveConstParamTy));
 	}
 
 
@@ -417,6 +335,43 @@ impl bindgen::callbacks::ParseCallbacks for DeriveCopyToPrimitives {
 
 		if TYPES.contains(&info.name) {
 			vec!["Copy".to_string()]
+		} else {
+			vec![]
+		}
+	}
+}
+
+
+#[derive(Debug)]
+/// Derives `Copy` to simple structs and enums.
+struct DeriveConstParamTy;
+
+impl bindgen::callbacks::ParseCallbacks for DeriveConstParamTy {
+	fn add_derives(&self, info: &DeriveInfo<'_>) -> Vec<String> {
+		const TYPES: &[&str] = &[
+		                         "PDButtons",
+		                         "FileOptions",
+		                         "LCDBitmapDrawMode",
+		                         "LCDBitmapFlip",
+		                         "LCDSolidColor",
+		                         "LCDLineCapStyle",
+		                         "PDStringEncoding",
+		                         "LCDPolygonFillRule",
+		                         "PDLanguage",
+		                         "PDPeripherals",
+		                         "l_valtype",
+		                         "LuaType",
+		                         "json_value_type",
+		                         "SpriteCollisionResponseType",
+		                         "SoundFormat",
+		                         "LFOType",
+		                         "SoundWaveform",
+		                         "TwoPoleFilterType",
+		                         "PDSystemEvent",
+		];
+
+		if TYPES.contains(&info.name) {
+			vec!["::core::marker::ConstParamTy".to_string()]
 		} else {
 			vec![]
 		}

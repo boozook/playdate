@@ -212,7 +212,9 @@ To prevent this behavior to use only _pre-built_ bindings set env var `IGNORE_EX
 
 There's `bindgen` used to generate bindings, and some features are re-exported:
 
-- use `bindgen-runtime` to on/off bindgen uses runtime linking (dlopen) with libclang. [More in bindgen docs][bindgen-clang].
+- use `bindgen-runtime` to on/off bindgen uses runtime linking (dlopen) with libclang.
+  Same for `bindgen-static`.
+  [More in bindgen docs][bindgen-clang].
 - use features like `bindings-derive-{name}` to ask bindgen to derive `{name}` to all entities if it possible
   - <details><summary>full list of derive- features</summary>
 
@@ -247,22 +249,22 @@ You can add functionality that based on this package. Just create a new your oun
 
 I must repeat myself, I apologize for intruding.
 
-⚠️ If you want to create a library that based on this library, please __share all features of this package__
-to allow everyone to properly configure entire dependency tree.
+⚠️ If you want to create a library that based on this library, please __share following features of this package__
+to allow everyone to properly configure entire dependency tree:
+- `bindgen-runtime`
+- `bindgen-static`
 
 _This makes kind of paramount importance if a user is using several of these extensions and it can be a mess if they dictate different configurations for this package._
 
 - `cargo new name-of-your-extension`
 - `cargo add playdate-sys`
-- copy & paste all features from Cargo.toml of this package into your Cargo.toml like this:
+- copy & paste all features mentioned above into your Cargo.toml like this:
   ```toml
   [features]
   default = ["playdate-sys/default"]
-  lang-items = ["playdate-sys/lang-items"]
-  allocator = ["playdate-sys/allocator"]
+  bindgen-runtime = ["playdate-sys/bindgen-runtime"]
+  bindgen-static = ["playdate-sys/bindgen-static"]
   bindings-derive-debug = ["playdate-sys/bindings-derive-debug"]
-  bindings-derive-default = ["playdate-sys/bindings-derive-default"]
-  ...
   ```
 
 For example see existing crates in the [repo/api][repo-api].
@@ -291,15 +293,11 @@ DERIVES_DEF=bindings-derive-debug
 FEATURES_DEF=--features=bindings-documentation,$DERIVES_DEF
 FEATURES_ALL=--features=bindings-documentation,$DERIVES_ALL
 
-cargo build -p=playdate-sys $FEATURES_DEF -vv
-cargo build -p=playdate-sys $FEATURES_DEF --release
+cargo build -p=playdate-sys $FEATURES_DEF
 cargo build -p=playdate-sys $FEATURES_DEF --target=thumbv7em-none-eabihf
-cargo build -p=playdate-sys $FEATURES_DEF --target=thumbv7em-none-eabihf --release
 
-cargo build -p=playdate-sys $FEATURES_ALL -vv
-cargo build -p=playdate-sys $FEATURES_ALL --release
+cargo build -p=playdate-sys $FEATURES_ALL
 cargo build -p=playdate-sys $FEATURES_ALL --target=thumbv7em-none-eabihf
-cargo build -p=playdate-sys $FEATURES_ALL --target=thumbv7em-none-eabihf --release
 
 # optionally format bindings:
 rustfmt ./api/sys/gen/*.rs

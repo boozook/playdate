@@ -1,6 +1,6 @@
 [package]
 name = "playdate-sys"
-version = "0.2.5"
+version = "0.2.6"
 build = "src/build.rs"
 readme = "README.md"
 description = "Low-level Playdate API bindings"
@@ -31,11 +31,11 @@ try-trait-v2 = [] # impl `FromResidual` for `EventLoopCtrl`
 error-ctx = []    # errors with context (incomplete feature)
 
 
+bindgen-runtime = ["bindgen", "bindgen/runtime"]  # runtime linking (dlopen)
+bindgen-static = ["bindgen", "bindgen/static"]    # static linking to clang
 bindgen-logging = ["bindgen/logging"]
 bindgen-pretty-please = ["bindgen/pretty-please"]
 bindgen-which-rustfmt = ["bindgen/which-rustfmt"]
-bindgen-runtime = ["bindgen/runtime"]             # runtime linking (dlopen)
-bindgen-static = ["bindgen/static"]               # static linking to clang
 # parse docs from the SDK, gen doc-comments
 bindings-documentation = ["bindgen/documentation"] # generate docs for bindings
 
@@ -53,16 +53,15 @@ bindings-derive-constparamty = [] # derive `ConstParamTy`
 
 
 [dependencies]
-arrayvec = { version = "0.7.4", default-features = false, optional = true }
+arrayvec = { version = "0.7", default-features = false, optional = true }
 
 
-[build-dependencies]
-semver.workspace = true
-
-# TODO: make bindgen optional:
-#       if no bindgen => use pre-built or find installed bindgen and call
 [build-dependencies.bindgen]
-# optional = true
+optional = true
+workspace = true
+default-features = false
+
+[build-dependencies.bindgen-cfg]
 workspace = true
 default-features = false
 

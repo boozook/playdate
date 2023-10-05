@@ -233,15 +233,11 @@ jobs:
       # TODO: check & stop if there's no changes or mb. save SDK version cached
 
       - name: Host
-        run: |
-          cargo build -p=playdate-sys --features="${{ matrix.features.v }}" -vv
-          cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --release
+        run: cargo build -p=playdate-sys --features="${{ matrix.features.v }}" -vv
 
       - name: Device
         if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: |
-          cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --target=thumbv7em-none-eabihf
-          cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --target=thumbv7em-none-eabihf --release
+        run: cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --target=thumbv7em-none-eabihf
 
       - name: Format
         run: rustfmt api/sys/gen/*.rs

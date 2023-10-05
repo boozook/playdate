@@ -89,7 +89,7 @@ impl<T> ::core::default::Default for __BindgenUnionField<T> {
 }
 impl<T> ::core::clone::Clone for __BindgenUnionField<T> {
 	#[inline]
-	fn clone(&self) -> Self { Self::new() }
+	fn clone(&self) -> Self { *self }
 }
 impl<T> ::core::marker::Copy for __BindgenUnionField<T> {}
 impl<T> ::core::fmt::Debug for __BindgenUnionField<T> {
