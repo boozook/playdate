@@ -41,6 +41,7 @@ pub struct Config<'cfg> {
 	pub no_wait: bool,
 
 	pub zip: bool,
+	pub no_info_meta: bool,
 
 	pub prevent_unwinding: bool,
 
@@ -82,6 +83,7 @@ impl<'cfg> Config<'cfg> {
 	           mounting: Option<Mount>,
 	           no_wait: bool,
 	           zip: bool,
+	           no_info_meta: bool,
 	           prevent_unwinding: bool,
 	           create_path: Option<PathBuf>,
 	           create_full_config: bool,
@@ -108,6 +110,7 @@ impl<'cfg> Config<'cfg> {
 		       mounting,
 		       no_wait,
 		       zip,
+		       no_info_meta,
 		       prevent_unwinding,
 		       create_path,
 		       create_full_config,

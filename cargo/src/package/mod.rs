@@ -114,7 +114,9 @@ fn package_single_target<'p>(config: &Config,
 
 	// finally call pdc and pack:
 	let mut artifact = execute_pdc(config, &product.layout)?;
-	ar::add_info_meta(&artifact)?;
+	if !config.no_info_meta {
+		ar::add_info_meta(&artifact)?;
+	}
 	if config.zip {
 		artifact = ar::build(artifact)?;
 	}

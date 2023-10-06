@@ -226,6 +226,7 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 
 		// zip flag for package:
 		let zip = matches.flag("zip");
+		let no_info_meta = matches.flag("no-info-file");
 
 		// shorthand for panic behavior:
 		let prevent_unwinding = matches.flag("no-unwinding");
@@ -288,6 +289,7 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 		                      mounting,
 		                      no_wait,
 		                      zip,
+		                      no_info_meta,
 		                      prevent_unwinding,
 		                      create_path,
 		                      create_full_config,
