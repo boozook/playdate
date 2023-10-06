@@ -46,14 +46,16 @@ pub fn special_args_for(cmd: &Cmd) -> Vec<Arg> {
 	match cmd {
 		Cmd::Build => shorthands_for(cmd),
 		Cmd::Run => {
-			let mut vec = mount();
-			vec.append(&mut shorthands_for(cmd));
-			vec.push(flag_no_wait());
-			vec
+			let mut args = mount();
+			args.append(&mut shorthands_for(cmd));
+			args.push(flag_no_wait());
+			args.push(flag_no_info_file());
+			args
 		},
 		Cmd::Package => {
 			let mut args = special_args_for(&Cmd::Build);
 			args.push(flag_zip_package());
+			args.push(flag_no_info_file());
 			args
 		},
 		Cmd::Assets => vec![flag_pdc_skip_unknown()],
@@ -279,6 +281,13 @@ fn flag_zip_package() -> Arg {
 	let name = "zip";
 	Arg::new(&name).long(&name)
 	               .help(format!("Make an archive with the produced package"))
+	               .action(ArgAction::SetTrue)
+}
+
+fn flag_no_info_file() -> Arg {
+	let name = "no-info-file";
+	Arg::new(&name).long(&name)
+	               .help(format!("Opt-out inclusion info file with builder version into the produced package"))
 	               .action(ArgAction::SetTrue)
 }
 
