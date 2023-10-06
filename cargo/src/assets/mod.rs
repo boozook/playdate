@@ -202,6 +202,8 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 			locked.prepare()?;
 
 			for (dependency, mut plan) in plans.into_iter() {
+				let dep_pkg_id = dependency.package_id();
+
 				let apply = |plan: CachedPlan, kind| -> CargoResult<()> {
 					let dest = match kind {
 						AssetKind::Package => locked.as_inner().assets(),
@@ -211,10 +213,8 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 						AssetKind::Package => "",
 						AssetKind::Dev => "dev-",
 					};
-					config.log().status(
-					                    "Build",
-					                    format!("{kind_prefix}assets for {}", dependency.package_id()),
-					);
+					config.log()
+					      .status("Build", format!("{kind_prefix}assets for {}", dep_pkg_id));
 					config.log().verbose(|mut log| {
 						            let s = format!("destination: {}", dest.as_relative_to_root(config).display());
 						            log.status("", s)
@@ -272,21 +272,26 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 
 
 					// finally build with pdc:
-					match pdc::build(config, dependency, locked.as_inner(), kind) {
-						Ok(_) => {
-							config.log().status(
-							                    "Finished",
-							                    format!("{kind_prefix}assets for {}", dependency.package_id()),
-							);
-						},
-						Err(err) => {
-							let message = format!("build with pdc failed: {err}");
-							config.log()
-							      .status_with_color("Error", message, termcolor::Color::Red);
-							if !config.compile_options.build_config.keep_going {
-								bail!("Assets build failed.");
-							}
-						},
+					// if not disallowed explicitly
+					if config.skip_prebuild {
+						const REASON: &str = "as requested";
+						let msg = format!("{kind_prefix}assets pre-build for {}, {REASON}.", dep_pkg_id);
+						config.log().status("Skip", msg);
+					} else {
+						match pdc::build(config, dependency, locked.as_inner(), kind) {
+							Ok(_) => {
+								let msg = format!("{kind_prefix}assets for {}", dep_pkg_id);
+								config.log().status("Finished", msg);
+							},
+							Err(err) => {
+								let msg = format!("build {kind_prefix}assets with pdc failed: {err}");
+								config.log()
+								      .status_with_color("Error", msg, termcolor::Color::Red);
+								if !config.compile_options.build_config.keep_going {
+									bail!("Assets build failed.");
+								}
+							},
+						}
 					}
 
 					Ok(())
@@ -294,16 +299,12 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 
 				// main:
 				let mut main_cache_hit = false;
-				if dependency.package_id() == target_pid {
+				if dep_pkg_id == target_pid {
 					if let Some(plan) = plan.main.take() {
 						if plan.difference.is_same() {
 							config.log().status(
 							                    "Skip",
-							                    format!(
-								"{}, cache state is {:?}",
-								dependency.package_id(),
-								&plan.difference
-							),
+							                    format!("{}, cache state is {:?}", dep_pkg_id, &plan.difference),
 							);
 							main_cache_hit = true;
 							// continue;
@@ -314,16 +315,12 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 				}
 
 				// dev:
-				if dependency.package_id() == target_pid {
+				if dep_pkg_id == target_pid {
 					if let Some(plan) = plan.dev.take() {
 						if main_cache_hit && plan.difference.is_same() {
 							config.log().status(
 							                    "Skip",
-							                    format!(
-								"{} (dev), cache state is {:?}",
-								dependency.package_id(),
-								&plan.difference
-							),
+							                    format!("{} (dev), cache state is {:?}", dep_pkg_id, &plan.difference),
 							);
 							continue;
 						}

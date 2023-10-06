@@ -30,6 +30,7 @@ pub struct Config<'cfg> {
 
 	pub dry_run: bool,
 	pub skip_unknown: bool,
+	pub skip_prebuild: bool,
 
 	pub no_sdk: bool,
 	pub no_gcc: bool,
@@ -76,6 +77,7 @@ impl<'cfg> Config<'cfg> {
 	           quiet: bool,
 	           dry_run: bool,
 	           skip_unknown: bool,
+	           skip_prebuild: bool,
 	           no_sdk: bool,
 	           no_gcc: bool,
 	           sdk_path: Option<PathBuf>,
@@ -103,6 +105,7 @@ impl<'cfg> Config<'cfg> {
 		       quiet,
 		       dry_run,
 		       skip_unknown,
+		       skip_prebuild,
 		       no_sdk,
 		       no_gcc,
 		       sdk_path,

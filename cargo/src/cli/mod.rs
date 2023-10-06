@@ -274,6 +274,7 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 
 		let dry_run = matches.dry_run();
 		let skip_unknown = matches.flag("skip-unknown");
+		let skip_prebuild = matches.flag("no-pre-build");
 
 		return Ok(Config::new(
 		                      cmd,
@@ -282,6 +283,7 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 		                      quiet,
 		                      dry_run,
 		                      skip_unknown,
+		                      skip_prebuild,
 		                      no_sdk,
 		                      no_gcc,
 		                      sdk_path,

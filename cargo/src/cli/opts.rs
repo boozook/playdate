@@ -50,15 +50,19 @@ pub fn special_args_for(cmd: &Cmd) -> Vec<Arg> {
 			args.append(&mut shorthands_for(cmd));
 			args.push(flag_no_wait());
 			args.push(flag_no_info_file());
+			args.push(flag_pdc_skip_unknown());
+			args.push(flag_pdc_skip_prebuild());
 			args
 		},
 		Cmd::Package => {
 			let mut args = special_args_for(&Cmd::Build);
 			args.push(flag_zip_package());
 			args.push(flag_no_info_file());
+			args.push(flag_pdc_skip_unknown());
+			args.push(flag_pdc_skip_prebuild());
 			args
 		},
-		Cmd::Assets => vec![flag_pdc_skip_unknown()],
+		Cmd::Assets => vec![flag_pdc_skip_unknown(), flag_pdc_skip_prebuild()],
 
 		Cmd::New => {
 			vec![
@@ -169,7 +173,11 @@ fn run() -> Command {
 fn package() -> Command {
 	// extend `build` command:
 	build().name(Cmd::Package.as_ref())
-	.arg(flag_zip_package()).about("Compile a local package and all of its dependencies, build assets for them, manifests for local crates and pack it all together.")
+	.arg(flag_zip_package())
+	.arg(flag_no_info_file())
+	.arg(flag_pdc_skip_unknown())
+	.arg(flag_pdc_skip_prebuild())
+	.about("Compile a local package and all of its dependencies, build assets for them, manifests for local crates and pack it all together.")
 }
 
 fn migrate() -> Command {
@@ -178,6 +186,7 @@ fn migrate() -> Command {
 }
 fn publish() -> Command {
 	Command::new(Cmd::Publish.as_ref()).arg(flag_zip_package().default_value("true"))
+	                                   .arg(flag_no_info_file())
 	                                   .ignore_errors(true)
 	                                   .about("non implemented yet")
 }
@@ -273,6 +282,14 @@ fn flag_pdc_skip_unknown() -> Arg {
 	let name = "skip-unknown";
 	Arg::new(&name).long(&name)
 	               .help(format!("Tell pdc to skip unknown files"))
+	               .conflicts_with("no-sdk")
+	               .action(ArgAction::SetTrue)
+}
+
+fn flag_pdc_skip_prebuild() -> Arg {
+	let name = "no-pre-build";
+	Arg::new(&name).long(&name)
+	               .help(format!("Skip the pre-build assets step"))
 	               .conflicts_with("no-sdk")
 	               .action(ArgAction::SetTrue)
 }
