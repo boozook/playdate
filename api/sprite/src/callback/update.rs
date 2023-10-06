@@ -4,7 +4,7 @@ use core::ops::Deref;
 use sys::ffi::LCDSprite;
 use sys::traits::AsRaw;
 
-use crate::{Sprite, SpriteApi, TypedSprite, SpriteRef, AnySprite, SharedSprite};
+use crate::{Sprite, SpriteApi, TypedSprite, SpriteRef, AnySprite, SharedSprite, SpriteType};
 use crate::api::{self, Api};
 
 
@@ -18,8 +18,7 @@ impl<UD, Api: api::Api, const FOD: bool> Sprite<UD, Api, FOD> {
 }
 
 
-pub trait SpriteUpdate: Sized + TypedSprite
-	where Self: From<SpriteRef> {
+pub trait SpriteUpdate: Sized + SpriteType {
 	fn on_update(sprite: &Handle<false, SharedSprite<Self::Userdata, Self::Api>, Self>);
 
 	unsafe extern "C" fn proxy(sprite: *mut LCDSprite)

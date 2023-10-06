@@ -4,7 +4,7 @@ use core::ops::Deref;
 use sys::ffi::{LCDSprite, SpriteCollisionResponseType};
 use sys::traits::AsRaw;
 
-use crate::{Sprite, SpriteApi, TypedSprite, SpriteRef, AnySprite, SharedSprite};
+use crate::{Sprite, SpriteApi, TypedSprite, SpriteRef, AnySprite, SharedSprite, SpriteType};
 use crate::api;
 
 
@@ -18,15 +18,13 @@ impl<UD, Api: api::Api, const FOD: bool> Sprite<UD, Api, FOD> {
 }
 
 
-pub trait SpriteCollisionResponse: Sized + TypedSprite
-	where Self: From<SpriteRef> {
+pub trait SpriteCollisionResponse: Sized + SpriteType {
 	fn on_collision(sprite: &Handle<false, SharedSprite<Self::Userdata, Self::Api>, Self>,
 	                other: SpriteRef)
 	                -> SpriteCollisionResponseType;
 
 	unsafe extern "C" fn proxy(sprite: *mut LCDSprite, other: *mut LCDSprite) -> SpriteCollisionResponseType
 		where Self::Api: Default {
-		sys::println!("on_collision");
 		Self::on_collision(
 		                   &Handle::new_unchanged(SpriteRef::from(sprite).into()),
 		                   SpriteRef::from(other),

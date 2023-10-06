@@ -4,7 +4,7 @@ use core::ops::Deref;
 use sys::ffi::{LCDSprite, PDRect};
 use sys::traits::AsRaw;
 
-use crate::{Sprite, SpriteApi, TypedSprite, SpriteRef, AnySprite, SharedSprite};
+use crate::{Sprite, SpriteApi, TypedSprite, SpriteRef, AnySprite, SharedSprite, SpriteType};
 use crate::api::{self, Api};
 
 
@@ -22,8 +22,7 @@ impl<UD, Api: api::Api, const FOD: bool> Sprite<UD, Api, FOD> {
 }
 
 
-pub trait SpriteDraw: Sized + TypedSprite
-	where Self: From<SpriteRef> {
+pub trait SpriteDraw: Sized + SpriteType {
 	fn on_draw(sprite: &Handle<false, SharedSprite<Self::Userdata, Self::Api>, Self>,
 	           bounds: PDRect,
 	           draw_rect: PDRect);
