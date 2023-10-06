@@ -185,10 +185,22 @@ pub struct Derive {
 }
 
 impl Derive {
+	pub const fn empty() -> Self {
+		Self { default: false,
+		       eq: false,
+		       copy: false,
+		       debug: false,
+		       hash: false,
+		       ord: false,
+		       partialeq: false,
+		       partialord: false,
+		       constparamty: false }
+	}
+
 	pub fn to_cli_args(&self) -> Vec<String> {
 		let words = self.to_string();
 		if words.is_empty() {
-			vec!["--derive=''".to_string()]
+			vec!["--derive=".to_string()]
 		} else {
 			vec![format!("--derive={words}")]
 		}
@@ -200,11 +212,10 @@ impl FromStr for Derive {
 	type Err = Infallible;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let mut this = Derive::default();
+		let mut this = Derive::empty();
 
-		// override defaults, because user set value explicitly
-		if !s.trim().is_empty() {
-			this.debug = false;
+		if s.trim().is_empty() {
+			return Ok(this);
 		}
 
 		for word in s.to_ascii_lowercase().split(',') {
@@ -264,10 +275,12 @@ pub struct Features {
 }
 
 impl Features {
+	pub const fn empty() -> Self { Self { documentation: false } }
+
 	pub fn to_cli_args(&self) -> Vec<String> {
 		let words = self.to_string();
 		if words.is_empty() {
-			vec!["--features=''".to_string()]
+			vec!["--features=".to_string()]
 		} else {
 			vec![format!("--features={words}")]
 		}
@@ -279,11 +292,10 @@ impl FromStr for Features {
 	type Err = Infallible;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let mut this = Features::default();
+		let mut this = Features::empty();
 
-		// override defaults, because user set value explicitly
-		if !s.trim().is_empty() {
-			this.documentation = false;
+		if s.trim().is_empty() {
+			return Ok(this);
 		}
 
 		for word in s.to_ascii_lowercase().split(',') {
