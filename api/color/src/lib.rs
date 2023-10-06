@@ -3,6 +3,10 @@
 #![feature(impl_trait_in_assoc_type)]
 
 extern crate sys;
+use core::ptr::NonNull;
+use core::usize;
+
+use sys::error::NullPtrError;
 use sys::ffi::LCDColor;
 use sys::ffi::LCDPattern;
 use sys::ffi::LCDSolidColor;
@@ -32,6 +36,30 @@ impl<'t> From<Color<'t>> for LCDColor
 			Color::Pattern(pattern) => (pattern as *const u8) as LCDColor,
 		}
 	}
+}
+
+impl<'t> TryFrom<LCDColor> for Color<'t>
+	where LCDColor: 't,
+	      Self: 't
+{
+	type Error = NullPtrError;
+
+	fn try_from(color: LCDColor) -> Result<Self, Self::Error> {
+		match color {
+			0 => Ok(Self::Solid(LCDSolidColor::Black())),
+			1 => Ok(Self::Solid(LCDSolidColor::White())),
+			2 => Ok(Self::Solid(LCDSolidColor::Clear())),
+			3 => Ok(Self::Solid(LCDSolidColor::XOR())),
+			color => {
+				NonNull::new(color as *mut LCDPattern).ok_or(NullPtrError)
+				                                      .map(|nn| Self::Pattern(unsafe { nn.as_ref() }))
+			},
+		}
+	}
+}
+
+impl<'t> From<&'t LCDPattern> for Color<'t> {
+	fn from(pattern: &'t LCDPattern) -> Self { Color::Pattern(pattern) }
 }
 
 
