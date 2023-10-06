@@ -272,5 +272,24 @@ pub trait TypedSprite: AsRaw<Type = LCDSprite> + SpriteApi {
 	/// Associated user-data with sprite.
 	type Userdata;
 	/// Should be freed when sprite is dropped.
-	const FREE_ON_DROP: bool;
+	const FREE_ON_DROP: bool = true;
+}
+
+
+/// Represents strictly typed sprite, includes associated user-data and free-on-drop flag.
+pub trait SpriteType {
+	/// Type of API access-point.
+	type Api: api::Api;
+
+	/// Associated user-data with sprite.
+	type Userdata;
+
+	/// Should be freed when sprite is dropped.
+	const FREE_ON_DROP: bool = false;
+}
+
+impl<T: TypedSprite> SpriteType for T {
+	type Api = <T as SpriteApi>::Api;
+	type Userdata = <T as TypedSprite>::Userdata;
+	const FREE_ON_DROP: bool = <T as TypedSprite>::FREE_ON_DROP;
 }

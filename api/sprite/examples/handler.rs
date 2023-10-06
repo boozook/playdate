@@ -94,20 +94,25 @@ impl Update for Game {
 /// Here is our "update sprite" behavior.
 mod updater {
 	use core::ffi::c_float;
+	use core::marker::PhantomData;
+
+	use sys::ffi::{LCD_COLUMNS, LCD_ROWS};
 
 	use super::sprite;
-	use sys::ffi::{LCD_COLUMNS, LCD_ROWS};
-	use sys::traits::AsRaw;
-	use sprite::AnySprite;
+	use sprite::{AnySprite, SpriteType};
 	use sprite::prelude::*;
 	use sprite::callback::update::{Handle, SpriteUpdate};
 
 
-	pub struct Upd<UD = UpdState, T: AnySprite = SpriteRef>(Sprite<UD, T::Api, false>);
+	pub struct Upd<UD = UpdState, T: AnySprite = SpriteRef>(PhantomData<(UD, T::Api)>);
+
+	impl<T: AnySprite, UD> SpriteType for Upd<UD, T> {
+		type Api = <T as SpriteApi>::Api;
+		type Userdata = UD;
+	}
 
 	impl<T, UD> SpriteUpdate for Upd<UD, T>
 		where T: AnySprite,
-		      Self: From<SpriteRef>,
 		      Self::Userdata: AsMut<UpdState>
 	{
 		fn on_update(sprite: &Handle<false, SharedSprite<Self::Userdata, Self::Api>, Self>) {
@@ -121,42 +126,9 @@ mod updater {
 				if bounds.y < 0. || bounds.y + bounds.height > LCD_ROWS as _ {
 					velocity.y = -velocity.y;
 				}
-
 				// Move sprite
 				sprite.move_by(velocity.x, velocity.y);
 			}
-		}
-	}
-
-
-	mod impls_needed_to_combine_handlers {
-		use super::*;
-
-		impl<T: AnySprite, UD> AsRef<Sprite<UD, T::Api, false>> for Upd<UD, T> {
-			fn as_ref(&self) -> &Sprite<UD, T::Api, false> { &self.0 }
-		}
-
-		impl<T: AnySprite, UD> From<T> for Upd<UD, T> where Sprite<UD, T::Api, false>: From<T> {
-			fn from(ptr: T) -> Self { Self(Sprite::from(ptr)) }
-		}
-
-		impl<T: AnySprite, UD> TypedSprite for Upd<UD, T> {
-			type Userdata = UD;
-			const FREE_ON_DROP: bool = false;
-		}
-		impl<T: AnySprite, UD> AsRaw for Upd<UD, T> {
-			type Type = <T as AsRaw>::Type;
-			unsafe fn as_raw(&self) -> *mut Self::Type { self.0.as_raw() }
-		}
-		impl<T: AnySprite, UD> SpriteApi for Upd<UD, T> {
-			type Api = <T as SpriteApi>::Api;
-
-			fn api(&self) -> Self::Api
-				where Self::Api: Copy {
-				self.0.api()
-			}
-
-			fn api_ref(&self) -> &Self::Api { self.0.api_ref() }
 		}
 	}
 

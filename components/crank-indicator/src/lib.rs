@@ -6,6 +6,7 @@ extern crate sys;
 
 use core::ffi::c_int;
 use core::ffi::c_uint;
+use core::marker::PhantomData;
 
 use display::DisplayScale;
 use gfx::BitmapFlip;
@@ -14,6 +15,7 @@ use gfx::bitmap;
 use gfx::bitmap::Bitmap;
 use gfx::bitmap::table::BitmapTable;
 use sprite::Sprite;
+use sprite::SpriteType;
 use sys::ffi::PDRect;
 use sys::traits::AsRaw;
 
@@ -76,10 +78,22 @@ impl SpriteApi for CrankIndicator {
 }
 impl AnySprite for CrankIndicator {}
 
+impl SpriteType for CrankIndicator {
+	type Api = <Self as SpriteApi>::Api;
+	type Userdata = <UpdateDraw as SpriteType>::Userdata;
+}
 
-pub struct UpdateDraw<T: AnySprite = SpriteRef>(Sprite<State, T::Api, false>);
 
-impl<T: AnySprite> SpriteUpdate for UpdateDraw<T> where Self: From<SpriteRef> {
+pub struct UpdateDraw<T: AnySprite = SpriteRef>(PhantomData<T>);
+
+impl<T: AnySprite> SpriteType for UpdateDraw<T> {
+	type Api = <T as SpriteApi>::Api;
+	type Userdata = State;
+	const FREE_ON_DROP: bool = false;
+}
+
+impl<T: AnySprite> SpriteUpdate for UpdateDraw<T> {
+	#[inline(always)]
 	fn on_update(s: &update::Handle<false, SharedSprite<Self::Userdata, Self::Api>, Self>) {
 		if let Some(state) = s.userdata() {
 			if state.update() {
@@ -92,7 +106,8 @@ impl<T: AnySprite> SpriteUpdate for UpdateDraw<T> where Self: From<SpriteRef> {
 	}
 }
 
-impl<T: AnySprite> SpriteDraw for UpdateDraw<T> where Self: From<SpriteRef> {
+impl<T: AnySprite> SpriteDraw for UpdateDraw<T> {
+	#[inline(always)]
 	fn on_draw(s: &draw::Handle<false, SharedSprite<Self::Userdata, Self::Api>, Self>, bounds: PDRect, _: PDRect) {
 		if let Some(state) = s.userdata() {
 			let gfx = state.gfx;
@@ -399,37 +414,4 @@ struct Size<T> {
 
 impl<T> Size<T> {
 	const fn new(w: T, h: T) -> Size<T> { Self { w, h } }
-}
-
-
-mod impls_combine_handlers {
-	use sys::traits::AsRaw;
-	use super::*;
-
-	impl<T: AnySprite> AsRef<Sprite<State, T::Api, false>> for UpdateDraw<T> {
-		fn as_ref(&self) -> &Sprite<State, T::Api, false> { &self.0 }
-	}
-
-	impl<T: AnySprite> From<T> for UpdateDraw<T> where Sprite<State, T::Api, false>: From<T> {
-		fn from(ptr: T) -> Self { Self(Sprite::from(ptr)) }
-	}
-
-	impl<T: AnySprite> TypedSprite for UpdateDraw<T> {
-		type Userdata = State;
-		const FREE_ON_DROP: bool = false;
-	}
-	impl<T: AnySprite> AsRaw for UpdateDraw<T> {
-		type Type = <T as AsRaw>::Type;
-		unsafe fn as_raw(&self) -> *mut Self::Type { self.0.as_raw() }
-	}
-	impl<T: AnySprite> SpriteApi for UpdateDraw<T> {
-		type Api = <T as SpriteApi>::Api;
-
-		fn api(&self) -> Self::Api
-			where Self::Api: Copy {
-			self.0.api()
-		}
-
-		fn api_ref(&self) -> &Self::Api { self.0.api_ref() }
-	}
 }
