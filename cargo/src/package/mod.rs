@@ -279,8 +279,9 @@ fn build_manifest<'l, Layout: playdate::layout::Layout>(config: &Config,
 		            log.status("Manifest", msg);
 	            });
 
-	let manifest = if let Some(metadata) = assets.map(|a| a.metadata.as_ref()) {
-		               Manifest::try_from_source(ManifestSource { package, metadata })
+	let manifest = if let Some(metadata) = assets.map(|a| a.metadata.as_ref()).flatten() {
+		               Manifest::try_from_source(ManifestSource { package,
+		                                                          metadata: metadata.into() })
 	               } else {
 		               let metadata = playdate_metadata(package);
 		               Manifest::try_from_source(ManifestSource { package,

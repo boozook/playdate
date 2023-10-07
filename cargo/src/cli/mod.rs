@@ -377,6 +377,15 @@ fn compile_options(cmd: &Cmd, matches: &ArgMatches, ws: &Workspace<'_>) -> Cargo
 		Cmd::Build | Cmd::Package | Cmd::Migrate | Cmd::Assets => {
 			matches.compile_options(cfg, CompileMode::Build, Some(&ws), ProfileChecking::Custom)?
 		},
+
+		Cmd::New | Cmd::Init => {
+			let mut opts = CompileOptions::new(ws.config(), CompileMode::Check { test: false })?;
+			opts.build_config
+			    .requested_kinds
+			    .push(PlaydateTarget::Device.into());
+			opts
+		},
+
 		// allow only one crate:
 		Cmd::Run => {
 			matches.compile_options_for_single_package(cfg, CompileMode::Build, Some(&ws), ProfileChecking::Custom)?
@@ -385,14 +394,6 @@ fn compile_options(cmd: &Cmd, matches: &ArgMatches, ws: &Workspace<'_>) -> Cargo
 		// allow only one crate?
 		Cmd::Publish => {
 			matches.compile_options_for_single_package(cfg, CompileMode::Build, Some(&ws), ProfileChecking::Custom)?
-		},
-
-		Cmd::New | Cmd::Init => {
-			let mut opts = CompileOptions::new(ws.config(), CompileMode::Check { test: false })?;
-			opts.build_config
-			    .requested_kinds
-			    .push(PlaydateTarget::Device.into());
-			opts
 		},
 	};
 
