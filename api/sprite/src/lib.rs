@@ -276,7 +276,7 @@ pub trait TypedSprite: AsRaw<Type = LCDSprite> + SpriteApi {
 }
 
 
-/// Represents strictly typed sprite, includes associated user-data and free-on-drop flag.
+/// Type of sprite, includes associated user-data and free-on-drop flag.
 pub trait SpriteType {
 	/// Type of API access-point.
 	type Api: api::Api;
