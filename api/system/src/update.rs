@@ -197,13 +197,17 @@ mod impl_trait_v2 {
 	use super::*;
 	use core::convert::Infallible;
 	use core::ops::FromResidual;
+	use core::fmt::Display;
 
-	impl<E> FromResidual<Result<Infallible, E>> for UpdateCtrl {
+	impl<E: Display> FromResidual<Result<Infallible, E>> for UpdateCtrl {
+		#[track_caller]
 		fn from_residual(residual: Result<Infallible, E>) -> Self {
-			if residual.is_ok() {
-				Self::Continue
-			} else {
+			if let Err(err) = residual {
+				sys::println!("Error: {err}");
+				// panic!("{err}");
 				Self::Stop
+			} else {
+				Self::Continue
 			}
 		}
 	}

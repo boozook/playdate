@@ -117,15 +117,19 @@ mod entry_point_ctrl {
 	#[cfg(feature = "try-trait-v2")]
 	mod impl_trait_v2 {
 		use super::*;
-		use core::convert::Infallible;
+		use core::fmt::Display;
 		use core::ops::FromResidual;
+		use core::convert::Infallible;
 
-		impl<E> FromResidual<Result<Infallible, E>> for EventLoopCtrl {
+		impl<E: Display> FromResidual<Result<Infallible, E>> for EventLoopCtrl {
+			#[track_caller]
 			fn from_residual(residual: Result<Infallible, E>) -> Self {
-				if residual.is_ok() {
-					Self::Continue
-				} else {
+				if let Err(err) = residual {
+					crate::println!("Error: {err}");
+					// panic!("{err}");
 					Self::Stop
+				} else {
+					Self::Continue
 				}
 			}
 		}
