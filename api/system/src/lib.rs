@@ -76,21 +76,44 @@ impl<Api: api::Api> System<Api> {
 	/// Equivalent to [`sys::ffi::playdate_sys::getCurrentTimeMilliseconds`]
 	#[doc(alias = "sys::ffi::playdate_sys::getCurrentTimeMilliseconds")]
 	#[inline(always)]
-	pub fn current_time_milliseconds(&self) -> Duration {
-		Duration::from_millis(self.current_time_milliseconds_raw().into())
-	}
+	pub fn current_time(&self) -> Duration { Duration::from_millis(self.current_time_ms().into()) }
 
 	/// Equivalent to [`sys::ffi::playdate_sys::getCurrentTimeMilliseconds`]
 	#[doc(alias = "sys::ffi::playdate_sys::getCurrentTimeMilliseconds")]
-	pub fn current_time_milliseconds_raw(&self) -> c_uint {
+	pub fn current_time_ms(&self) -> c_uint {
 		let f = self.0.get_current_time_milliseconds();
 		unsafe { f() }
+	}
+
+	/// Returns the number of seconds elapsed since midnight (hour 0), January 1, 2000.
+	///
+	/// See also [`System::seconds_since_epoch_with_ms`].
+	///
+	/// Equivalent to [`sys::ffi::playdate_sys::getSecondsSinceEpoch`]
+	#[doc(alias = "sys::ffi::playdate_sys::getSecondsSinceEpoch")]
+	#[inline(always)]
+	pub fn seconds_since_epoch(&self) -> c_uint {
+		let f = self.0.get_seconds_since_epoch();
+		unsafe { f(core::ptr::null_mut()) }
+	}
+
+	/// Returns current time as `(seconds, milliseconds)`,
+	/// elapsed since midnight (hour 0), January 1, 2000.
+	///
+	/// Equivalent to [`sys::ffi::playdate_sys::getSecondsSinceEpoch`]
+	#[doc(alias = "sys::ffi::playdate_sys::getSecondsSinceEpoch")]
+	#[inline(always)]
+	pub fn seconds_since_epoch_with_ms(&self) -> (c_uint, c_uint) {
+		let f = self.0.get_seconds_since_epoch();
+		let mut millis: c_uint = 0;
+		let secs = unsafe { f(&mut millis) };
+		(secs, millis)
 	}
 
 	/// Equivalent to [`sys::ffi::playdate_sys::getSecondsSinceEpoch`]
 	#[doc(alias = "sys::ffi::playdate_sys::getSecondsSinceEpoch")]
 	#[inline(always)]
-	pub fn seconds_since_epoch(&self) -> Duration {
+	pub fn time_since_epoch(&self) -> Duration {
 		let f = self.0.get_seconds_since_epoch();
 		let mut millis: c_uint = 0;
 		let secs = unsafe { f(&mut millis) };
@@ -130,6 +153,18 @@ impl<Api: api::Api> System<Api> {
 	}
 
 	// TODO: invent analog of `std::time::Instant`
+
+	/// Returns the number of __seconds__ since [`reset_elapsed_time`] was called.
+	///
+	/// The value is a floating-point number with microsecond accuracy.
+	///
+	/// Equivalent to [`sys::ffi::playdate_sys::getElapsedTime`]
+	#[doc(alias = "sys::ffi::playdate_sys::getElapsedTime")]
+	#[inline(always)]
+	pub fn elapsed_time_secs(&self) -> c_float {
+		let f = self.0.get_elapsed_time();
+		unsafe { f() }
+	}
 
 	/// Equivalent to [`sys::ffi::playdate_sys::getElapsedTime`]
 	#[doc(alias = "sys::ffi::playdate_sys::getElapsedTime")]

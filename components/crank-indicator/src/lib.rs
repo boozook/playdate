@@ -27,8 +27,8 @@ use sprite::callback::draw::SpriteDraw;
 use sprite::callback::draw;
 
 
-const CRANK_FRAME_COUNT: c_int = 12;
-const TEXT_FRAME_COUNT: c_int = 14;
+const CRANK_FRAME_COUNT: u8 = 12;
+const TEXT_FRAME_COUNT: u8 = 14;
 
 type MySprite = Sprite<State, sprite::api::Default>;
 type UpdHandle = update::Handle<true, MySprite, UpdateDraw>;
@@ -145,12 +145,12 @@ pub struct State {
 	crank_current: Option<Bitmap>,
 
 	// frames of sequence
-	frame: c_int,       // TODO: u8
-	frame_count: c_int, // TODO: u8
+	frame: u8,
+	frame_count: u8,
 
 	// text
 	text: Option<Bitmap<gfx::api::Default>>,
-	text_frame_count: c_int, // TODO: u8
+	text_frame_count: u8,
 	text_offset: i16,
 	text_position: Point<i16>,
 
@@ -188,7 +188,7 @@ impl State {
 		                      crank_current: None,
 		                      crank_pos: Point::new(0, 0),
 		                      frame: 1,
-		                      frame_count: CRANK_FRAME_COUNT as c_int * 3,
+		                      frame_count: CRANK_FRAME_COUNT * 3,
 		                      text: None,
 		                      text_frame_count: 0,
 		                      text_position: Point::new(0, 0),
@@ -313,7 +313,7 @@ impl State {
 		}
 
 
-		let current_time = self.system.current_time_milliseconds_raw();
+		let current_time = self.system.current_time_ms();
 		let mut delta = current_time - self.last_time;
 
 
@@ -340,16 +340,11 @@ impl State {
 				((CRANK_FRAME_COUNT - (self.frame - self.text_frame_count - 1)) % CRANK_FRAME_COUNT) + 1
 			} - 1;
 
-			if index < 0 {
-				self.crank_current = None;
-				return true;
-			}
-
 			if dirty || self.frame != last_frame {
 				dirty = true;
 
 				let frame = self.crank
-				                .get::<bitmap::api::Default>(index)
+				                .get::<bitmap::api::Default>(index as _)
 				                .expect("missed frame");
 				let (fw, fh) = frame.size();
 

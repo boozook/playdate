@@ -1,11 +1,6 @@
 [workspace]
 resolver = "2"
-members = [
-	"cargo",
-	"api/*",
-	"support/*",
-	"components/*"
-]
+members = ["cargo", "api/*", "support/*", "components/*"]
 default-members = ["cargo", "support/tool", "support/bindgen"]
 exclude = ["cargo/tests/crates/**/*"]
 

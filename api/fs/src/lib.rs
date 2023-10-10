@@ -39,7 +39,7 @@ pub type Path = str;
 
 /// Read the entire contents of a file into a bytes vector.
 /// > Works similarly to [`std::fs::read`].
-fn read<P: AsRef<Path>>(path: P, data_dir: bool) -> Result<Vec<u8>, ApiError> {
+pub fn read<P: AsRef<Path>>(path: P, data_dir: bool) -> Result<Vec<u8>, ApiError> {
 	let fs = Fs::Cached();
 	let opts = FileOptions::new().read(true).read_data(data_dir);
 	let mut file = fs.open_with(api::Default, &path, opts)?;
