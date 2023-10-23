@@ -125,7 +125,7 @@ fn bindgen_test_layout_LCDRect() {
 	           concat!("Offset of field: ", stringify!(LCDRect), "::", stringify!(bottom))
 	);
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum LCDBitmapDrawMode {
@@ -138,7 +138,7 @@ pub enum LCDBitmapDrawMode {
 	kDrawModeNXOR = 6,
 	kDrawModeInverted = 7,
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum LCDBitmapFlip {
@@ -147,7 +147,7 @@ pub enum LCDBitmapFlip {
 	kBitmapFlippedY = 2,
 	kBitmapFlippedXY = 3,
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum LCDSolidColor {
@@ -156,7 +156,7 @@ pub enum LCDSolidColor {
 	kColorClear = 2,
 	kColorXOR = 3,
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum LCDLineCapStyle {
@@ -164,7 +164,7 @@ pub enum LCDLineCapStyle {
 	kLineCapStyleSquare = 1,
 	kLineCapStyleRound = 2,
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum PDStringEncoding {
@@ -174,7 +174,7 @@ pub enum PDStringEncoding {
 }
 pub type LCDPattern = [u8; 16usize];
 pub type LCDColor = usize;
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum LCDPolygonFillRule {
@@ -1245,8 +1245,8 @@ impl ::core::ops::BitAndAssign for PDButtons {
 #[repr(transparent)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
-pub struct PDButtons(pub u32);
-#[repr(u32)]
+pub struct PDButtons(pub i32);
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum PDLanguage {
@@ -1352,7 +1352,7 @@ fn bindgen_test_layout_PDDateTime() {
 pub struct PDMenuItem {
 	_unused: [u8; 0],
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum PDPeripherals {
@@ -1911,7 +1911,7 @@ pub struct LuaUDObject {
 pub struct LCDSprite {
 	_unused: [u8; 0],
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum l_valtype {
@@ -1960,7 +1960,7 @@ impl Default for lua_reg {
 		}
 	}
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum LuaType {
@@ -2511,7 +2511,7 @@ fn bindgen_test_layout_playdate_lua() {
 	)
 	);
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum json_value_type {
@@ -3230,7 +3230,7 @@ impl ::core::ops::BitAndAssign for FileOptions {
 #[repr(transparent)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
-pub struct FileOptions(pub u32);
+pub struct FileOptions(pub i32);
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
@@ -3473,7 +3473,7 @@ fn bindgen_test_layout_playdate_file() {
 	)
 	);
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum SpriteCollisionResponseType {
@@ -4650,7 +4650,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	)
 	);
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum SoundFormat {
@@ -5459,7 +5459,7 @@ fn bindgen_test_layout_playdate_sound_signal() {
 	)
 	);
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum LFOType {
@@ -5811,7 +5811,7 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	)
 	);
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum SoundWaveform {
@@ -7054,7 +7054,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 pub struct TwoPoleFilter {
 	_unused: [u8; 0],
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum TwoPoleFilterType {
@@ -9089,7 +9089,7 @@ impl Default for PlaydateAPI {
 		}
 	}
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum PDSystemEvent {
