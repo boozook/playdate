@@ -156,7 +156,7 @@ fn bindgen_test_layout_LCDRect() {
 	           concat!("Offset of field: ", stringify!(LCDRect), "::", stringify!(bottom))
 	);
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LCDBitmapDrawMode {
@@ -169,7 +169,7 @@ pub enum LCDBitmapDrawMode {
 	kDrawModeNXOR = 6,
 	kDrawModeInverted = 7,
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LCDBitmapFlip {
@@ -178,7 +178,7 @@ pub enum LCDBitmapFlip {
 	kBitmapFlippedY = 2,
 	kBitmapFlippedXY = 3,
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LCDSolidColor {
@@ -187,7 +187,7 @@ pub enum LCDSolidColor {
 	kColorClear = 2,
 	kColorXOR = 3,
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LCDLineCapStyle {
@@ -195,7 +195,7 @@ pub enum LCDLineCapStyle {
 	kLineCapStyleSquare = 1,
 	kLineCapStyleRound = 2,
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum PDStringEncoding {
@@ -205,7 +205,7 @@ pub enum PDStringEncoding {
 }
 pub type LCDPattern = [u8; 16usize];
 pub type LCDColor = usize;
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LCDPolygonFillRule {
@@ -1267,8 +1267,8 @@ impl ::core::ops::BitAndAssign for PDButtons {
 #[repr(transparent)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
-pub struct PDButtons(pub u32);
-#[repr(u32)]
+pub struct PDButtons(pub i32);
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum PDLanguage {
@@ -1374,7 +1374,7 @@ fn bindgen_test_layout_PDDateTime() {
 pub struct PDMenuItem {
 	_unused: [u8; 0],
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum PDPeripherals {
@@ -1933,7 +1933,7 @@ pub struct LuaUDObject {
 pub struct LCDSprite {
 	_unused: [u8; 0],
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum l_valtype {
@@ -1973,7 +1973,7 @@ fn bindgen_test_layout_lua_reg() {
 	           concat!("Offset of field: ", stringify!(lua_reg), "::", stringify!(func))
 	);
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LuaType {
@@ -2505,7 +2505,7 @@ fn bindgen_test_layout_playdate_lua() {
 	)
 	);
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum json_value_type {
@@ -3178,7 +3178,7 @@ impl ::core::ops::BitAndAssign for FileOptions {
 #[repr(transparent)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
-pub struct FileOptions(pub u32);
+pub struct FileOptions(pub i32);
 #[repr(C)]
 #[derive(Debug)]
 #[must_use]
@@ -3421,7 +3421,7 @@ fn bindgen_test_layout_playdate_file() {
 	)
 	);
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum SpriteCollisionResponseType {
@@ -4580,7 +4580,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	)
 	);
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum SoundFormat {
@@ -5389,7 +5389,7 @@ fn bindgen_test_layout_playdate_sound_signal() {
 	)
 	);
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LFOType {
@@ -5741,7 +5741,7 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	)
 	);
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum SoundWaveform {
@@ -6984,7 +6984,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 pub struct TwoPoleFilter {
 	_unused: [u8; 0],
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum TwoPoleFilterType {
@@ -8956,7 +8956,7 @@ fn bindgen_test_layout_PlaydateAPI() {
 	)
 	);
 }
-#[repr(u32)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum PDSystemEvent {
