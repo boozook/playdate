@@ -99,6 +99,19 @@ jobs:
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
 
+      # - name: Install Bindgen
+      #   # id: pdbindgen
+      #   # continue-on-error: true
+      #   if: runner.os == 'Windows'
+      #   env:
+      #     # LLVM_CONFIG_PATH: ${{ env.LLVM_PATH }}\\bin\\llvm-config
+      #     LIBCLANG_PATH: ${{ env.LLVM_PATH }}\\bin
+      #   run: >-
+      #     cargo install playdate-bindgen --path ./support/bindgen
+      #     --features=cli
+      #     --debug
+      #   # --features=cli,static --no-default-features
+
       - name: Test Sys (host)
         run: |
           cargo test -p=playdate-sys --features=lang-items -- --nocapture
@@ -106,6 +119,10 @@ jobs:
           cargo test -p=playdate-sys --features=lang-items,$FEATURES_2
 
       - name: Build Sys (device)
+        # env:
+        ## add env if step.pdbindgen.failed
+        #   DOCS_RS: ${{ runner.os == 'Windows' && 1 || 0 }}
+        #   IGNORE_EXISTING_PLAYDATE_SDK: ${{ runner.os == 'Windows' && 1 || 0 }}
         run: |
           cargo build -p=playdate-sys ${{ env.BUILD_STD_ARGS }}
           cargo build -p=playdate-sys --features=lang-items,$FEATURES_1 ${{ env.BUILD_STD_ARGS }} --examples
