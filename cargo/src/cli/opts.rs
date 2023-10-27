@@ -312,7 +312,7 @@ fn flag_no_unwinding() -> Arg {
 	let name = "no-unwinding";
 	const SHORT: &str =
 		"Prevents unwinding, shorthand for `panic=abort` rustc flag and `panic_immediate_abort` feature.";
-	const LONG: &str ="Prevents unwinding. Adds `-Cpanic=abort` to `RUSTFLAGS` so that build profiles do not need to specify `panic = \"abort\"` in the cargo manifest. Also adds `-Zbuild-std-features=panic_immediate_abort` to ensure that there is no `core::panicking` in the product.";
+	const LONG: &str = "Prevents unwinding. Adds `-Cpanic=abort` to `RUSTFLAGS` so that build profiles do not need to specify `panic = \"abort\"` in the cargo manifest. Also adds `-Zbuild-std-features=panic_immediate_abort` to ensure that there is no `core::panicking` in the product.";
 	Arg::new(&name).long(&name)
 	               .help(SHORT)
 	               .long_help(LONG)
@@ -322,8 +322,7 @@ fn flag_no_unwinding() -> Arg {
 fn flag_create_full_config() -> Arg {
 	let name = "full-config";
 	let help = format!("Create a full cargo config file with hardcoded link-paths that required to compile bin.");
-	let long =
-		format!("{help} Usually you don't need to use this flag when using {BIN_NAME} because {BIN_NAME} adds them itself when compiling.");
+	let long = format!("{help} Usually you don't need to use this flag when using {BIN_NAME} because {BIN_NAME} adds them itself when compiling.");
 	Arg::new(&name).long(&name)
 	               .help(help)
 	               .long_help(long)
@@ -496,13 +495,7 @@ fn usage() -> String {
 	        include_str!("usage.txt"),
 	        NAME = CMD_NAME,
 	        BIN_NAME = BIN_NAME,
-	        toolchain = {
-		        if rustup.is_some() {
-			        " [+toolchain]"
-		        } else {
-			        ""
-		        }
-	        },
+	        toolchain = { if rustup.is_some() { " [+toolchain]" } else { "" } },
 	        toolchain_usage = {
 		        if rustup.is_some() {
 			        &toolchain_help

@@ -173,23 +173,11 @@ impl UpdateCtrl {
 }
 
 impl From<bool> for UpdateCtrl {
-	fn from(value: bool) -> Self {
-		if value {
-			Self::Continue
-		} else {
-			Self::Stop
-		}
-	}
+	fn from(value: bool) -> Self { if value { Self::Continue } else { Self::Stop } }
 }
 
 impl<T, E> From<Result<T, E>> for UpdateCtrl {
-	fn from(res: Result<T, E>) -> Self {
-		if res.is_ok() {
-			Self::Continue
-		} else {
-			Self::Stop
-		}
-	}
+	fn from(res: Result<T, E>) -> Self { if res.is_ok() { Self::Continue } else { Self::Stop } }
 }
 
 #[cfg(feature = "try-trait-v2")]

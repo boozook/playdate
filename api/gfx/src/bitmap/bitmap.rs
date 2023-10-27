@@ -327,11 +327,7 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 		// TODO: investigate is it correct "res == 0 => Ok"
 		let f = self.1.set_bitmap_mask();
 		let res = unsafe { f(self.0, mask.0) };
-		if res == 0 {
-			Ok(())
-		} else {
-			Err(Error::InvalidMask)
-		}
+		if res == 0 { Ok(()) } else { Err(Error::InvalidMask) }
 	}
 
 	/// Gets a mask image for the given bitmap.
