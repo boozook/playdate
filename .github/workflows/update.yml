@@ -160,7 +160,7 @@ jobs:
         os:
           - macos-latest
           - ubuntu-latest
-          - windows-latest
+          # - windows-latest
         sdk:
           - ${{ github.event.inputs.sdk || 'latest' }}
         features:
