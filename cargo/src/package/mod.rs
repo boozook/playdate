@@ -190,8 +190,7 @@ fn package_multi_target<'p>(config: &Config,
 			let message = format!("Packaging more then two binaries for targets ({targets}) into one package can cause that some of them overwrite some other, so produced package can be broken.");
 			config.log().warn(message);
 
-			let message =
-				format!("Package can contains three binaries: one dylib for unix-family, one dll for windows and one elf for hardware.");
+			let message = format!("Package can contains three binaries: one dylib for unix-family, one dll for windows and one elf for hardware.");
 			config.log().note(message);
 
 			let error = format!("Can't mix two unix-family's dylibs into one package");

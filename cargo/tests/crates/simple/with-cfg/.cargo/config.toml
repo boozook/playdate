@@ -1,0 +1,23 @@
+[target.'cfg(target_family = "unix")']
+rustflags = ["-C", "target-cpu=native"]
+[target.'cfg(target_family = "windows")']
+rustflags = ["-C", "target-cpu=native"]
+
+[target.thumbv7em-none-eabihf]
+rustflags = [
+	"-Ctarget-cpu=cortex-m7",
+	"-Clink-args=--emit-relocs",
+	"-Crelocation-model=pic",
+	"-Csoft-float=no",
+
+	#
+	"-Clink-arg=--cref",
+	"-Clink-arg=--gc-sections",
+]
+
+
+[unstable]
+unstable-options = true
+config-include = true
+panic-abort-tests = true
+# TODO: build-std = ["core", "alloc"]

@@ -54,7 +54,10 @@ fn main() {
 
 	let pdbindgen_found = Runner::find_tool(&cfg);
 	if cfg!(feature = "bindgen") && pdbindgen_found.is_some() {
-		println!("cargo:warning=Playdate bindgen found but also built as dependency of the {} by enabled feature 'bindgen'. You might want to disable that feature to significantly decrease build time.", pkg_name);
+		println!(
+		         "cargo:warning=Playdate bindgen found but also built as dependency of the {} by enabled feature 'bindgen'. You might want to disable that feature to significantly decrease build time.",
+		         pkg_name
+		);
 		// better wording: significantly speed up the compilation process?
 	}
 

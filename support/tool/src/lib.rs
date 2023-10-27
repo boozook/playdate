@@ -46,11 +46,7 @@ pub(crate) fn wait_for_mut<F: FnMut() -> bool>(mut f: F, delay: Duration, max: D
 			std::thread::sleep(delay);
 		}
 	}
-	if !res {
-		Err(Error::timeout())
-	} else {
-		Ok(())
-	}
+	if !res { Err(Error::timeout()) } else { Ok(()) }
 }
 
 

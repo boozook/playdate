@@ -48,8 +48,7 @@ pub fn read<P: AsRef<Path>>(path: P, data_dir: bool) -> Result<Vec<u8>, ApiError
 	let size = fs.metadata(path).map(|m| m.size).ok().unwrap_or(0);
 
 	// prepare prefilled buffer:
-	let mut buf = Vec::<u8>::with_capacity(size as usize);
-	buf.resize(size as usize, 0);
+	let mut buf = alloc::vec![0; size as usize];
 
 	fs.read(&mut file, &mut buf, size)?;
 	Ok(buf)
@@ -318,8 +317,8 @@ impl<Api: api::Api> Fs<Api> {
 	///
 	/// Caution: Vector must be prefilled with `0`s.
 	/// ```no_run
-	/// let mut buf = Vec::<u8>::with_capacity(size as usize);
-	/// buf.resize(size as usize, 0);
+	/// let mut buf = Vec::<u8>::with_capacity(size);
+	/// buf.resize(size, 0);
 	/// fs.read(&mut file, &mut buf, size)?;
 	/// ```
 	///

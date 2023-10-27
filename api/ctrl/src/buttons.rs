@@ -158,7 +158,7 @@ pub struct PDButtonsDisplay<'t>(&'t PDButtons);
 
 impl<'t> Debug for PDButtonsDisplay<'t> {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-		let mut fmt = f.debug_tuple(&format!("PDButtons[{:08b}]", self.0 .0));
+		let mut fmt = f.debug_tuple(&format!("PDButtons[{:08b}]", self.0.0));
 		let iter = self.0.iter().singles();
 		for item in iter {
 			fmt.field(&item);

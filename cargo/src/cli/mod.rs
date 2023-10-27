@@ -464,39 +464,40 @@ fn adapt_args_for_underlying_cargo<S, I>(cmd: &Cmd,
 	                                                 .collect();
 	let special_cases = matches!(cmd, Cmd::Run) && matches.get_raw("device").is_some();
 	let is_special_case = |id| id == "device" && matches!(cmd, Cmd::Run);
-	let specials_vals = specials_args.iter()
-	                                 .flat_map(|arg| {
-		                                 let max_values = if let Some(range) = arg.get_num_args() {
-			                                 assert!(
+	let specials_vals =
+		specials_args.iter()
+		             .flat_map(|arg| {
+			             let max_values = if let Some(range) = arg.get_num_args() {
+				             assert!(
 				                     arg.get_short().map(|_| range.max_values()).unwrap_or_default() == 0,
 				                     "special shorts should no require values, otherwise not implemented, {arg:?}"
 				);
-			                                 assert!(
+				             assert!(
 				                     range.min_values() == range.max_values() ||
 				                     is_special_case(arg.get_id().as_str()),
 				                     "special args should require exact values num, otherwise not implemented"
 				);
-			                                 assert!(
+				             assert!(
 				                     range.max_values() <= 1,
 				                     "special args should have 0..1 values, otherwise not implemented"
 				);
-			                                 range.max_values()
-		                                 } else {
-			                                 0
-		                                 };
-		                                 assert!(
-		                                         !arg.is_allow_hyphen_values_set(),
-		                                         "special args should no allow hyphen values"
-		);
-		                                 let mut all: Vec<_> = arg.get_all_aliases()
-		                                                          .unwrap_or_default()
-		                                                          .into_iter()
-		                                                          .map(ToOwned::to_owned)
-		                                                          .collect();
-		                                 all.extend(arg.get_long().map(ToOwned::to_owned).into_iter());
-		                                 all.into_iter().map(move |k| (k, max_values))
-	                                 })
-	                                 .collect::<HashMap<String, usize>>();
+				             range.max_values()
+			             } else {
+				             0
+			             };
+			             assert!(
+			                     !arg.is_allow_hyphen_values_set(),
+			                     "special args should no allow hyphen values"
+			);
+			             let mut all: Vec<_> = arg.get_all_aliases()
+			                                      .unwrap_or_default()
+			                                      .into_iter()
+			                                      .map(ToOwned::to_owned)
+			                                      .collect();
+			             all.extend(arg.get_long().map(ToOwned::to_owned).into_iter());
+			             all.into_iter().map(move |k| (k, max_values))
+		             })
+		             .collect::<HashMap<String, usize>>();
 
 
 	// insert targets:

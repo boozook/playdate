@@ -1,6 +1,6 @@
 [package]
 name = "cargo-playdate"
-version = "0.3.10"
+version = "0.3.11"
 readme = "README.md"
 description = "Build tool for neat yellow console."
 keywords = ["playdate", "build", "cargo", "plugin", "cargo-subcommand"]
@@ -31,9 +31,9 @@ clap_lex = "0.5"
 dirs.workspace = true
 fs_extra.workspace = true
 
-cargo = "=0.73.1"
-cargo-util = "=0.2.5"
-cargo-platform = "0.1.3"
+cargo = "=0.74.0"
+cargo-util = "=0.2.6"
+cargo-platform = "0.1.4"
 
 semver.workspace = true
 serde = { workspace = true, features = ["derive"] }
