@@ -1,4 +1,4 @@
-required_version = "1.6.0"
+version = "Two"
 unstable_features = true
 edition = "2018"
 

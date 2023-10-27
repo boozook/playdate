@@ -1,7 +1,7 @@
 [unstable]
 unstable-options = true
 config-include = true
-check-cfg = ["features", "names", "values", "output"]
+check-cfg = true
 panic-abort-tests = true
 mtime-on-use = true
 avoid-dev-deps = true
