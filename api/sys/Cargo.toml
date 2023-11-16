@@ -1,6 +1,6 @@
 [package]
 name = "playdate-sys"
-version = "0.2.10"
+version = "0.2.11"
 build = "src/build.rs"
 readme = "README.md"
 description = "Low-level Playdate API bindings"
