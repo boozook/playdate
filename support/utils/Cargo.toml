@@ -1,6 +1,6 @@
 [package]
 name = "playdate-build-utils"
-version = "0.1.2"
+version = "0.1.3"
 readme = "README.md"
 description = "Utils that help to build program with Rust and Playdate API"
 keywords = ["playdate", "utility"]

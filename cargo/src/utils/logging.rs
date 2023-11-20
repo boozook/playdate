@@ -5,7 +5,7 @@ use std::ops::DerefMut;
 
 use cargo::core::Shell;
 use cargo::util::machine_message::Message;
-use termcolor::Color;
+use anstyle::AnsiColor as Color;
 
 use crate::config::Config;
 use crate::logger::LogErr;
@@ -29,7 +29,10 @@ impl<S: DerefMut<Target = Shell>> CargoLogger<S> {
 	pub fn status_with_color<T, U>(&mut self, status: T, message: U, color: Color)
 		where T: Display,
 		      U: Display {
-		self.0.status_with_color(status, message, color).log_err().ok();
+		self.0
+		    .status_with_color(status, message, &color.on_default())
+		    .log_err()
+		    .ok();
 	}
 
 	/// Prints a red 'error' status message.
@@ -42,7 +45,8 @@ impl<S: DerefMut<Target = Shell>> CargoLogger<S> {
 			                                                                     spans: vec![] } };
 			self.0.print_json(&msg)
 		} else {
-			self.0.status_with_color("Error", message, Color::Red)
+			self.0
+			    .status_with_color("Error", message, &Color::Red.on_default())
 		}.log_err()
 		.ok();
 	}

@@ -51,7 +51,7 @@ jobs:
         sdk:
           # - beta
           - latest
-          - 2.0.1
+          - 2.1.0
 
     steps:
       - uses: actions/checkout@v4
@@ -225,7 +225,7 @@ jobs:
         sdk:
           # - beta
           - latest
-          - 2.0.1
+          - 2.1.0
 
     steps:
       - uses: actions/checkout@v4
@@ -323,7 +323,7 @@ jobs:
         sdk:
           # - beta
           - latest
-          - 2.0.1
+          - 2.1.0
 
     steps:
       - uses: actions/checkout@v4
@@ -408,12 +408,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
-        uses: clechasseur/rs-fmt-check@v2
-        with:
-          toolchain: nightly
+      # - name: Check
+      #   if: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
+      #   uses: clechasseur/rs-fmt-check@v2.0.1
+      #   # with:
+      #   #   toolchain: nightly
 
       - name: Check
-        if: ${{ github.event_name != 'pull_request' && github.event_name != 'pull_request_target' }}
+        # if: ${{ github.event_name != 'pull_request' && github.event_name != 'pull_request_target' }}
         run: cargo fmt -- --check

@@ -528,11 +528,11 @@ fn adapt_args_for_underlying_cargo<S, I>(cmd: &Cmd,
 		let raw_arg = arg.to_value_os();
 		let is_escape = arg.is_escape();
 		let maybe_cmd = !meet_cmd &&
-		                !(arg.is_empty() &&
-		                  is_escape &&
-		                  arg.is_long() &&
-		                  arg.is_short() &&
-		                  arg.is_number() &&
+		                !(arg.is_empty() ||
+		                  is_escape ||
+		                  arg.is_long() ||
+		                  arg.is_short() ||
+		                  arg.is_negative_number() ||
 		                  arg.is_stdio());
 
 		if maybe_cmd {

@@ -132,6 +132,8 @@ fn build() -> Command {
 	)
 	                     .arg_future_incompat_report()
 	                     .arg_timings()
+								// Issue: https://github.com/clap-rs/clap/issues/5081
+								._arg(flag("keep-going", "Do not abort the build as soon as there is an error"))
 	                     // hide currently not supported targets:
 	                     .mut_arg("test", |arg| arg.hide(true))
 	                     .mut_arg("tests", |arg| arg.hide(true))
@@ -165,6 +167,8 @@ fn run() -> Command {
 	)
 	                               .arg_future_incompat_report()
 	                               .arg_timings()
+	                               // Issue: https://github.com/clap-rs/clap/issues/5081
+	                               ._arg(flag("keep-going", "Do not abort the build as soon as there is an error"))
 	                               // add exclusive shorthands:
 	                               .args(special_args_for(&Cmd::Run))
 											 .arg(extra_arg())

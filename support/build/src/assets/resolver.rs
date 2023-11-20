@@ -17,11 +17,10 @@ pub fn resolve_includes<S: AsRef<str>, Excl: AsRef<str>>(expr: S,
                                                          exclude: &[Excl],
                                                          links: LinkBehavior)
                                                          -> Result<Vec<Match>, Error> {
-	let glob = Glob::new(expr.as_ref()).map_err(BuildError::into_owned)?;
+	let glob = Glob::new(expr.as_ref())?;
 	let exclude = exclude.into_iter().map(AsRef::as_ref).chain(["**/.*/**"]);
 	let walker = glob.walk_with_behavior(&crate_root, links)
-	                 .not(exclude)
-	                 .map_err(BuildError::into_owned)?
+	                 .not(exclude)?
 	                 .map(|res| res.map(|entry| Match::from(entry)));
 
 	let files = walker.map(|res| {

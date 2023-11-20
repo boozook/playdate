@@ -4,7 +4,6 @@
 extern crate alloc;
 extern crate sys;
 
-use core::ffi::c_int;
 use core::ffi::c_uint;
 use core::marker::PhantomData;
 

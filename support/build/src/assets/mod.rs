@@ -188,7 +188,7 @@ fn log_err<Err: std::fmt::Display>(err: Err) -> Err {
 #[derive(Debug)]
 pub enum Error {
 	Io(std::io::Error),
-	Wax(wax::BuildError<'static>),
+	Wax(wax::BuildError),
 	Walk(WalkError),
 	Error(String),
 }
@@ -197,8 +197,8 @@ pub enum Error {
 impl From<std::io::Error> for Error {
 	fn from(err: std::io::Error) -> Self { Self::Io(err) }
 }
-impl From<wax::BuildError<'static>> for Error {
-	fn from(err: wax::BuildError<'static>) -> Self { Self::Wax(err) }
+impl From<wax::BuildError> for Error {
+	fn from(err: wax::BuildError) -> Self { Self::Wax(err) }
 }
 impl From<WalkError> for Error {
 	fn from(err: WalkError) -> Self { Self::Walk(err) }

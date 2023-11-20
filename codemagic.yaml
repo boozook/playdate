@@ -235,6 +235,11 @@ workflows:
           cargo test -p=cargo-playdate -- --nocapture
           rm -rf ./target/tmp
 
+      - name: Reset manifests
+        script: |
+          git checkout HEAD -- ./Cargo.toml
+          git checkout HEAD -- ./Cargo.lock
+
       - name: Execution
         script: |
           source "$HOME/.cargo/env"

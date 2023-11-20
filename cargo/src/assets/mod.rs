@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::path::{PathBuf, Path};
 
+use anstyle::AnsiColor as Color;
 use anyhow::bail;
 use cargo::CargoResult;
 use cargo::core::{Package, Verbosity};
@@ -257,8 +258,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 									                      path.display()
 									);
 
-									config.log()
-									      .status_with_color("Error", message, termcolor::Color::Red)
+									config.log().status_with_color("Error", message, Color::Red)
 								},
 							};
 						}
@@ -285,8 +285,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 							},
 							Err(err) => {
 								let msg = format!("build {kind_prefix}assets with pdc failed: {err}");
-								config.log()
-								      .status_with_color("Error", msg, termcolor::Color::Red);
+								config.log().status_with_color("Error", msg, Color::Red);
 								if !config.compile_options.build_config.keep_going {
 									bail!("Assets build failed.");
 								}

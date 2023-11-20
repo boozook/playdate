@@ -21,7 +21,7 @@ use playdate::compile::static_lib_suffix;
 use playdate::io::soft_link_checked;
 use playdate::toolchain::gcc::ArmToolchain;
 use playdate::toolchain::sdk::Sdk;
-use termcolor::Color;
+use anstyle::AnsiColor as Color;
 
 use crate::cli::cmd::Cmd;
 use crate::config::Config;

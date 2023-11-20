@@ -14,7 +14,7 @@ use cargo::core::Verbosity;
 use cargo::core::compiler::{CrateType, CompileKind};
 use cargo::util::{CargoResult, Config as CargoConfig};
 use config::Config;
-use termcolor::Color;
+use anstyle::AnsiColor as Color;
 
 use crate::utils::cargo::CompileKindExt;
 

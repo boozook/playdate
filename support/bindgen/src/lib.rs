@@ -240,7 +240,7 @@ fn create_builder(_target: &str, capi: &Path, header: &Path, derive: &cfg::Deriv
 	.generate_comments(true);
 
 
-	builder = builder.parse_callbacks(Box::new(bindgen::CargoCallbacks));
+	builder = builder.parse_callbacks(Box::new(bindgen::CargoCallbacks::new()));
 	if !derive.copy {
 		builder = builder.parse_callbacks(Box::new(DeriveCopyToPrimitives));
 	}

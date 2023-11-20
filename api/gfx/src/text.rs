@@ -648,7 +648,7 @@ pub mod api {
 		/// Equivalent to [`sys::ffi::playdate_graphics::setTextLeading`]
 		#[doc(alias = "sys::ffi::playdate_graphics::setTextLeading")]
 		#[inline(always)]
-		fn set_text_leading(&self) -> unsafe extern "C" fn(lineHeightAdustment: c_int) {
+		fn set_text_leading(&self) -> unsafe extern "C" fn(lineHeightAdjustment: c_int) {
 			*sys::api!(graphics.setTextLeading)
 		}
 	}
