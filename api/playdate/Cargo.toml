@@ -1,6 +1,6 @@
 [package]
 name = "playdate"
-version = "0.1.13"
+version = "0.1.14"
 readme = "README.md"
 description = "High-level Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -39,6 +39,7 @@ default = [
 	"sprite/default",
 	"system/default",
 	"entry-point",
+	"sdk_2_1"
 ]
 
 # SDK v2.1 compatibility
