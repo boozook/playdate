@@ -244,9 +244,9 @@ dependencies = [
 
 [[package]]
 name = "cargo"
-version = "0.75.0"
+version = "0.75.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5fd077f2cb74b87f972015dc436ee3ea87292539d16d1d4d3e62303105e7a7b4"
+checksum = "8883ad826b173ffc1363f9478d16714977ba3b3ddd540d2dd5cbc0ceeda1819b"
 dependencies = [
  "anstream",
  "anstyle",
@@ -304,7 +304,7 @@ dependencies = [
  "tar",
  "tempfile",
  "time",
- "toml 0.7.8",
+ "toml",
  "toml_edit 0.19.15",
  "tracing",
  "tracing-subscriber",
@@ -333,9 +333,9 @@ dependencies = [
 
 [[package]]
 name = "cargo-credential-libsecret"
-version = "0.3.2"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ad243e36ec5bc20e738b36fbcc42533da99cffacb90ef0d6dfe8b9d791a1f80"
+checksum = "a1433b31d23bb41ee5db8cbbff2257361206984ba3e1587e0622a28dc2a3f904"
 dependencies = [
  "anyhow",
  "cargo-credential",
@@ -344,9 +344,9 @@ dependencies = [
 
 [[package]]
 name = "cargo-credential-macos-keychain"
-version = "0.3.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c1d7aa6dbc2e1764071e3ea97539df2e9ebf5512302062917a5cca9c9a95a63"
+checksum = "fed52a63bf607de492234d9bc4b32f5dfe18f6bc0d7f4283193153355285f211"
 dependencies = [
  "cargo-credential",
  "security-framework",
@@ -354,9 +354,9 @@ dependencies = [
 
 [[package]]
 name = "cargo-credential-wincred"
-version = "0.3.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66a1db314f0de303d822d44531e52d20919e9ed6fc08ebcaf0ec7226e4825eb7"
+checksum = "594d90197d0f2c2dda8466f277968aa92fd71d64a92a88b86310c069932b6c4b"
 dependencies = [
  "cargo-credential",
  "windows-sys",
@@ -397,8 +397,8 @@ dependencies = [
  "serde",
  "serde_json",
  "target",
- "toml 0.8.8",
- "toml_edit 0.20.7",
+ "toml",
+ "toml_edit 0.21.0",
  "try-lazy-init",
  "walkdir",
  "zip",
@@ -2641,7 +2641,7 @@ dependencies = [
  "serde",
  "serde_json",
  "symlink",
- "toml 0.8.8",
+ "toml",
  "wax",
 ]
 
@@ -3134,9 +3134,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.192"
+version = "1.0.193"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bca2a08484b285dcb282d0f67b26cadc0df8b19f8c12502c13d966bf9482f001"
+checksum = "25dd9975e68d0cb5aa1120c288333fc98731bd1dd12f561e468ea4728c042b89"
 dependencies = [
  "serde_derive",
 ]
@@ -3163,9 +3163,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.192"
+version = "1.0.193"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6c7207fbec9faa48073f3e3074cbe553af6ea512d7c21ba46e434e70ea9fbc1"
+checksum = "43576ca501357b9b071ac53cdc7da8ef0cbd9493d8df094cd821777ea6e894d3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3516,18 +3516,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "toml"
-version = "0.8.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1a195ec8c9da26928f773888e0742ca3ca1040c6cd859c919c9f59c1954ab35"
-dependencies = [
- "serde",
- "serde_spanned",
- "toml_datetime",
- "toml_edit 0.21.0",
-]
-
-[[package]]
 name = "toml_datetime"
 version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3541,19 +3529,6 @@ name = "toml_edit"
 version = "0.19.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b5bb770da30e5cbfde35a2d7b9b8a2c4b8ef89548a7a6aeab5c9a576e3e7421"
-dependencies = [
- "indexmap",
- "serde",
- "serde_spanned",
- "toml_datetime",
- "winnow",
-]
-
-[[package]]
-name = "toml_edit"
-version = "0.20.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70f427fce4d84c72b5b732388bf4a9f4531b53f74e2887e3ecb2481f68f66d81"
 dependencies = [
  "indexmap",
  "serde",
