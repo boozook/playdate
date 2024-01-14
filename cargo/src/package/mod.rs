@@ -12,7 +12,7 @@ use cargo::core::compiler::CompileKind;
 use cargo::core::compiler::CrateType;
 use cargo::core::profiles::DebugInfo;
 use cargo::core::profiles::Profiles;
-use cargo::util::toml::TomlDebugInfo;
+use cargo::util::toml::schema::TomlDebugInfo;
 use clap_lex::OsStrExt;
 use playdate::io::soft_link_checked;
 use playdate::layout::Layout;
