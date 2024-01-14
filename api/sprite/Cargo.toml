@@ -1,6 +1,6 @@
 [package]
 name = "playdate-sprite"
-version = "0.2.8"
+version = "0.2.9"
 readme = "README.md"
 description = "High-level sprite API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -19,9 +19,8 @@ repository.workspace = true
 
 
 [features]
-default = ["sys/default", "gfx/default", "sdk_2_1"]
+default = ["sys/default", "gfx/default"]
 
-sdk_2_1 = ["gfx/sdk_2_1"]
 
 # playdate-sys features, should be shared because it's build configuration:
 
@@ -69,7 +68,6 @@ features = [
 	"sys/bindings-derive-ord",
 	"sys/bindings-derive-partialeq",
 	"sys/bindings-derive-partialord",
-	# "sdk_2_1"
 ]
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"

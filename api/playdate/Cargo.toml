@@ -1,6 +1,6 @@
 [package]
 name = "playdate"
-version = "0.1.14"
+version = "0.1.15"
 readme = "README.md"
 description = "High-level Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -39,11 +39,7 @@ default = [
 	"sprite/default",
 	"system/default",
 	"entry-point",
-	"sdk_2_1"
 ]
-
-# SDK v2.1 compatibility
-sdk_2_1 = ["gfx/sdk_2_1", "sprite/sdk_2_1"]
 
 lang-items = ["sys/lang-items"]
 allocator = ["sys/allocator"]
@@ -133,7 +129,6 @@ features = [
 	"sys/bindings-derive-ord",
 	"sys/bindings-derive-partialeq",
 	"sys/bindings-derive-partialord",
-	# "sdk_2_1"
 ]
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"

@@ -2609,7 +2609,7 @@ checksum = "69d3587f8a9e599cc7ec2c00e331f71c4e69a5f9a4b8a6efd5b07466b9736f9a"
 
 [[package]]
 name = "playdate"
-version = "0.1.14"
+version = "0.1.15"
 dependencies = [
  "playdate-controls",
  "playdate-display",
@@ -2709,7 +2709,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-graphics"
-version = "0.3.12"
+version = "0.3.13"
 dependencies = [
  "playdate-color",
  "playdate-display",
@@ -2748,7 +2748,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-sprite"
-version = "0.2.8"
+version = "0.2.9"
 dependencies = [
  "playdate-display",
  "playdate-graphics",
@@ -2791,7 +2791,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-ui-crank-indicator"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "playdate-controls",
  "playdate-display",
