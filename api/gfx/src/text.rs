@@ -225,7 +225,6 @@ pub fn set_text_tracking(tracking: c_int) { Graphics::Default().set_text_trackin
 /// Equivalent to [`sys::ffi::playdate_graphics::getTextTracking`].
 #[doc(alias = "sys::ffi::playdate_graphics::getTextTracking")]
 #[inline(always)]
-#[cfg(feature = "sdk_2_1")]
 pub fn get_text_tracking() -> c_int { Graphics::Default().get_text_tracking() }
 
 
@@ -477,7 +476,6 @@ impl<Api: crate::api::Api> Graphics<Api> {
 	///
 	/// Equivalent to [`sys::ffi::playdate_graphics::getTextTracking`].
 	#[doc(alias = "sys::ffi::playdate_graphics::getTextTracking")]
-	#[cfg(feature = "sdk_2_1")]
 	pub fn get_text_tracking(&self) -> c_int {
 		let f = self.0.get_text_tracking();
 		unsafe { f() }
@@ -599,7 +597,6 @@ pub mod api {
 		/// Equivalent to [`sys::ffi::playdate_graphics::getTextTracking`]
 		#[doc(alias = "sys::ffi::playdate_graphics::getTextTracking")]
 		#[inline(always)]
-		#[cfg(feature = "sdk_2_1")]
 		fn get_text_tracking(&self) -> unsafe extern "C" fn() -> c_int { *sys::api!(graphics.getTextTracking) }
 
 		/// Equivalent to [`sys::ffi::playdate_graphics::getGlyphKerning`]

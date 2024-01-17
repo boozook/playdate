@@ -1,6 +1,6 @@
 [package]
 name = "playdate-graphics"
-version = "0.3.12"
+version = "0.3.13"
 readme = "README.md"
 description = "High-level graphics API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -15,7 +15,6 @@ repository.workspace = true
 [features]
 default = ["sys/default", "color/default", "fs/default"]
 
-sdk_2_1 = []
 
 # playdate-sys features, should be shared because it's build configuration:
 
@@ -60,7 +59,6 @@ features = [
 	"sys/bindings-derive-ord",
 	"sys/bindings-derive-partialeq",
 	"sys/bindings-derive-partialord",
-	"sdk_2_1"
 ]
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"

@@ -124,7 +124,6 @@ impl crate::text::api::Api for Cache {
 	/// Equivalent to [`sys::ffi::playdate_graphics::getTextTracking`]
 	#[doc(alias = "sys::ffi::playdate_graphics::getTextTracking")]
 	#[inline(always)]
-	#[cfg(feature = "sdk_2_1")]
 	fn get_text_tracking(&self) -> unsafe extern "C" fn() -> c_int {
 		self.0.getTextTracking.expect("getTextTracking")
 	}

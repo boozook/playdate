@@ -1,6 +1,6 @@
 [package]
 name = "playdate-ui-crank-indicator"
-version = "0.1.3"
+version = "0.1.4"
 readme = "README.md"
 description = "Crank Indicator UI component."
 edition.workspace = true
@@ -49,9 +49,8 @@ bindings-derive-debug = [
 sys = { workspace = true, default-features = false }
 system = { workspace = true, default-features = false }
 display = { workspace = true, default-features = false }
-# feature `sdk_2_1` not used really, it's just because linked assets exists only in SDK starting from 2.1.
-gfx = { workspace = true, default-features = false, features = ["sdk_2_1"] }
-sprite = { workspace = true, default-features = false, features = ["sdk_2_1"] }
+gfx = { workspace = true, default-features = false }
+sprite = { workspace = true, default-features = false }
 
 
 [dev-dependencies]
