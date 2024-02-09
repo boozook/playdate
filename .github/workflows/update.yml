@@ -278,7 +278,7 @@ jobs:
           echo "SHA: ${{ steps.commit.outputs.commit_sha }}"
 
   bump:
-    name: Make PR
+    name: Bump
     needs: [new-branch, pre-gen, pre-gen-arm]
     runs-on: ubuntu-latest
     defaults:
