@@ -2,6 +2,19 @@ name: Post
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      crate:
+        type: string
+        description: "Name of published crate"
+        required: false
+      version:
+        type: string
+        description: "Version of published crate."
+        required: false
+      message:
+        description: "Just message to post."
+        required: false
 jobs:
   post:
     name: Post
@@ -15,12 +28,10 @@ jobs:
 
       - name: Toot
         id: mastodon
-        uses: cbrgm/mastodon-github-action@v1
+        uses: cbrgm/mastodon-github-action@v2.0.1
         with:
           message: |
-            🦀 Rusty Playdate Updated
-
-            New release happens!
+            🦀 Rusty Playdate Updated!
 
             ${{ steps.url.outputs.value }}
 
@@ -28,7 +39,7 @@ jobs:
 
           # TODO: Write good-look link like [github.event.repository.name](url)
 
+          language: "en"
           visibility: "public" # use `unlisted` for tests
-        env:
-          MASTODON_URL: ${{ secrets.MASTODON_URL }}
-          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+          url: ${{ secrets.MASTODON_URL }}
+          access-token: ${{ secrets.MASTODON_ACCESS_TOKEN }}

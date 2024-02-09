@@ -277,9 +277,48 @@ jobs:
           echo "Pushed: ${{ steps.commit.outputs.pushed }}"
           echo "SHA: ${{ steps.commit.outputs.commit_sha }}"
 
-  pr:
+  bump:
     name: Make PR
     needs: [new-branch, pre-gen, pre-gen-arm]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.new-branch.outputs.working }}
+
+      - name: Bump Version
+        uses: tj-actions/cargo-bump@v2.1.0
+        with:
+          release_type: patch
+          working-directory: ./api/sys
+
+      - name: Commit
+        id: commit
+        uses: EndBug/add-and-commit@v9.1.4
+        with:
+          add: ./api/sys/Cargo.toml
+          author_name: Alex Koz
+          author_email: boozook@users.noreply.github.com
+          committer_name: Bump sys version
+          message: Automated bump sys crate version
+          pull: "--rebase --autostash"
+          push: true
+
+      - name: Committed
+        run: |
+          echo "Committed: ${{ steps.commit.outputs.committed }}"
+          echo "Pushed: ${{ steps.commit.outputs.pushed }}"
+          echo "SHA: ${{ steps.commit.outputs.commit_sha }}"
+
+  pr:
+    name: Make PR
+    needs: [new-branch, pre-gen, pre-gen-arm, bump]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -305,8 +344,8 @@ jobs:
           TO_BRANCH: ${{ needs.new-branch.outputs.base || github.event.repository.default_branch }}
           PULL_REQUEST_TITLE: Update pre-built bindings
           PULL_REQUEST_BODY: |
-            Pre-built bindings just updated.
-            Don't forget to bump version and make release.
+            - [x] Pre-built bindings just updated.
+            - [ ] Bump sys crate
           PULL_REQUEST_IS_DRAFT: false
           CONTENT_COMPARISON: true
           REVIEWERS: '["boozook"]'
