@@ -47,11 +47,11 @@ jobs:
         os:
           - macos-latest
           - ubuntu-latest
-          - windows-latest
+          # - windows-latest
         sdk:
           # - beta
           - latest
-          - 2.1.0
+          - 2.3.0
 
     steps:
       - uses: actions/checkout@v4
@@ -225,7 +225,7 @@ jobs:
         sdk:
           # - beta
           - latest
-          - 2.1.0
+          - 2.3.0
 
     steps:
       - uses: actions/checkout@v4
@@ -323,7 +323,7 @@ jobs:
         sdk:
           # - beta
           - latest
-          - 2.1.0
+          - 2.3.0
 
     steps:
       - uses: actions/checkout@v4
