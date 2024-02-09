@@ -281,6 +281,7 @@ jobs:
     name: Bump
     needs: [new-branch, pre-gen, pre-gen-arm]
     runs-on: ubuntu-latest
+    continue-on-error: true # Workspaces are not supported yet
     defaults:
       run:
         shell: bash
@@ -318,7 +319,7 @@ jobs:
 
   pr:
     name: Make PR
-    needs: [new-branch, pre-gen, pre-gen-arm, bump]
+    needs: [new-branch, pre-gen, pre-gen-arm]
     runs-on: ubuntu-latest
     defaults:
       run:
