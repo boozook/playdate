@@ -73,7 +73,7 @@ jobs:
           echo "Published $CRATES_NUM crates: $LIST"
 
       - name: Post
-        if: fromJSON(steps.publisher.outputs.published).* && (github.event.inputs.dry-run == 'true' || (github.head_ref && 'true'))
+        if: join(fromJSON(steps.publisher.outputs.published).*.name, '-') && (github.event.inputs.dry-run == 'true' || (github.head_ref && 'true') || 'false') == 'false'
         uses: ./.github/workflows/post.yml
         with:
           message: Crate${{ steps.counter.outputs.value == 1 && '' || 's' }} ${{ join(fromJSON(steps.publisher.outputs.published).*.name, ', ') }} updated.
