@@ -1,5 +1,6 @@
 #![cfg(not(test))]
 #![cfg(feature = "panic-handler")]
+//! Global Panic Handler implementation. Depends on `panic-handler` feature.
 
 use core::panic::PanicInfo;
 use core::fmt::Write;

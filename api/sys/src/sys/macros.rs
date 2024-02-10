@@ -1,5 +1,8 @@
+//! Helper macros for API access.
+
+
 #[macro_export]
-/// Print line to stdout, simulator's console or device's output.
+/// Print line to stdout, simulator's console or device's output channel.
 ///
 /// Woks like [`std::println!`](https://doc.rust-lang.org/std/macro.println.html).
 macro_rules! println {

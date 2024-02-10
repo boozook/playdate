@@ -1,3 +1,5 @@
+//! `println` function.
+
 use core::ffi::c_char;
 use alloc::ffi::CString;
 
