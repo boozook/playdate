@@ -293,11 +293,13 @@ jobs:
         with:
           ref: ${{ needs.new-branch.outputs.working }}
 
-      - name: Bump Version
-        uses: tj-actions/cargo-bump@v2.1.0
+      - name: Install cargo semver tool
+        uses: baptiste0928/cargo-install@v3
         with:
-          release_type: patch
-          working-directory: ./api/sys
+          crate: cargo-semver-tool
+
+      - name: Bump Version
+        run: cd ./api/sys && cargo semver bump
 
       - name: Commit
         id: commit
