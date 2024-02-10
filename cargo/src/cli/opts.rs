@@ -435,7 +435,8 @@ pub fn globals() -> Command { add_globals(Command::new("")) }
 fn add_globals(cmd: Command) -> Command {
 	let cmd =
 		cmd.arg_dry_run("Enable dry-run mode")
-		   .arg_quiet()
+			.arg(flag("quiet", "Do not print cargo log messages").short('q').global(true))
+			.arg_silent_suggestion()
 		   .arg(opt("verbose", "Use verbose output (-vv extra verbose output)").short('v')
 		                                                                       .env("CARGO_TERM_VERBOSE")
 		                                                                       .action(ArgAction::Count)

@@ -6,13 +6,13 @@ use std::process::Command;
 
 use anyhow::anyhow;
 use anyhow::bail;
+use cargo::util_schemas::manifest::TomlDebugInfo;
 use cargo::CargoResult;
 use cargo::core::Package;
 use cargo::core::compiler::CompileKind;
 use cargo::core::compiler::CrateType;
 use cargo::core::profiles::DebugInfo;
 use cargo::core::profiles::Profiles;
-use cargo::util::toml::schema::TomlDebugInfo;
 use clap_lex::OsStrExt;
 use playdate::io::soft_link_checked;
 use playdate::layout::Layout;
@@ -309,8 +309,7 @@ fn execute_pdc<'l, Layout: playdate::layout::Layout>(config: &Config,
 			let debuginfo = match profile.debuginfo {
 				DebugInfo::Resolved(TomlDebugInfo::None) => false,
 				DebugInfo::Deferred(TomlDebugInfo::None) => false,
-				DebugInfo::Resolved(_) => true,
-				DebugInfo::Deferred(_) => true,
+				DebugInfo::Resolved(_) | DebugInfo::Deferred(_) => true,
 			};
 			(optimized, debuginfo)
 		},
