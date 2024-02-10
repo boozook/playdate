@@ -1,8 +1,11 @@
+//! Process API. Abort and abort with error message.
+
 /// Executes the undefined instruction (UDF) and causes a CPU-level exception.
 /// See [`core::intrinsics::abort()`]
 pub fn abort() -> ! { core::intrinsics::abort() }
 
 
+/// Stops the program execution with custom system-level error.
 #[track_caller]
 pub fn error<S: AsRef<str>>(text: S) -> ! {
 	if let Some(f) = unsafe { (*(*crate::sys::API).system).error } {

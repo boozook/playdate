@@ -1,3 +1,5 @@
+//! Typed API errors.
+
 use core::any::Any;
 use core::convert::Infallible;
 use core::fmt;

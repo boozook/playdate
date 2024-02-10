@@ -1,4 +1,7 @@
 #![cfg(not(test))]
+//! Global Allocator implementation. Depends on `allocator` feature.
+
+
 /*
 With rust-lang/rust#102318 default_alloc_error_handler has been stabilized,
 ie. the default error handler is enabled by default.
