@@ -9,7 +9,7 @@ use super::proc::error;
 
 
 #[panic_handler]
-fn panic(#[allow(unused)] panic_info: &PanicInfo) -> ! {
+fn panic(panic_info: &PanicInfo) -> ! {
 	let mut output = ArrayString::<1024>::new();
 	let payload = if let Some(payload) = panic_info.payload().downcast_ref::<&str>() {
 		payload
