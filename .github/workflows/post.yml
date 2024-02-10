@@ -4,14 +4,6 @@ on:
     types: [published]
   workflow_dispatch:
     inputs:
-      crate:
-        type: string
-        description: "Name of published crate"
-        required: false
-      version:
-        type: string
-        description: "Version of published crate."
-        required: false
       message:
         description: "Just message to post."
         required: false
@@ -32,6 +24,9 @@ jobs:
         with:
           message: |
             🦀 Rusty Playdate Updated!
+
+            ${{ inputs.message || (github.event_name == 'release' && 'New release published.' || '') }}
+
 
             ${{ steps.url.outputs.value }}
 
