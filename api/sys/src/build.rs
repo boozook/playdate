@@ -7,7 +7,7 @@ use bindgen_cfg::*;
 
 
 /// Existing pre-built bindings used for "no-sdk" environment like docs.rs.
-const SDK_VER_EXISTING: &str = "2.2.0";
+const SDK_VER_EXISTING: &str = "2.3.1";
 const BINDINGS_PATH_ENV: &str = "PD_BINDINGS_PATH"; // used in source - include-path.
 const BINDINGS_NAME_ENV: &str = "PD_BINDINGS_FILENAME";
 const BINDINGS_VER_ENV: &str = "PD_SDK_VERSION"; // used in source - doc for ffi mod.
