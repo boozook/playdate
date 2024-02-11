@@ -81,4 +81,4 @@ jobs:
     if: join(fromJSON(needs.crates-io.outputs.published).*.name, '-') && (github.event.inputs.dry-run == 'true' || (github.head_ref && 'true') || 'false') == 'false'
     uses: ./.github/workflows/post.yml
     with:
-      message: Crate${{ needs.crates-io.outputs.counter == 1 && '' || 's' }} ${{ join(fromJSON(needs.crates-io.outputs.published).*.name, ', ') }} updated.
+      message: "Crate${{ needs.crates-io.outputs.counter > 1 && 's' || '' }} updated: ${{ join(fromJSON(needs.crates-io.outputs.published).*.name, ', ') }}."
