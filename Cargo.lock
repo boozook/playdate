@@ -2685,7 +2685,7 @@ checksum = "2900ede94e305130c13ddd391e0ab7cbaeb783945ae07a279c268cb05109c6cb"
 
 [[package]]
 name = "playdate"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "playdate-controls",
  "playdate-display",
