@@ -51,7 +51,7 @@ jobs:
         sdk:
           # - beta
           - latest
-          - 2.3.0
+          - 2.4.0
 
     steps:
       - uses: actions/checkout@v4
@@ -225,7 +225,7 @@ jobs:
         sdk:
           # - beta
           - latest
-          - 2.3.0
+          - 2.4.0
 
     steps:
       - uses: actions/checkout@v4
@@ -323,7 +323,7 @@ jobs:
         sdk:
           # - beta
           - latest
-          - 2.3.0
+          - 2.4.0
 
     steps:
       - uses: actions/checkout@v4

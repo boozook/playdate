@@ -182,15 +182,18 @@ type FnSetRate = unsafe extern "C" fn(player: *mut FilePlayer, rate: c_float);
 type FnSetLoopRange = unsafe extern "C" fn(player: *mut FilePlayer, start: c_float, end: c_float);
 type FnDidUnderrun = unsafe extern "C" fn(player: *mut FilePlayer) -> c_int;
 type FnSetStopOnUnderrun = unsafe extern "C" fn(player: *mut FilePlayer, flag: c_int);
-type FnSetFinishCallback = unsafe extern "C" fn(player: *mut FilePlayer, callback: sndCallbackProc);
-type FnSetLoopCallback = unsafe extern "C" fn(player: *mut FilePlayer, callback: sndCallbackProc);
+type FnSetFinishCallback =
+	unsafe extern "C" fn(player: *mut FilePlayer, callback: sndCallbackProc, userdata: *mut c_void);
+type FnSetLoopCallback =
+	unsafe extern "C" fn(player: *mut FilePlayer, callback: sndCallbackProc, userdata: *mut c_void);
 type FnGetOffset = unsafe extern "C" fn(player: *mut FilePlayer) -> c_float;
 type FnGetRate = unsafe extern "C" fn(player: *mut FilePlayer) -> c_float;
 type FnFadeVolume = unsafe extern "C" fn(player: *mut FilePlayer,
                                          left: c_float,
                                          right: c_float,
                                          len: i32,
-                                         finishCallback: sndCallbackProc);
+                                         finishCallback: sndCallbackProc,
+                                         userdata: *mut c_void);
 type FnSetMP3StreamSource = unsafe extern "C" fn(player: *mut FilePlayer,
                                                  dataSource: Option<FnDataSource>,
                                                  userdata: *mut c_void,

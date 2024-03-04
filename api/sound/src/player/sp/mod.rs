@@ -206,13 +206,15 @@ impl<Api> Player<Api> where Api: api::Api {
 	// But with cost of memory - one static for each `F`*`Self`, so so much.
 	pub fn set_finish_callback_raw(&self, callback: sndCallbackProc) -> Result<(), Error> {
 		let f = self.api().set_finish_callback();
-		Ok(unsafe { f(self.0, callback) })
+		// TODO: use userdata
+		Ok(unsafe { f(self.0, callback, core::ptr::null_mut()) })
 	}
 
 	/// Equivalent to [setLoopCallback](sys::ffi::playdate_sound_sampleplayer::setLoopCallback)
 	#[doc(alias = "sys::ffi::playdate_sound_sampleplayer::setLoopCallback")]
 	pub fn set_loop_callback_raw(&self, callback: sndCallbackProc) -> Result<(), Error> {
 		let f = self.api().set_loop_callback();
-		Ok(unsafe { f(self.0, callback) })
+		// TODO: use userdata
+		Ok(unsafe { f(self.0, callback, core::ptr::null_mut()) })
 	}
 }

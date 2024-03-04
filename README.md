@@ -33,9 +33,9 @@ Follow the instructions for:
 
 ## Compatibility
 
-* __Minimal__ supported versions of Playdate SDK is `2.1.0` but with earlier versions all should work probably.
+* __Minimal__ supported versions of Playdate SDK is `2.4.0` because of breaking changes in `2.4.0`.
 
-* __Latest__ version of SDK is `2.3.1`, all tested and works correctly.
+* __Latest__ version of SDK is `2.4.0`.
 
 
 
