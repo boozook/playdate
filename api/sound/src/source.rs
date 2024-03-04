@@ -57,12 +57,14 @@ impl<Api: api::Api> SoundSource<Api> {
 	#[doc(alias = "sys::ffi::playdate_sound_source::setFinishCallback")]
 	pub fn set_finish_callback_raw(&self, callback: sndCallbackProc) {
 		let f = self.1.set_finish_callback();
-		unsafe { f(self.0, callback) }
+		// TODO: use userdata
+		unsafe { f(self.0, callback, core::ptr::null_mut()) }
 	}
 }
 
 
 pub mod api {
+	use core::ffi::c_void;
 	use core::ffi::c_float;
 	use core::ptr::NonNull;
 
@@ -129,7 +131,9 @@ pub mod api {
 		}
 
 		#[inline(always)]
-		fn set_finish_callback(&self) -> unsafe extern "C" fn(c: *mut SoundSource, callback: sndCallbackProc) {
+		fn set_finish_callback(
+			&self)
+			-> unsafe extern "C" fn(c: *mut SoundSource, callback: sndCallbackProc, userdata: *mut c_void) {
 			self.0.setFinishCallback.expect("setFinishCallback")
 		}
 	}
@@ -160,7 +164,9 @@ pub mod api {
 		/// Returns [`sys::ffi::playdate_sound_source::setFinishCallback`]
 		#[doc(alias = "sys::ffi::playdate_sound_source::setFinishCallback")]
 		#[inline(always)]
-		fn set_finish_callback(&self) -> unsafe extern "C" fn(c: *mut SoundSource, callback: sndCallbackProc) {
+		fn set_finish_callback(
+			&self)
+			-> unsafe extern "C" fn(c: *mut SoundSource, callback: sndCallbackProc, userdata: *mut c_void) {
 			*sys::api!(sound.source.setFinishCallback)
 		}
 	}
