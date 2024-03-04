@@ -1,21 +1,27 @@
 api:
-  - any:
-      - "api/**"
-      - "components/**"
+  - changed-files:
+      - any:
+          - "api/**"
+          - "components/**"
 
 pre-built bindings:
-  - any:
-      - "api/gen/*"
+  - changed-files:
+      - any:
+          - "api/gen/*"
 
 cargo:
-  - any:
-      - "cargo/**"
+  - changed-files:
+      - any:
+          - "cargo/**"
 
 bindgen:
-  - any:
-      - "support/bindgen/**"
+  - changed-files:
+      - any:
+          - "support/bindgen/**"
+          - "support/bindgen-cfg/**"
 
 docs:
-  - any:
-      - "**/*.md"
-      - "**/*.txt"
+  - changed-files:
+      - any:
+          - "**/*.md"
+          - "**/*.txt"
