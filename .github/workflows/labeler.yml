@@ -1,6 +1,12 @@
 name: "Labels"
 on:
   pull_request_target:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: The pull request number(s).
+        type: string
+        required: false
 
 jobs:
   triage:
@@ -13,4 +19,4 @@ jobs:
       - uses: actions/labeler@v5.0.0
         with:
           sync-labels: true
-          # dot: false
+          pr-number: ${{ github.event.inputs.pr || '' }}

@@ -1,27 +1,25 @@
 api:
   - changed-files:
-      - any:
+      - any-glob-to-any-file:
           - "api/**"
           - "components/**"
-
 pre-built bindings:
-  - changed-files:
-      - any:
-          - "api/gen/*"
+  - any:
+      - changed-files:
+          - any-glob-to-any-file: "api/gen/*"
+      - head-branch: api/sys/pre-build/.*
 
 cargo:
   - changed-files:
-      - any:
-          - "cargo/**"
+      - any-glob-to-any-file: "cargo/**"
 
 bindgen:
   - changed-files:
-      - any:
+      - any-glob-to-any-file:
           - "support/bindgen/**"
           - "support/bindgen-cfg/**"
-
 docs:
   - changed-files:
-      - any:
+      - any-glob-to-any-file:
           - "**/*.md"
           - "**/*.txt"
