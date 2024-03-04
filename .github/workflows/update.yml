@@ -68,7 +68,7 @@ jobs:
 
       - name: Create Branch
         id: branch
-        uses: peterjgrainger/action-create-branch@v2.3.0
+        uses: peterjgrainger/action-create-branch@v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -193,7 +193,7 @@ jobs:
           ref: ${{ needs.new-branch.outputs.working }}
 
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4.0.1
         with:
           path: |
             target/
@@ -203,7 +203,7 @@ jobs:
       - name: Cache LLVM
         id: cache-llvm
         if: runner.os == 'Windows'
-        uses: actions/cache@v3
+        uses: actions/cache@v4.0.1
         with:
           path: ${{ runner.temp }}/llvm
           key: llvm-14.0

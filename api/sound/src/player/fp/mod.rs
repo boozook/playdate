@@ -232,14 +232,16 @@ impl<Api> Player<Api> where Api: api::Api {
 	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setFinishCallback")]
 	pub fn set_finish_callback(&self, callback: sndCallbackProc) {
 		let f = self.api().set_finish_callback();
-		unsafe { f(self.0, callback) }
+		// TODO: use userdata
+		unsafe { f(self.0, callback, core::ptr::null_mut()) }
 	}
 
 	/// Equivalent to [setLoopCallback](sys::ffi::playdate_sound_fileplayer::setLoopCallback)
 	#[doc(alias = "sys::ffi::playdate_sound_fileplayer::setLoopCallback")]
 	pub fn set_loop_callback(&self, callback: sndCallbackProc) {
 		let f = self.api().set_loop_callback();
-		unsafe { f(self.0, callback) }
+		// TODO: use userdata
+		unsafe { f(self.0, callback, core::ptr::null_mut()) }
 	}
 
 	/// Changes the volume of the [`Player`] to `left` and `right` over a length of `len` sample frames,
@@ -250,7 +252,8 @@ impl<Api> Player<Api> where Api: api::Api {
 	// Probably here we can use just FnOnce, because it will dropped after call by proxy.
 	pub fn fade_volume(&self, left: c_float, right: c_float, len: i32, finish_callback: sndCallbackProc) {
 		let f = self.api().fade_volume();
-		unsafe { f(self.0, left, right, len, finish_callback) }
+		// TODO: use userdata
+		unsafe { f(self.0, left, right, len, finish_callback, core::ptr::null_mut()) }
 	}
 
 	/// Equivalent to [setMP3StreamSource](sys::ffi::playdate_sound_fileplayer::setMP3StreamSource)

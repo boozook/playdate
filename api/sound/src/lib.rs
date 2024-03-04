@@ -322,7 +322,7 @@ pub mod api {
 
 		fn set_mic_callback(
 			&self)
-			-> unsafe extern "C" fn(callback: RecordCallback, context: *mut c_void, forceInternal: c_int) {
+			-> unsafe extern "C" fn(callback: RecordCallback, context: *mut c_void, source: MicSource) -> c_int {
 			self.0.setMicCallback.expect("setMicCallback")
 		}
 
@@ -396,7 +396,7 @@ pub mod api {
 		#[doc(alias = "sys::ffi::playdate_sound::setMicCallback")]
 		fn set_mic_callback(
 			&self)
-			-> unsafe extern "C" fn(callback: RecordCallback, context: *mut c_void, forceInternal: c_int) {
+			-> unsafe extern "C" fn(callback: RecordCallback, context: *mut c_void, source: MicSource) -> c_int {
 			*sys::api!(sound.setMicCallback)
 		}
 

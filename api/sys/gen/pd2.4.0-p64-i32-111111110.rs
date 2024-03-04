@@ -251,7 +251,7 @@ pub struct playdate_video {
 	                                                         outFrameRate: *mut core::ffi::c_float,
 	                                                         outFrameCount: *mut core::ffi::c_int,
 	                                                         outCurrentFrame: *mut core::ffi::c_int)>,
-	#[doc = "`LCBitmap * playdate->graphics->video->getContext(LCDVideoPlayer* p)`\n\nGets the rendering destination for the video player. If no rendering context has been setallocates a context bitmap with the same dimensions as the vieo will be allocated."]
+	#[doc = "`LCBitmap* playdate->graphics->video->getContext(LCDVideoPlayer* p)`\n\nGets the rendering destination for the video player. If no rendering context has been setallocates a context bitmap with the same dimensions as the vieo will be allocated."]
 	pub getContext: ::core::option::Option<unsafe extern "C" fn(p: *mut LCDVideoPlayer) -> *mut LCDBitmap>,
 }
 #[test]
@@ -358,7 +358,7 @@ pub struct playdate_graphics {
 	pub clear: ::core::option::Option<unsafe extern "C" fn(color: LCDColor)>,
 	#[doc = "`void playdate->graphics->setBackgroundColor(LCDColor color);`\n\nSets the background color shown when the display is [offset](#f-display.setOffset) or for clearing dirty areas in the sprite system.\n\nEquivalent to [`playdate.graphics.setBackgroundColor()`](./Inside%20Playdate.html#f-graphics.setBackgroundColor) in the Lua API."]
 	pub setBackgroundColor: ::core::option::Option<unsafe extern "C" fn(color: LCDSolidColor)>,
-	#[doc = "`void playdate->graphics->setStencil(LCDBitmap* stencil);`\n\nSets the stencil used for drawing. For a tiled stencil, use *setStencilImage()* instead."]
+	#[doc = "`void playdate->graphics->setStencil(LCDBitmap* stencil);`\n\nSets the stencil used for drawing. For a tiled stencil, use *setStencilImage()* instead. To clear the stencil, set it to *NULL*."]
 	pub setStencil: ::core::option::Option<unsafe extern "C" fn(stencil: *mut LCDBitmap)>,
 	#[doc = "`void playdate->graphics->setDrawMode(LCDBitmapDrawMode mode);`\n\nSets the mode used for drawing bitmaps. Note that text drawing uses bitmaps, so this affects how fonts are displayed as well.\n\nLCDBitmapDrawMode\n\n```cpp\ntypedef enum\n{\n\tkDrawModeCopy,\n\tkDrawModeWhiteTransparent,\n\tkDrawModeBlackTransparent,\n\tkDrawModeFillWhite,\n\tkDrawModeFillBlack,\n\tkDrawModeXOR,\n\tkDrawModeNXOR,\n\tkDrawModeInverted\n} LCDBitmapDrawMode;\n```\n\nEquivalent to [`playdate.graphics.setImageDrawMode()`](./Inside%20Playdate.html#f-graphics.setImageDrawMode) in the Lua API."]
 	pub setDrawMode: ::core::option::Option<unsafe extern "C" fn(mode: LCDBitmapDrawMode)>,
@@ -377,7 +377,7 @@ pub struct playdate_graphics {
 	pub setFont: ::core::option::Option<unsafe extern "C" fn(font: *mut LCDFont)>,
 	#[doc = "`void playdate->graphics->setTextTracking(int tracking);`\n\nSets the tracking to use when drawing text.\n\nEquivalent to [`playdate.graphics.font:setTracking()`](./Inside%20Playdate.html#m-graphics.font.setTracking) in the Lua API."]
 	pub setTextTracking: ::core::option::Option<unsafe extern "C" fn(tracking: core::ffi::c_int)>,
-	#[doc = "`void playdate->graphics->pushContext(LCDBitmap* target);`\n\nPush a new drawing context for drawing into the given bitmap. If *target* is nil, the drawing functions will use the display framebuffer.\n\nEquivalent to [`playdate.graphics.pushContext()`](./Inside%20Playdate.html#f-graphics.pushContext) in the Lua API."]
+	#[doc = "`void playdate->graphics->pushContext(LCDBitmap* target);`\n\nPush a new drawing context for drawing into the given bitmap. If *target* is *NULL*, the drawing functions will use the display framebuffer.\n\nEquivalent to [`playdate.graphics.pushContext()`](./Inside%20Playdate.html#f-graphics.pushContext) in the Lua API."]
 	pub pushContext: ::core::option::Option<unsafe extern "C" fn(target: *mut LCDBitmap)>,
 	#[doc = "`void playdate->graphics->popContext(void);`\n\nPops a context off the stack (if any are left), restoring the drawing settings from before the context was pushed.\n\nEquivalent to [`playdate.graphics.popContext()`](./Inside%20Playdate.html#f-graphics.popContext) in the Lua API."]
 	pub popContext: ::core::option::Option<unsafe extern "C" fn()>,
@@ -508,13 +508,13 @@ pub struct playdate_graphics {
 	                                                          -> *mut LCDFont>,
 	#[doc = "`LCDFontPage* playdate->graphics->getFontPage(LCDFont* font, uint32_t c);`\n\nReturns an LCDFontPage object for the given character code. Each LCDFontPage contains information for 256 characters; specifically, if `(c1 & ~0xff) == (c2 & ~0xff)`, then *c1* and *c2* belong to the same page and the same LCDFontPage can be used to fetch the character data for both instead of searching for the page twice."]
 	pub getFontPage: ::core::option::Option<unsafe extern "C" fn(font: *mut LCDFont, c: u32) -> *mut LCDFontPage>,
-	#[doc = "`LCDFontGlyph* getPageGlyph(LCDFontPage* page, uint32_t c, LCDBitmap** bitmap, int* advance);`\n\nReturns an LCDFontGlyph object for character *c* in LCDFontPage *page*, and optionally returns the glyph’s bitmap and advance value."]
+	#[doc = "`LCDFontGlyph* playdate->graphics->getPageGlyph(LCDFontPage* page, uint32_t c, LCDBitmap** bitmap, int* advance);`\n\nReturns an LCDFontGlyph object for character *c* in LCDFontPage *page*, and optionally returns the glyph’s bitmap and advance value."]
 	pub getPageGlyph: ::core::option::Option<unsafe extern "C" fn(page: *mut LCDFontPage,
 	                                                              c: u32,
 	                                                              bitmap: *mut *mut LCDBitmap,
 	                                                              advance: *mut core::ffi::c_int)
 	                                                              -> *mut LCDFontGlyph>,
-	#[doc = "`int (*getGlyphKerning)(LCDFontGlyph* glyph, uint32_t c1, uint32_t c2);`\n\nReturns the kerning adjustment between characters *c1* and *c2* as specified by the font."]
+	#[doc = "`int playdate->graphics->getGlyphKerning(LCDFontGlyph* glyph, uint32_t c1, uint32_t c2);`\n\nReturns the kerning adjustment between characters *c1* and *c2* as specified by the font."]
 	pub getGlyphKerning: ::core::option::Option<unsafe extern "C" fn(glyph: *mut LCDFontGlyph,
 	                                                                 glyphcode: u32,
 	                                                                 nextcode: u32)
@@ -560,7 +560,7 @@ pub struct playdate_graphics {
 	                                                                   y: core::ffi::c_int,
 	                                                                   width: core::ffi::c_int,
 	                                                                   height: core::ffi::c_int)>,
-	#[doc = "`void playdate->graphics->fillPolygon(int nPoints, int* points, LCDColor color, LCDPolygonFillRule fillrule);`\n\nFills the polygon with vertices at the given coordinates (an array of 2\\*`nPoints` ints containing alternating x and y values) using the given color and fill, or winding, rule. See [https://en.wikipedia.org/wiki/Nonzero-rule](https://en.wikipedia.org/wiki/Nonzero-rule) for an explanation of the winding rule.\n\nEquivalent to [`playdate.graphics.fillPolygon()`](./Inside%20Playdate.html#f-graphics.fillPolygon) in the Lua API."]
+	#[doc = "`void playdate->graphics->fillPolygon(int nPoints, int* points, LCDColor color, LCDPolygonFillRule fillrule);`\n\nFills the polygon with vertices at the given coordinates (an array of 2\\*`nPoints` ints containing alternating x and y values) using the given color and fill, or winding, rule. See [https://en.wikipedia.org/wiki/Nonzero-rule](https://en.wikipedia.org/wiki/Nonzero-rule) for an explanation of the winding rule. An edge between the last vertex and the first is assumed.\n\nEquivalent to [`playdate.graphics.fillPolygon()`](./Inside%20Playdate.html#f-graphics.fillPolygon) in the Lua API."]
 	pub fillPolygon: ::core::option::Option<unsafe extern "C" fn(nPoints: core::ffi::c_int,
 	                                                             coords: *mut core::ffi::c_int,
 	                                                             color: LCDColor,
@@ -586,7 +586,7 @@ pub struct playdate_graphics {
 	                                                               -> core::ffi::c_int>,
 	#[doc = "`LCDBitmap* playdate->graphics->getBitmapMask(LCDBitmap* bitmap);`\n\nGets a mask image for the given *bitmap*, or returns NULL if the *bitmap* doesn’t have a mask layer. The returned image points to *bitmap*'s data, so drawing into the mask image affects the source bitmap directly. The caller takes ownership of the returned LCDBitmap and is responsible for freeing it when it’s no longer in use."]
 	pub getBitmapMask: ::core::option::Option<unsafe extern "C" fn(bitmap: *mut LCDBitmap) -> *mut LCDBitmap>,
-	#[doc = "`void playdate->graphics->setStencilImage(LCDBitmap* stencil, int tile);`\n\nSets the stencil used for drawing. If the *tile* flag is set the stencil image will be tiled. Tiled stencils must have width equal to a multiple of 32 pixels.\n\nEquivalent to [`playdate.graphics.setStencilImage()`](./Inside%20Playdate.html#f-graphics.setStencilImage) in the Lua API."]
+	#[doc = "`void playdate->graphics->setStencilImage(LCDBitmap* stencil, int tile);`\n\nSets the stencil used for drawing. If the *tile* flag is set the stencil image will be tiled. Tiled stencils must have width equal to a multiple of 32 pixels. To clear the stencil, call `playdate→graphics→setStencil(NULL);`.\n\nEquivalent to [`playdate.graphics.setStencilImage()`](./Inside%20Playdate.html#f-graphics.setStencilImage) in the Lua API."]
 	pub setStencilImage:
 		::core::option::Option<unsafe extern "C" fn(stencil: *mut LCDBitmap, tile: core::ffi::c_int)>,
 	#[doc = "`LCDFont* playdate->graphics->makeFontFromData(LCDFontData* data, int wide);`\n\nReturns an LCDFont object wrapping the LCDFontData *data* comprising the contents (minus 16-byte header) of an uncompressed pft file. *wide* corresponds to the flag in the header indicating whether the font contains glyphs at codepoints above U+1FFFF."]
@@ -1220,6 +1220,7 @@ impl Default for playdate_graphics {
 		}
 	}
 }
+pub type va_list = __builtin_va_list;
 impl PDButtons {
 	pub const kButtonLeft: PDButtons = PDButtons(1);
 }
@@ -1378,131 +1379,23 @@ pub type PDCallbackFunction =
 	::core::option::Option<unsafe extern "C" fn(userdata: *mut core::ffi::c_void) -> core::ffi::c_int>;
 pub type PDMenuItemCallbackFunction =
 	::core::option::Option<unsafe extern "C" fn(userdata: *mut core::ffi::c_void)>;
+pub type PDButtonCallbackFunction =
+	::core::option::Option<unsafe extern "C" fn(button: PDButtons,
+	                                            down: core::ffi::c_int,
+	                                            when: u32,
+	                                            userdata: *mut core::ffi::c_void)
+	                                            -> core::ffi::c_int>;
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
-pub struct playdate_sys {
-	#[doc = "`void* playdate->system->realloc(void* ptr, size_t size)`\n\nAllocates heap space if *ptr* is NULL, else reallocates the given pointer. If *size* is zero, frees the given pointer."]
-	pub realloc: ::core::option::Option<unsafe extern "C" fn(ptr: *mut core::ffi::c_void,
-	                                                         size: usize)
-	                                                         -> *mut core::ffi::c_void>,
-	#[doc = "`int playdate->system->formatString(char **ret, const char *format, ...)`\n\nAllocates a buffer *ret* and formats a string. Note that the caller is responsible for freeing *ret*."]
-	pub formatString: ::core::option::Option<unsafe extern "C" fn(ret: *mut *mut core::ffi::c_char,
-	                                                              fmt: *const core::ffi::c_char,
-	                                                              ...)
-	                                                              -> core::ffi::c_int>,
-	#[doc = "`void playdate->system->logToConsole(const char* format, ...)`\n\nCalls the log function.\n\nEquivalent to [`print()`](./Inside%20Playdate.html#f-print) in the Lua API."]
-	pub logToConsole: ::core::option::Option<unsafe extern "C" fn(fmt: *const core::ffi::c_char, ...)>,
-	#[doc = "`void playdate->system->error(const char* format, ...)`\n\nCalls the log function, outputting an error in red to the console, then pauses execution."]
-	pub error: ::core::option::Option<unsafe extern "C" fn(fmt: *const core::ffi::c_char, ...)>,
-	#[doc = "`PDLanguage playdate->system->getLanguage(void);`\n\nReturns the current language of the system."]
-	pub getLanguage: ::core::option::Option<unsafe extern "C" fn() -> PDLanguage>,
-	#[doc = "`unsigned int playdate->system->getCurrentTimeMilliseconds(void)`\n\nReturns the number of milliseconds since…\u{200b}some arbitrary point in time. This should present a consistent timebase while a game is running, but the counter will be disabled when the device is sleeping."]
-	pub getCurrentTimeMilliseconds: ::core::option::Option<unsafe extern "C" fn() -> core::ffi::c_uint>,
-	#[doc = "`unsigned int playdate->system->getSecondsSinceEpoch(unsigned int *milliseconds)`\n\nReturns the number of seconds (and sets *milliseconds* if not NULL) elapsed since midnight (hour 0), January 1, 2000."]
-	pub getSecondsSinceEpoch:
-		::core::option::Option<unsafe extern "C" fn(milliseconds: *mut core::ffi::c_uint) -> core::ffi::c_uint>,
-	#[doc = "`void playdate->system->drawFPS(int x, int y)`\n\nCalculates the current frames per second and draws that value at *x, y*."]
-	pub drawFPS: ::core::option::Option<unsafe extern "C" fn(x: core::ffi::c_int, y: core::ffi::c_int)>,
-	#[doc = "`void playdate->system->setUpdateCallback(PDCallbackFunction* update, void* userdata)`\n\nReplaces the default Lua run loop function with a custom update function. The update function should return a non-zero number to tell the system to update the display, or zero if update isn’t needed."]
-	pub setUpdateCallback:
-		::core::option::Option<unsafe extern "C" fn(update: PDCallbackFunction, userdata: *mut core::ffi::c_void)>,
-	#[doc = "`void playdate->system->getButtonState(PDButtons* current, PDButtons* pushed, PDButtons* released)`\n\nSets the value pointed to by *current* to a bitmask indicating which buttons are currently down. *pushed* and *released* reflect which buttons were pushed or released over the previous update cycle—at the nominal frame rate of 50 ms, fast button presses can be missed if you just poll the instantaneous state.\n\nPDButton\n\n```cpp\nkButtonLeft\nkButtonRight\nkButtonUp\nkButtonDown\nkButtonB\nkButtonA\n```"]
-	pub getButtonState: ::core::option::Option<unsafe extern "C" fn(current: *mut PDButtons,
-	                                                                pushed: *mut PDButtons,
-	                                                                released: *mut PDButtons)>,
-	#[doc = "`void playdate->system->setPeripheralsEnabled(PDPeripherals mask)`\n\nBy default, the accelerometer is disabled to save (a small amount of) power. To use a peripheral, it must first be enabled via this function. Accelerometer data is not available until the next update cycle after it’s enabled.\n\nPDPeripherals\n\n```cpp\nkNone\nkAccelerometer\n```"]
-	pub setPeripheralsEnabled: ::core::option::Option<unsafe extern "C" fn(mask: PDPeripherals)>,
-	#[doc = "`void playdate->system->getAccelerometer(float* outx, float* outy, float* outz)`\n\nReturns the last-read accelerometer data."]
-	pub getAccelerometer: ::core::option::Option<unsafe extern "C" fn(outx: *mut core::ffi::c_float,
-	                                                                  outy: *mut core::ffi::c_float,
-	                                                                  outz: *mut core::ffi::c_float)>,
-	#[doc = "`float playdate->system->getCrankChange(void)`\n\nReturns the angle change of the crank since the last time this function was called. Negative values are anti-clockwise."]
-	pub getCrankChange: ::core::option::Option<unsafe extern "C" fn() -> core::ffi::c_float>,
-	#[doc = "`float playdate->system->getCrankAngle(void)`\n\nReturns the current position of the crank, in the range 0-360. Zero is pointing up, and the value increases as the crank moves clockwise, as viewed from the right side of the device."]
-	pub getCrankAngle: ::core::option::Option<unsafe extern "C" fn() -> core::ffi::c_float>,
-	#[doc = "`int playdate->system->isCrankDocked(void)`\n\nReturns 1 or 0 indicating whether or not the crank is folded into the unit."]
-	pub isCrankDocked: ::core::option::Option<unsafe extern "C" fn() -> core::ffi::c_int>,
-	#[doc = "`int playdate->system->setCrankSoundsDisabled(int disable)`\n\nThe function returns the previous value for this setting."]
-	pub setCrankSoundsDisabled:
-		::core::option::Option<unsafe extern "C" fn(flag: core::ffi::c_int) -> core::ffi::c_int>,
-	#[doc = "`int playdate->system->getFlipped()`\n\nReturns 1 if the global \"flipped\" system setting is set, otherwise 0."]
-	pub getFlipped: ::core::option::Option<unsafe extern "C" fn() -> core::ffi::c_int>,
-	#[doc = "`void playdate->system->setAutoLockDisabled(int disable)`\n\nDisables or enables the 60 second auto lock feature. When called, the timer is reset to 60 seconds."]
-	pub setAutoLockDisabled: ::core::option::Option<unsafe extern "C" fn(disable: core::ffi::c_int)>,
-	#[doc = "`void playdate->system->setMenuImage(LCDBitmap* bitmap, int xOffset);`\n\nA game can optionally provide an image to be displayed alongside the system menu. *bitmap* must be a 400x240 LCDBitmap. All important content should be in the left half of the image in an area 200 pixels wide, as the menu will obscure the rest. The right side of the image will be visible briefly as the menu animates in and out.\n\nOptionally, a non-zero *xoffset*, can be provided. This must be a number between 0 and 200 and will cause the menu image to animate to a position offset left by xoffset pixels as the menu is animated in.\n\nThis function could be called in response to the kEventPause *event* in your implementation of [eventHandler()](#_eventHandler).\n\nPDCallbackFunction\n\n```cpp\nint PDCallbackFunction(void* userdata);\n```"]
-	pub setMenuImage:
-		::core::option::Option<unsafe extern "C" fn(bitmap: *mut LCDBitmap, xOffset: core::ffi::c_int)>,
-	#[doc = "`PDMenuItem* playdate->system->addMenuItem(const char* title, PDMenuItemCallbackFunction* callback, void* userdata)`\n\n*title* will be the title displayed by the menu item.\n\nAdds a new menu item to the System Menu. When invoked by the user, this menu item will:\n\n1. Invoke your *callback* function.\n\n2. Hide the System Menu.\n\n3. Unpause your game and call [eventHandler()](#_eventHandler) with the kEventResume *event*.\n\nYour game can then present an options interface to the player, or take other action, in whatever manner you choose.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."]
-	pub addMenuItem: ::core::option::Option<unsafe extern "C" fn(title: *const core::ffi::c_char,
-	                                                             callback: PDMenuItemCallbackFunction,
-	                                                             userdata: *mut core::ffi::c_void)
-	                                                             -> *mut PDMenuItem>,
-	#[doc = "`PDMenuItem* playdate->system->addCheckmarkMenuItem(const char* title, int value, PDMenuItemCallbackFunction* callback, void* userdata)`\n\nAdds a new menu item that can be checked or unchecked by the player.\n\n*title* will be the title displayed by the menu item.\n\n*value* should be 0 for unchecked, 1 for checked.\n\nIf this menu item is interacted with while the system menu is open, *callback* will be called when the menu is closed.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."]
-	pub addCheckmarkMenuItem: ::core::option::Option<unsafe extern "C" fn(title: *const core::ffi::c_char,
-	                                                                      value: core::ffi::c_int,
-	                                                                      callback: PDMenuItemCallbackFunction,
-	                                                                      userdata: *mut core::ffi::c_void)
-	                                                                      -> *mut PDMenuItem>,
-	#[doc = "`PDMenuItem* playdate->system->addOptionsMenuItem(const char* title, const char** options, int optionsCount, PDMenuItemCallbackFunction* callback, void* userdata)`\n\nAdds a new menu item that allows the player to cycle through a set of options.\n\n*title* will be the title displayed by the menu item.\n\n*options* should be an array of strings representing the states this menu item can cycle through. Due to limited horizontal space, the option strings and title should be kept short for this type of menu item.\n\n*optionsCount* should be the number of items contained in *options*.\n\nIf this menu item is interacted with while the system menu is open, *callback* will be called when the menu is closed.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."]
-	pub addOptionsMenuItem:
-		::core::option::Option<unsafe extern "C" fn(title: *const core::ffi::c_char,
-		                                            optionTitles: *mut *const core::ffi::c_char,
-		                                            optionsCount: core::ffi::c_int,
-		                                            f: PDMenuItemCallbackFunction,
-		                                            userdata: *mut core::ffi::c_void)
-		                                            -> *mut PDMenuItem>,
-	#[doc = "`void playdate->system->removeAllMenuItems()`\n\nRemoves all custom menu items from the system menu."]
-	pub removeAllMenuItems: ::core::option::Option<unsafe extern "C" fn()>,
-	#[doc = "`void playdate->system->removeMenuItem(PDMenuItem *menuItem)`\n\nRemoves the menu item from the system menu."]
-	pub removeMenuItem: ::core::option::Option<unsafe extern "C" fn(menuItem: *mut PDMenuItem)>,
-	#[doc = "`int playdate->system->getMenuItemValue(PDMenuItem *menuItem)`"]
-	pub getMenuItemValue:
-		::core::option::Option<unsafe extern "C" fn(menuItem: *mut PDMenuItem) -> core::ffi::c_int>,
-	#[doc = "`void playdate->system->setMenuItemValue(PDMenuItem *menuItem, int value)`\n\nGets or sets the integer value of the menu item.\n\nFor checkmark menu items, 1 means checked, 0 unchecked. For option menu items, the value indicates the array index of the currently selected option."]
-	pub setMenuItemValue:
-		::core::option::Option<unsafe extern "C" fn(menuItem: *mut PDMenuItem, value: core::ffi::c_int)>,
-	#[doc = "`const char* playdate->system->getMenuItemTitle(PDMenuItem *menuItem)`"]
-	pub getMenuItemTitle:
-		::core::option::Option<unsafe extern "C" fn(menuItem: *mut PDMenuItem) -> *const core::ffi::c_char>,
-	#[doc = "`void playdate->system->setMenuItemTitle(PDMenuItem *menuItem, const char* title)`\n\nGets or sets the display title of the menu item."]
-	pub setMenuItemTitle:
-		::core::option::Option<unsafe extern "C" fn(menuItem: *mut PDMenuItem, title: *const core::ffi::c_char)>,
-	#[doc = "`void* playdate->system->getMenuItemUserdata(PDMenuItem *menuItem)`"]
-	pub getMenuItemUserdata:
-		::core::option::Option<unsafe extern "C" fn(menuItem: *mut PDMenuItem) -> *mut core::ffi::c_void>,
-	#[doc = "`void playdate->system->setMenuItemUserdata(PDMenuItem *menuItem, void* userdata)`\n\nGets or sets the userdata value associated with this menu item."]
-	pub setMenuItemUserdata:
-		::core::option::Option<unsafe extern "C" fn(menuItem: *mut PDMenuItem, ud: *mut core::ffi::c_void)>,
-	#[doc = "`int playdate->system->getReduceFlashing()`\n\nReturns 1 if the global \"reduce flashing\" system setting is set, otherwise 0."]
-	pub getReduceFlashing: ::core::option::Option<unsafe extern "C" fn() -> core::ffi::c_int>,
-	#[doc = "`float playdate->system->getElapsedTime()`\n\nReturns the number of seconds since `playdate.resetElapsedTime()` was called. The value is a floating-point number with microsecond accuracy."]
-	pub getElapsedTime: ::core::option::Option<unsafe extern "C" fn() -> core::ffi::c_float>,
-	#[doc = "`void playdate->system->resetElapsedTime(void)`\n\nResets the high-resolution timer."]
-	pub resetElapsedTime: ::core::option::Option<unsafe extern "C" fn()>,
-	#[doc = "`float playdate->system->getBatteryPercentage()`\n\nReturns a value from 0-100 denoting the current level of battery charge. 0 = empty; 100 = full."]
-	pub getBatteryPercentage: ::core::option::Option<unsafe extern "C" fn() -> core::ffi::c_float>,
-	#[doc = "`float playdate->system->getBatteryVoltage()`\n\nReturns the battery’s current voltage level."]
-	pub getBatteryVoltage: ::core::option::Option<unsafe extern "C" fn() -> core::ffi::c_float>,
-	#[doc = "`int32_t playdate->system->getTimezoneOffset()`\n\nReturns the system timezone offset from GMT, in seconds."]
-	pub getTimezoneOffset: ::core::option::Option<unsafe extern "C" fn() -> i32>,
-	#[doc = "`int playdate->system->shouldDisplay24HourTime()`\n\nReturns 1 if the user has set the 24-Hour Time preference in the Settings program."]
-	pub shouldDisplay24HourTime: ::core::option::Option<unsafe extern "C" fn() -> core::ffi::c_int>,
-	#[doc = "`void playdate->system->convertEpochToDateTime(uint32_t epoch, struct PDDateTime* datetime)`\n\nConverts the given epoch time to a PDDateTime."]
-	pub convertEpochToDateTime:
-		::core::option::Option<unsafe extern "C" fn(epoch: u32, datetime: *mut PDDateTime)>,
-	#[doc = "`uint32_t playdate->system->convertDateTimeToEpoch(struct PDDateTime* datetime)`\n\nConverts the given PDDateTime to an epoch time."]
-	pub convertDateTimeToEpoch: ::core::option::Option<unsafe extern "C" fn(datetime: *mut PDDateTime) -> u32>,
-	#[doc = "`float playdate->system->clearICache()`\n\nFlush the CPU instruction cache, on the very unlikely chance you’re modifying instruction code on the fly. (If you don’t know what I’m talking about, you don’t need this. :smile:)"]
-	pub clearICache: ::core::option::Option<unsafe extern "C" fn()>,
-}
+pub struct playdate_sys { # [doc = "`void* playdate->system->realloc(void* ptr, size_t size)`\n\nAllocates heap space if *ptr* is NULL, else reallocates the given pointer. If *size* is zero, frees the given pointer."] pub realloc : :: core :: option :: Option < unsafe extern "C" fn (ptr : * mut core :: ffi :: c_void , size : usize) -> * mut core :: ffi :: c_void > , # [doc = "`int playdate->system->formatString(char **outstring, const char *format, ...)`\n\nCreates a formatted string and returns it via the *outstring* argument. The arguments and return value match libc’s `asprintf()`: the format string is standard `printf()` style, the string returned in *outstring* should be freed by the caller when it’s no longer in use, and the return value is the length of the formatted string."] pub formatString : :: core :: option :: Option < unsafe extern "C" fn (ret : * mut * mut core :: ffi :: c_char , fmt : * const core :: ffi :: c_char , ...) -> core :: ffi :: c_int > , # [doc = "`void playdate->system->logToConsole(const char* format, ...)`\n\nCalls the log function.\n\nEquivalent to [`print()`](./Inside%20Playdate.html#f-print) in the Lua API."] pub logToConsole : :: core :: option :: Option < unsafe extern "C" fn (fmt : * const core :: ffi :: c_char , ...) > , # [doc = "`void playdate->system->error(const char* format, ...)`\n\nCalls the log function, outputting an error in red to the console, then pauses execution."] pub error : :: core :: option :: Option < unsafe extern "C" fn (fmt : * const core :: ffi :: c_char , ...) > , # [doc = "`PDLanguage playdate->system->getLanguage(void);`\n\nReturns the current language of the system."] pub getLanguage : :: core :: option :: Option < unsafe extern "C" fn () -> PDLanguage > , # [doc = "`unsigned int playdate->system->getCurrentTimeMilliseconds(void)`\n\nReturns the number of milliseconds since…\u{200b}some arbitrary point in time. This should present a consistent timebase while a game is running, but the counter will be disabled when the device is sleeping."] pub getCurrentTimeMilliseconds : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_uint > , # [doc = "`unsigned int playdate->system->getSecondsSinceEpoch(unsigned int *milliseconds)`\n\nReturns the number of seconds (and sets *milliseconds* if not NULL) elapsed since midnight (hour 0), January 1, 2000."] pub getSecondsSinceEpoch : :: core :: option :: Option < unsafe extern "C" fn (milliseconds : * mut core :: ffi :: c_uint) -> core :: ffi :: c_uint > , # [doc = "`void playdate->system->drawFPS(int x, int y)`\n\nCalculates the current frames per second and draws that value at *x, y*."] pub drawFPS : :: core :: option :: Option < unsafe extern "C" fn (x : core :: ffi :: c_int , y : core :: ffi :: c_int) > , # [doc = "`void playdate->system->setUpdateCallback(PDCallbackFunction* update, void* userdata)`\n\nPDCallbackFunction\n\n```cpp\nint PDCallbackFunction(void* userdata);\n```\n\nReplaces the default Lua run loop function with a custom update function. The update function should return a non-zero number to tell the system to update the display, or zero if update isn’t needed."] pub setUpdateCallback : :: core :: option :: Option < unsafe extern "C" fn (update : PDCallbackFunction , userdata : * mut core :: ffi :: c_void) > , # [doc = "`void playdate->system->getButtonState(PDButtons* current, PDButtons* pushed, PDButtons* released)`\n\nSets the value pointed to by *current* to a bitmask indicating which buttons are currently down. *pushed* and *released* reflect which buttons were pushed or released over the previous update cycle—at the nominal frame rate of 50 ms, fast button presses can be missed if you just poll the instantaneous state."] pub getButtonState : :: core :: option :: Option < unsafe extern "C" fn (current : * mut PDButtons , pushed : * mut PDButtons , released : * mut PDButtons) > , # [doc = "`void playdate->system->setPeripheralsEnabled(PDPeripherals mask)`\n\nBy default, the accelerometer is disabled to save (a small amount of) power. To use a peripheral, it must first be enabled via this function. Accelerometer data is not available until the next update cycle after it’s enabled.\n\nPDPeripherals\n\n```cpp\nkNone\nkAccelerometer\n```"] pub setPeripheralsEnabled : :: core :: option :: Option < unsafe extern "C" fn (mask : PDPeripherals) > , # [doc = "`void playdate->system->getAccelerometer(float* outx, float* outy, float* outz)`\n\nReturns the last-read accelerometer data."] pub getAccelerometer : :: core :: option :: Option < unsafe extern "C" fn (outx : * mut core :: ffi :: c_float , outy : * mut core :: ffi :: c_float , outz : * mut core :: ffi :: c_float) > , # [doc = "`float playdate->system->getCrankChange(void)`\n\nReturns the angle change of the crank since the last time this function was called. Negative values are anti-clockwise."] pub getCrankChange : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`float playdate->system->getCrankAngle(void)`\n\nReturns the current position of the crank, in the range 0-360. Zero is pointing up, and the value increases as the crank moves clockwise, as viewed from the right side of the device."] pub getCrankAngle : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`int playdate->system->isCrankDocked(void)`\n\nReturns 1 or 0 indicating whether or not the crank is folded into the unit."] pub isCrankDocked : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`int playdate->system->setCrankSoundsDisabled(int disable)`\n\nThe function returns the previous value for this setting."] pub setCrankSoundsDisabled : :: core :: option :: Option < unsafe extern "C" fn (flag : core :: ffi :: c_int) -> core :: ffi :: c_int > , # [doc = "`int playdate->system->getFlipped()`\n\nReturns 1 if the global \"flipped\" system setting is set, otherwise 0."] pub getFlipped : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`void playdate->system->setAutoLockDisabled(int disable)`\n\nDisables or enables the 3 minute auto lock feature. When called, the timer is reset to 3 minutes."] pub setAutoLockDisabled : :: core :: option :: Option < unsafe extern "C" fn (disable : core :: ffi :: c_int) > , # [doc = "`void playdate->system->setMenuImage(LCDBitmap* bitmap, int xOffset);`\n\nA game can optionally provide an image to be displayed alongside the system menu. *bitmap* must be a 400x240 LCDBitmap. All important content should be in the left half of the image in an area 200 pixels wide, as the menu will obscure the rest. The right side of the image will be visible briefly as the menu animates in and out.\n\nOptionally, a non-zero *xoffset*, can be provided. This must be a number between 0 and 200 and will cause the menu image to animate to a position offset left by xoffset pixels as the menu is animated in.\n\nThis function could be called in response to the kEventPause *event* in your implementation of [eventHandler()](#_eventHandler)."] pub setMenuImage : :: core :: option :: Option < unsafe extern "C" fn (bitmap : * mut LCDBitmap , xOffset : core :: ffi :: c_int) > , # [doc = "`PDMenuItem* playdate->system->addMenuItem(const char* title, PDMenuItemCallbackFunction* callback, void* userdata)`\n\n*title* will be the title displayed by the menu item.\n\nAdds a new menu item to the System Menu. When invoked by the user, this menu item will:\n\n1. Invoke your *callback* function.\n\n2. Hide the System Menu.\n\n3. Unpause your game and call [eventHandler()](#_eventHandler) with the kEventResume *event*.\n\nYour game can then present an options interface to the player, or take other action, in whatever manner you choose.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."] pub addMenuItem : :: core :: option :: Option < unsafe extern "C" fn (title : * const core :: ffi :: c_char , callback : PDMenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut PDMenuItem > , # [doc = "`PDMenuItem* playdate->system->addCheckmarkMenuItem(const char* title, int value, PDMenuItemCallbackFunction* callback, void* userdata)`\n\nAdds a new menu item that can be checked or unchecked by the player.\n\n*title* will be the title displayed by the menu item.\n\n*value* should be 0 for unchecked, 1 for checked.\n\nIf this menu item is interacted with while the system menu is open, *callback* will be called when the menu is closed.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."] pub addCheckmarkMenuItem : :: core :: option :: Option < unsafe extern "C" fn (title : * const core :: ffi :: c_char , value : core :: ffi :: c_int , callback : PDMenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut PDMenuItem > , # [doc = "`PDMenuItem* playdate->system->addOptionsMenuItem(const char* title, const char** options, int optionsCount, PDMenuItemCallbackFunction* callback, void* userdata)`\n\nAdds a new menu item that allows the player to cycle through a set of options.\n\n*title* will be the title displayed by the menu item.\n\n*options* should be an array of strings representing the states this menu item can cycle through. Due to limited horizontal space, the option strings and title should be kept short for this type of menu item.\n\n*optionsCount* should be the number of items contained in *options*.\n\nIf this menu item is interacted with while the system menu is open, *callback* will be called when the menu is closed.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."] pub addOptionsMenuItem : :: core :: option :: Option < unsafe extern "C" fn (title : * const core :: ffi :: c_char , optionTitles : * mut * const core :: ffi :: c_char , optionsCount : core :: ffi :: c_int , f : PDMenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut PDMenuItem > , # [doc = "`void playdate->system->removeAllMenuItems()`\n\nRemoves all custom menu items from the system menu."] pub removeAllMenuItems : :: core :: option :: Option < unsafe extern "C" fn () > , # [doc = "`void playdate->system->removeMenuItem(PDMenuItem *menuItem)`\n\nRemoves the menu item from the system menu."] pub removeMenuItem : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) > , # [doc = "`int playdate->system->getMenuItemValue(PDMenuItem *menuItem)`"] pub getMenuItemValue : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) -> core :: ffi :: c_int > , # [doc = "`void playdate->system->setMenuItemValue(PDMenuItem *menuItem, int value)`\n\nGets or sets the integer value of the menu item.\n\nFor checkmark menu items, 1 means checked, 0 unchecked. For option menu items, the value indicates the array index of the currently selected option."] pub setMenuItemValue : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem , value : core :: ffi :: c_int) > , # [doc = "`const char* playdate->system->getMenuItemTitle(PDMenuItem *menuItem)`"] pub getMenuItemTitle : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) -> * const core :: ffi :: c_char > , # [doc = "`void playdate->system->setMenuItemTitle(PDMenuItem *menuItem, const char* title)`\n\nGets or sets the display title of the menu item."] pub setMenuItemTitle : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem , title : * const core :: ffi :: c_char) > , # [doc = "`void* playdate->system->getMenuItemUserdata(PDMenuItem *menuItem)`"] pub getMenuItemUserdata : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) -> * mut core :: ffi :: c_void > , # [doc = "`void playdate->system->setMenuItemUserdata(PDMenuItem *menuItem, void* userdata)`\n\nGets or sets the userdata value associated with this menu item."] pub setMenuItemUserdata : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem , ud : * mut core :: ffi :: c_void) > , # [doc = "`int playdate->system->getReduceFlashing()`\n\nReturns 1 if the global \"reduce flashing\" system setting is set, otherwise 0."] pub getReduceFlashing : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`float playdate->system->getElapsedTime()`\n\nReturns the number of seconds since `playdate.resetElapsedTime()` was called. The value is a floating-point number with microsecond accuracy."] pub getElapsedTime : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`void playdate->system->resetElapsedTime(void)`\n\nResets the high-resolution timer."] pub resetElapsedTime : :: core :: option :: Option < unsafe extern "C" fn () > , # [doc = "`float playdate->system->getBatteryPercentage()`\n\nReturns a value from 0-100 denoting the current level of battery charge. 0 = empty; 100 = full."] pub getBatteryPercentage : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`float playdate->system->getBatteryVoltage()`\n\nReturns the battery’s current voltage level."] pub getBatteryVoltage : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`int32_t playdate->system->getTimezoneOffset()`\n\nReturns the system timezone offset from GMT, in seconds."] pub getTimezoneOffset : :: core :: option :: Option < unsafe extern "C" fn () -> i32 > , # [doc = "`int playdate->system->shouldDisplay24HourTime()`\n\nReturns 1 if the user has set the 24-Hour Time preference in the Settings program."] pub shouldDisplay24HourTime : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`void playdate->system->convertEpochToDateTime(uint32_t epoch, struct PDDateTime* datetime)`\n\nConverts the given epoch time to a PDDateTime."] pub convertEpochToDateTime : :: core :: option :: Option < unsafe extern "C" fn (epoch : u32 , datetime : * mut PDDateTime) > , # [doc = "`uint32_t playdate->system->convertDateTimeToEpoch(struct PDDateTime* datetime)`\n\nConverts the given PDDateTime to an epoch time."] pub convertDateTimeToEpoch : :: core :: option :: Option < unsafe extern "C" fn (datetime : * mut PDDateTime) -> u32 > , # [doc = "`float playdate->system->clearICache()`\n\nFlush the CPU instruction cache, on the very unlikely chance you’re modifying instruction code on the fly. (If you don’t know what I’m talking about, you don’t need this. :smile:)"] pub clearICache : :: core :: option :: Option < unsafe extern "C" fn () > , pub setButtonCallback : :: core :: option :: Option < unsafe extern "C" fn (cb : PDButtonCallbackFunction , buttonud : * mut core :: ffi :: c_void , queuesize : core :: ffi :: c_int) > , # [doc = "`void playdate->system->setSerialMessageCallback(void (*callback)(const char* data));`\n\nProvides a callback to receive messages sent to the device over the serial port using the `msg` command. If no device is connected, you can send these messages to a game in the simulator by entering `!msg <message>` in the Lua console."] pub setSerialMessageCallback : :: core :: option :: Option < unsafe extern "C" fn (callback : :: core :: option :: Option < unsafe extern "C" fn (data : * const core :: ffi :: c_char) >) > , # [doc = "`int playdate->system->vaFormatString(char **ret, const char *format, va_list args)`\n\nAllocates and formats a string using a variadic `va_list` argument, in the style of `vasprintf()`. The string returned via *ret* should be freed by the caller when it is no longer in use. The return value from the function is the length of the formatted string."] pub vaFormatString : :: core :: option :: Option < unsafe extern "C" fn (outstr : * mut * mut core :: ffi :: c_char , fmt : * const core :: ffi :: c_char , args : * mut va_list) -> core :: ffi :: c_int > , # [doc = "`int playdate->system->parseString(const char *str, const char *format, ...)`\n\nLike libc `sscanf()`, parses a string according to a format string and places the values into pointers passed in after the format. The return value is the number of items matched."] pub parseString : :: core :: option :: Option < unsafe extern "C" fn (str_ : * const core :: ffi :: c_char , format : * const core :: ffi :: c_char , ...) -> core :: ffi :: c_int > , }
 #[test]
 fn bindgen_test_layout_playdate_sys() {
 	const UNINIT: ::core::mem::MaybeUninit<playdate_sys> = ::core::mem::MaybeUninit::uninit();
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sys>(),
-	           320usize,
+	           352usize,
 	           concat!("Size of: ", stringify!(playdate_sys))
 	);
 	assert_eq!(
@@ -1908,6 +1801,46 @@ fn bindgen_test_layout_playdate_sys() {
 		stringify!(playdate_sys),
 		"::",
 		stringify!(clearICache)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).setButtonCallback) as usize - ptr as usize },
+	           320usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(playdate_sys),
+		"::",
+		stringify!(setButtonCallback)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).setSerialMessageCallback) as usize - ptr as usize },
+	           328usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(playdate_sys),
+		"::",
+		stringify!(setSerialMessageCallback)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).vaFormatString) as usize - ptr as usize },
+	           336usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(playdate_sys),
+		"::",
+		stringify!(vaFormatString)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).parseString) as usize - ptr as usize },
+	           344usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(playdate_sys),
+		"::",
+		stringify!(parseString)
 	)
 	);
 }
@@ -3155,7 +3088,7 @@ pub struct playdate_json {
 	                                                             write: json_writeFunc,
 	                                                             userdata: *mut core::ffi::c_void,
 	                                                             pretty: core::ffi::c_int)>,
-	#[doc = "`int playdate->json->decode(struct json_decoder* decoder, json_reader reader, json_value* outval);`\n\nEquivalent to [`playdate.graphics.decode()`](./Inside%20Playdate.html#f-json.decode) in the Lua API."]
+	#[doc = "`int playdate->json->decode(struct json_decoder* decoder, json_reader reader, json_value* outval);`\n\nEquivalent to [`playdate.json.decode()`](./Inside%20Playdate.html#f-json.decode) in the Lua API."]
 	pub decode: ::core::option::Option<unsafe extern "C" fn(functions: *mut json_decoder,
 	                                                        reader: json_reader,
 	                                                        outval: *mut json_value)
@@ -3957,7 +3890,7 @@ pub struct playdate_sprite {
 	#[doc = "`void playdate->sprite->setUpdateFunction(LCDSprite *sprite, LCDSpriteUpdateFunction *func);`\n\nSets the update function for the given *sprite*."]
 	pub setUpdateFunction:
 		::core::option::Option<unsafe extern "C" fn(sprite: *mut LCDSprite, func: LCDSpriteUpdateFunction)>,
-	#[doc = "`void playdate->sprite->setDrawFunction(LCDSprite *sprite, LCDSpriteDrawFunction *func);`\n\nSets the draw function for the given *sprite*."]
+	#[doc = "`void playdate->sprite->setDrawFunction(LCDSprite *sprite, LCDSpriteDrawFunction *func);`\n\nSets the draw function for the given *sprite*. Note that the callback is only called when the sprite is on screen and has a size specified via [playdate→sprite→setSize()](#f-sprite.setSize) or [playdate→sprite→setBounds()](#f-sprite.setBounds)."]
 	pub setDrawFunction:
 		::core::option::Option<unsafe extern "C" fn(sprite: *mut LCDSprite, func: LCDSpriteDrawFunction)>,
 	#[doc = "`void playdate->sprite->getPosition(LCDSprite *sprite, float *x, float *y);`\n\nSets *x* and *y* to the current position of *sprite*."]
@@ -4711,7 +4644,8 @@ pub type MIDINote = core::ffi::c_float;
 pub struct SoundSource {
 	_unused: [u8; 0],
 }
-pub type sndCallbackProc = ::core::option::Option<unsafe extern "C" fn(c: *mut SoundSource)>;
+pub type sndCallbackProc =
+	::core::option::Option<unsafe extern "C" fn(c: *mut SoundSource, userdata: *mut core::ffi::c_void)>;
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
@@ -4726,8 +4660,9 @@ pub struct playdate_sound_source {
 	                                                           outr: *mut core::ffi::c_float)>,
 	#[doc = "`int playdate->sound->source->isPlaying(SoundSource* c)`\n\nReturns 1 if the source is currently playing."]
 	pub isPlaying: ::core::option::Option<unsafe extern "C" fn(c: *mut SoundSource) -> core::ffi::c_int>,
-	pub setFinishCallback:
-		::core::option::Option<unsafe extern "C" fn(c: *mut SoundSource, callback: sndCallbackProc)>,
+	pub setFinishCallback: ::core::option::Option<unsafe extern "C" fn(c: *mut SoundSource,
+	                                                                   callback: sndCallbackProc,
+	                                                                   userdata: *mut core::ffi::c_void)>,
 }
 #[test]
 fn bindgen_test_layout_playdate_sound_source() {
@@ -4793,7 +4728,7 @@ pub struct FilePlayer {
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
-pub struct playdate_sound_fileplayer { # [doc = "`FilePlayer* playdate->sound->fileplayer->newPlayer(void);`\n\nAllocates a new FilePlayer."] pub newPlayer : :: core :: option :: Option < unsafe extern "C" fn () -> * mut FilePlayer > , # [doc = "`void playdate->sound->fileplayer->freePlayer(FilePlayer* player);`\n\nFrees the given *player*."] pub freePlayer : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) > , # [doc = "`int playdate->sound->fileplayer->loadIntoPlayer(FilePlayer* player, const char* path);`\n\nPrepares *player* to stream the file at *path*. Returns 1 if the file exists, otherwise 0."] pub loadIntoPlayer : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , path : * const core :: ffi :: c_char) -> core :: ffi :: c_int > , # [doc = "`void playdate->sound->fileplayer->setBufferLength(FilePlayer* player, float bufferLen);`\n\nSets the buffer length of *player* to *bufferLen* seconds;"] pub setBufferLength : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , bufferLen : core :: ffi :: c_float) > , # [doc = "`int playdate->sound->fileplayer->play(FilePlayer* player, int repeat);`\n\nStarts playing the file *player*. If *repeat* is greater than one, it loops the given number of times. If zero, it loops endlessly until it is stopped with [playdate-\\>sound-\\>fileplayer-\\>stop()](#f-sound.fileplayer.stop)."] pub play : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , repeat : core :: ffi :: c_int) -> core :: ffi :: c_int > , # [doc = "`int playdate->sound->fileplayer->isPlaying(FilePlayer* player);`\n\nReturns one if *player* is playing, zero if not."] pub isPlaying : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_int > , # [doc = "`void playdate->sound->fileplayer->pause(FilePlayer* player);`\n\nPauses the file *player*."] pub pause : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) > , # [doc = "`void playdate->sound->fileplayer->stop(FilePlayer* player);`\n\nStops playing the file."] pub stop : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) > , # [doc = "`void playdate->sound->fileplayer->setVolume(FilePlayer* player, float left, float right);`\n\nSets the playback volume for left and right channels of *player*."] pub setVolume : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , left : core :: ffi :: c_float , right : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->fileplayer->getVolume(FilePlayer* player, float* left, float* right);`\n\nGets the left and right channel playback volume for *player*."] pub getVolume : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , left : * mut core :: ffi :: c_float , right : * mut core :: ffi :: c_float) > , # [doc = "`float playdate->sound->fileplayer->getLength(FilePlayer* player);`\n\nReturns the length, in seconds, of the file loaded into *player*."] pub getLength : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_float > , # [doc = "`void playdate->sound->fileplayer->setOffset(FilePlayer* player, float offset);`\n\nSets the current *offset* in seconds."] pub setOffset : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , offset : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->fileplayer->setRate(FilePlayer* player, float rate)`\n\nSets the playback *rate* for the *player*. 1.0 is normal speed, 0.5 is down an octave, 2.0 is up an octave, etc. Unlike sampleplayers, fileplayers can’t play in reverse (i.e., rate \\< 0)."] pub setRate : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , rate : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->fileplayer->setLoopRange(FilePlayer* player, float start, float end);`\n\nSets the *start* and *end* of the loop region for playback, in seconds. If *end* is omitted, the end of the file is used."] pub setLoopRange : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , start : core :: ffi :: c_float , end : core :: ffi :: c_float) > , # [doc = "`int playdate->sound->fileplayer->didUnderrun(FilePlayer* player);`\n\nReturns one if *player* has underrun, zero if not."] pub didUnderrun : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_int > , # [doc = "`void playdate->sound->fileplayer->setFinishCallback(FilePlayer* player, sndCallbackProc callback);`\n\nSets a function to be called when playback has completed. This is an alias for [playdate→sound→source→setFinishCallback()](#f-sound.source.setFinishCallback).\n\nsndCallbackProc\n\n```cpp\ntypedef void sndCallbackProc(SoundSource* c);\n```"] pub setFinishCallback : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , callback : sndCallbackProc) > , pub setLoopCallback : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , callback : sndCallbackProc) > , # [doc = "`void playdate->sound->fileplayer->getOffset(FilePlayer* player);`\n\nGets the current offset in seconds for *player*."] pub getOffset : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_float > , # [doc = "`void playdate->sound->fileplayer->getRate(FilePlayer* player)`\n\nGets the playback rate for *player*."] pub getRate : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_float > , # [doc = "`void playdate->sound->fileplayer->setStopOnUnderrun(FilePlayer* player, int flag)`\n\nIf *flag* evaluates to true, the *player* will restart playback (after an audible stutter) as soon as data is available."] pub setStopOnUnderrun : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , flag : core :: ffi :: c_int) > , # [doc = "`void playdate->sound->fileplayer->fadeVolume(FilePlayer* player, float left, float right, int32_t len, sndCallbackProc finishCallback);`\n\nChanges the volume of the fileplayer to *left* and *right* over a length of *len* sample frames, then calls the provided callback (if set)."] pub fadeVolume : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , left : core :: ffi :: c_float , right : core :: ffi :: c_float , len : i32 , finishCallback : sndCallbackProc) > , pub setMP3StreamSource : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , dataSource : :: core :: option :: Option < unsafe extern "C" fn (data : * mut u8 , bytes : core :: ffi :: c_int , userdata : * mut core :: ffi :: c_void) -> core :: ffi :: c_int > , userdata : * mut core :: ffi :: c_void , bufferLen : core :: ffi :: c_float) > , }
+pub struct playdate_sound_fileplayer { # [doc = "`FilePlayer* playdate->sound->fileplayer->newPlayer(void);`\n\nAllocates a new FilePlayer."] pub newPlayer : :: core :: option :: Option < unsafe extern "C" fn () -> * mut FilePlayer > , # [doc = "`void playdate->sound->fileplayer->freePlayer(FilePlayer* player);`\n\nFrees the given *player*."] pub freePlayer : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) > , # [doc = "`int playdate->sound->fileplayer->loadIntoPlayer(FilePlayer* player, const char* path);`\n\nPrepares *player* to stream the file at *path*. Returns 1 if the file exists, otherwise 0."] pub loadIntoPlayer : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , path : * const core :: ffi :: c_char) -> core :: ffi :: c_int > , # [doc = "`void playdate->sound->fileplayer->setBufferLength(FilePlayer* player, float bufferLen);`\n\nSets the buffer length of *player* to *bufferLen* seconds;"] pub setBufferLength : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , bufferLen : core :: ffi :: c_float) > , # [doc = "`int playdate->sound->fileplayer->play(FilePlayer* player, int repeat);`\n\nStarts playing the file *player*. If *repeat* is greater than one, it loops the given number of times. If zero, it loops endlessly until it is stopped with [playdate-\\>sound-\\>fileplayer-\\>stop()](#f-sound.fileplayer.stop). Returns 1 on success, 0 if buffer allocation failed."] pub play : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , repeat : core :: ffi :: c_int) -> core :: ffi :: c_int > , # [doc = "`int playdate->sound->fileplayer->isPlaying(FilePlayer* player);`\n\nReturns one if *player* is playing, zero if not."] pub isPlaying : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_int > , # [doc = "`void playdate->sound->fileplayer->pause(FilePlayer* player);`\n\nPauses the file *player*."] pub pause : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) > , # [doc = "`void playdate->sound->fileplayer->stop(FilePlayer* player);`\n\nStops playing the file."] pub stop : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) > , # [doc = "`void playdate->sound->fileplayer->setVolume(FilePlayer* player, float left, float right);`\n\nSets the playback volume for left and right channels of *player*."] pub setVolume : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , left : core :: ffi :: c_float , right : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->fileplayer->getVolume(FilePlayer* player, float* outleft, float* outright);`\n\nGets the left and right channel playback volume for *player*."] pub getVolume : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , left : * mut core :: ffi :: c_float , right : * mut core :: ffi :: c_float) > , # [doc = "`float playdate->sound->fileplayer->getLength(FilePlayer* player);`\n\nReturns the length, in seconds, of the file loaded into *player*."] pub getLength : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_float > , # [doc = "`void playdate->sound->fileplayer->setOffset(FilePlayer* player, float offset);`\n\nSets the current *offset* in seconds."] pub setOffset : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , offset : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->fileplayer->setRate(FilePlayer* player, float rate)`\n\nSets the playback *rate* for the *player*. 1.0 is normal speed, 0.5 is down an octave, 2.0 is up an octave, etc. Unlike sampleplayers, fileplayers can’t play in reverse (i.e., rate \\< 0)."] pub setRate : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , rate : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->fileplayer->setLoopRange(FilePlayer* player, float start, float end);`\n\nSets the *start* and *end* of the loop region for playback, in seconds. If *end* is omitted, the end of the file is used."] pub setLoopRange : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , start : core :: ffi :: c_float , end : core :: ffi :: c_float) > , # [doc = "`int playdate->sound->fileplayer->didUnderrun(FilePlayer* player);`\n\nReturns one if *player* has underrun, zero if not."] pub didUnderrun : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_int > , # [doc = "`void playdate->sound->fileplayer->setFinishCallback(FilePlayer* player, sndCallbackProc callback, void* userdata);`\n\nSets a function to be called when playback has completed. This is an alias for [playdate→sound→source→setFinishCallback()](#f-sound.source.setFinishCallback).\n\nsndCallbackProc\n\n```cpp\ntypedef void sndCallbackProc(SoundSource* c, void* userdata);\n```"] pub setFinishCallback : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , callback : sndCallbackProc , userdata : * mut core :: ffi :: c_void) > , pub setLoopCallback : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , callback : sndCallbackProc , userdata : * mut core :: ffi :: c_void) > , # [doc = "`float playdate->sound->fileplayer->getOffset(FilePlayer* player);`\n\nReturns the current offset in seconds for *player*."] pub getOffset : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_float > , # [doc = "`float playdate->sound->fileplayer->getRate(FilePlayer* player)`\n\nReturns the playback rate for *player*."] pub getRate : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_float > , # [doc = "`void playdate->sound->fileplayer->setStopOnUnderrun(FilePlayer* player, int flag)`\n\nIf *flag* evaluates to true, the *player* will restart playback (after an audible stutter) as soon as data is available."] pub setStopOnUnderrun : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , flag : core :: ffi :: c_int) > , # [doc = "`void playdate->sound->fileplayer->fadeVolume(FilePlayer* player, float left, float right, int32_t len, sndCallbackProc finishCallback);`\n\nChanges the volume of the fileplayer to *left* and *right* over a length of *len* sample frames, then calls the provided callback (if set)."] pub fadeVolume : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , left : core :: ffi :: c_float , right : core :: ffi :: c_float , len : i32 , finishCallback : sndCallbackProc , userdata : * mut core :: ffi :: c_void) > , pub setMP3StreamSource : :: core :: option :: Option < unsafe extern "C" fn (player : * mut FilePlayer , dataSource : :: core :: option :: Option < unsafe extern "C" fn (data : * mut u8 , bytes : core :: ffi :: c_int , userdata : * mut core :: ffi :: c_void) -> core :: ffi :: c_int > , userdata : * mut core :: ffi :: c_void , bufferLen : core :: ffi :: c_float) > , }
 #[test]
 fn bindgen_test_layout_playdate_sound_fileplayer() {
 	const UNINIT: ::core::mem::MaybeUninit<playdate_sound_fileplayer> = ::core::mem::MaybeUninit::uninit();
@@ -5069,6 +5004,8 @@ pub struct playdate_sound_sample {
 	pub freeSample: ::core::option::Option<unsafe extern "C" fn(sample: *mut AudioSample)>,
 	#[doc = "`float playdate->sound->sample->getLength(AudioSample* sample)`\n\nReturns the length, in seconds, of *sample*."]
 	pub getLength: ::core::option::Option<unsafe extern "C" fn(sample: *mut AudioSample) -> core::ffi::c_float>,
+	#[doc = "`int playdate->sound->sample->decompress(void)`\n\nIf the sample is ADPCM compressed, decompresses the sample data to 16-bit PCM data. This increases the sample’s memory footprint by 4x and does not affect the quality in any way, but it is necessary if you want to use the sample in a synth or play the file backwards. Returns 1 if successful, 0 if there’s not enough memory for the uncompressed data."]
+	pub decompress: ::core::option::Option<unsafe extern "C" fn(sample: *mut AudioSample) -> core::ffi::c_int>,
 }
 #[test]
 fn bindgen_test_layout_playdate_sound_sample() {
@@ -5076,7 +5013,7 @@ fn bindgen_test_layout_playdate_sound_sample() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_sample>(),
-	           56usize,
+	           64usize,
 	           concat!("Size of: ", stringify!(playdate_sound_sample))
 	);
 	assert_eq!(
@@ -5154,6 +5091,16 @@ fn bindgen_test_layout_playdate_sound_sample() {
 		stringify!(getLength)
 	)
 	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).decompress) as usize - ptr as usize },
+	           56usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(playdate_sound_sample),
+		"::",
+		stringify!(decompress)
+	)
+	);
 }
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
@@ -5166,7 +5113,7 @@ pub struct playdate_sound_sampleplayer {
 	#[doc = "`void playdate->sound->sampleplayer->setSample(SamplePlayer* player, AudioSample* sample)`\n\nAssigns *sample* to *player*."]
 	pub setSample:
 		::core::option::Option<unsafe extern "C" fn(player: *mut SamplePlayer, sample: *mut AudioSample)>,
-	#[doc = "`int playdate->sound->sampleplayer->play(SamplePlayer* player, int repeat, float rate)`\n\nStarts playing the sample in *player*.\n\nIf *repeat* is greater than one, it loops the given number of times. If zero, it loops endlessly until it is stopped with [playdate-\\>sound-\\>sampleplayer-\\>stop()](#f-sound.sampleplayer.stop). If negative one, it does ping-pong looping.\n\nSets the playback *rate* for the sample. 1.0 is normal speed, 0.5 is down an octave, 2.0 is up an octave, etc."]
+	#[doc = "`int playdate->sound->sampleplayer->play(SamplePlayer* player, int repeat, float rate)`\n\nStarts playing the sample in *player*.\n\nIf *repeat* is greater than one, it loops the given number of times. If zero, it loops endlessly until it is stopped with [playdate-\\>sound-\\>sampleplayer-\\>stop()](#f-sound.sampleplayer.stop). If negative one, it does ping-pong looping.\n\n*rate* is the playback rate for the sample; 1.0 is normal speed, 0.5 is down an octave, 2.0 is up an octave, etc.\n\nReturns 1 on success (which is always, currently)."]
 	pub play: ::core::option::Option<unsafe extern "C" fn(player: *mut SamplePlayer,
 	                                                      repeat: core::ffi::c_int,
 	                                                      rate: core::ffi::c_float)
@@ -5179,7 +5126,7 @@ pub struct playdate_sound_sampleplayer {
 	pub setVolume: ::core::option::Option<unsafe extern "C" fn(player: *mut SamplePlayer,
 	                                                           left: core::ffi::c_float,
 	                                                           right: core::ffi::c_float)>,
-	#[doc = "`void playdate->sound->sampleplayer->getVolume(SamplePlayer* player, float* left, float* right)`\n\nGets the current left and right channel volume of the sampleplayer."]
+	#[doc = "`void playdate->sound->sampleplayer->getVolume(SamplePlayer* player, float* outleft, float* outright)`\n\nGets the current left and right channel volume of the sampleplayer."]
 	pub getVolume: ::core::option::Option<unsafe extern "C" fn(player: *mut SamplePlayer,
 	                                                           left: *mut core::ffi::c_float,
 	                                                           right: *mut core::ffi::c_float)>,
@@ -5194,14 +5141,16 @@ pub struct playdate_sound_sampleplayer {
 	pub setPlayRange: ::core::option::Option<unsafe extern "C" fn(player: *mut SamplePlayer,
 	                                                              start: core::ffi::c_int,
 	                                                              end: core::ffi::c_int)>,
-	#[doc = "`void playdate->sound->sampleplayer->setFinishCallback(SamplePlayer* player, sndCallbackProc callback)`\n\nSets a function to be called when playback has completed. See [sndCallbackProc](#_sndCallbackProc)."]
-	pub setFinishCallback:
-		::core::option::Option<unsafe extern "C" fn(player: *mut SamplePlayer, callback: sndCallbackProc)>,
-	pub setLoopCallback:
-		::core::option::Option<unsafe extern "C" fn(player: *mut SamplePlayer, callback: sndCallbackProc)>,
-	#[doc = "`void playdate->sound->sampleplayer->getOffset(SamplePlayer* player);`\n\nGets the current offset in seconds for *player*."]
+	#[doc = "`void playdate->sound->sampleplayer->setFinishCallback(SamplePlayer* player, sndCallbackProc callback, void* userdata)`\n\nSets a function to be called when playback has completed. See [sndCallbackProc](#_sndCallbackProc)."]
+	pub setFinishCallback: ::core::option::Option<unsafe extern "C" fn(player: *mut SamplePlayer,
+	                                                                   callback: sndCallbackProc,
+	                                                                   userdata: *mut core::ffi::c_void)>,
+	pub setLoopCallback: ::core::option::Option<unsafe extern "C" fn(player: *mut SamplePlayer,
+	                                                                 callback: sndCallbackProc,
+	                                                                 userdata: *mut core::ffi::c_void)>,
+	#[doc = "`float playdate->sound->sampleplayer->getOffset(SamplePlayer* player);`\n\nReturns the current offset in seconds for *player*."]
 	pub getOffset: ::core::option::Option<unsafe extern "C" fn(player: *mut SamplePlayer) -> core::ffi::c_float>,
-	#[doc = "`void playdate->sound->sampleplayer->getRate(SamplePlayer* player)`\n\nGets the playback rate for *player*."]
+	#[doc = "`float playdate->sound->sampleplayer->getRate(SamplePlayer* player)`\n\nReturns the playback rate for *player*."]
 	pub getRate: ::core::option::Option<unsafe extern "C" fn(player: *mut SamplePlayer) -> core::ffi::c_float>,
 	#[doc = "`void playdate->sound->sampleplayer->setPaused(SamplePlayer* player, int paused)`\n\nPauses or resumes playback."]
 	pub setPaused: ::core::option::Option<unsafe extern "C" fn(player: *mut SamplePlayer, flag: core::ffi::c_int)>,
@@ -5412,7 +5361,7 @@ pub type signalNoteOnFunc = ::core::option::Option<unsafe extern "C" fn(userdata
                                                                         vel: core::ffi::c_float,
                                                                         len: core::ffi::c_float)>;
 pub type signalNoteOffFunc = ::core::option::Option<unsafe extern "C" fn(userdata: *mut core::ffi::c_void,
-                                                                         stopped: core::ffi::c_int,
+                                                                         stop: core::ffi::c_int,
                                                                          offset: core::ffi::c_int)>;
 pub type signalDeallocFunc = ::core::option::Option<unsafe extern "C" fn(userdata: *mut core::ffi::c_void)>;
 #[repr(C)]
@@ -5426,14 +5375,14 @@ pub struct playdate_sound_signal {
 	                                                           dealloc: signalDeallocFunc,
 	                                                           userdata: *mut core::ffi::c_void)
 	                                                           -> *mut PDSynthSignal>,
-	#[doc = "`void (*freeSignal)(PDSynthSignal* signal);`\n\nFrees a signal created with *playdate→sound→signal→newSignal()*."]
+	#[doc = "`void playdate->sound->signal->freeSignal(PDSynthSignal* signal);`\n\nFrees a signal created with *playdate→sound→signal→newSignal()*."]
 	pub freeSignal: ::core::option::Option<unsafe extern "C" fn(signal: *mut PDSynthSignal)>,
-	#[doc = "`float (*getValue)(PDSynthSignal* signal);`\n\nReturns the current output value of *signal*. The signal can be a custom signal created with newSignal(), or any of the PDSynthSignal subclasses."]
+	#[doc = "`float playdate->sound->signal->getValue(PDSynthSignal* signal);`\n\nReturns the current output value of *signal*. The signal can be a custom signal created with newSignal(), or any of the PDSynthSignal subclasses."]
 	pub getValue: ::core::option::Option<unsafe extern "C" fn(signal: *mut PDSynthSignal) -> core::ffi::c_float>,
-	#[doc = "`void (*setValueScale)(PDSynthSignal* signal, float scale);`\n\nScales the signal’s output by the given factor. The scale is applied before the offset."]
+	#[doc = "`void playdate->sound->signal->setValueScale(PDSynthSignal* signal, float scale);`\n\nScales the signal’s output by the given factor. The scale is applied before the offset."]
 	pub setValueScale:
 		::core::option::Option<unsafe extern "C" fn(signal: *mut PDSynthSignal, scale: core::ffi::c_float)>,
-	#[doc = "`void (*setValueOffset)(PDSynthSignal* signal, float offset);`\n\nOffsets the signal’s output by the given amount."]
+	#[doc = "`void playdate->sound->signal->setValueOffset(PDSynthSignal* signal, float offset);`\n\nOffsets the signal’s output by the given amount."]
 	pub setValueOffset:
 		::core::option::Option<unsafe extern "C" fn(signal: *mut PDSynthSignal, offset: core::ffi::c_float)>,
 }
@@ -5524,7 +5473,7 @@ pub struct PDSynthLFO {
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
-pub struct playdate_sound_lfo { # [doc = "`PDSynthLFO* playdate->sound->newLFO(LFOType type)`\n\nReturns a new LFO object, which can be used to modulate sounds. The *type* argument is one of the following values:\n\nLFOType\n\n```cpp\ntypedef enum\n{\n\tkLFOTypeSquare,\n\tkLFOTypeTriangle,\n\tkLFOTypeSine,\n\tkLFOTypeSampleAndHold,\n\tkLFOTypeSawtoothUp,\n\tkLFOTypeSawtoothDown,\n\tkLFOTypeArpeggiator,\n\tkLFOTypeFunction\n} LFOType;\n```"] pub newLFO : :: core :: option :: Option < unsafe extern "C" fn (type_ : LFOType) -> * mut PDSynthLFO > , # [doc = "`void playdate->sound->lfo->freeLFO(PDSynthLFO* lfo)`\n\nFrees the LFO."] pub freeLFO : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO) > , # [doc = "`void playdate->sound->lfo->setType(PDSynthLFO* lfo, LFOType type)`\n\nSets the LFO shape to one of the values given above."] pub setType : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , type_ : LFOType) > , # [doc = "`void playdate->sound->lfo->setRate(PDSynthLFO* lfo, float rate)`\n\nSets the LFO’s rate, in cycles per second."] pub setRate : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , rate : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setPhase(PDSynthLFO* lfo, float phase)`\n\nSets the LFO’s phase, from 0 to 1."] pub setPhase : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , phase : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setCenter(PDSynthLFO* lfo, float center)`"] pub setCenter : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , center : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setDepth(PDSynthLFO* lfo, float depth)`\n\nSets the center or depth of the LFO."] pub setDepth : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , depth : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setArpeggiation(PDSynthLFO* lfo, int nSteps, float* steps)`\n\nSets the LFO type to arpeggio, where the given values are in half-steps from the center note. For example, the sequence (0, 4, 7, 12) plays the notes of a major chord."] pub setArpeggiation : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , nSteps : core :: ffi :: c_int , steps : * mut core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setFunction(PDSynthLFO* lfo, float (*lfoFunc)(PDSynthLFO* lfo, void* userdata), void* userdata, int interpolate)`\n\nProvides a custom function for LFO values."] pub setFunction : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , lfoFunc : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , userdata : * mut core :: ffi :: c_void) -> core :: ffi :: c_float > , userdata : * mut core :: ffi :: c_void , interpolate : core :: ffi :: c_int) > , # [doc = "`void playdate->sound->lfo->setDelay(PDSynthLFO* lfo, float holdoff, float ramptime)`\n\nSets an initial holdoff time for the LFO where the LFO remains at its center value, and a ramp time where the value increases linearly to its maximum depth. Values are in seconds."] pub setDelay : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , holdoff : core :: ffi :: c_float , ramptime : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setRetrigger(PDSynthLFO* lfo, int flag)`\n\nIf retrigger is on, the LFO’s phase is reset to its initial phase (default 0) when a synth using the LFO starts playing a note."] pub setRetrigger : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , flag : core :: ffi :: c_int) > , # [doc = "`float playdate->sound->lfo->getValue(PDSynthLFO* lfo)`\n\nReturn the current output value of the LFO."] pub getValue : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO) -> core :: ffi :: c_float > , # [doc = "`float playdate->sound->lfo->setGlobal(PDSynthLFO* lfo, int global)`\n\nIf *global* is set, the LFO is continuously updated whether or not it’s currently in use."] pub setGlobal : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , global : core :: ffi :: c_int) > , # [doc = "`void playdate->sound->lfo->setStartPhase(PDSynthLFO* lfo, float phase)`\n\nSets the LFO’s initial phase, from 0 to 1."] pub setStartPhase : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , phase : core :: ffi :: c_float) > , }
+pub struct playdate_sound_lfo { # [doc = "`PDSynthLFO* playdate->sound->lfo->newLFO(LFOType type)`\n\nReturns a new LFO object, which can be used to modulate sounds. The *type* argument is one of the following values:\n\nLFOType\n\n```cpp\ntypedef enum\n{\n\tkLFOTypeSquare,\n\tkLFOTypeTriangle,\n\tkLFOTypeSine,\n\tkLFOTypeSampleAndHold,\n\tkLFOTypeSawtoothUp,\n\tkLFOTypeSawtoothDown,\n\tkLFOTypeArpeggiator,\n\tkLFOTypeFunction\n} LFOType;\n```"] pub newLFO : :: core :: option :: Option < unsafe extern "C" fn (type_ : LFOType) -> * mut PDSynthLFO > , # [doc = "`void playdate->sound->lfo->freeLFO(PDSynthLFO* lfo)`\n\nFrees the LFO."] pub freeLFO : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO) > , # [doc = "`void playdate->sound->lfo->setType(PDSynthLFO* lfo, LFOType type)`\n\nSets the LFO shape to one of the values given above."] pub setType : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , type_ : LFOType) > , # [doc = "`void playdate->sound->lfo->setRate(PDSynthLFO* lfo, float rate)`\n\nSets the LFO’s rate, in cycles per second."] pub setRate : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , rate : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setPhase(PDSynthLFO* lfo, float phase)`\n\nSets the LFO’s phase, from 0 to 1."] pub setPhase : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , phase : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setCenter(PDSynthLFO* lfo, float center)`\n\nSets the center value for the LFO."] pub setCenter : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , center : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setDepth(PDSynthLFO* lfo, float depth)`\n\nSets the depth of the LFO."] pub setDepth : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , depth : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setArpeggiation(PDSynthLFO* lfo, int nSteps, float* steps)`\n\nSets the LFO type to arpeggio, where the given values are in half-steps from the center note. For example, the sequence (0, 4, 7, 12) plays the notes of a major chord."] pub setArpeggiation : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , nSteps : core :: ffi :: c_int , steps : * mut core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setFunction(PDSynthLFO* lfo, float (*lfoFunc)(PDSynthLFO* lfo, void* userdata), void* userdata, int interpolate)`\n\nProvides a custom function for LFO values."] pub setFunction : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , lfoFunc : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , userdata : * mut core :: ffi :: c_void) -> core :: ffi :: c_float > , userdata : * mut core :: ffi :: c_void , interpolate : core :: ffi :: c_int) > , # [doc = "`void playdate->sound->lfo->setDelay(PDSynthLFO* lfo, float holdoff, float ramptime)`\n\nSets an initial holdoff time for the LFO where the LFO remains at its center value, and a ramp time where the value increases linearly to its maximum depth. Values are in seconds."] pub setDelay : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , holdoff : core :: ffi :: c_float , ramptime : core :: ffi :: c_float) > , # [doc = "`void playdate->sound->lfo->setRetrigger(PDSynthLFO* lfo, int flag)`\n\nIf retrigger is on, the LFO’s phase is reset to its initial phase (default 0) when a synth using the LFO starts playing a note."] pub setRetrigger : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , flag : core :: ffi :: c_int) > , # [doc = "`float playdate->sound->lfo->getValue(PDSynthLFO* lfo)`\n\nReturn the current output value of the LFO."] pub getValue : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO) -> core :: ffi :: c_float > , # [doc = "`void playdate->sound->lfo->setGlobal(PDSynthLFO* lfo, int global)`\n\nIf *global* is set, the LFO is continuously updated whether or not it’s currently in use."] pub setGlobal : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , global : core :: ffi :: c_int) > , # [doc = "`void playdate->sound->lfo->setStartPhase(PDSynthLFO* lfo, float phase)`\n\nSets the LFO’s initial phase, from 0 to 1."] pub setStartPhase : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut PDSynthLFO , phase : core :: ffi :: c_float) > , }
 #[test]
 fn bindgen_test_layout_playdate_sound_lfo() {
 	const UNINIT: ::core::mem::MaybeUninit<playdate_sound_lfo> = ::core::mem::MaybeUninit::uninit();
@@ -5895,6 +5844,8 @@ pub type synthSetParameterFunc = ::core::option::Option<unsafe extern "C" fn(use
                                                                              value: core::ffi::c_float)
                                                                              -> core::ffi::c_int>;
 pub type synthDeallocFunc = ::core::option::Option<unsafe extern "C" fn(userdata: *mut core::ffi::c_void)>;
+pub type synthCopyUserdata =
+	::core::option::Option<unsafe extern "C" fn(userdata: *mut core::ffi::c_void) -> *mut core::ffi::c_void>;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 #[must_use]
@@ -5911,15 +5862,14 @@ pub struct playdate_sound_synth {
 	pub freeSynth: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth)>,
 	#[doc = "`void playdate->sound->synth->setWaveform(PDSynth* synth, SoundWaveform wave)`\n\nSets the waveform of the synth. The SoundWaveform enum contains the following values:\n\nSoundWaveform\n\n```cpp\ntypedef enum\n{\n\tkWaveformSquare,\n\tkWaveformTriangle,\n\tkWaveformSine,\n\tkWaveformNoise,\n\tkWaveformSawtooth,\n\tkWaveformPOPhase,\n\tkWaveformPODigital,\n\tkWaveformPOVosim\n} SoundWaveform;\n```"]
 	pub setWaveform: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth, wave: SoundWaveform)>,
-	#[doc = "`void playdate->sound->synth->setGenerator(PDSynth* synth, int stereo, synthRenderFunc* render, synthNoteOnFunc* noteOn, synthReleaseFunc* release, synthSetParameterFunc* setparam, synthDeallocFunc* dealloc, void* userdata)`\n\nGeneratorCallbacks\n\n```cpp\ntypedef int (*synthRenderFunc)(void* userdata, int32_t* left, int32_t* right, int nsamples, uint32_t rate, int32_t drate);\ntypedef void (*synthNoteOnFunc)(void* userdata, MIDINote note, float velocity, float len); // len == -1 if indefinite\ntypedef void (*synthReleaseFunc)(void* userdata, int ended);\ntypedef int (*synthSetParameterFunc)(void* userdata, int parameter, float value);\ntypedef void (*synthDeallocFunc)(void* userdata);\n```\n\nProvides custom waveform generator functions for the synth. *synthRenderFunc*, the data provider callback, is the only required function. *left* (and *right* if *setGenerator()* was called with the stereo flag set) are sample buffers in Q8.24 format. *rate* is the amount to change a (Q32) phase accumulator each sample, and *drate* is the amount to change *rate* each sample. Custom synths can safely ignore this and use the *note* paramter in the noteOn function to handle pitch, but synth→setFrequencyModulator() won’t work as expected. These functions are called on the audio render thread, so they should return as quickly as possible."]
-	pub setGenerator: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth,
-	                                                              stereo: core::ffi::c_int,
-	                                                              render: synthRenderFunc,
-	                                                              noteOn: synthNoteOnFunc,
-	                                                              release: synthReleaseFunc,
-	                                                              setparam: synthSetParameterFunc,
-	                                                              dealloc: synthDeallocFunc,
-	                                                              userdata: *mut core::ffi::c_void)>,
+	pub setGenerator_deprecated: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth,
+	                                                                         stereo: core::ffi::c_int,
+	                                                                         render: synthRenderFunc,
+	                                                                         noteOn: synthNoteOnFunc,
+	                                                                         release: synthReleaseFunc,
+	                                                                         setparam: synthSetParameterFunc,
+	                                                                         dealloc: synthDeallocFunc,
+	                                                                         userdata: *mut core::ffi::c_void)>,
 	#[doc = "`void playdate->sound->synth->setSample(PDSynth* synth, AudioSample* sample, uint32_t sustainStart, uint32_t sustainEnd)`\n\nProvides a sample for the synth to play. Sample data must be uncompressed PCM, not ADPCM."]
 	pub setSample: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth,
 	                                                           sample: *mut AudioSample,
@@ -5939,16 +5889,16 @@ pub struct playdate_sound_synth {
 	#[doc = "`void playdate->sound->synth->setTranspose(PDSynth* synth, float halfSteps)`\n\nTransposes the synth’s output by the given number of half steps. For example, if the transpose is set to 2 and a C note is played, the synth will output a D instead."]
 	pub setTranspose:
 		::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth, halfSteps: core::ffi::c_float)>,
-	#[doc = "`void playdate->sound->synth->setFrequencyModulator(PDSynth* synth, PDSynthSignalValue* mod)`"]
+	#[doc = "`void playdate->sound->synth->setFrequencyModulator(PDSynth* synth, PDSynthSignalValue* mod)`\n\nSets a [signal](#C-sound.signal) to modulate the synth’s frequency. The signal is scaled so that a value of 1 doubles the synth pitch (i.e. an octave up) and -1 halves it (an octave down). Set to *NULL* to clear the modulator."]
 	pub setFrequencyModulator:
 		::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth, mod_: *mut PDSynthSignalValue)>,
-	#[doc = "`PDSynthSignalValue* playdate->sound->synth->getFrequencyModulator(PDSynth* synth)`\n\nSets or gets a [signal](#C-sound.signal) to modulate the synth’s frequency. The signal is scaled so that a value of 1 doubles the synth pitch (i.e. an octave up) and -1 halves it (an octave down)."]
+	#[doc = "`PDSynthSignalValue* playdate->sound->synth->getFrequencyModulator(PDSynth* synth)`\n\nReturns the currently set frequency modulator."]
 	pub getFrequencyModulator:
 		::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth) -> *mut PDSynthSignalValue>,
-	#[doc = "`void playdate->sound->synth->setAmplitudeModulator(PDSynth* synth, PDSynthSignalValue* mod)`"]
+	#[doc = "`void playdate->sound->synth->setAmplitudeModulator(PDSynth* synth, PDSynthSignalValue* mod)`\n\nSets a [signal](#C-sound.signal) to modulate the synth’s output amplitude. Set to *NULL* to clear the modulator."]
 	pub setAmplitudeModulator:
 		::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth, mod_: *mut PDSynthSignalValue)>,
-	#[doc = "`PDSynthSignalValue* playdate->sound->synth->getAmplitudeModulator(PDSynth* synth)`\n\nSets or gets a [signal](#C-sound.signal) to modulate the synth’s output amplitude."]
+	#[doc = "`PDSynthSignalValue* playdate->sound->synth->getAmplitudeModulator(PDSynth* synth)`\n\nReturns the currently set amplitude modulator."]
 	pub getAmplitudeModulator:
 		::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth) -> *mut PDSynthSignalValue>,
 	#[doc = "`int playdate->sound->synth->getParameterCount(PDSynth* synth)`\n\nReturns the number of parameters advertised by the synth."]
@@ -5958,11 +5908,11 @@ pub struct playdate_sound_synth {
 	                                                              parameter: core::ffi::c_int,
 	                                                              value: core::ffi::c_float)
 	                                                              -> core::ffi::c_int>,
-	#[doc = "`int playdate->sound->synth->setParameterModulator(PDSynth* synth, int num, PDSynthSignalValue* mod)`"]
+	#[doc = "`void playdate->sound->synth->setParameterModulator(PDSynth* synth, int num, PDSynthSignalValue* mod)`\n\nSets a [signal](#C-sound.signal) to modulate the parameter at index *num*. Set to *NULL* to clear the modulator."]
 	pub setParameterModulator: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth,
 	                                                                       parameter: core::ffi::c_int,
 	                                                                       mod_: *mut PDSynthSignalValue)>,
-	#[doc = "`PDSynthSignalValue* playdate->sound->synth->getParameterModulator(PDSynth* synth, int num)`\n\nSets or gets a [signal](#C-sound.signal) to modulate the parameter at index *num*."]
+	#[doc = "`PDSynthSignalValue* playdate->sound->synth->getParameterModulator(PDSynth* synth, int num)`\n\nReturns the currently set parameter modulator for the given index."]
 	pub getParameterModulator: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth,
 	                                                                       parameter: core::ffi::c_int)
 	                                                                       -> *mut PDSynthSignalValue>,
@@ -5972,7 +5922,7 @@ pub struct playdate_sound_synth {
 	                                                          vel: core::ffi::c_float,
 	                                                          len: core::ffi::c_float,
 	                                                          when: u32)>,
-	#[doc = "`void playdate->sound->synth->playMIDINote(PDSynth* synth, MIDINote note, float vel, float len, uint32_t when)`\n\nThe same as [playNote](#f-sound.synth.playNote) but uses MIDI note (where 60 = C4) instead of frequency."]
+	#[doc = "`void playdate->sound->synth->playMIDINote(PDSynth* synth, MIDINote note, float vel, float len, uint32_t when)`\n\nThe same as [playNote](#f-sound.synth.playNote) but uses MIDI note (where 60 = C4) instead of frequency. Note that `MIDINote` is a typedef for `float', meaning fractional values are allowed (for all you microtuning enthusiasts)."]
 	pub playMIDINote: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth,
 	                                                              note: MIDINote,
 	                                                              vel: core::ffi::c_float,
@@ -5981,11 +5931,11 @@ pub struct playdate_sound_synth {
 	#[doc = "`void playdate->sound->synth->noteOff(PDSynth* synth, uint32_t when)`\n\nSends a note off event to the synth, either immediately (*when* = 0) or at the scheduled time."]
 	pub noteOff: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth, when: u32)>,
 	pub stop: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth)>,
-	#[doc = "`void playdate->sound->synth->setVolume(PDSynth* synth, float lvol, float rvol)`"]
+	#[doc = "`void playdate->sound->synth->setVolume(PDSynth* synth, float lvol, float rvol)`\n\nSets the playback volume (0.0 - 1.0) for the left and, if the synth is stereo, right channels of the synth. This is equivalent to\n\n```cpp\nplaydate->sound->source->setVolume((SoundSource*)synth, lvol, rvol);\n```"]
 	pub setVolume: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth,
 	                                                           left: core::ffi::c_float,
 	                                                           right: core::ffi::c_float)>,
-	#[doc = "`void playdate->sound->synth->getVolume(PDSynth* synth, float* outlvol, float* outrvol)`\n\nSets and gets the playback volume (0.0 - 1.0) for left and right channels of the synth. This is equivalent to\n\n```cpp\nplaydate->sound->source->setVolume((SoundSource*)synth, lvol, rvol);\nplaydate->sound->source->getVolume((SoundSource*)synth, &lvol, &rvol);\n```"]
+	#[doc = "`float playdate->sound->synth->getVolume(PDSynth* synth, float* outlvol, float* outrvol)`\n\nGets the playback volume for the left and right (if stereo) channels of the synth. This is equivalent to\n\n```cpp\nplaydate->sound->source->getVolume((SoundSource*)synth, outlvol, outrvol);\n```"]
 	pub getVolume: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth,
 	                                                           left: *mut core::ffi::c_float,
 	                                                           right: *mut core::ffi::c_float)>,
@@ -5993,13 +5943,25 @@ pub struct playdate_sound_synth {
 	pub isPlaying: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth) -> core::ffi::c_int>,
 	#[doc = "`PDSynthEnvelope* playdate->sound->synth->getEnvelope(PDSynth* synth)`\n\nReturns the synth’s envelope. The PDSynth object owns this envelope, so it must not be freed."]
 	pub getEnvelope: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth) -> *mut PDSynthEnvelope>,
-	#[doc = "`int playdate->sound->synth->setWavetable(PDSynth* synth, AudioSample* sample, int log2size, int rowwidth)`\n\nSets a wavetable for the synth to play. Sample data must be 16-bit mono uncompressed. `log2size` is the base 2 logarithm of the number of samples in each waveform \"cell\" in the table. `xsize` is the number of cells across the wavetable. If the wavetable is two-dimensional, `ysize` gives the number of cells in the y direction.\n\nThe function returns 1 on success, or 0 if the given dimensions don’t match the sample size.\n\nThe synth’s \"position\" in the wavetable is set manually with [setParameter()](#f-sound.synth.setParameter) or automated with [setParameterModulator()](#f-sound.synth.setParameterModulator). In some cases it’s easier to use a parameter that matches the waveform position in the table, in others (notably when using envelopes and lfos) it’s more convenient to use a 0-1 scale, so there’s some redundancy here. Parameters are\n\n* 1: x position, values are from 0 to the table width\n\n* 2: x position, values are from 0 to 1, parameter is scaled up to table width\n\nFor 2-D tables (`rowwidth` \\> 0):\n\n* 3: y position, values are from 0 to the table height\n\n* 4: y position, values are from 0 to 1, parameter is scaled up to table height"]
+	#[doc = "`int playdate->sound->synth->setWavetable(PDSynth* synth, AudioSample* sample, int log2size, int columns, rows)`\n\nSets a wavetable for the synth to play. Sample data must be 16-bit mono uncompressed. `log2size` is the base 2 logarithm of the number of samples in each waveform \"cell\" in the table, and `columns` and `rows` gives the number of cells in each direction; for example, if the wavetable is arranged in an 8x8 grid, `columns` and `rows` are both 8 and `log2size` is 6, since 2^6 = 8x8.\n\nThe function returns 1 on success. If it fails, use [playdate→sound→getError()](#f-sound.getError) to get a human-readable error message.\n\nThe synth’s \"position\" in the wavetable is set manually with [setParameter()](#f-sound.synth.setParameter) or automated with [setParameterModulator()](#f-sound.synth.setParameterModulator). In some cases it’s easier to use a parameter that matches the waveform position in the table, in others (notably when using envelopes and lfos) it’s more convenient to use a 0-1 scale, so there’s some redundancy here. Parameters are\n\n* 1: x position, values are from 0 to the table width\n\n* 2: x position, values are from 0 to 1, parameter is scaled up to table width\n\nFor 2-D tables (`height` \\> 1):\n\n* 3: y position, values are from 0 to the table height\n\n* 4: y position, values are from 0 to 1, parameter is scaled up to table height"]
 	pub setWavetable: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth,
 	                                                              sample: *mut AudioSample,
 	                                                              log2size: core::ffi::c_int,
 	                                                              columns: core::ffi::c_int,
 	                                                              rows: core::ffi::c_int)
 	                                                              -> core::ffi::c_int>,
+	#[doc = "`void playdate->sound->synth->setGenerator(PDSynth* synth, int stereo, synthRenderFunc* render, synthNoteOnFunc* noteOn, synthReleaseFunc* release, synthSetParameterFunc* setparam, synthDeallocFunc* dealloc, synthCopyUserdataFunc copyUserdata, void* userdata)`\n\nGeneratorCallbacks\n\n```cpp\ntypedef int (*synthRenderFunc)(void* userdata, int32_t* left, int32_t* right, int nsamples, uint32_t rate, int32_t drate);\ntypedef void (*synthNoteOnFunc)(void* userdata, MIDINote note, float velocity, float len); // len == -1 if indefinite\ntypedef void (*synthReleaseFunc)(void* userdata, int endoffset);\ntypedef int (*synthSetParameterFunc)(void* userdata, int parameter, float value);\ntypedef void (*synthDeallocFunc)(void* userdata);\ntypedef void* (*synthCopyUserdata)(void* userdata);\n```\n\nProvides custom waveform generator functions for the synth. These functions are called on the audio render thread, so they should return as quickly as possible. *synthRenderFunc*, the data provider callback, is the only required function.\n\n*synthRenderFunc*: called every audio cycle to get the samples for playback. *left* (and *right* if *setGenerator()* was called with the stereo flag set) are sample buffers in Q8.24 format. *rate* is the amount to change a (Q32) phase accumulator each sample, and *drate* is the amount to change *rate* each sample. Custom synths can ignore this and use the *note* paramter in the noteOn function to handle pitch, but synth→setFrequencyModulator() won’t work as expected.\n\n*synthNoteOnFunc*: called when the synth receives a note on event. *len* is the length of the note in seconds, or -1 if it’s not known yet when the note will end.\n\n*synthReleaseFunc*: called when the synth receives a note off event. *endoffset* is how many samples into the current render cycle the note ends, allowing for sample-accurate timing.\n\n*synthSetParameterFunc*: called when a parameter change is received from [synth→setParameter()](#f-sound.synth.setParameter) or a modulator.\n\n*synthDeallocFunc*: called when the synth is being dealloced. This function should free anything that was allocated for the synth and also free the *userdata* itself.\n\n*synthCopyUserdata*: called when [synth→copy()](#f-sound.synth.copy) needs a unique copy of the synth’s userdata. External objects should be retained or copied so that the object isn’t freed while the synth is still using it."]
+	pub setGenerator: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth,
+	                                                              stereo: core::ffi::c_int,
+	                                                              render: synthRenderFunc,
+	                                                              noteOn: synthNoteOnFunc,
+	                                                              release: synthReleaseFunc,
+	                                                              setparam: synthSetParameterFunc,
+	                                                              dealloc: synthDeallocFunc,
+	                                                              copyUserdata: synthCopyUserdata,
+	                                                              userdata: *mut core::ffi::c_void)>,
+	#[doc = "`PDSynth* playdate->sound->synth->copy(PDSynth* synth)`\n\nReturns a copy of the given synth. Caller assumes ownership of the returned object and should free it when it is no longer in use."]
+	pub copy: ::core::option::Option<unsafe extern "C" fn(synth: *mut PDSynth) -> *mut PDSynth>,
 }
 #[test]
 fn bindgen_test_layout_playdate_sound_synth() {
@@ -6007,7 +5969,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_synth>(),
-	           216usize,
+	           232usize,
 	           concat!("Size of: ", stringify!(playdate_sound_synth))
 	);
 	assert_eq!(
@@ -6046,13 +6008,13 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	)
 	);
 	assert_eq!(
-	           unsafe { ::core::ptr::addr_of!((*ptr).setGenerator) as usize - ptr as usize },
+	           unsafe { ::core::ptr::addr_of!((*ptr).setGenerator_deprecated) as usize - ptr as usize },
 	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
 		"::",
-		stringify!(setGenerator)
+		stringify!(setGenerator_deprecated)
 	)
 	);
 	assert_eq!(
@@ -6283,6 +6245,26 @@ fn bindgen_test_layout_playdate_sound_synth() {
 		stringify!(playdate_sound_synth),
 		"::",
 		stringify!(setWavetable)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).setGenerator) as usize - ptr as usize },
+	           216usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(playdate_sound_synth),
+		"::",
+		stringify!(setGenerator)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).copy) as usize - ptr as usize },
+	           224usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(playdate_sound_synth),
+		"::",
+		stringify!(copy)
 	)
 	);
 }
@@ -6862,7 +6844,8 @@ pub struct playdate_sound_sequence {
 	pub newSequence: ::core::option::Option<unsafe extern "C" fn() -> *mut SoundSequence>,
 	#[doc = "`void playdate->sound->sequence->freeSequence(SoundSequence* sequence)`\n\nCreates or destroys a SoundSequence object."]
 	pub freeSequence: ::core::option::Option<unsafe extern "C" fn(sequence: *mut SoundSequence)>,
-	pub loadMidiFile: ::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence,
+	#[doc = "`int playdate->sound->sequence->loadMIDIFile(SoundSequence* sequence, const char* path)`\n\nIf the sequence is empty, attempts to load data from the MIDI file at *path* into the sequence. Returns 1 on success, 0 on failure."]
+	pub loadMIDIFile: ::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence,
 	                                                              path: *const core::ffi::c_char)
 	                                                              -> core::ffi::c_int>,
 	#[doc = "`uint32_t playdate->sound->sequence->getTime(SoundSequence* sequence)`"]
@@ -6948,13 +6931,13 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	)
 	);
 	assert_eq!(
-	           unsafe { ::core::ptr::addr_of!((*ptr).loadMidiFile) as usize - ptr as usize },
+	           unsafe { ::core::ptr::addr_of!((*ptr).loadMIDIFile) as usize - ptr as usize },
 	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
 		"::",
-		stringify!(loadMidiFile)
+		stringify!(loadMIDIFile)
 	)
 	);
 	assert_eq!(
@@ -7140,22 +7123,32 @@ pub enum TwoPoleFilterType {
 #[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct playdate_sound_effect_twopolefilter {
+	#[doc = "`TwoPoleFilter* playdate->sound->effect->twopolefilter->newFilter(void)`\n\nCreates a new two pole filter effect."]
 	pub newFilter: ::core::option::Option<unsafe extern "C" fn() -> *mut TwoPoleFilter>,
+	#[doc = "`void playdate->sound->effect->twopolefilter->freeFilter(TwoPoleFilter* filter)`\n\nFrees the given filter."]
 	pub freeFilter: ::core::option::Option<unsafe extern "C" fn(filter: *mut TwoPoleFilter)>,
+	#[doc = "`void playdate->sound->effect->twopolefilter->setType(TwoPoleFilter* filter, TwoPoleFilterType type)`\n\nTwoPoleFilterType\n\n```cpp\ntypedef enum\n{\n\tkFilterTypeLowPass,\n\tkFilterTypeHighPass,\n\tkFilterTypeBandPass,\n\tkFilterTypeNotch,\n\tkFilterTypePEQ,\n\tkFilterTypeLowShelf,\n\tkFilterTypeHighShelf\n} TwoPoleFilterType;\n```\n\nSets the type of the filter."]
 	pub setType:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut TwoPoleFilter, type_: TwoPoleFilterType)>,
+	#[doc = "`void playdate->sound->effect->twopolefilter->setFrequency(TwoPoleFilter* filter, float frequency)`\n\nSets the center/corner frequency of the filter. Value is in Hz."]
 	pub setFrequency:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut TwoPoleFilter, frequency: core::ffi::c_float)>,
+	#[doc = "`void playdate->sound->effect->twopolefilter->setFrequencyModulator(TwoPoleFilter* filter, PDSynthSignalValue* signal)`\n\nSets a [signal](#C-sound.signal) to modulate the effect’s frequency. The signal is scaled so that a value of 1.0 corresponds to half the sample rate. Set to *NULL* to clear the modulator."]
 	pub setFrequencyModulator:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut TwoPoleFilter, signal: *mut PDSynthSignalValue)>,
+	#[doc = "`PDSynthSignalValue* playdate->sound->effect->twopolefilter->getFrequencyModulator(TwoPoleFilter* filter)`\n\nReturns the filter’s current frequency modulator."]
 	pub getFrequencyModulator:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut TwoPoleFilter) -> *mut PDSynthSignalValue>,
+	#[doc = "`void playdate->sound->effect->twopolefilter->setGain(TwoPoleFilter* filter, float gain)`\n\nSets the filter gain."]
 	pub setGain:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut TwoPoleFilter, gain: core::ffi::c_float)>,
+	#[doc = "`void playdate->sound->effect->twopolefilter->setResonance(TwoPoleFilter* filter, float resonance)`\n\nSets the filter resonance."]
 	pub setResonance:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut TwoPoleFilter, resonance: core::ffi::c_float)>,
+	#[doc = "`void playdate->sound->effect->twopolefilter->setResonanceModulator(TwoPoleFilter* filter, PDSynthSignalValue* signal)`\n\nSets a [signal](#C-sound.signal) to modulate the filter resonance. Set to *NULL* to clear the modulator."]
 	pub setResonanceModulator:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut TwoPoleFilter, signal: *mut PDSynthSignalValue)>,
+	#[doc = "`PDSynthSignalValue* playdate->sound->effect->twopolefilter->getResonanceModulator(TwoPoleFilter* filter)`\n\nReturns the filter’s current resonance modulator."]
 	pub getResonanceModulator:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut TwoPoleFilter) -> *mut PDSynthSignalValue>,
 }
@@ -7285,12 +7278,17 @@ pub struct OnePoleFilter {
 #[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct playdate_sound_effect_onepolefilter {
+	#[doc = "`OnePoleFilter* playdate->sound->effect->onepolefilter->newFilter(void)`\n\nCreates a new one pole filter."]
 	pub newFilter: ::core::option::Option<unsafe extern "C" fn() -> *mut OnePoleFilter>,
+	#[doc = "`void playdate->sound->effect->onepolefilter->freeFilter(OnePoleFilter* filter)`\n\nFrees the filter."]
 	pub freeFilter: ::core::option::Option<unsafe extern "C" fn(filter: *mut OnePoleFilter)>,
+	#[doc = "`void playdate->sound->effect->onepolefilter->setParameter(OnePoleFilter* filter, float parameter)`\n\nSets the filter’s single parameter (cutoff frequency) to *p*. Values above 0 (up to 1) are high-pass, values below 0 (down to -1) are low-pass."]
 	pub setParameter:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut OnePoleFilter, parameter: core::ffi::c_float)>,
+	#[doc = "`void playdate->sound->effect->onepolefilter->setParameterModulator(OnePoleFilter* filter, PDSynthSignalValue* signal)`\n\nSets a [signal](#C-sound.signal) to modulate the filter parameter. Set to *NULL* to clear the modulator."]
 	pub setParameterModulator:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut OnePoleFilter, signal: *mut PDSynthSignalValue)>,
+	#[doc = "`PDSynthSignalValue* playdate->sound->effect->onepolefilter->getParameterModulator(OnePoleFilter* filter)`\n\nReturns the filter’s current parameter modulator."]
 	pub getParameterModulator:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut OnePoleFilter) -> *mut PDSynthSignalValue>,
 }
@@ -7370,18 +7368,26 @@ pub struct BitCrusher {
 #[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct playdate_sound_effect_bitcrusher {
+	#[doc = "`BitCrusher* playdate->sound->effect->bitcrusher->newBitCrusher(void)`\n\nReturns a new BitCrusher effect."]
 	pub newBitCrusher: ::core::option::Option<unsafe extern "C" fn() -> *mut BitCrusher>,
+	#[doc = "`void playdate->sound->effect->bitcrusher->freeBitCrusher(BitCrusher* filter)`\n\nFrees the given effect."]
 	pub freeBitCrusher: ::core::option::Option<unsafe extern "C" fn(filter: *mut BitCrusher)>,
+	#[doc = "`void playdate->sound->effect->bitcrusher->setAmount(BitCrusher* filter, float amount)`\n\nSets the amount of crushing to *amount*. Valid values are 0 (no effect) to 1 (quantizing output to 1-bit)."]
 	pub setAmount:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut BitCrusher, amount: core::ffi::c_float)>,
+	#[doc = "`void playdate->sound->effect->bitcrusher->setAmountModulator(BitCrusher* filter, PDSynthSignalValue* signal)`\n\nSets a [signal](#C-sound.signal) to modulate the crushing amount. Set to *NULL* to clear the modulator."]
 	pub setAmountModulator:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut BitCrusher, signal: *mut PDSynthSignalValue)>,
+	#[doc = "`PDSynthSignalValue* playdate->sound->effect->bitcrusher->getAmountModulator(BitCrusher* filter)`\n\nReturns the currently set modulator."]
 	pub getAmountModulator:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut BitCrusher) -> *mut PDSynthSignalValue>,
+	#[doc = "`void playdate->sound->effect->bitcrusher->setUndersampling(BitCrusher* filter, float undersample)`\n\nSets the number of samples to repeat, quantizing the input in time. A value of 0 produces no undersampling, 1 repeats every other sample, etc."]
 	pub setUndersampling:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut BitCrusher, undersampling: core::ffi::c_float)>,
+	#[doc = "`void playdate->sound->effect->bitcrusher->setUndersampleModulator(BitCrusher* filter, PDSynthSignalValue* signal)`\n\nSets a [signal](#C-sound.signal) to modulate the undersampling amount. Set to *NULL* to clear the modulator."]
 	pub setUndersampleModulator:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut BitCrusher, signal: *mut PDSynthSignalValue)>,
+	#[doc = "`PDSynthSignalValue* playdate->sound->effect->bitcrusher->getUndersampleModulator(BitCrusher* filter)`\n\nReturns the currently set modulator."]
 	pub getUndersampleModulator:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut BitCrusher) -> *mut PDSynthSignalValue>,
 }
@@ -7490,12 +7496,16 @@ pub struct RingModulator {
 #[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct playdate_sound_effect_ringmodulator {
+	#[doc = "`RingModulator* playdate->sound->effect->ringmodulator->newRingmod(void)`\n\nReturns a new ring modulator effect."]
 	pub newRingmod: ::core::option::Option<unsafe extern "C" fn() -> *mut RingModulator>,
 	pub freeRingmod: ::core::option::Option<unsafe extern "C" fn(filter: *mut RingModulator)>,
+	#[doc = "`void playdate->sound->effect->ringmodulator->setFrequency(RingModulator* filter, float frequency)`\n\nSets the frequency of the modulation signal."]
 	pub setFrequency:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut RingModulator, frequency: core::ffi::c_float)>,
+	#[doc = "`void playdate->sound->effect->ringmodulator->setFrequencyModulator(RingModulator* filter, PDSynthSignalValue* signal)`\n\nSets a [signal](#C-sound.signal) to modulate the frequency of the ring modulator. Set to *NULL* to clear the modulator."]
 	pub setFrequencyModulator:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut RingModulator, signal: *mut PDSynthSignalValue)>,
+	#[doc = "`PDSynthSignalValue* playdate->sound->effect->ringmodulator->getFrequencyModulator(RingModulator* filter)`\n\nReturns the currently set frequency modulator."]
 	pub getFrequencyModulator:
 		::core::option::Option<unsafe extern "C" fn(filter: *mut RingModulator) -> *mut PDSynthSignalValue>,
 }
@@ -7581,21 +7591,31 @@ pub struct DelayLineTap {
 #[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct playdate_sound_effect_delayline {
+	#[doc = "`DelayLine* playdate->sound->effect->delayline->newDelayLine(int length, int stereo)`\n\nCreates a new delay line effect. The *length* parameter is given in samples."]
 	pub newDelayLine: ::core::option::Option<unsafe extern "C" fn(length: core::ffi::c_int,
 	                                                              stereo: core::ffi::c_int)
 	                                                              -> *mut DelayLine>,
+	#[doc = "`void playdate->sound->effect->delayline->freeDelayLine(DelayLine* delay)`\n\nFrees the delay line."]
 	pub freeDelayLine: ::core::option::Option<unsafe extern "C" fn(filter: *mut DelayLine)>,
+	#[doc = "`void playdate->sound->effect->delayline->setLength(DelayLine* d, int frames)`\n\nChanges the length of the delay line, clearing its contents."]
 	pub setLength: ::core::option::Option<unsafe extern "C" fn(d: *mut DelayLine, frames: core::ffi::c_int)>,
+	#[doc = "`void playdate->sound->effect->delayline->setFeedback(DelayLine* d, float fb)`\n\nSets the feedback level of the delay line."]
 	pub setFeedback: ::core::option::Option<unsafe extern "C" fn(d: *mut DelayLine, fb: core::ffi::c_float)>,
+	#[doc = "`DelayLineTap* playdate->sound->effect->delayline->addTap(DelayLine* d, int delay)`\n\nReturns a new tap on the delay line, at the given position. *delay* must be less than or equal to the length of the delay line."]
 	pub addTap: ::core::option::Option<unsafe extern "C" fn(d: *mut DelayLine,
 	                                                        delay: core::ffi::c_int)
 	                                                        -> *mut DelayLineTap>,
+	#[doc = "`void playdate->sound->effect->delayline->freeTap(DelayLineTap* tap)`\n\nFrees a tap previously created with [playdate→sound→delayline→addTap()](#f-sound.effect.delayline.addTap), first removing it from the sound engine if needed."]
 	pub freeTap: ::core::option::Option<unsafe extern "C" fn(tap: *mut DelayLineTap)>,
+	#[doc = "`void playdate->sound->effect->delayline->setTapDelay(DelayLineTap* tap, int frames)`\n\nSets the position of the tap on the delay line, up to the delay line’s length."]
 	pub setTapDelay: ::core::option::Option<unsafe extern "C" fn(t: *mut DelayLineTap, frames: core::ffi::c_int)>,
+	#[doc = "`void playdate->sound->effect->delayline->setTapDelayModulator(DelayLineTap* tap, PDSynthSignalValue* mod)`\n\nSets a [signal](#C-sound.signal) to modulate the tap delay. If the signal is continuous (e.g. an envelope or a triangle LFO, but not a square LFO) playback is sped up or slowed down to compress or expand time. Set to *NULL* to clear the modulator."]
 	pub setTapDelayModulator:
 		::core::option::Option<unsafe extern "C" fn(t: *mut DelayLineTap, mod_: *mut PDSynthSignalValue)>,
+	#[doc = "`PDSynthSignalValue* playdate->sound->effect->delayline->getTapDelayModulator(DelayLineTap* tap)`\n\nReturns the current delay modulator."]
 	pub getTapDelayModulator:
 		::core::option::Option<unsafe extern "C" fn(t: *mut DelayLineTap) -> *mut PDSynthSignalValue>,
+	#[doc = "`void playdate->sound->effect->delayline->setTapChannelsFlipped(DelayLineTap* tap, int flip)`\n\nIf the delay line is stereo and *flip* is set, the tap outputs the delay line’s left channel to its right output and vice versa."]
 	pub setTapChannelsFlipped:
 		::core::option::Option<unsafe extern "C" fn(t: *mut DelayLineTap, flip: core::ffi::c_int)>,
 }
@@ -7732,18 +7752,18 @@ pub struct playdate_sound_effect_overdrive {
 	pub setGain: ::core::option::Option<unsafe extern "C" fn(o: *mut Overdrive, gain: core::ffi::c_float)>,
 	#[doc = "`void playdate->sound->effect->overdrive->setLimit(Overdrive* filter, float limit)`\n\nSets the level where the amplified input clips."]
 	pub setLimit: ::core::option::Option<unsafe extern "C" fn(o: *mut Overdrive, limit: core::ffi::c_float)>,
-	#[doc = "`void playdate->sound->effect->overdrive->setLimitModulator(Overdrive* filter, PDSynthSignalValue* signal)`"]
+	#[doc = "`void playdate->sound->effect->overdrive->setLimitModulator(Overdrive* filter, PDSynthSignalValue* signal)`\n\nSets a [signal](#C-sound.signal) to modulate the limit parameter. Set to *NULL* to clear the modulator."]
 	pub setLimitModulator:
 		::core::option::Option<unsafe extern "C" fn(o: *mut Overdrive, mod_: *mut PDSynthSignalValue)>,
-	#[doc = "`PDSynthSignalValue* playdate->sound->effect->overdrive->getLimitModulator(RingMoOverdrivedulator* filter)`\n\nSets or gets a [signal](#C-sound.signal) to modulate the limit parameter."]
+	#[doc = "`PDSynthSignalValue* playdate->sound->effect->overdrive->getLimitModulator(RingMoOverdrivedulator* filter)`\n\nReturns the currently set limit modulator."]
 	pub getLimitModulator:
 		::core::option::Option<unsafe extern "C" fn(o: *mut Overdrive) -> *mut PDSynthSignalValue>,
 	#[doc = "`void playdate->sound->effect->overdrive->setOffset(Overdrive* filter, float offset)`\n\nAdds an offset to the upper and lower limits to create an asymmetric clipping."]
 	pub setOffset: ::core::option::Option<unsafe extern "C" fn(o: *mut Overdrive, offset: core::ffi::c_float)>,
-	#[doc = "`void playdate->sound->effect->overdrive->setOffsetModulator(Overdrive* filter, PDSynthSignalValue* signal)`"]
+	#[doc = "`void playdate->sound->effect->overdrive->setOffsetModulator(Overdrive* filter, PDSynthSignalValue* signal)`\n\nSets a [signal](#C-sound.signal) to modulate the offset parameter. Set to *NULL* to clear the modulator."]
 	pub setOffsetModulator:
 		::core::option::Option<unsafe extern "C" fn(o: *mut Overdrive, mod_: *mut PDSynthSignalValue)>,
-	#[doc = "`PDSynthSignalValue* playdate->sound->effect->overdrive->getOffsetModulator(RingMoOverdrivedulator* filter)`\n\nSets or gets a [signal](#C-sound.signal) to modulate the offset parameter."]
+	#[doc = "`PDSynthSignalValue* playdate->sound->effect->overdrive->getOffsetModulator(RingMoOverdrivedulator* filter)`\n\nReturns the currently set offset modulator."]
 	pub getOffsetModulator:
 		::core::option::Option<unsafe extern "C" fn(o: *mut Overdrive) -> *mut PDSynthSignalValue>,
 }
@@ -7876,10 +7896,10 @@ pub struct playdate_sound_effect {
 	pub freeEffect: ::core::option::Option<unsafe extern "C" fn(effect: *mut SoundEffect)>,
 	#[doc = "`void playdate->sound->effect->setMix(SoundEffect* effect, float level)`\n\nSets the wet/dry mix for the effect. A level of 1 (full wet) replaces the input with the effect output; 0 leaves the effect out of the mix (which is useful if you’re using a delay line with taps and don’t want to hear the delay line itself)."]
 	pub setMix: ::core::option::Option<unsafe extern "C" fn(effect: *mut SoundEffect, level: core::ffi::c_float)>,
-	#[doc = "`void playdate->sound->effect->setMixModulator(SoundEffect* effect, PDSynthSignalValue* signal)`"]
+	#[doc = "`void playdate->sound->effect->setMixModulator(SoundEffect* effect, PDSynthSignalValue* signal)`\n\nSets a [signal](#C-sound.signal) to modulate the effect’s mix level. Set to *NULL* to clear the modulator."]
 	pub setMixModulator:
 		::core::option::Option<unsafe extern "C" fn(effect: *mut SoundEffect, signal: *mut PDSynthSignalValue)>,
-	#[doc = "`PDSynthSignalValue* playdate->sound->effect->getMixModulator(SoundEffect* effect)`\n\nSets or gets a [signal](#C-sound.signal) to modulate the effect’s mix level."]
+	#[doc = "`PDSynthSignalValue* playdate->sound->effect->getMixModulator(SoundEffect* effect)`\n\nReturns the current mix modulator for the effect."]
 	pub getMixModulator:
 		::core::option::Option<unsafe extern "C" fn(effect: *mut SoundEffect) -> *mut PDSynthSignalValue>,
 	#[doc = "`void playdate->sound->effect->setUserdata(SoundEffect* effect, void* userdata)`"]
@@ -8093,7 +8113,7 @@ pub struct playdate_sound_channel {
 		::core::option::Option<unsafe extern "C" fn(channel: *mut SoundChannel, volume: core::ffi::c_float)>,
 	#[doc = "`float playdate->sound->channel->getVolume(SoundChannel* channel)`\n\nGets the volume for the channel, in the range [0-1]."]
 	pub getVolume: ::core::option::Option<unsafe extern "C" fn(channel: *mut SoundChannel) -> core::ffi::c_float>,
-	#[doc = "`void playdate->sound->channel->setVolumeModulator(SoundChannel* channel, PDSynthSignalValue* mod)`\n\nSets a [signal](#C-sound.signal) to modulate the channel volume."]
+	#[doc = "`void playdate->sound->channel->setVolumeModulator(SoundChannel* channel, PDSynthSignalValue* mod)`\n\nSets a [signal](#C-sound.signal) to modulate the channel volume. Set to *NULL* to clear the modulator."]
 	pub setVolumeModulator:
 		::core::option::Option<unsafe extern "C" fn(channel: *mut SoundChannel, mod_: *mut PDSynthSignalValue)>,
 	#[doc = "`PDSynthSignalValue* playdate->sound->channel->getVolumeModulator(SoundChannel* channel)`\n\nGets a [signal](#C-sound.signal) modulating the channel volume."]
@@ -8101,7 +8121,7 @@ pub struct playdate_sound_channel {
 		::core::option::Option<unsafe extern "C" fn(channel: *mut SoundChannel) -> *mut PDSynthSignalValue>,
 	#[doc = "`void playdate->sound->channel->setPan(SoundChannel* channel, float pan)`\n\nSets the pan parameter for the channel. Valid values are in the range [-1,1], where -1 is left, 0 is center, and 1 is right."]
 	pub setPan: ::core::option::Option<unsafe extern "C" fn(channel: *mut SoundChannel, pan: core::ffi::c_float)>,
-	#[doc = "`void playdate->sound->channel->setPanModulator(SoundChannel* channel, PDSynthSignalValue* mod)`\n\nSets a [signal](#C-sound.signal) to modulate the channel pan."]
+	#[doc = "`void playdate->sound->channel->setPanModulator(SoundChannel* channel, PDSynthSignalValue* mod)`\n\nSets a [signal](#C-sound.signal) to modulate the channel pan. Set to *NULL* to clear the modulator."]
 	pub setPanModulator:
 		::core::option::Option<unsafe extern "C" fn(channel: *mut SoundChannel, mod_: *mut PDSynthSignalValue)>,
 	#[doc = "`PDSynthSignalValue* playdate->sound->channel->getPanModulator(SoundChannel* channel)`\n\nGets a [signal](#C-sound.signal) modulating the channel pan."]
@@ -8293,10 +8313,18 @@ pub type RecordCallback = ::core::option::Option<unsafe extern "C" fn(context: *
                                                                       buffer: *mut i16,
                                                                       length: core::ffi::c_int)
                                                                       -> core::ffi::c_int>;
+#[repr(u32)]
+#[must_use]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+pub enum MicSource {
+	kMicInputAutodetect = 0,
+	kMicInputInternal = 1,
+	kMicInputHeadset = 2,
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
-pub struct playdate_sound { pub channel : * const playdate_sound_channel , pub fileplayer : * const playdate_sound_fileplayer , pub sample : * const playdate_sound_sample , pub sampleplayer : * const playdate_sound_sampleplayer , pub synth : * const playdate_sound_synth , pub sequence : * const playdate_sound_sequence , pub effect : * const playdate_sound_effect , pub lfo : * const playdate_sound_lfo , pub envelope : * const playdate_sound_envelope , pub source : * const playdate_sound_source , pub controlsignal : * const playdate_control_signal , pub track : * const playdate_sound_track , pub instrument : * const playdate_sound_instrument , # [doc = "`uint32_t playdate->sound->getCurrentTime(void)`\n\nReturns the sound engine’s current time value, in units of sample frames, 44,100 per second.\n\nEquivalent to [`playdate.sound.getCurrentTime()`](./Inside%20Playdate.html#f-sound.getCurrentTime) in the Lua API."] pub getCurrentTime : :: core :: option :: Option < unsafe extern "C" fn () -> u32 > , # [doc = "`SoundSource* playdate->sound->addSource(AudioSourceFunction* callback, void* context, int stereo)`\n\nThe *callback* function you pass in will be called every audio render cycle.\n\nAudioSourceFunction\n\n```cpp\nint AudioSourceFunction(void* context, int16_t* left, int16_t* right, int len)\n```\n\nThis function should fill the passed-in *left* buffer (and *right* if it’s a stereo source) with *len* samples each and return 1, or return 0 if the source is silent through the cycle."] pub addSource : :: core :: option :: Option < unsafe extern "C" fn (callback : AudioSourceFunction , context : * mut core :: ffi :: c_void , stereo : core :: ffi :: c_int) -> * mut SoundSource > , # [doc = "`SoundChannel* playdate->sound->getDefaultChannel(void)`\n\nReturns the default channel, where sound sources play if they haven’t been explicity assigned to a different channel."] pub getDefaultChannel : :: core :: option :: Option < unsafe extern "C" fn () -> * mut SoundChannel > , # [doc = "`int playdate->sound->addChannel(SoundChannel* channel)`\n\nAdds the given channel to the sound engine. Returns 1 if the channel was added, 0 if it was already in the engine."] pub addChannel : :: core :: option :: Option < unsafe extern "C" fn (channel : * mut SoundChannel) -> core :: ffi :: c_int > , # [doc = "`int playdate->sound->removeChannel(SoundChannel* channel)`\n\nRemoves the given channel from the sound engine. Returns 1 if the channel was successfully removed, 0 if the channel is the default channel or hadn’t been previously added."] pub removeChannel : :: core :: option :: Option < unsafe extern "C" fn (channel : * mut SoundChannel) -> core :: ffi :: c_int > , # [doc = "`void playdate->sound->setMicCallback(AudioInputFunction* callback, void* context, int forceInternal)`\n\nThe *callback* you pass in will be called every audio cycle.\n\nAudioInputFunction\n\n```cpp\nint AudioInputFunction(void* context, int16_t* data, int len)\n```\n\nYour input callback will be called with the recorded audio data, a monophonic stream of samples. The function should return 1 to continue recording, 0 to stop recording. If *forceInternal* is set, the device microphone is used regardless of whether the headset has a microphone."] pub setMicCallback : :: core :: option :: Option < unsafe extern "C" fn (callback : RecordCallback , context : * mut core :: ffi :: c_void , forceInternal : core :: ffi :: c_int) > , # [doc = "`void playdate->sound->getHeadphoneState(int* headphone, int* mic, int (*changeCallback)(int headphone, int mic))`\n\nIf *headphone* contains a pointer to an int, the value is set to 1 if headphones are currently plugged in. Likewise, *mic* is set if the headphones include a microphone. If *changeCallback* is provided, it will be called when the headset or mic status changes, and audio output will **not** automatically switch from speaker to headphones when headphones are plugged in (and vice versa). In this case, the callback should use `playdate→sound→setOutputsActive()` to change the output if needed.\n\nEquivalent to [`playdate.sound.getHeadphoneState()`](./Inside%20Playdate.html#f-sound.getHeadphoneState) in the Lua API."] pub getHeadphoneState : :: core :: option :: Option < unsafe extern "C" fn (headphone : * mut core :: ffi :: c_int , headsetmic : * mut core :: ffi :: c_int , changeCallback : :: core :: option :: Option < unsafe extern "C" fn (headphone : core :: ffi :: c_int , mic : core :: ffi :: c_int) >) > , # [doc = "`void playdate->sound->setOutputsActive(int headphone, int speaker)`\n\nForce audio output to the given outputs, regardless of headphone status.\n\nEquivalent to [`playdate.sound.setOutputsActive()`](./Inside%20Playdate.html#f-sound.setOutputsActive) in the Lua API."] pub setOutputsActive : :: core :: option :: Option < unsafe extern "C" fn (headphone : core :: ffi :: c_int , speaker : core :: ffi :: c_int) > , # [doc = "`int playdate->sound->removeSource(SoundSource* source)`\n\nRemoves the given [SoundSource](#f-sound.source) object from its channel, whether it’s in the default channel or a channel created with [playdate→sound→addChannel()](#f-sound.addChannel). Returns 1 if a source was removed, 0 if the source wasn’t in a channel."] pub removeSource : :: core :: option :: Option < unsafe extern "C" fn (source : * mut SoundSource) -> core :: ffi :: c_int > , pub signal : * const playdate_sound_signal , pub getError : :: core :: option :: Option < unsafe extern "C" fn () -> * const core :: ffi :: c_char > , }
+pub struct playdate_sound { pub channel : * const playdate_sound_channel , pub fileplayer : * const playdate_sound_fileplayer , pub sample : * const playdate_sound_sample , pub sampleplayer : * const playdate_sound_sampleplayer , pub synth : * const playdate_sound_synth , pub sequence : * const playdate_sound_sequence , pub effect : * const playdate_sound_effect , pub lfo : * const playdate_sound_lfo , pub envelope : * const playdate_sound_envelope , pub source : * const playdate_sound_source , pub controlsignal : * const playdate_control_signal , pub track : * const playdate_sound_track , pub instrument : * const playdate_sound_instrument , # [doc = "`uint32_t playdate->sound->getCurrentTime(void)`\n\nReturns the sound engine’s current time value, in units of sample frames, 44,100 per second.\n\nEquivalent to [`playdate.sound.getCurrentTime()`](./Inside%20Playdate.html#f-sound.getCurrentTime) in the Lua API."] pub getCurrentTime : :: core :: option :: Option < unsafe extern "C" fn () -> u32 > , # [doc = "`SoundSource* playdate->sound->addSource(AudioSourceFunction* callback, void* context, int stereo)`\n\nThe *callback* function you pass in will be called every audio render cycle.\n\nAudioSourceFunction\n\n```cpp\nint AudioSourceFunction(void* context, int16_t* left, int16_t* right, int len)\n```\n\nThis function should fill the passed-in *left* buffer (and *right* if it’s a stereo source) with *len* samples each and return 1, or return 0 if the source is silent through the cycle."] pub addSource : :: core :: option :: Option < unsafe extern "C" fn (callback : AudioSourceFunction , context : * mut core :: ffi :: c_void , stereo : core :: ffi :: c_int) -> * mut SoundSource > , # [doc = "`SoundChannel* playdate->sound->getDefaultChannel(void)`\n\nReturns the default channel, where sound sources play if they haven’t been explicity assigned to a different channel."] pub getDefaultChannel : :: core :: option :: Option < unsafe extern "C" fn () -> * mut SoundChannel > , # [doc = "`int playdate->sound->addChannel(SoundChannel* channel)`\n\nAdds the given channel to the sound engine. Returns 1 if the channel was added, 0 if it was already in the engine."] pub addChannel : :: core :: option :: Option < unsafe extern "C" fn (channel : * mut SoundChannel) -> core :: ffi :: c_int > , # [doc = "`int playdate->sound->removeChannel(SoundChannel* channel)`\n\nRemoves the given channel from the sound engine. Returns 1 if the channel was successfully removed, 0 if the channel is the default channel or hadn’t been previously added."] pub removeChannel : :: core :: option :: Option < unsafe extern "C" fn (channel : * mut SoundChannel) -> core :: ffi :: c_int > , # [doc = "`int playdate->sound->setMicCallback(AudioInputFunction* callback, void* context, enum MicSource source)`\n\nThe *callback* you pass in will be called every audio cycle.\n\nAudioInputFunction\n\n```cpp\nint AudioInputFunction(void* context, int16_t* data, int len)\n```\n\nenum MicSource\n\n```cpp\nenum MicSource {\n\tkMicInputAutodetect = 0,\n\tkMicInputInternal = 1,\n\tkMicInputHeadset = 2\n};\n```\n\nYour input callback will be called with the recorded audio data, a monophonic stream of samples. The function should return 1 to continue recording, 0 to stop recording.\n\nThe Playdate hardware has a circuit that attempts to autodetect the presence of a headset mic, but there are cases where you may want to override this. For instance, if you’re using a headphone splitter to wire an external source to the mic input, the detector may not always see the input. Setting the source to `kMicInputHeadset` forces recording from the headset. Using `kMicInputInternal` records from the device mic even when a headset with a mic is plugged in. And `kMicInputAutodetect` uses a headset mic if one is detected, otherwise the device microphone. `setMicCallback()` returns which source the function used, internal or headset, or 0 on error."] pub setMicCallback : :: core :: option :: Option < unsafe extern "C" fn (callback : RecordCallback , context : * mut core :: ffi :: c_void , source : MicSource) -> core :: ffi :: c_int > , # [doc = "`void playdate->sound->getHeadphoneState(int* headphone, int* mic, void (*changeCallback)(int headphone, int mic))`\n\nIf *headphone* contains a pointer to an int, the value is set to 1 if headphones are currently plugged in. Likewise, *mic* is set if the headphones include a microphone. If *changeCallback* is provided, it will be called when the headset or mic status changes, and audio output will **not** automatically switch from speaker to headphones when headphones are plugged in (and vice versa). In this case, the callback should use `playdate→sound→setOutputsActive()` to change the output if needed.\n\nEquivalent to [`playdate.sound.getHeadphoneState()`](./Inside%20Playdate.html#f-sound.getHeadphoneState) in the Lua API."] pub getHeadphoneState : :: core :: option :: Option < unsafe extern "C" fn (headphone : * mut core :: ffi :: c_int , headsetmic : * mut core :: ffi :: c_int , changeCallback : :: core :: option :: Option < unsafe extern "C" fn (headphone : core :: ffi :: c_int , mic : core :: ffi :: c_int) >) > , # [doc = "`void playdate->sound->setOutputsActive(int headphone, int speaker)`\n\nForce audio output to the given outputs, regardless of headphone status.\n\nEquivalent to [`playdate.sound.setOutputsActive()`](./Inside%20Playdate.html#f-sound.setOutputsActive) in the Lua API."] pub setOutputsActive : :: core :: option :: Option < unsafe extern "C" fn (headphone : core :: ffi :: c_int , speaker : core :: ffi :: c_int) > , # [doc = "`int playdate->sound->removeSource(SoundSource* source)`\n\nRemoves the given [SoundSource](#C-sound.source) object from its channel, whether it’s in the default channel or a channel created with [playdate→sound→addChannel()](#f-sound.addChannel). Returns 1 if a source was removed, 0 if the source wasn’t in a channel."] pub removeSource : :: core :: option :: Option < unsafe extern "C" fn (source : * mut SoundSource) -> core :: ffi :: c_int > , pub signal : * const playdate_sound_signal , pub getError : :: core :: option :: Option < unsafe extern "C" fn () -> * const core :: ffi :: c_char > , }
 #[test]
 fn bindgen_test_layout_playdate_sound() {
 	const UNINIT: ::core::mem::MaybeUninit<playdate_sound> = ::core::mem::MaybeUninit::uninit();
@@ -9183,4 +9211,78 @@ pub enum PDSystemEvent {
 	kEventKeyPressed = 7,
 	kEventKeyReleased = 8,
 	kEventLowPower = 9,
+}
+pub type __builtin_va_list = [__va_list_tag; 1usize];
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[must_use]
+pub struct __va_list_tag {
+	pub gp_offset: core::ffi::c_uint,
+	pub fp_offset: core::ffi::c_uint,
+	pub overflow_arg_area: *mut core::ffi::c_void,
+	pub reg_save_area: *mut core::ffi::c_void,
+}
+#[test]
+fn bindgen_test_layout___va_list_tag() {
+	const UNINIT: ::core::mem::MaybeUninit<__va_list_tag> = ::core::mem::MaybeUninit::uninit();
+	let ptr = UNINIT.as_ptr();
+	assert_eq!(
+	           ::core::mem::size_of::<__va_list_tag>(),
+	           24usize,
+	           concat!("Size of: ", stringify!(__va_list_tag))
+	);
+	assert_eq!(
+	           ::core::mem::align_of::<__va_list_tag>(),
+	           8usize,
+	           concat!("Alignment of ", stringify!(__va_list_tag))
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).gp_offset) as usize - ptr as usize },
+	           0usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(__va_list_tag),
+		"::",
+		stringify!(gp_offset)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).fp_offset) as usize - ptr as usize },
+	           4usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(__va_list_tag),
+		"::",
+		stringify!(fp_offset)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).overflow_arg_area) as usize - ptr as usize },
+	           8usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(__va_list_tag),
+		"::",
+		stringify!(overflow_arg_area)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).reg_save_area) as usize - ptr as usize },
+	           16usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(__va_list_tag),
+		"::",
+		stringify!(reg_save_area)
+	)
+	);
+}
+impl Default for __va_list_tag {
+	fn default() -> Self {
+		let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+		unsafe {
+			::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+			s.assume_init()
+		}
+	}
 }
