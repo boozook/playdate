@@ -155,8 +155,10 @@ type FnGetLength = unsafe extern "C" fn(player: *mut SamplePlayer) -> c_float;
 type FnSetOffset = unsafe extern "C" fn(player: *mut SamplePlayer, offset: c_float);
 type FnSetRate = unsafe extern "C" fn(player: *mut SamplePlayer, rate: c_float);
 type FnSetPlayRange = unsafe extern "C" fn(player: *mut SamplePlayer, start: c_int, end: c_int);
-type FnSetFinishCallback = unsafe extern "C" fn(player: *mut SamplePlayer, callback: sndCallbackProc, userdata: *mut c_void);
-type FnSetLoopCallback = unsafe extern "C" fn(player: *mut SamplePlayer, callback: sndCallbackProc, userdata: *mut c_void);
+type FnSetFinishCallback =
+	unsafe extern "C" fn(player: *mut SamplePlayer, callback: sndCallbackProc, userdata: *mut c_void);
+type FnSetLoopCallback =
+	unsafe extern "C" fn(player: *mut SamplePlayer, callback: sndCallbackProc, userdata: *mut c_void);
 type FnGetOffset = unsafe extern "C" fn(player: *mut SamplePlayer) -> c_float;
 type FnGetRate = unsafe extern "C" fn(player: *mut SamplePlayer) -> c_float;
 type FnSetPaused = unsafe extern "C" fn(player: *mut SamplePlayer, flag: c_int);
