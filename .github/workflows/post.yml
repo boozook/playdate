@@ -41,6 +41,7 @@ jobs:
           # TODO: Write good-look link like [github.event.repository.name](url)
 
           language: "en"
-          visibility: public # use `unlisted` for tests
+          # visibility: public # use `unlisted` for tests
+          visibility: unlisted
           url: ${{ secrets.MASTODON_URL }}
           access-token: ${{ secrets.MASTODON_ACCESS_TOKEN }}

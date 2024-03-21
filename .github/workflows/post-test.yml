@@ -1,0 +1,10 @@
+name: PostTest
+on:
+  workflow_dispatch:
+
+jobs:
+  post-test:
+    uses: ./.github/workflows/post.yml
+    secrets: inherit
+    with:
+      message: "test"
