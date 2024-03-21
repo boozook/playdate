@@ -382,15 +382,17 @@ fn cargo_config<P: AsRef<Path>>(config: &Config, path: P) -> CargoResult<()> {
 	doc.insert("target".into(), targets.into());
 
 
+	// NOTE: removed as workaround for issue:
+	// https://github.com/boozook/playdate/issues/221
 	// unstable features:
-	let mut unstable = toml::Table::new();
-	unstable.insert("unstable-options".into(), true.into());
-	unstable.insert("avoid-dev-deps".into(), true.into());
-	let check_cfg: Vec<toml::Value> = ["names", "values", "output"].into_iter()
-	                                                               .map(|s| toml::Value::String(s.to_string()))
-	                                                               .collect();
-	unstable.insert("check-cfg".into(), check_cfg.into());
-	doc.insert("unstable".into(), unstable.into());
+	// let mut unstable = toml::Table::new();
+	// unstable.insert("unstable-options".into(), true.into());
+	// unstable.insert("avoid-dev-deps".into(), true.into());
+	// let check_cfg: Vec<toml::Value> = ["names", "values", "output"].into_iter()
+	//                                                                .map(|s| toml::Value::String(s.to_string()))
+	//                                                                .collect();
+	// unstable.insert("check-cfg".into(), check_cfg.into());
+	// doc.insert("unstable".into(), unstable.into());
 
 
 	// export:
