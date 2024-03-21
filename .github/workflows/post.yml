@@ -27,13 +27,12 @@ jobs:
 
       - name: Toot
         id: mastodon
-        uses: cbrgm/mastodon-github-action@v2.0.1
+        uses: cbrgm/mastodon-github-action@v2.0.4
         with:
           message: |
             🦀 Rusty Playdate Updated!
 
             ${{ inputs.message || (github.event_name == 'release' && 'New release published.' || '') }}
-
 
             ${{ steps.url.outputs.value }}
 
