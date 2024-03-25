@@ -1,0 +1,3 @@
+
+README:
+- add `libudev-sys` to linux deps

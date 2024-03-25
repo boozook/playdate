@@ -1,0 +1,83 @@
+[package]
+name = "playdate-device"
+version = "0.1.0"
+readme = "README.md"
+description = "Cross-platform interface Playdate device, async & blocking."
+keywords = ["playdate", "usb", "serial"]
+categories = ["hardware-support"]
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+
+[dependencies]
+# TODO: remove probably
+object-pool = "0.5"
+
+regex.workspace = true
+log.workspace = true
+miette = "7.2"
+thiserror = "1.0"
+
+nusb = "0.1"
+usb-ids = { version = "1.2024.2" }
+serialport = { version = "4.3", features = ["usbportinfo-interface"] }
+tokio-serial = { version = "5.4", optional = true }
+
+# mb. read mount-points:
+# rustix = "0.38"
+
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+hex = "0.4"
+
+[dependencies.utils]
+workspace = true
+default-features = false
+
+[dependencies.tokio]
+version = "1.36"
+features = ["fs", "process", "time", "io-std"]
+optional = true
+
+[dependencies.futures-lite]
+version = "2.3"
+
+[dependencies.futures]
+version = "0.3"
+optional = true
+
+
+[dependencies.clap]
+features = ["std", "env", "derive", "help", "color"]
+workspace = true
+optional = true
+
+
+[target.'cfg(target_os = "macos")'.dependencies]
+plist = "1.6"
+const-hex = "1.11"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+udev = "0.8"
+lfs-core = "0.11"
+
+[target.'cfg(target_os = "windows")'.dependencies.windows]
+version = "0.54.0"
+features = [
+	"Win32_Foundation",
+	"Win32_Storage",
+	"Win32_Storage_FileSystem",
+	"Win32_System",
+	"Win32_System_IO",
+	"Win32_System_Ioctl",
+	"Win32_Security",
+]
+
+
+[features]
+default = ["async"]
+async = ["futures", "tokio", "tokio-serial"]
+tokio-serial = ["dep:tokio-serial", "tokio?/io-util", "tokio?/rt"]

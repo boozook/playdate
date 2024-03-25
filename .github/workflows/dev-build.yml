@@ -1,0 +1,105 @@
+name: Dev
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Source ref used to build bindings. Uses `github.ref`` by default."
+        required: false
+      sha:
+        description: "Source SHA used to build bindings. Uses `github.sha`` by default."
+        required: false
+  push:
+    branches: [dev/**, refactor/**]
+
+env:
+  CARGO_NET_RETRY: 10
+  RUSTUP_MAX_RETRIES: 10
+  CARGO_TERM_COLOR: always
+  CARGO_TERM_PROGRESS_WHEN: never
+  CARGO_INCREMENTAL: 1
+  # logging:
+  RUST_LOG: trace
+  CARGO_PLAYDATE_LOG: trace
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.source || github.ref || github.event.ref }}
+
+      - name: Cache
+        uses: actions/cache@v4.0.2
+        with:
+          path: |
+            target/
+            ~/.cargo
+          key: ${{ runner.os }}-dev-build-${{ hashFiles('Cargo.lock') }}
+
+      - name: Config
+        run: |
+          mkdir -p .cargo
+          cp -rf .github/config.toml .cargo/config.toml
+
+      - name: Cache LLVM
+        id: cache-llvm
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4.0.2
+        with:
+          path: ${{ runner.temp }}/llvm
+          key: llvm-14.0
+
+      # See:
+      # https://github.com/rust-lang/rust-bindgen/issues/1797
+      # https://rust-lang.github.io/rust-bindgen/requirements.html#windows
+      - name: Install LLVM
+        if: runner.os == 'Windows'
+        uses: KyleMayes/install-llvm-action@v1.9.0
+        with:
+          version: "14.0"
+          directory: ${{ runner.temp }}/llvm
+          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
+          env: true
+
+
+      - name: Install linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt install pkg-config -y
+          sudo apt install libudev-dev -y
+
+
+      - name: pdtool
+        run: |
+          cargo build -p=playdate-tool2 --bins
+
+
+      - name: Upload
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdtool-${{ runner.os }}-${{ runner.arch }}${{ ((runner.os == 'Windows') && '.exe') || ' ' }}
+          path: target/debug/pdtool${{ ((runner.os == 'Windows') && '.exe') || ' ' }}
+          if-no-files-found: warn
+          retention-days: 3
+          overwrite: true
+      - name: Artifact
+        run: |
+          echo 'ID: ${{ steps.upload.outputs.artifact-id }}'
+          echo 'URL: ${{ steps.upload.outputs.artifact-url }}'
+
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+      artifact-url: ${{ steps.upload.outputs.artifact-url }}

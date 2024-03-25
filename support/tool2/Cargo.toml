@@ -1,0 +1,42 @@
+[package]
+name = "playdate-tool2"
+version = "0.2.0"
+readme = "README.md"
+description = "Tool for interaction with Playdate device and sim."
+keywords = ["playdate", "usb", "utility"]
+categories = ["development-tools", "hardware-support"]
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+
+[[bin]]
+path = "src/main.rs"
+name = "pdtool"
+
+
+[dependencies]
+# RT, async:
+tokio = { version = "1.36", features = ["full"] }
+futures-lite = { version = "2.3" }
+futures = { version = "0.3" }
+
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+
+# CLI:
+log.workspace = true
+env_logger.workspace = true
+thiserror = "1.0"
+miette = { version = "7.2", features = ["fancy"] }
+
+[dependencies.clap]
+features = ["std", "env", "derive", "help", "usage", "color"]
+workspace = true
+
+# PD:
+[dependencies.device]
+features = ["async", "tokio", "clap", "tokio-serial"]
+workspace = true

@@ -56,9 +56,12 @@ workspace = true
 default-features = false
 features = ["assets-report", "toml"]
 
-[dependencies.tool]
+# [dependencies.tool]
+# workspace = true
+# features = ["clap", "cli"]
+[dependencies.device]
 workspace = true
-features = ["clap", "cli"]
+features = ["clap", "async", "tokio-serial", "tokio"]
 
 [dependencies.clap]
 workspace = true
@@ -89,4 +92,4 @@ nix = { version = "0.28", features = ["signal"] }
 
 [features]
 default = []
-usb = ["tool/usb"]
+# usb = ["tool/usb"]
