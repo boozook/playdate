@@ -7,7 +7,6 @@ use cargo::core::compiler::{CompileTarget, CompileKind, TargetInfo};
 use cargo::ops::CompileOptions;
 use playdate::toolchain::gcc::{ArmToolchain, Gcc};
 use playdate::toolchain::sdk::Sdk;
-use tool::cli::mount::Mount;
 use try_lazy_init::Lazy;
 
 use cargo::util::{CargoResult, Rustc};
@@ -16,6 +15,7 @@ use crate::build::rustflags::Rustflags;
 use crate::cli::cmd::Cmd;
 use crate::cli::deps::Dependency;
 use crate::cli::ide::Ide;
+use crate::cli::opts::Mount;
 use crate::utils::LazyBuildContext;
 
 
@@ -39,7 +39,7 @@ pub struct Config<'cfg> {
 	pub gcc_path: Option<PathBuf>,
 
 	pub mounting: Option<Mount>,
-	pub no_wait: bool,
+	pub no_read: bool,
 
 	pub zip: bool,
 	pub no_info_meta: bool,
@@ -83,7 +83,7 @@ impl<'cfg> Config<'cfg> {
 	           sdk_path: Option<PathBuf>,
 	           gcc_path: Option<PathBuf>,
 	           mounting: Option<Mount>,
-	           no_wait: bool,
+	           no_read: bool,
 	           zip: bool,
 	           no_info_meta: bool,
 	           prevent_unwinding: bool,
@@ -111,7 +111,7 @@ impl<'cfg> Config<'cfg> {
 		       sdk_path,
 		       gcc_path,
 		       mounting,
-		       no_wait,
+		       no_read,
 		       zip,
 		       no_info_meta,
 		       prevent_unwinding,

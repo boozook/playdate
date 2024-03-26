@@ -20,7 +20,6 @@ use cargo::util::command_prelude::{ArgMatchesExt, CompileMode, ProfileChecking};
 use cargo::util::Config as CargoConfig;
 use cargo::util::CargoResult;
 use clap_lex::SeekFrom;
-use tool::cli::mount::Mount;
 
 use crate::config::Config;
 use crate::logger::LogErr;
@@ -220,7 +219,7 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 			log::debug!("extra args: {extra:?}");
 		}
 
-		let no_wait = matches.flag("no-wait");
+		let no_read = matches.flag("no-read");
 		let mounting = matches!(cmd, Cmd::Run).then(|| Mount::from_arg_matches(&matches).ok())
 		                                      .flatten();
 
@@ -289,7 +288,7 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 		                      sdk_path,
 		                      gcc_path,
 		                      mounting,
-		                      no_wait,
+		                      no_read,
 		                      zip,
 		                      no_info_meta,
 		                      prevent_unwinding,

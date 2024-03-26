@@ -20,8 +20,8 @@ name = "pdtool"
 [dependencies]
 # RT, async:
 tokio = { version = "1.36", features = ["full"] }
-futures-lite = { version = "2.3" }
 futures = { version = "0.3" }
+futures-lite.workspace = true
 
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true

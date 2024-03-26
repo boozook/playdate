@@ -13,7 +13,7 @@ use crate::mount::mount_without_sdk;
 
 /// Mount the device.
 #[derive(Clone, Debug, clap::Parser)]
-#[command(author, version, about, long_about = None, name = "install")]
+#[command(author, version, about, long_about = None, name = "mount")]
 pub struct Mount {
 	#[cfg_attr(feature = "cli", command(flatten))]
 	pub device: DeviceQuery,

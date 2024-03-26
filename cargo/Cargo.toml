@@ -31,9 +31,10 @@ clap_lex = "0.7"
 dirs.workspace = true
 fs_extra.workspace = true
 
-cargo = "=0.77.0"
-cargo-util = "=0.2.9"
-cargo-platform = "0.1.7"
+cargo = "=0.78.0"
+cargo-util = "=0.2.10"
+cargo-platform = "0.1.8"
+cargo-util-schemas = "0.2.0"
 
 semver.workspace = true
 serde = { workspace = true, features = ["derive"] }
@@ -51,14 +52,14 @@ anstyle = "1"
 env_logger.workspace = true
 log.workspace = true
 
+futures-lite.workspace = true
+
+
 [dependencies.build]
 workspace = true
 default-features = false
 features = ["assets-report", "toml"]
 
-# [dependencies.tool]
-# workspace = true
-# features = ["clap", "cli"]
 [dependencies.device]
 workspace = true
 features = ["clap", "async", "tokio-serial", "tokio"]
@@ -92,4 +93,3 @@ nix = { version = "0.28", features = ["signal"] }
 
 [features]
 default = []
-# usb = ["tool/usb"]
