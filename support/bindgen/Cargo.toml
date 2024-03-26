@@ -32,7 +32,7 @@ utils.workspace = true
 bindgen-cfg = { workspace = true, features = ["clap"] }
 
 [dependencies.bindgen]
-version = "=0.69.4"
+version = "0.69.4"
 default-features = false
 
 [dependencies.clap]
