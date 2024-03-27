@@ -15,6 +15,7 @@ use object_pool::Reusable;
 use crate::device::command::Command;
 use crate::device::Device;
 use crate::error::Error;
+use crate::interface::blocking::Out;
 
 use self::mode::DeviceMode;
 use self::mode::Mode;
@@ -231,43 +232,53 @@ pub fn inspect_device(dev: &DeviceInfo) {
 	         dev.product_string().unwrap_or("")
 	);
 
+	println!("  {dev:#?}");
 
-	{
-		let bulk = dev.data_interface();
-		println!("bulk interface: {:#?}", bulk);
-	}
+
+	let bulk = dev.data_interface();
+	let mut has_data_interface = bulk.is_some();
+	let mut bulk_interface_number = None;
+	println!("bulk interface: {:#?}", bulk);
 	println!("---");
+
+
+	let describe_class = |class: u8, subclass: u8, protocol: u8, indent: &'static str| {
+		use usb_ids::FromId;
+
+		let class = usb_ids::Class::from_id(class);
+
+		let subs = class.unwrap()
+		                .sub_classes()
+		                .filter(|sub| sub.id() == subclass)
+		                .collect::<Vec<_>>();
+
+
+		for sub in subs {
+			println!("{indent}sub: ({:#02x}) {}", sub.id(), sub.name());
+			let protocols = sub.protocols().filter(|p| p.id() == protocol).collect::<Vec<_>>();
+			if protocols.is_empty() {
+				println!("{indent}{indent}unknown protocol: {protocol:#02x}");
+			}
+			for p in protocols {
+				println!("{indent}{indent}protocol: ({:#02x}) {}", p.id(), p.name());
+			}
+		}
+	};
 
 	{
 		use usb_ids::FromId;
 
-		println!("interfaces:");
-		for i in dev.interfaces() {
+		let interfaces = dev.interfaces().collect::<Vec<_>>();
+		println!("interfaces: ({})", interfaces.len());
+		for i in interfaces {
 			let class = usb_ids::Class::from_id(i.class());
 
-			let subclass_id = i.subclass();
-			let subs = class.unwrap()
-			                .sub_classes()
-			                .filter(|sub| sub.id() == subclass_id)
-			                .collect::<Vec<_>>();
 			let n = i.interface_number();
 			let name = i.interface_string().unwrap_or("_");
-			let protocol_id = i.protocol();
 
 			println!("{n}: {name}");
 			println!("class: ({:#02x})  {:?}", i.class(), class.map(|c| c.name()));
-			for sub in subs {
-				println!("  sub: ({:#02x}) {}", sub.id(), sub.name());
-				let protocols = sub.protocols()
-				                   .filter(|p| p.id() == protocol_id)
-				                   .collect::<Vec<_>>();
-				if protocols.is_empty() {
-					println!("    unknown protocol: {protocol_id:#02x}");
-				}
-				for p in protocols {
-					println!("    protocol: ({:#02x}) {}", p.id(), p.name());
-				}
-			}
+			describe_class(i.class(), i.subclass(), i.protocol(), "  ");
 		}
 	}
 	println!("---");
@@ -281,13 +292,64 @@ pub fn inspect_device(dev: &DeviceInfo) {
 		},
 	};
 
-	match dev.active_configuration() {
+	let active_configuration = dev.active_configuration();
+	match &active_configuration {
 		Ok(config) => println!("Active configuration is {}", config.configuration_value()),
 		Err(e) => println!("Unknown active configuration: {e}"),
 	}
 
+
+	let mut bulk_found = false;
 	for config in dev.configurations() {
-		println!("{config:#?}");
+		let active = if let Ok(ref cfg) = active_configuration {
+			if config.configuration_value() == cfg.configuration_value() {
+				"[ACTIVE] "
+			} else {
+				""
+			}
+		} else {
+			""
+		};
+
+		println!("  {active}{config:#?}");
+
+		if !has_data_interface {
+			println!("  |");
+			println!("  |");
+			println!("  \\---");
+			for i in config.interfaces() {
+				let bulk = i.alt_settings().find(|i| i.class() == 0xA | 2);
+				if let Some(bulk) = bulk {
+					println!("I JUST FOUND BULK INTERFACE!");
+					println!("{bulk:#?}");
+					has_data_interface = true;
+					bulk_interface_number = Some(bulk.interface_number());
+				} else {
+					for i in i.alt_settings() {
+						describe_class(i.class(), i.subclass(), i.protocol(), "    ");
+						println!("    endpoints: ({})", i.num_endpoints());
+						for endpoint in i.endpoints() {
+							println!("    {endpoint:#?}");
+						}
+					}
+				}
+			}
+		}
+	}
+
+	println!("---");
+
+	if has_data_interface && bulk_interface_number.is_some() {
+		let i = bulk_interface_number.unwrap();
+		println!("trying to open interface: {i}");
+		let interf = Interface::new(dev.claim_interface(i).unwrap());
+		{
+			use crate::device::command::SystemPath;
+			use crate::device::command::Switch;
+
+			interf.send_cmd(Command::Echo { value: Switch::On }).unwrap();
+			interf.send_cmd(Command::RunSystem { path: SystemPath::Settings }).unwrap();
+		}
 	}
 
 	println!("----------------\n");

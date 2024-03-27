@@ -20,7 +20,7 @@ name = "pdtool"
 
 [dependencies]
 # RT, async:
-tokio = { version = "1.36", features = ["full"] }
+tokio = { version = "1.36", features = ["full", "rt-multi-thread"] }
 futures = { version = "0.3" }
 futures-lite.workspace = true
 

@@ -88,13 +88,11 @@ async fn main() -> miette::Result<()> {
 	debug!("cmd: {:?}", cfg.cmd);
 
 	match cfg.cmd {
-		cli::Command::List { kind } => discover(cfg.format, kind).await,
+		cli::Command::List { kind } => list(cfg.format, kind).await,
 		cli::Command::Read(query) => read(query).await,
-		cli::Command::Mount { query, wait } => mount_and(query, wait, cfg.format).await,
-		cli::Command::Unmount { query, wait } => unmount_and(query, wait, cfg.format).await,
-		cli::Command::Install(cli::Install { pdx, query, force }) => {
-			install_and(query, pdx, force, cfg.format).await
-		},
+		cli::Command::Mount { query, wait } => mount(query, wait, cfg.format).await,
+		cli::Command::Unmount { query, wait } => unmount(query, wait, cfg.format).await,
+		cli::Command::Install(cli::Install { pdx, query, force }) => install(query, pdx, force, cfg.format).await,
 		cli::Command::Run(cli::Run { destination:
 		                                cli::Destination::Device(cli::DeviceDestination { install:
 		                                                                                     cli::Install { pdx,
@@ -102,11 +100,11 @@ async fn main() -> miette::Result<()> {
 		                                                                                                    force, },
 		                                                                                  no_install,
 		                                                                                  no_read, }), }) => {
-			run_on_device(query, pdx, no_install, no_read, force, cfg.format).await
+			run_dev(query, pdx, no_install, no_read, force, cfg.format).await
 		},
 		cli::Command::Run(cli::Run { destination:
 		                                cli::Destination::Simulator(cli::SimDestination { pdx, sdk }), }) => {
-			run_with_sim(pdx, sdk, cfg.format).await
+			run_sim(pdx, sdk, cfg.format).await
 		},
 		cli::Command::Send(cli::Send { command, query, read }) => send(query, command, read, cfg.format).await,
 
@@ -127,13 +125,13 @@ async fn main() -> miette::Result<()> {
 
 
 #[cfg_attr(feature = "tracing", tracing::instrument())]
-async fn run_on_device(query: DeviceQuery,
-                       pdx: PathBuf,
-                       no_install: bool,
-                       no_read: bool,
-                       force: bool,
-                       format: cli::Format)
-                       -> Result<(), error::Error> {
+async fn run_dev(query: DeviceQuery,
+                 pdx: PathBuf,
+                 no_install: bool,
+                 no_read: bool,
+                 force: bool,
+                 format: cli::Format)
+                 -> Result<(), error::Error> {
 	let devs = run::run_on_device(query, pdx, no_install, no_read, force).await?
 	                                                                     .into_iter()
 	                                                                     .enumerate();
@@ -165,7 +163,7 @@ async fn run_on_device(query: DeviceQuery,
 
 
 #[cfg_attr(feature = "tracing", tracing::instrument())]
-async fn run_with_sim(pdx: PathBuf, sdk: Option<PathBuf>, _format: cli::Format) -> Result<(), error::Error> {
+async fn run_sim(pdx: PathBuf, sdk: Option<PathBuf>, _format: cli::Format) -> Result<(), error::Error> {
 	run::run_with_sim(pdx, sdk).await
 	                           .inspect(|_| trace!("sim execution is done"))
 }
@@ -173,11 +171,11 @@ async fn run_with_sim(pdx: PathBuf, sdk: Option<PathBuf>, _format: cli::Format) 
 
 /// `mount_and_install` with report.
 #[cfg_attr(feature = "tracing", tracing::instrument())]
-async fn install_and(query: DeviceQuery,
-                     path: PathBuf,
-                     force: bool,
-                     format: cli::Format)
-                     -> Result<(), error::Error> {
+async fn install(query: DeviceQuery,
+                 path: PathBuf,
+                 force: bool,
+                 format: cli::Format)
+                 -> Result<(), error::Error> {
 	if matches!(format, cli::Format::Json) {
 		print!("[");
 	}
@@ -216,7 +214,7 @@ async fn install_and(query: DeviceQuery,
 
 /// [[mount::mount_and]] with report.
 #[cfg_attr(feature = "tracing", tracing::instrument())]
-async fn mount_and(query: DeviceQuery, wait: bool, format: cli::Format) -> Result<(), error::Error> {
+async fn mount(query: DeviceQuery, wait: bool, format: cli::Format) -> Result<(), error::Error> {
 	if matches!(format, cli::Format::Json) {
 		print!("[");
 	}
@@ -253,7 +251,7 @@ async fn mount_and(query: DeviceQuery, wait: bool, format: cli::Format) -> Resul
 
 /// [[mount::unmount_and]] with report.
 #[cfg_attr(feature = "tracing", tracing::instrument())]
-async fn unmount_and(query: DeviceQuery, wait: bool, format: cli::Format) -> Result<(), error::Error> {
+async fn unmount(query: DeviceQuery, wait: bool, format: cli::Format) -> Result<(), error::Error> {
 	let results: Vec<_> = mount::unmount_and(query, wait).await?.collect().await;
 	for (i, res) in results.into_iter().enumerate() {
 		match res {
@@ -350,7 +348,7 @@ async fn read(query: DeviceQuery) -> Result<(), error::Error> {
 
 
 #[cfg_attr(feature = "tracing", tracing::instrument())]
-async fn discover(format: cli::Format, kind: cli::DeviceKind) -> Result<(), error::Error> {
+async fn list(format: cli::Format, kind: cli::DeviceKind) -> Result<(), error::Error> {
 	use mount::volume::volumes_for_map;
 
 	let devices = match kind {
