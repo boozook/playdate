@@ -26,6 +26,7 @@ pub mod io;
 
 const BULK_IN: u8 = 0x81;
 const BULK_OUT: u8 = 0x01;
+const INTERRUPT_IN: u8 = 0x82;
 
 
 pub trait HaveDataInterface {
@@ -34,7 +35,9 @@ pub trait HaveDataInterface {
 }
 
 impl HaveDataInterface for DeviceInfo {
+	#[cfg_attr(feature = "tracing", tracing::instrument)]
 	fn data_interface(&self) -> Option<&InterfaceInfo> { self.interfaces().find(|i| i.class() == 0xA | 2) }
+	#[cfg_attr(feature = "tracing", tracing::instrument)]
 	fn have_data_interface(&self) -> bool { self.data_interface().is_some() }
 }
 
@@ -44,7 +47,9 @@ pub trait MassStorageInterface {
 }
 
 impl MassStorageInterface for DeviceInfo {
+	#[cfg_attr(feature = "tracing", tracing::instrument)]
 	fn storage_interface(&self) -> Option<&InterfaceInfo> { self.interfaces().find(|i| i.class() == 8) }
+	#[cfg_attr(feature = "tracing", tracing::instrument)]
 	fn have_storage_interface(&self) -> bool { self.storage_interface().is_some() }
 }
 
@@ -55,6 +60,7 @@ impl Device {
 	/// 1. [if changed] Update state of `this`, drop all pending transfers if needed
 	///    to prevent future errors when send to unexisting interface.
 	/// 1. Return `true` if `mode` changed.
+	#[cfg_attr(feature = "tracing", tracing::instrument)]
 	pub fn refresh(&mut self) -> Result<bool, Error> {
 		let mode = self.info.mode();
 		if mode != self.mode {
@@ -100,6 +106,7 @@ impl Device {
 
 	/// Open USB interface if available,
 	/// otherwise try open serial port if available.
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
 	pub fn open(&mut self) -> Result<(), Error> {
 		if !matches!(self.mode, Mode::Data) {
 			return Err(Error::WrongState(self.mode));
@@ -111,19 +118,20 @@ impl Device {
 		}
 
 		if self.info.have_data_interface() {
-			let bulk = self.open_bulk().map(|_| {});
+			let bulk = self.try_bulk().map(|_| {});
 			if let Some(err) = bulk.err() {
-				self.open_serial().map_err(|err2| Error::chain(err, [err2]))
+				self.try_serial().map_err(|err2| Error::chain(err, [err2]))
 			} else {
 				self.interface()
 			}
 		} else {
-			self.open_serial()
+			self.try_serial()
 		}?;
 		Ok(())
 	}
 
-	fn open_bulk(&mut self) -> Result<&crate::interface::Interface, Error> {
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
+	fn try_bulk(&mut self) -> Result<&crate::interface::Interface, Error> {
 		if let Some(ref io) = self.interface {
 			Ok(io)
 		} else if let Some(ref dev) = self.inner {
@@ -137,7 +145,8 @@ impl Device {
 		}
 	}
 
-	fn open_serial(&mut self) -> Result<&crate::interface::Interface, Error> {
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
+	fn try_serial(&mut self) -> Result<&crate::interface::Interface, Error> {
 		use crate::serial::Interface;
 
 
@@ -174,17 +183,20 @@ impl Device {
 		self.interface.as_mut().ok_or_else(|| Error::not_ready())
 	}
 
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
 	pub fn set_interface(&mut self, interface: crate::interface::Interface) {
 		self.close();
 		self.interface = Some(interface);
 	}
 
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
 	pub fn close(&mut self) {
 		self.info.serial_number().map(|s| debug!("closing {s}"));
 		self.interface.take();
 		self.inner.take();
 	}
 
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
 	pub fn close_with_reset(&mut self) {
 		self.info.serial_number().map(|s| debug!("closing* {s}"));
 		self.interface.take();
@@ -192,6 +204,44 @@ impl Device {
 			dev.reset().map_err(|err| error!("{err}")).ok();
 		}
 	}
+
+
+	pub fn inspect(&self) {
+		inspect_device(self.info());
+		//
+	}
+}
+
+
+/// Print debug information about device.
+pub fn inspect_device(dev: &DeviceInfo) {
+	println!(
+	         "Device {:03}.{:03} ({:04x}:{:04x}) {} {}",
+	         dev.bus_number(),
+	         dev.device_address(),
+	         dev.vendor_id(),
+	         dev.product_id(),
+	         dev.manufacturer_string().unwrap_or(""),
+	         dev.product_string().unwrap_or("")
+	);
+	let dev = match dev.open() {
+		Ok(dev) => dev,
+		Err(e) => {
+			println!("Failed to open device: {}", e);
+			return;
+		},
+	};
+
+	match dev.active_configuration() {
+		Ok(config) => println!("Active configuration is {}", config.configuration_value()),
+		Err(e) => println!("Unknown active configuration: {e}"),
+	}
+
+	for config in dev.configurations() {
+		println!("{config:#?}");
+	}
+	println!("");
+	println!("");
 }
 
 
@@ -202,7 +252,7 @@ impl Device {
 // }
 
 impl crate::interface::blocking::Out for Interface {
-	#[inline(always)]
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
 	fn send_cmd(&self, cmd: Command) -> Result<usize, Error> {
 		futures_lite::future::block_on(self.write_cmd(cmd)).map_err(Into::into)
 	}
@@ -214,7 +264,7 @@ impl crate::interface::blocking::In for Interface {
 
 
 impl crate::interface::r#async::Out for Interface {
-	#[inline(always)]
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
 	async fn send_cmd(&self, cmd: Command) -> Result<usize, Error> {
 		self.write_cmd(cmd).await.map_err(Into::into)
 	}
@@ -230,12 +280,15 @@ pub struct Interface {
 }
 
 impl Interface {
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(inner)))]
 	pub fn new(inner: nusb::Interface) -> Self { Self { inner } }
 
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
 	pub fn write_cmd(&self, cmd: Command) -> impl std::future::Future<Output = Result<usize, TransferError>> {
 		self.write(cmd.with_break().as_bytes())
 	}
 
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
 	pub fn write(&self, data: &[u8]) -> impl std::future::Future<Output = Result<usize, TransferError>> {
 		self.inner.bulk_out(BULK_OUT, data.to_vec()).map(|comp| {
 			                                            // TODO: attach data to the pool

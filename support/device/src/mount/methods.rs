@@ -20,6 +20,7 @@ use crate::interface::{self, AsyncSend};
 type Result<T = (), E = Error> = std::result::Result<T, E>;
 
 // TODO: make timeout configurable
+#[cfg_attr(feature = "tracing", tracing::instrument(fields(dev = mount.info().serial_number(), mount = mount.handle.volume().path().as_ref().display().to_string())))]
 pub async fn wait_fs_available(mount: &MountedDevice) -> Result {
 	const ITER: u64 = 120; // ms
 	const RETRIES: u8 = 255; // ≈30 sec
@@ -77,6 +78,7 @@ pub async fn wait_fs_available(mount: &MountedDevice) -> Result {
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn mount(query: Query) -> Result<impl Stream<Item = Result<MountedDevice>>> {
 	match query.value {
 		Some(QueryValue::Path(port)) => {
@@ -96,6 +98,7 @@ pub async fn mount(query: Query) -> Result<impl Stream<Item = Result<MountedDevi
 
 /// Switch between stream methods `mount` and `mount then wait_fs_available`,
 /// depending on `wait` parameter.
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn mount_and(query: Query, wait: bool) -> Result<impl Stream<Item = Result<MountedDevice>>> {
 	let fut = mount(query).await?.flat_map(move |res| {
 		                             async move {
@@ -114,6 +117,7 @@ pub async fn mount_and(query: Query, wait: bool) -> Result<impl Stream<Item = Re
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn mount_by_sn_mb(sn: Option<Sn>) -> Result<Unordered<impl Future<Output = Result<MountedDevice>>>> {
 	let devices = usb::discover::devices_with(sn)?;
 	let mounting = devices.map(mount_dev);
@@ -131,6 +135,7 @@ pub async fn mount_by_sn_mb(sn: Option<Sn>) -> Result<Unordered<impl Future<Outp
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument(fields(port = port.as_ref())))]
 pub async fn mount_by_port_name<S: AsRef<str>>(
 	port: S)
 	-> Result<Unordered<impl Future<Output = Result<MountedDevice>>>> {
@@ -201,6 +206,7 @@ pub async fn mount_by_port_name<S: AsRef<str>>(
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument(fields(dev = dev.info().serial_number())))]
 fn mount_dev(mut dev: Device) -> Result<impl Future<Output = Result<MountedDevice>>> {
 	dev.info().serial_number().map(|s| debug!("mounting {s}"));
 	let fut = match dev.mode_cached() {
@@ -225,6 +231,7 @@ fn mount_dev(mut dev: Device) -> Result<impl Future<Output = Result<MountedDevic
 
 
 // TODO: make timeout configurable
+#[cfg_attr(feature = "tracing", tracing::instrument(fields(dev = dev.info().serial_number())))]
 async fn wait_mount_point(dev: Device) -> Result<MountedDevice> {
 	const ITER: u64 = 100; // ms
 	const RETRIES: u8 = 100; // ≈10 sec
@@ -266,6 +273,7 @@ async fn wait_mount_point(dev: Device) -> Result<MountedDevice> {
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn unmount(query: Query) -> Result<Unordered<impl Future<Output = (Device, Result)>>> {
 	match query.value {
 		Some(QueryValue::Path(path)) => {
@@ -281,6 +289,7 @@ pub async fn unmount(query: Query) -> Result<Unordered<impl Future<Output = (Dev
 }
 
 /// Unmount device(s), then wait for state change to [`Data`][usb::mode::Mode::Data].
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn unmount_and_wait(query: Query) -> Result<impl Stream<Item = Result<Device>>> {
 	let stream = Unordered::new();
 	unmount(query).await?
@@ -300,6 +309,7 @@ pub async fn unmount_and_wait(query: Query) -> Result<impl Stream<Item = Result<
 
 /// Switch between stream methods `unmount` and `unmount_and_wait`,
 /// depending on `wait` parameter.
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn unmount_and(query: Query, wait: bool) -> Result<impl Stream<Item = Result<Device>>> {
 	let results = if wait {
 		unmount_and_wait(query).await?.left_stream()
@@ -313,6 +323,7 @@ pub async fn unmount_and(query: Query, wait: bool) -> Result<impl Stream<Item = 
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn unmount_mb_sn(sn: Option<Sn>) -> Result<Unordered<impl Future<Output = (Device, Result)>>> {
 	let devs = devices_storage()?.filter(move |dev| {
 		                             sn.as_ref()

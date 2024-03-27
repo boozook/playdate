@@ -24,8 +24,10 @@ pub struct Interface {
 
 
 impl Interface {
+	#[cfg_attr(feature = "tracing", tracing::instrument)]
 	pub fn new(info: serialport::SerialPortInfo) -> Self { Self { info, port: None } }
 
+	#[cfg_attr(feature = "tracing", tracing::instrument)]
 	pub fn new_with(port: Port, name: Option<String>) -> Self {
 		use serialport::{SerialPort, SerialPortType, SerialPortInfo};
 
@@ -41,8 +43,10 @@ impl Interface {
 	pub fn info(&self) -> &serialport::SerialPortInfo { &self.info }
 	pub fn is_open(&self) -> bool { self.port.is_some() }
 
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self), fields(self.port_name = self.info().port_name)))]
 	pub fn set_port(&mut self, port: Port) { self.port = Some(RefCell::new(port)); }
 
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self), fields(self.port_name = self.info().port_name)))]
 	pub fn open(&mut self) -> Result<(), Error> {
 		if self.port.is_some() {
 			Ok(())
@@ -54,11 +58,14 @@ impl Interface {
 	}
 
 
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self), fields(self.port_name = self.info().port_name)))]
 	pub fn close(&mut self) { self.port.take(); }
 }
 
 
-pub fn open<'a>(port_name: impl Into<std::borrow::Cow<'a, str>>) -> Result<Port, Error> {
+#[cfg_attr(feature = "tracing", tracing::instrument)]
+pub fn open<'a, S: Into<std::borrow::Cow<'a, str>>>(port_name: S) -> Result<Port, Error>
+	where S: std::fmt::Debug {
 	let builder = port_builder(port_name);
 
 	#[cfg(not(feature = "tokio-serial"))]

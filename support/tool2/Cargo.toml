@@ -15,6 +15,7 @@ repository.workspace = true
 [[bin]]
 path = "src/main.rs"
 name = "pdtool"
+# required-features = ["tracing"]
 
 
 [dependencies]
@@ -32,6 +33,12 @@ env_logger.workspace = true
 thiserror = "1.0"
 miette = { version = "7.2", features = ["fancy"] }
 
+tracing = { version = "0.1", optional = true }
+tracing-subscriber = { version = "0.3", optional = true }
+console-subscriber = { version = "0.2", features = [
+	"env-filter",
+], optional = true }
+
 [dependencies.clap]
 features = ["std", "env", "derive", "help", "usage", "color"]
 workspace = true
@@ -40,3 +47,11 @@ workspace = true
 [dependencies.device]
 features = ["async", "tokio", "clap", "tokio-serial"]
 workspace = true
+
+
+[features]
+default = ["tracing"]
+tracing = ["dep:tracing", "tracing-subscriber", "device/tracing"]
+
+# use with tokio-console, https://tokio.rs/tokio/topics/tracing-next-steps
+tokio-tracing = ["tracing", "tokio/tracing", "console-subscriber", "tracing"]

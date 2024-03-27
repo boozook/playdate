@@ -16,6 +16,7 @@ use crate::error::Error;
 use crate::device::Device;
 
 
+#[derive(Debug, Clone)]
 pub struct Volume {
 	/// FS mount point.
 	path: PathBuf,
@@ -58,6 +59,7 @@ mod unmount {
 
 
 	impl Unmount for Volume {
+		#[cfg_attr(feature = "tracing", tracing::instrument())]
 		fn unmount_blocking(&self) -> Result<(), Error> {
 			use std::process::Command;
 
@@ -101,6 +103,7 @@ mod unmount {
 
 	#[cfg(feature = "tokio")]
 	impl UnmountAsync for Volume {
+		#[cfg_attr(feature = "tracing", tracing::instrument())]
 		async fn unmount(&self) -> Result<(), Error> {
 			use tokio::process::Command;
 			use futures_lite::future::ready;
@@ -210,6 +213,7 @@ mod unmount {
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument(fields(dev = dev.as_ref().serial_number())))]
 pub async fn volume_for<Info>(dev: Info) -> Result<Volume, Error>
 	where Info: AsRef<nusb::DeviceInfo> {
 	let sysfs = dev.as_ref().sysfs_path();
@@ -246,6 +250,7 @@ pub async fn volume_for<Info>(dev: Info) -> Result<Volume, Error>
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument(skip(devs)))]
 pub async fn volumes_for_map<I>(devs: I) -> Result<HashMap<Device, Option<Volume>>, Error>
 	where I: IntoIterator<Item = Device> {
 	let mounts = lfs_core::read_mountinfo()?;

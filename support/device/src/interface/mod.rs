@@ -79,6 +79,7 @@ mod ext {
 		where T: tokio::io::AsyncWriteExt,
 		      Self: Unpin
 	{
+		#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
 		async fn send_cmd(&mut self, cmd: crate::device::command::Command) -> Result<usize, Error> {
 			let cmd = cmd.with_break();
 			let bytes = cmd.as_bytes();

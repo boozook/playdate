@@ -13,22 +13,26 @@ use super::Device;
 
 
 /// Enumerate all Playdate- devices.
+#[cfg_attr(feature = "tracing", tracing::instrument)]
 pub fn devices() -> Result<impl Iterator<Item = Device>, Error> {
 	Ok(nusb::list_devices()?.filter(|d| d.vendor_id() == VENDOR_ID)
 	                        .map(|info| Device::new(info)))
 }
 
 /// Search Playdate- devices that in data (serial/modem/telnet) mode.
+#[cfg_attr(feature = "tracing", tracing::instrument)]
 pub fn devices_data() -> Result<impl Iterator<Item = Device>, Error> {
 	devices().map(|iter| iter.filter(|d| d.info.product_id() == PRODUCT_ID_DATA))
 }
 
 /// Search Playdate- devices that in storage (data-disk) mode.
+#[cfg_attr(feature = "tracing", tracing::instrument)]
 pub fn devices_storage() -> Result<impl Iterator<Item = Device>, Error> {
 	devices().map(|iter| iter.filter(|d| d.info.product_id() == PRODUCT_ID_STORAGE))
 }
 
 /// Search exact one device with same serial number.
+#[cfg_attr(feature = "tracing", tracing::instrument)]
 pub fn device(sn: &Sn) -> Result<Device, Error> {
 	devices()?.find(|d| d.info.serial_number().filter(|s| sn.eq(s)).is_some())
 	          .ok_or_else(|| Error::not_found())
@@ -36,6 +40,7 @@ pub fn device(sn: &Sn) -> Result<Device, Error> {
 
 /// Search devices with same serial number,
 /// or __any__ Playdate- device if `sn` is `None`.
+#[cfg_attr(feature = "tracing", tracing::instrument)]
 pub fn devices_with(sn: Option<Sn>) -> Result<impl Iterator<Item = Device>, Error> {
 	Ok(devices()?.filter(move |dev| {
 		             if let Some(sn) = sn.as_ref() {
@@ -48,6 +53,7 @@ pub fn devices_with(sn: Option<Sn>) -> Result<impl Iterator<Item = Device>, Erro
 
 /// Search devices with same serial number in data mode,
 /// or __any__ Playdate- device if `sn` is `None`.
+#[cfg_attr(feature = "tracing", tracing::instrument)]
 pub fn devices_data_with(sn: Option<Sn>) -> Result<impl Iterator<Item = Device>, Error> {
 	Ok(devices_data()?.filter(move |dev| {
 		                  if let Some(sn) = sn.as_ref() {
@@ -60,6 +66,7 @@ pub fn devices_data_with(sn: Option<Sn>) -> Result<impl Iterator<Item = Device>,
 
 
 #[cfg(feature = "futures")]
+#[cfg_attr(feature = "tracing", tracing::instrument)]
 pub async fn devices_data_for(query: query::DeviceQuery) -> Result<Vec<Device>, Error> {
 	use query::DeviceQueryValue as Query;
 	use serial::dev_with_port;
@@ -123,6 +130,7 @@ pub async fn devices_data_for(query: query::DeviceQuery) -> Result<Vec<Device>, 
 
 
 #[cfg(feature = "futures")]
+#[cfg_attr(feature = "tracing", tracing::instrument(skip(f)))]
 pub async fn for_each_data_interface<F, Fut, T>(query: query::DeviceQuery,
                                                 mut f: F)
                                                 -> Result<impl Stream<Item = T>, Error>

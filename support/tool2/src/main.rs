@@ -1,7 +1,11 @@
-// #![feature(exit_status_error)]
+#[cfg(feature = "tracing")]
+#[macro_use]
+extern crate tracing;
 
+#[cfg(not(feature = "tracing"))]
 #[macro_use]
 extern crate log;
+
 extern crate device as pddev;
 
 use std::path::PathBuf;
@@ -22,13 +26,66 @@ mod cli;
 mod report;
 
 
+#[cfg(all(feature = "tracing", not(feature = "console-subscriber")))]
+fn enable_tracing() {
+	use tracing::Level;
+	use tracing_subscriber::fmt::Subscriber;
+
+	let subscriber = Subscriber::builder().compact()
+	                                      .with_file(true)
+	                                      .with_target(false)
+	                                      .with_line_number(true)
+	                                      .without_time()
+	                                      .with_level(true)
+	                                      .with_thread_ids(false)
+	                                      .with_thread_names(true)
+	                                      .with_max_level(Level::TRACE)
+	                                      .finish();
+	tracing::subscriber::set_global_default(subscriber).unwrap();
+}
+
+#[cfg(all(feature = "tracing", feature = "console-subscriber"))]
+fn enable_tracing() {
+	use tracing::Level;
+	use console_subscriber::ConsoleLayer;
+	use tracing_subscriber::prelude::*;
+
+	let console_layer = ConsoleLayer::builder().with_default_env().spawn();
+	let fmt = tracing_subscriber::fmt::layer().with_file(true)
+	                                          .with_target(false)
+	                                          .with_line_number(true)
+	                                          .without_time()
+	                                          .with_level(true)
+	                                          .with_thread_ids(true)
+	                                          .with_thread_names(true)
+	                                          .with_filter(tracing::level_filters::LevelFilter::from(Level::TRACE));
+
+
+	tracing_subscriber::registry().with(console_layer)
+	                              .with(fmt)
+	                              .init();
+}
+
+
 #[tokio::main]
 async fn main() -> miette::Result<()> {
-	let cfg = cli::parse();
-	std::env::set_var("RUST_LOG", "trace,nusb=warn,mio_serial=info,mio=info");
-	env_logger::init();
+	#[cfg(feature = "tracing")]
+	enable_tracing();
+	#[cfg(not(feature = "tracing"))]
+	{
+		// std::env::set_var("RUST_LOG", "trace,nusb=warn,mio_serial=info,mio=info");
+		std::env::set_var("RUST_LOG", "trace");
+		env_logger::Builder::from_env(env_logger::Env::default()).format_indent(Some(3))
+		                                                         .format_module_path(false)
+		                                                         .format_target(true)
+		                                                         .format_timestamp(None)
+		                                                         .init();
+	}
 
-	debug!("cmd: {:#?}", cfg.cmd);
+	let cfg = cli::parse();
+
+
+	debug!("cmd: {:?}", cfg.cmd);
 
 	match cfg.cmd {
 		cli::Command::List { kind } => discover(cfg.format, kind).await,
@@ -52,10 +109,24 @@ async fn main() -> miette::Result<()> {
 			run_with_sim(pdx, sdk, cfg.format).await
 		},
 		cli::Command::Send(cli::Send { command, query, read }) => send(query, command, read, cfg.format).await,
+
+		cli::Command::Debug => {
+			use mount::volume::volumes_for_map;
+
+			volumes_for_map(usb::discover::devices()?).await?
+			                                          .into_iter()
+			                                          .map(|(dev, vol)| (dev, vol.map(|v| v.path().to_path_buf())))
+			                                          .for_each(|(dev, path)| {
+				                                          dev.inspect();
+				                                          println!("vol: {path:?}");
+			                                          });
+			Ok(())
+		},
 	}.into_diagnostic()
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 async fn run_on_device(query: DeviceQuery,
                        pdx: PathBuf,
                        no_install: bool,
@@ -93,6 +164,7 @@ async fn run_on_device(query: DeviceQuery,
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 async fn run_with_sim(pdx: PathBuf, sdk: Option<PathBuf>, _format: cli::Format) -> Result<(), error::Error> {
 	run::run_with_sim(pdx, sdk).await
 	                           .inspect(|_| trace!("sim execution is done"))
@@ -100,6 +172,7 @@ async fn run_with_sim(pdx: PathBuf, sdk: Option<PathBuf>, _format: cli::Format) 
 
 
 /// `mount_and_install` with report.
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 async fn install_and(query: DeviceQuery,
                      path: PathBuf,
                      force: bool,
@@ -142,6 +215,7 @@ async fn install_and(query: DeviceQuery,
 
 
 /// [[mount::mount_and]] with report.
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 async fn mount_and(query: DeviceQuery, wait: bool, format: cli::Format) -> Result<(), error::Error> {
 	if matches!(format, cli::Format::Json) {
 		print!("[");
@@ -178,6 +252,7 @@ async fn mount_and(query: DeviceQuery, wait: bool, format: cli::Format) -> Resul
 
 
 /// [[mount::unmount_and]] with report.
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 async fn unmount_and(query: DeviceQuery, wait: bool, format: cli::Format) -> Result<(), error::Error> {
 	let results: Vec<_> = mount::unmount_and(query, wait).await?.collect().await;
 	for (i, res) in results.into_iter().enumerate() {
@@ -203,6 +278,7 @@ async fn unmount_and(query: DeviceQuery, wait: bool, format: cli::Format) -> Res
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 async fn send(query: DeviceQuery,
               command: device::command::Command,
               read: bool,
@@ -229,6 +305,7 @@ async fn send(query: DeviceQuery,
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 async fn read(query: DeviceQuery) -> Result<(), error::Error> {
 	let by_dev = |mut device: device::Device| -> Result<_, Error> {
 		device.info().serial_number().map(|s| trace!("reading {s}"));
@@ -272,6 +349,7 @@ async fn read(query: DeviceQuery) -> Result<(), error::Error> {
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 async fn discover(format: cli::Format, kind: cli::DeviceKind) -> Result<(), error::Error> {
 	use mount::volume::volumes_for_map;
 

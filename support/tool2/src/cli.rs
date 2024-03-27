@@ -78,6 +78,8 @@ pub enum Command {
 	/// Send command to specified device.
 	// #[command(hide = true)]
 	Send(#[command(flatten)] Send),
+
+	Debug,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy)]

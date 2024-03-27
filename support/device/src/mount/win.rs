@@ -19,6 +19,7 @@ use crate::usb::mode::{DeviceMode, Mode};
 use crate::device::Device;
 
 
+#[derive(Debug, Clone)]
 pub struct Volume {
 	letter: char,
 	disk_number: u32,
@@ -138,6 +139,7 @@ mod unmount {
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn volume_for(dev: &Device) -> Result<Volume, Error> {
 	if !matches!(dev.info().mode(), Mode::Storage) {
 		return Err(Error::not_found());
@@ -147,6 +149,7 @@ pub async fn volume_for(dev: &Device) -> Result<Volume, Error> {
 	                   .ok_or_else(|| Error::not_found())
 }
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub fn volumes_for(devs: &[Device]) -> impl Iterator<Item = (Volume, &Device)> {
 	enumerate_volumes().filter_map(|vol| {
 		                   devs.into_iter()
@@ -156,6 +159,7 @@ pub fn volumes_for(devs: &[Device]) -> impl Iterator<Item = (Volume, &Device)> {
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument(skip(devs)))]
 pub async fn volumes_for_map<I>(devs: I) -> Result<HashMap<Device, Option<Volume>>, Error>
 	where I: IntoIterator<Item = Device> {
 	let mut devs: Vec<_> = devs.into_iter().collect();
@@ -178,6 +182,7 @@ pub async fn volumes_for_map<I>(devs: I) -> Result<HashMap<Device, Option<Volume
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 fn enumerate_volumes() -> impl Iterator<Item = Volume> {
 	const LETTERS: &'static str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	let mask = unsafe { GetLogicalDrives() };
@@ -243,6 +248,7 @@ fn enumerate_volumes() -> impl Iterator<Item = Volume> {
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 fn file_handle(letter: char) -> Result<FileHandle, std::io::Error> {
 	use windows::Win32::Storage::FileSystem::{FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING,
 	                                      FILE_FLAGS_AND_ATTRIBUTES};
@@ -269,7 +275,7 @@ struct FileHandle(pub HANDLE, Pin<CString>);
 
 impl Drop for FileHandle {
 	fn drop(&mut self) {
-		trace!("closing file handle {:?}", self.0);
+		trace!("closing file handle {:?} by drop", self.0);
 		unsafe { windows::Win32::Foundation::CloseHandle(self.0) }.map_err(|err| error!("{err}"))
 		                                                          .ok();
 	}

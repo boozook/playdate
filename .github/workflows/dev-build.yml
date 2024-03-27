@@ -83,7 +83,7 @@ jobs:
 
       - name: pdtool
         run: |
-          cargo build -p=playdate-tool2 --bins
+          cargo build -p=playdate-tool2 --bins -features=tracing
 
 
       - name: Upload

@@ -15,6 +15,7 @@ pub async fn wait_mode_data(dev: Device) -> Result<Device> { wait_mode_change(de
 
 
 // TODO: make timeout configurable
+#[cfg_attr(feature = "tracing", tracing::instrument(skip(dev), fields(dev = dev.info().serial_number())))]
 pub async fn wait_mode_change(mut dev: Device, to: Mode) -> Result<Device> {
 	const ITER: u64 = 40; // ms
 	const RETRIES: u8 = 130; // ≈5 sec

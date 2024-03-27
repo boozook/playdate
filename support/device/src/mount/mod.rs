@@ -97,12 +97,14 @@ pub struct MountedDevice {
 }
 
 impl Unmount for MountedDevice {
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self), fields(dev = self.info().serial_number(), mount = self.handle.volume().path().as_ref().display().to_string())))]
 	fn unmount_blocking(&self) -> Result<(), Error> {
 		<volume::Volume as Unmount>::unmount_blocking(&self.handle.volume)
 	}
 }
 
 impl UnmountAsync for MountedDevice where volume::Volume: UnmountAsync {
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self), fields(dev = self.info().serial_number(), mount = self.handle.volume().path().as_ref().display().to_string())))]
 	fn unmount(&self) -> impl std::future::Future<Output = Result<(), Error>> {
 		<volume::Volume as UnmountAsync>::unmount(&self.handle.volume)
 	}
@@ -145,7 +147,7 @@ impl MountHandle {
 impl Drop for MountHandle {
 	fn drop(&mut self) {
 		if self.unmount_on_drop {
-			debug!("Unmounting {}", self.volume);
+			trace!("Unmounting {} by drop", self.volume);
 			let _ = self.volume
 			            .unmount_blocking()
 			            .map_err(|err| {

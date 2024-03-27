@@ -13,6 +13,7 @@ type Result<T = (), E = Error> = std::result::Result<T, E>;
 
 /// Fails if can't map specified port to device in case of query is a port name/path.
 /// Use [[send_to_interfaces]] instead if device mapping not needed.
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn send_to_devs(query: Query,
                           cmd: Command,
                           read: bool)
@@ -50,6 +51,7 @@ pub async fn send_to_devs(query: Query,
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn send_to_interfaces(query: Query,
                                 cmd: Command)
                                 -> Result<impl Stream<Item = Result<interface::Interface>>> {

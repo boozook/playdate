@@ -143,7 +143,7 @@ impl Command {
 		line
 	}
 
-	pub fn with_break_to<W: Write>(&self, mut writer: W) -> std::io::Result<()> { writeln!(writer, "{self}") }
+	pub fn with_break_to<W: Write>(&self, mut writer: W) -> std::io::Result<()> { writeln!(writer, "\n{self}\n") }
 }
 
 

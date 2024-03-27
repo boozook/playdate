@@ -15,6 +15,7 @@ use crate::usb::mode::Mode;
 use crate::usb::BULK_IN;
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument(skip(interface)))]
 pub fn read_interface(interface: &Interface,
                       buf_size: usize,
                       bufs: usize)
@@ -40,6 +41,7 @@ pub fn read_interface(interface: &Interface,
 	Ok(stream)
 }
 
+#[cfg_attr(feature = "tracing", tracing::instrument(skip(interface, map)))]
 pub fn read_while_map<F, T>(interface: &Interface,
                             buf_size: usize,
                             buffers: usize,
@@ -80,6 +82,7 @@ pub fn read_while_map<F, T>(interface: &Interface,
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument)]
 pub fn read_once(device: DeviceInfo) -> Result<(String, Interface), Error> {
 	let mode = device.mode();
 	if !matches!(mode, Mode::Data) {
@@ -110,6 +113,7 @@ pub fn read_once(device: DeviceInfo) -> Result<(String, Interface), Error> {
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument)]
 pub async fn redirect_to_stdout(device: &mut Device) -> Result<(), Error> {
 	let mode = device.mode();
 	if !matches!(mode, Mode::Data) {
@@ -122,6 +126,7 @@ pub async fn redirect_to_stdout(device: &mut Device) -> Result<(), Error> {
 	Ok(())
 }
 
+#[cfg_attr(feature = "tracing", tracing::instrument)]
 pub async fn redirect_interface_to_stdout(interface: &mut crate::interface::Interface) -> Result<(), Error> {
 	match interface {
 		crate::interface::Interface::Usb(interface) => {

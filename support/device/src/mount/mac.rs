@@ -14,6 +14,7 @@ use crate::error::Error;
 pub const VENDOR_ID_ENC: &str = const_hex::const_encode::<2, true>(&crate::VENDOR_ID.to_be_bytes()).as_str();
 
 
+#[derive(Debug, Clone)]
 pub struct Volume {
 	path: PathBuf,
 }
@@ -39,6 +40,7 @@ mod unmount {
 
 
 	impl Unmount for Volume {
+		#[cfg_attr(feature = "tracing", tracing::instrument())]
 		fn unmount_blocking(&self) -> Result<(), Error> {
 			cmd(self).status()?
 			         .exit_ok()
@@ -49,6 +51,7 @@ mod unmount {
 
 	#[cfg(feature = "tokio")]
 	impl UnmountAsync for Volume {
+		#[cfg_attr(feature = "tracing", tracing::instrument())]
 		async fn unmount(&self) -> Result<(), Error> {
 			tokio::process::Command::from(cmd(self)).status()
 			                                        .await?
@@ -76,6 +79,7 @@ pub struct SpusbInfo<Fut>
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument(fields(dev = dev.as_ref().serial_number())))]
 pub async fn volume_for<Info>(dev: Info) -> Result<Volume, Error>
 	where Info: AsRef<nusb::DeviceInfo> {
 	if let Some(sn) = dev.as_ref().serial_number() {
@@ -91,6 +95,7 @@ pub async fn volume_for<Info>(dev: Info) -> Result<Volume, Error>
 	.map(Volume::from)
 }
 
+#[cfg_attr(feature = "tracing", tracing::instrument(skip(devs)))]
 pub async fn volumes_for_map<I>(devs: I) -> Result<HashMap<Device, Option<Volume>>, Error>
 	where I: IntoIterator<Item = Device> {
 	let mut devs = devs.into_iter()
@@ -127,6 +132,7 @@ pub async fn volumes_for_map<I>(devs: I) -> Result<HashMap<Device, Option<Volume
 	Ok(results)
 }
 
+#[cfg_attr(feature = "tracing", tracing::instrument(skip(devs)))]
 pub fn volumes_for<'i, I: 'i>(
 	devs: I)
 	-> Result<impl Iterator<Item = (impl Future<Output = Result<PathBuf, Error>>, &'i Device)>, Error>
@@ -146,6 +152,7 @@ pub fn volumes_for<'i, I: 'i>(
 
 
 /// Call `system_profiler -json SPUSBDataType`
+#[cfg_attr(feature = "tracing", tracing::instrument(skip(filter)))]
 fn spusb<F>(filter: F)
             -> Result<impl Iterator<Item = SpusbInfo<impl Future<Output = Result<PathBuf, Error>>>>, Error>
 	where F: FnMut(&DeviceInfo) -> bool {
@@ -198,6 +205,7 @@ fn spusb<F>(filter: F)
 
 
 /// Calls `diskutil info -plist {partition.volume_uuid}`
+#[cfg_attr(feature = "tracing", tracing::instrument(skip(par), fields(par.name = par.name.as_str())))]
 async fn mount_point_for_partition(par: MediaPartitionInfo) -> Result<PathBuf, Error> {
 	use std::process::Command;
 

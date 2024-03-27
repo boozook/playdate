@@ -5,6 +5,7 @@ use super::Interface;
 
 
 impl crate::interface::blocking::Out for Interface {
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
 	fn send_cmd(&self, cmd: crate::device::command::Command) -> Result<usize, Error> {
 		trace!("sending `{cmd}` to {}", self.info.port_name);
 		if let Some(ref port) = self.port {

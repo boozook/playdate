@@ -16,6 +16,7 @@ use crate::{install, device, usb, interface};
 type Result<T = (), E = Error> = std::result::Result<T, E>;
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn run_on_device(query: Query,
                            pdx: PathBuf,
                            no_install: bool,
@@ -75,6 +76,7 @@ pub async fn run_on_device(query: Query,
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn run_with_sim(pdx: PathBuf, sdk: Option<PathBuf>) -> Result<(), Error> {
 	let sdk = sdk.map_or_else(|| Sdk::try_new(), Sdk::try_new_exact)?;
 

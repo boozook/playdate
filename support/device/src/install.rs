@@ -58,6 +58,7 @@ impl MountedDevicePath {
 /// Install package on the device.
 ///
 /// `path` is a host filesystem path to pdx.
+#[cfg_attr(feature = "tracing", tracing::instrument(skip(drive)))]
 pub async fn install<'dev>(drive: &'dev MountedDevice,
                            path: &Path,
                            force: bool)
@@ -146,6 +147,7 @@ pub async fn install<'dev>(drive: &'dev MountedDevice,
 /// 1. Mount if needed
 /// 1. Wait for FS to become available
 /// 1. Install package
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn mount_and_install(query: Query,
                                path: &Path,
                                force: bool)
@@ -170,6 +172,7 @@ pub async fn mount_and_install(query: Query,
 
 
 /// Validate path - pdz or pdx-dir.
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn validate_host_package(path: &Path) -> Result<()> {
 	use std::io::{Error, ErrorKind};
 

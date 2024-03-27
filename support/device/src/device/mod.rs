@@ -72,7 +72,7 @@ impl std::fmt::Display for Device {
 impl std::fmt::Debug for Device {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.debug_struct("Device")
-		 .field("info", &self.info)
+		 .field("sn", &self.info.serial_number())
 		 .field("mode", &self.mode)
 		 .field("open", &self.is_open())
 		 .field("ready", &self.is_ready())

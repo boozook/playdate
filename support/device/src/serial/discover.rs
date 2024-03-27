@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::fmt::Debug;
 
 use serialport::{SerialPortInfo, SerialPortType, available_ports};
 
@@ -8,6 +9,7 @@ use crate::{VENDOR_ID, PRODUCT_ID_DATA};
 
 
 /// Enumerate all serial ports on the system for Playdate devices.
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub fn ports() -> Result<impl Iterator<Item = SerialPortInfo>, Error> {
 	let iter = available_ports()?.into_iter().filter(|port| {
 		                                         match port.port_type {
@@ -22,8 +24,9 @@ pub fn ports() -> Result<impl Iterator<Item = SerialPortInfo>, Error> {
 
 
 /// Search exact one serial port for device with same serial number.
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub fn port<SN>(sn: &SN) -> Result<SerialPortInfo, Error>
-	where SN: PartialEq<str> {
+	where SN: PartialEq<str> + Debug {
 	let port = ports()?.find(move |port| {
 		                   match port.port_type {
 			                   SerialPortType::UsbPort(ref info) => {
@@ -38,8 +41,9 @@ pub fn port<SN>(sn: &SN) -> Result<SerialPortInfo, Error>
 
 /// Search serial ports for device with same serial number,
 /// or __any__ Playdate- serial port if `sn` is `None`.
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub fn ports_with<SN>(sn: Option<SN>) -> Result<impl Iterator<Item = SerialPortInfo>, Error>
-	where SN: PartialEq<str> {
+	where SN: PartialEq<str> + Debug {
 	let ports = ports()?.filter(move |port| {
 		                    match port.port_type {
 			                    SerialPortType::UsbPort(ref info) => {
@@ -67,8 +71,9 @@ pub fn ports_with<SN>(sn: Option<SN>) -> Result<impl Iterator<Item = SerialPortI
 /// or __any__ Playdate- serial port if `sn` is `None`.
 ///
 /// In case of just one device and just one port found, serial number will not be used for matching, so it returns.
+#[cfg_attr(feature = "tracing", tracing::instrument())]
 pub fn ports_with_or_single<SN>(sn: Option<SN>) -> Result<impl IntoIterator<Item = SerialPortInfo>, Error>
-	where SN: PartialEq<str> {
+	where SN: PartialEq<str> + Debug {
 	let ports: Vec<_> = ports()?.collect();
 	let devs: Vec<_> = crate::usb::discover::devices_data()?.collect();
 
@@ -102,6 +107,7 @@ pub fn ports_with_or_single<SN>(sn: Option<SN>) -> Result<impl IntoIterator<Item
 }
 
 
+#[cfg_attr(feature = "tracing", tracing::instrument(skip(dev)))]
 /// Search serial ports for `device`` with same serial number.
 #[cfg(not(target_os = "windows"))]
 pub fn ports_for(dev: &Device) -> Result<impl Iterator<Item = SerialPortInfo> + '_, Error> {
