@@ -81,9 +81,8 @@ jobs:
           sudo apt install libudev-dev -y
 
 
-      - name: pdtool
-        run: |
-          cargo build -p=playdate-tool2 --bins -features=tracing
+      - name: pdtool with tracing
+        run: cargo build -p=playdate-tool2 --bin=pdtool --features=tracing
 
 
       - name: Upload
