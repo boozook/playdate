@@ -116,8 +116,8 @@ async fn main() -> miette::Result<()> {
 			volumes_for_map(usb::discover::devices()?).await?
 			                                          .into_iter()
 			                                          .map(|(dev, vol)| (dev, vol.map(|v| v.path().to_path_buf())))
-			                                          .for_each(|(dev, path)| {
-				                                          dev.inspect();
+			                                          .for_each(|(mut dev, path)| {
+				                                          dev.debug_inspect();
 				                                          println!("vol: {path:?}");
 			                                          });
 			Ok(())

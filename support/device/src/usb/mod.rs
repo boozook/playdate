@@ -206,8 +206,14 @@ impl Device {
 	}
 
 
-	pub fn inspect(&self) {
+	pub fn debug_inspect(&mut self) {
 		inspect_device(self.info());
+
+		// try interfaces:
+
+		self.open().unwrap();
+		// let device = self.
+
 		//
 	}
 }
@@ -224,6 +230,49 @@ pub fn inspect_device(dev: &DeviceInfo) {
 	         dev.manufacturer_string().unwrap_or(""),
 	         dev.product_string().unwrap_or("")
 	);
+
+
+	{
+		let bulk = dev.data_interface();
+		println!("bulk interface: {:#?}", bulk);
+	}
+	println!("---");
+
+	{
+		use usb_ids::FromId;
+
+		println!("interfaces:");
+		for i in dev.interfaces() {
+			let class = usb_ids::Class::from_id(i.class());
+
+			let subclass_id = i.subclass();
+			let subs = class.unwrap()
+			                .sub_classes()
+			                .filter(|sub| sub.id() == subclass_id)
+			                .collect::<Vec<_>>();
+			let n = i.interface_number();
+			let name = i.interface_string().unwrap_or("_");
+			let protocol_id = i.protocol();
+
+			println!("{n}: {name}");
+			println!("class: ({:#02x})  {:?}", i.class(), class.map(|c| c.name()));
+			for sub in subs {
+				println!("  sub: ({:#02x}) {}", sub.id(), sub.name());
+				let protocols = sub.protocols()
+				                   .filter(|p| p.id() == protocol_id)
+				                   .collect::<Vec<_>>();
+				if protocols.is_empty() {
+					println!("    unknown protocol: {protocol_id:#02x}");
+				}
+				for p in protocols {
+					println!("    protocol: ({:#02x}) {}", p.id(), p.name());
+				}
+			}
+		}
+	}
+	println!("---");
+
+
 	let dev = match dev.open() {
 		Ok(dev) => dev,
 		Err(e) => {
@@ -240,8 +289,8 @@ pub fn inspect_device(dev: &DeviceInfo) {
 	for config in dev.configurations() {
 		println!("{config:#?}");
 	}
-	println!("");
-	println!("");
+
+	println!("----------------\n");
 }
 
 
