@@ -49,13 +49,18 @@ features = ["async", "tokio", "clap", "tokio-serial"]
 workspace = true
 
 [dependencies.simulator]
-# features = ["async", "tokio", "clap", "tokio-serial"]
+features = ["tokio"]
 workspace = true
 
 
 [features]
 default = ["tracing"]
-tracing = ["dep:tracing", "tracing-subscriber", "device/tracing", "simulator/tracing"]
+tracing = [
+	"dep:tracing",
+	"tracing-subscriber",
+	"device/tracing",
+	"simulator/tracing",
+]
 
 # use with tokio-console, https://tokio.rs/tokio/topics/tracing-next-steps
 tokio-tracing = ["tracing", "tokio/tracing", "console-subscriber", "tracing"]

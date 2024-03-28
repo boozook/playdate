@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use futures::{FutureExt, Stream, StreamExt, TryFutureExt};
 
-use crate::device::query::DeviceQuery as Query;
+use crate::device::query::Query as Query;
 use crate::error::Error;
 use crate::mount::MountedDevice;
 use crate::mount;

@@ -533,6 +533,7 @@ dependencies = [
  "once_cell",
  "playdate-build",
  "playdate-device",
+ "playdate-simulator-utils",
  "rand",
  "regex",
  "semver",
@@ -3572,6 +3573,7 @@ dependencies = [
  "log",
  "playdate-build-utils",
  "thiserror",
+ "tokio",
  "tracing",
 ]
 

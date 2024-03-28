@@ -14,10 +14,10 @@ use std::path::PathBuf;
 use std::process::Termination;
 
 use futures::{FutureExt, StreamExt, TryFutureExt};
-use pddev::device::query::DeviceQueryValue;
+use pddev::device::query::Value;
 use pddev::device::serial::SerialNumber;
 use pddev::error::Error;
-use pddev::device::query::DeviceQuery;
+use pddev::device::query::Query;
 use pddev::*;
 
 
@@ -106,10 +106,10 @@ async fn main() -> miette::Result<()> {
 			run_dev(query, pdx, no_install, no_read, force, cfg.format).await
 		},
 		cli::Command::Run(cli::Run { destination: cli::Destination::Simulator(cli::Sim { pdx, sdk }), }) => {
-			simulator::run::run_with_sim(pdx, sdk).await
-			                                      .inspect(|_| trace!("sim execution is done"))
-			                                      .report()
-			                                      .exit_process();
+			simulator::run::run(&pdx, sdk.as_deref()).await
+			                                         .inspect(|_| trace!("sim execution is done"))
+			                                         .report()
+			                                         .exit_process();
 		},
 		cli::Command::Send(cli::Send { command, query, read }) => send(query, command, read, cfg.format).await,
 
@@ -130,16 +130,16 @@ async fn main() -> miette::Result<()> {
 
 
 #[cfg_attr(feature = "tracing", tracing::instrument())]
-async fn run_dev(query: DeviceQuery,
+async fn run_dev(query: Query,
                  pdx: PathBuf,
                  no_install: bool,
                  no_read: bool,
                  force: bool,
                  format: cli::Format)
                  -> Result<(), error::Error> {
-	let devs = run::run_on_device(query, pdx, no_install, no_read, force).await?
-	                                                                     .into_iter()
-	                                                                     .enumerate();
+	let devs = run::run(query, pdx, no_install, no_read, force).await?
+	                                                           .into_iter()
+	                                                           .enumerate();
 	if matches!(format, cli::Format::Json) {
 		print!("[");
 	}
@@ -169,11 +169,7 @@ async fn run_dev(query: DeviceQuery,
 
 /// `mount_and_install` with report.
 #[cfg_attr(feature = "tracing", tracing::instrument())]
-async fn install(query: DeviceQuery,
-                 path: PathBuf,
-                 force: bool,
-                 format: cli::Format)
-                 -> Result<(), error::Error> {
+async fn install(query: Query, path: PathBuf, force: bool, format: cli::Format) -> Result<(), error::Error> {
 	if matches!(format, cli::Format::Json) {
 		print!("[");
 	}
@@ -212,7 +208,7 @@ async fn install(query: DeviceQuery,
 
 /// [[mount::mount_and]] with report.
 #[cfg_attr(feature = "tracing", tracing::instrument())]
-async fn mount(query: DeviceQuery, wait: bool, format: cli::Format) -> Result<(), error::Error> {
+async fn mount(query: Query, wait: bool, format: cli::Format) -> Result<(), error::Error> {
 	if matches!(format, cli::Format::Json) {
 		print!("[");
 	}
@@ -249,7 +245,7 @@ async fn mount(query: DeviceQuery, wait: bool, format: cli::Format) -> Result<()
 
 /// [[mount::unmount_and]] with report.
 #[cfg_attr(feature = "tracing", tracing::instrument())]
-async fn unmount(query: DeviceQuery, wait: bool, format: cli::Format) -> Result<(), error::Error> {
+async fn unmount(query: Query, wait: bool, format: cli::Format) -> Result<(), error::Error> {
 	let results: Vec<_> = mount::unmount_and(query, wait).await?.collect().await;
 	for (i, res) in results.into_iter().enumerate() {
 		match res {
@@ -275,7 +271,7 @@ async fn unmount(query: DeviceQuery, wait: bool, format: cli::Format) -> Result<
 
 
 #[cfg_attr(feature = "tracing", tracing::instrument())]
-async fn send(query: DeviceQuery,
+async fn send(query: Query,
               command: device::command::Command,
               read: bool,
               _format: cli::Format)
@@ -302,7 +298,7 @@ async fn send(query: DeviceQuery,
 
 
 #[cfg_attr(feature = "tracing", tracing::instrument())]
-async fn read(query: DeviceQuery) -> Result<(), error::Error> {
+async fn read(query: Query) -> Result<(), error::Error> {
 	let by_dev = |mut device: device::Device| -> Result<_, Error> {
 		device.info().serial_number().map(|s| trace!("reading {s}"));
 		let fut = async move { usb::io::redirect_to_stdout(&mut device).await };
@@ -327,9 +323,9 @@ async fn read(query: DeviceQuery) -> Result<(), error::Error> {
 	};
 
 	match query.value {
-		Some(DeviceQueryValue::Serial(sn)) => by_sn(sn)?.await,
-		Some(DeviceQueryValue::Path(port)) => by_port(port.to_string_lossy().to_string())?.await,
-		Some(DeviceQueryValue::Com(port)) => by_port(format!("COM{port}"))?.await,
+		Some(Value::Serial(sn)) => by_sn(sn)?.await,
+		Some(Value::Path(port)) => by_port(port.to_string_lossy().to_string())?.await,
+		Some(Value::Com(port)) => by_port(format!("COM{port}"))?.await,
 		None => {
 			let mut devices: Vec<_> = usb::discover::devices_data()?.collect();
 			match devices.len() {

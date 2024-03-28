@@ -64,6 +64,10 @@ features = ["assets-report", "toml"]
 workspace = true
 features = ["clap", "async", "tokio-serial", "tokio"]
 
+[dependencies.simulator]
+# features = ["tokio"]
+workspace = true
+
 [dependencies.clap]
 workspace = true
 default-features = true

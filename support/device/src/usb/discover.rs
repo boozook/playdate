@@ -67,8 +67,8 @@ pub fn devices_data_with(sn: Option<Sn>) -> Result<impl Iterator<Item = Device>,
 
 #[cfg(feature = "futures")]
 #[cfg_attr(feature = "tracing", tracing::instrument)]
-pub async fn devices_data_for(query: query::DeviceQuery) -> Result<Vec<Device>, Error> {
-	use query::DeviceQueryValue as Query;
+pub async fn devices_data_for(query: query::Query) -> Result<Vec<Device>, Error> {
+	use query::Value as Query;
 	use serial::dev_with_port;
 
 
@@ -131,13 +131,13 @@ pub async fn devices_data_for(query: query::DeviceQuery) -> Result<Vec<Device>, 
 
 #[cfg(feature = "futures")]
 #[cfg_attr(feature = "tracing", tracing::instrument(skip(f)))]
-pub async fn for_each_data_interface<F, Fut, T>(query: query::DeviceQuery,
+pub async fn for_each_data_interface<F, Fut, T>(query: query::Query,
                                                 mut f: F)
                                                 -> Result<impl Stream<Item = T>, Error>
 	where Fut: std::future::Future<Output = T>, /* + Unpin */
 	      F: FnMut(interface::Interface) -> Fut
 {
-	use query::DeviceQueryValue as Query;
+	use query::Value as Query;
 	use serial::unknown_serial_port_info;
 
 

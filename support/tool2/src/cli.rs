@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use simulator::utils::consts::SDK_ENV_VAR;
 
-use crate::device::query::DeviceQuery;
+use crate::device::query::Query;
 
 
 pub fn parse() -> Cfg { Cfg::parse() }
@@ -48,7 +48,7 @@ pub enum Command {
 	/// Mount a Playdate device if specified, otherwise mount all Playdates as possible.
 	Mount {
 		#[command(flatten)]
-		query: DeviceQuery,
+		query: Query,
 		/// Wait for availability of mounted device's filesystem.
 		#[arg(long, default_value_t = false)]
 		wait: bool,
@@ -58,7 +58,7 @@ pub enum Command {
 	Unmount {
 		/// Device spec
 		#[command(flatten)]
-		query: DeviceQuery,
+		query: Query,
 		/// Wait for device to be connected after unmounted.
 		#[arg(long, default_value_t = false)]
 		wait: bool,
@@ -73,7 +73,7 @@ pub enum Command {
 	Run(#[command(flatten)] run::Run),
 
 	/// Connect to device and proxy output to stdout.
-	Read(#[command(flatten)] DeviceQuery),
+	Read(#[command(flatten)] Query),
 
 	/// Send command to specified device.
 	// #[command(hide = true)]
@@ -112,7 +112,7 @@ pub struct Install {
 	pub force: bool,
 
 	#[command(flatten)]
-	pub query: DeviceQuery,
+	pub query: Query,
 }
 
 
@@ -125,7 +125,7 @@ pub struct Send {
 
 	/// Device selector.
 	#[command(flatten)]
-	pub query: DeviceQuery,
+	pub query: Query,
 
 	/// Read output from device after sending command.
 	#[arg(long, default_value_t = false)]

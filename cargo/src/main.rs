@@ -203,8 +203,9 @@ fn execute(config: &Config) -> CargoResult<()> {
 
 			// run:
 			{
-				use device::run::{run_on_device, run_with_sim};
 				use futures_lite::future::block_on;
+				use device::run::run as run_dev;
+				use simulator::run::run as run_sim;
 
 				if ck.is_playdate() {
 					let query = config.mounting.clone().unwrap_or_default().device;
@@ -212,10 +213,10 @@ fn execute(config: &Config) -> CargoResult<()> {
 					let no_install = false;
 					let no_read = config.no_read;
 					let force = false;
-					let fut = run_on_device(query, pdx, no_install, no_read, force);
+					let fut = run_dev(query, pdx, no_install, no_read, force);
 					block_on(fut)?;
 				} else {
-					let fut = run_with_sim(package.path.to_owned(), config.sdk_path.clone());
+					let fut = run_sim(&package.path, config.sdk_path.as_deref());
 					block_on(fut)?;
 				};
 			}

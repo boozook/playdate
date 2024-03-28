@@ -233,7 +233,7 @@ fn init_crate() -> Command {
 #[derive(clap::Parser, Debug, Clone, Default)]
 pub struct Mount {
 	#[command(flatten)]
-	pub device: device::device::query::DeviceQuery,
+	pub device: device::device::query::Query,
 }
 
 fn mount() -> Vec<Arg> {

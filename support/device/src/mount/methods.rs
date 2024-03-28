@@ -3,8 +3,8 @@ use std::future::Future;
 use futures::stream::FuturesUnordered as Unordered;
 use futures::{FutureExt, Stream, StreamExt, TryFutureExt};
 
-use crate::device::query::DeviceQuery as Query;
-use crate::device::query::DeviceQueryValue as QueryValue;
+use crate::device::query::Query as Query;
+use crate::device::query::Value as QueryValue;
 use crate::device::serial::SerialNumber as Sn;
 use crate::device::{wait_mode_storage, wait_mode_data, Device};
 use crate::error::Error;

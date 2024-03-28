@@ -1,11 +1,29 @@
-use std::path::PathBuf;
+use std::path::Path;
 use std::io::{Error as IoError, ErrorKind as IoErrorKind};
 
 use utils::toolchain::sdk::Sdk;
 
 
-#[cfg_attr(feature = "tracing", tracing::instrument())]
-pub async fn run_with_sim(pdx: PathBuf, sdk: Option<PathBuf>) -> Result<(), Error> {
+#[cfg_attr(feature = "tracing", tracing::instrument)]
+pub async fn run(pdx: &Path, sdk: Option<&Path>) -> Result<(), Error> {
+	#[allow(unused_mut)]
+	let mut cmd = command(&pdx, sdk.as_deref())?;
+	#[cfg(feature = "tokio")]
+	let mut cmd = tokio::process::Command::from(cmd);
+
+	trace!("executing: {cmd:?}");
+
+	#[cfg(feature = "tokio")]
+	cmd.status().await?.exit_ok()?;
+	#[cfg(not(feature = "tokio"))]
+	cmd.status()?.exit_ok()?;
+
+	Ok(())
+}
+
+
+#[cfg_attr(feature = "tracing", tracing::instrument)]
+pub fn command(pdx: &Path, sdk: Option<&Path>) -> Result<std::process::Command, Error> {
 	let sdk = sdk.map_or_else(|| Sdk::try_new(), Sdk::try_new_exact)?;
 
 	let (pwd, sim) = if cfg!(target_os = "macos") {
@@ -18,31 +36,16 @@ pub async fn run_with_sim(pdx: PathBuf, sdk: Option<PathBuf>) -> Result<(), Erro
 		return Err(IoError::new(IoErrorKind::Unsupported, "Unsupported platform").into());
 	};
 
-
-	#[cfg(feature = "tokio")]
-	use tokio::process::Command;
-	#[cfg(not(feature = "tokio"))]
-	use std::process::Command;
-
-
-	let mut cmd = Command::new(sim);
+	let mut cmd = std::process::Command::new(sim);
 	cmd.current_dir(sdk.bin().join(pwd));
 	cmd.arg(&pdx);
 
-	debug!("Run: {cmd:?}");
-	#[cfg(feature = "tokio")]
-	cmd.status().await?.exit_ok()?;
-	#[cfg(not(feature = "tokio"))]
-	cmd.status()?.exit_ok()?;
-
-	Ok(())
+	Ok(cmd)
 }
 
 
 pub use error::*;
 mod error {
-	// use std::backtrace::Backtrace;
-
 	#[derive(thiserror::Error, Debug)]
 	pub enum Error {
 		#[error(transparent)]
