@@ -5,7 +5,8 @@ use futures::stream::FuturesUnordered;
 use futures::{FutureExt, TryStreamExt};
 use futures_lite::StreamExt;
 
-use crate::device::query::Query as Query;
+use crate::device::query::Query;
+use crate::device::wait_mode_data;
 use crate::error::Error;
 use crate::mount::UnmountAsync;
 use crate::{install, device, usb, interface};
@@ -14,13 +15,17 @@ use crate::{install, device, usb, interface};
 type Result<T = (), E = Error> = std::result::Result<T, E>;
 
 
-#[cfg_attr(feature = "tracing", tracing::instrument())]
+#[cfg_attr(feature = "tracing", tracing::instrument)]
 pub async fn run(query: Query,
                  pdx: PathBuf,
                  no_install: bool,
                  no_read: bool,
                  force: bool)
                  -> Result<Vec<device::Device>> {
+	use crate::retry::{DefaultIterTime, Retries};
+	let wait_data = Retries::<DefaultIterTime>::default();
+
+
 	let to_run = if !no_install {
 		install::mount_and_install(query, &pdx, force).await?
 		                                              .filter_map(|r| r.map_err(|e| error!("{e}")).ok())
@@ -28,9 +33,10 @@ pub async fn run(query: Query,
 			                                              async {
 				                                              let (mount, path) = path.into_parts();
 				                                              mount.unmount().await?;
-				                                              device::wait_mode_data(mount.device).await.map(|dev| {
-					                                                                                        (dev, path.into())
-				                                                                                        })
+				                                              wait_mode_data(mount.device, wait_data.clone()).await
+				                                                                                         .map(|dev| {
+					                                                                                         (dev, path.into())
+				                                                                                         })
 			                                              }.into_stream()
 			                                              .filter_map(move |r| r.inspect_err(|e| error!("{e}")).ok())
 		                                              })

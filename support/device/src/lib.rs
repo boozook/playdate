@@ -27,6 +27,8 @@ pub mod run;
 
 pub mod interface;
 
+pub mod retry;
+
 
 pub const VENDOR_ID: u16 = 0x1331;
 pub const PRODUCT_ID_DATA: u16 = 0x5740;

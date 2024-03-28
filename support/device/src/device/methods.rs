@@ -1,7 +1,9 @@
 #![cfg(feature = "tokio")]
 
-use crate::error::Error;
+
+use crate::retry::{IterTime, Retries};
 use crate::usb::mode::Mode;
+use crate::error::Error;
 
 use super::Device;
 
@@ -9,19 +11,26 @@ use super::Device;
 type Result<T = (), E = Error> = std::result::Result<T, E>;
 
 
-pub async fn wait_mode_storage(dev: Device) -> Result<Device> { wait_mode_change(dev, Mode::Storage).await }
+pub async fn wait_mode_storage<T>(dev: Device, retry: Retries<T>) -> Result<Device>
+	where T: IterTime {
+	wait_mode_change(dev, Mode::Storage, retry).await
+}
 
-pub async fn wait_mode_data(dev: Device) -> Result<Device> { wait_mode_change(dev, Mode::Data).await }
+pub async fn wait_mode_data<T>(dev: Device, retry: Retries<T>) -> Result<Device>
+	where T: IterTime {
+	wait_mode_change(dev, Mode::Data, retry).await
+}
 
 
-// TODO: make timeout configurable
-#[cfg_attr(feature = "tracing", tracing::instrument(skip(dev), fields(dev = dev.info().serial_number())))]
-pub async fn wait_mode_change(mut dev: Device, to: Mode) -> Result<Device> {
-	const ITER: u64 = 40; // ms
-	const RETRIES: u8 = 130; // ≈5 sec
-	let mut counter = RETRIES;
-	let every = std::time::Duration::from_millis(ITER);
-	let mut interval = tokio::time::interval(every);
+#[cfg_attr(feature = "tracing", tracing::instrument(skip(dev, retry), fields(dev = dev.info().serial_number())))]
+pub async fn wait_mode_change(mut dev: Device, to: Mode, retry: Retries<impl IterTime>) -> Result<Device> {
+	let total = &retry.total;
+	let iter_ms = retry.iters.interval(total);
+	let retries_num = total.as_millis() / iter_ms.as_millis();
+	debug!("retries: {retries_num} * {iter_ms:?} ≈ {total:?}.");
+
+	let mut counter = retries_num;
+	let mut interval = tokio::time::interval(iter_ms);
 
 	while {
 		counter -= 1;
@@ -29,12 +38,12 @@ pub async fn wait_mode_change(mut dev: Device, to: Mode) -> Result<Device> {
 	} != 0
 	{
 		interval.tick().await;
-		trace!("try: {}/{RETRIES}", RETRIES - counter);
 
 		let mode = dev.mode_cached();
-		dev.info()
-		   .serial_number()
-		   .map(|s| trace!("waiting mode {to} of {s}, current: {mode}"));
+		trace!(
+		       "{dev}: waiting mode {to}, current: {mode}, try: {}/{retries_num}",
+		       retries_num - counter
+		);
 
 		if mode == to {
 			dev.info().serial_number().map(|s| trace!("{s} is in {to} mode."));

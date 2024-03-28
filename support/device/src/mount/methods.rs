@@ -1,9 +1,10 @@
 use std::future::Future;
+use std::time::Duration;
 
 use futures::stream::FuturesUnordered as Unordered;
 use futures::{FutureExt, Stream, StreamExt, TryFutureExt};
 
-use crate::device::query::Query as Query;
+use crate::device::query::Query;
 use crate::device::query::Value as QueryValue;
 use crate::device::serial::SerialNumber as Sn;
 use crate::device::{wait_mode_storage, wait_mode_data, Device};
@@ -12,6 +13,7 @@ use crate::interface::r#async::Out;
 use crate::mount::{MountAsync, MountHandle};
 use crate::mount::MountedDevice;
 use crate::mount::volume::volumes_for_map;
+use crate::retry::{DefaultIterTime, Retries, IterTime};
 use crate::usb::discover::devices_storage;
 use crate::usb;
 use crate::serial::{self, dev_with_port};
@@ -20,14 +22,25 @@ use crate::interface;
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
 
-// TODO: make timeout configurable
-#[cfg_attr(feature = "tracing", tracing::instrument(fields(dev = mount.info().serial_number(), mount = mount.handle.volume().path().as_ref().display().to_string())))]
-pub async fn wait_fs_available(mount: &MountedDevice) -> Result {
-	const ITER: u64 = 120; // ms
-	const RETRIES: u8 = 255; // ≈30 sec
-	let mut counter = RETRIES;
-	let every = std::time::Duration::from_millis(ITER);
-	let mut interval = tokio::time::interval(every);
+
+/// Recommended total time for retries is 30 seconds or more.
+///
+/// ```ignore
+/// let retry = Retries::new(DefaultIterTime, Duration::from_secs(60));
+/// mount::wait_fs_available(drive, retry).await?;
+/// ```
+#[cfg_attr(feature = "tracing", tracing::instrument(fields(dev = mount.device.to_string(),
+                                                           mount = mount.handle.volume().path().as_ref().display().to_string(),
+																			)))]
+pub async fn wait_fs_available<T>(mount: &MountedDevice, retry: Retries<T>) -> Result
+	where T: Clone + std::fmt::Debug + IterTime {
+	let total = &retry.total;
+	let iter_ms = retry.iters.interval(total);
+	let retries_num = total.as_millis() / iter_ms.as_millis();
+	debug!("retries: {retries_num} * {iter_ms:?} ≈ {total:?}.");
+
+	let mut counter = retries_num;
+	let mut interval = tokio::time::interval(iter_ms);
 
 	let check = || {
 		mount.handle
@@ -52,29 +65,28 @@ pub async fn wait_fs_available(mount: &MountedDevice) -> Result {
 		return Ok(());
 	}
 
-	let sn = mount.info()
-	              .serial_number()
-	              .ok_or_else(|| Error::DeviceSerial { source: "unknown".into() })?
-	              .to_owned();
-
 	while {
 		counter -= 1;
 		counter
 	} != 0
 	{
 		interval.tick().await;
-		trace!("try: {}/{RETRIES}", RETRIES - counter);
 
 		if check() {
 			return Ok(());
 		} else {
-			trace!("waiting filesystem availability: {sn}");
+			trace!(
+			       "{dev}: waiting filesystem availability, try: {i}/{retries_num}",
+			       dev = mount.device,
+			       i = retries_num - counter,
+			);
 		}
 	}
 
 	Err(Error::timeout(format!(
-		"{sn}: filesystem not found at {} after {RETRIES} retries",
-		mount.handle.path().display()
+		"{dev}: filesystem not available at {path} after {retries_num} retries",
+		dev = mount.device,
+		path = mount.handle.path().display(),
 	)))
 }
 
@@ -101,19 +113,22 @@ pub async fn mount(query: Query) -> Result<impl Stream<Item = Result<MountedDevi
 /// depending on `wait` parameter.
 #[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn mount_and(query: Query, wait: bool) -> Result<impl Stream<Item = Result<MountedDevice>>> {
-	let fut = mount(query).await?.flat_map(move |res| {
-		                             async move {
-			                             match res {
-				                             Ok(drive) => {
-				                                if wait {
-					                                wait_fs_available(&drive).await?
-				                                }
-				                                Ok(drive)
-			                                },
-			                                Err(err) => Err(err),
-			                             }
-		                             }.into_stream()
-	                             });
+	let fut =
+		mount(query).await?.flat_map(move |res| {
+			                   async move {
+				                   match res {
+					                   Ok(drive) => {
+					                      if wait {
+						                      let retry =
+							                      Retries::new(Duration::from_millis(150), Duration::from_secs(60));
+						                      wait_fs_available(&drive, retry).await?
+					                      }
+					                      Ok(drive)
+				                      },
+				                      Err(err) => Err(err),
+				                   }
+			                   }.into_stream()
+		                   });
 	Ok(fut)
 }
 
@@ -213,7 +228,11 @@ pub async fn mount_by_port_name<S: AsRef<str>>(
 
 #[cfg_attr(feature = "tracing", tracing::instrument(fields(dev = dev.info().serial_number())))]
 fn mount_dev(mut dev: Device) -> Result<impl Future<Output = Result<MountedDevice>>> {
-	dev.info().serial_number().map(|s| debug!("mounting {s}"));
+	let retry = Retries::<DefaultIterTime>::default();
+	let mut retry_wait_mount_point = retry.clone();
+	retry_wait_mount_point.total += Duration::from_secs(40);
+
+	trace!("mounting {dev}");
 	let fut = match dev.mode_cached() {
 		usb::mode::Mode::Data => {
 			trace!("create sending fut");
@@ -225,25 +244,27 @@ fn mount_dev(mut dev: Device) -> Result<impl Future<Output = Result<MountedDevic
 				   .await?;
 				dev.close();
 				Ok(dev)
-			}.and_then(wait_mode_storage)
+			}.and_then(|dev| wait_mode_storage(dev, retry))
 			.left_future()
 		},
 		usb::mode::Mode::Storage => futures_lite::future::ready(Ok(dev)).right_future(),
 		mode => return Err(Error::WrongState(mode)),
 	};
-	Ok(fut.and_then(wait_mount_point))
+	Ok(fut.and_then(|dev| wait_mount_point(dev, retry_wait_mount_point)))
 }
 
 
 // TODO: make timeout configurable
 #[cfg_attr(feature = "tracing", tracing::instrument(fields(dev = dev.info().serial_number())))]
-async fn wait_mount_point(dev: Device) -> Result<MountedDevice> {
-	const ITER: u64 = 100; // ms
-	const RETRIES: u8 = 100; // ≈10 sec
-	let mut counter = RETRIES;
-	let every = std::time::Duration::from_millis(ITER);
-	let mut interval = tokio::time::interval(every);
+async fn wait_mount_point<T>(dev: Device, retry: Retries<T>) -> Result<MountedDevice>
+	where T: Clone + std::fmt::Debug + IterTime {
+	let total = &retry.total;
+	let iter_ms = retry.iters.interval(total);
+	let retries_num = total.as_millis() / iter_ms.as_millis();
+	debug!("retries: {retries_num} * {iter_ms:?} ≈ {total:?}.");
 
+	let mut counter = retries_num;
+	let mut interval = tokio::time::interval(iter_ms);
 
 	let sn = dev.info()
 	            .serial_number()
@@ -256,10 +277,12 @@ async fn wait_mount_point(dev: Device) -> Result<MountedDevice> {
 	} != 0
 	{
 		interval.tick().await;
-		trace!("try: {}/{RETRIES}", RETRIES - counter);
 
 		let mode = dev.mode_cached();
-		trace!("waiting mount point availability: {sn}, current: {mode}");
+		trace!(
+		       "waiting mount point availability: {sn}, current: {mode}, try: {}/{retries_num}",
+		       retries_num - counter
+		);
 
 		let vol = crate::mount::volume::volume_for(&dev).await
 		                                                .map_err(|err| debug!("ERROR: {err}"))
@@ -295,15 +318,15 @@ pub async fn unmount(query: Query) -> Result<Unordered<impl Future<Output = (Dev
 
 /// Unmount device(s), then wait for state change to [`Data`][usb::mode::Mode::Data].
 #[cfg_attr(feature = "tracing", tracing::instrument())]
-pub async fn unmount_and_wait(query: Query) -> Result<impl Stream<Item = Result<Device>>> {
+pub async fn unmount_and_wait<T>(query: Query, retry: Retries<T>) -> Result<impl Stream<Item = Result<Device>>>
+	where T: Clone + std::fmt::Debug + IterTime {
 	let stream = Unordered::new();
 	unmount(query).await?
 	              .for_each_concurrent(4, |(dev, res)| {
 		              if let Some(err) = res.err() {
-			              let sn = dev.info().serial_number().unwrap_or("unknown");
-			              error!("{sn}: {err}")
+			              error!("{dev}: {err}")
 		              }
-		              stream.push(wait_mode_data(dev));
+		              stream.push(wait_mode_data(dev, retry.clone()));
 		              futures_lite::future::ready(())
 	              })
 	              .await;
@@ -317,7 +340,8 @@ pub async fn unmount_and_wait(query: Query) -> Result<impl Stream<Item = Result<
 #[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn unmount_and(query: Query, wait: bool) -> Result<impl Stream<Item = Result<Device>>> {
 	let results = if wait {
-		unmount_and_wait(query).await?.left_stream()
+		let retry = Retries::<DefaultIterTime>::default();
+		unmount_and_wait(query, retry).await?.left_stream()
 	} else {
 		unmount(query).await?
 		              .map(|(dev, res)| res.map(|_| dev))
@@ -336,18 +360,12 @@ pub async fn unmount_mb_sn(sn: Option<Sn>) -> Result<Unordered<impl Future<Outpu
 		                               .is_some() ||
 		                             sn.is_none()
 	                             })
-	                             .inspect(|dev| {
-		                             dev.info().serial_number().map(|sn| trace!("Unmounting {sn}"));
-	                             });
+	                             .inspect(|dev| trace!("Unmounting {dev}"));
 
 	let unmounting = volumes_for_map(devs).await?
 	                                      .into_iter()
 	                                      .filter_map(|(dev, vol)| vol.map(|vol| (dev, vol)))
-	                                      .inspect(|(dev, vol)| {
-		                                      dev.info()
-		                                         .serial_number()
-		                                         .map(|sn| trace!("Unmounting {sn}: {vol}"));
-	                                      })
+	                                      .inspect(|(dev, vol)| trace!("Unmounting {dev}: {vol}"))
 	                                      .map(|(dev, vol)| {
 		                                      let h = MountHandle::new(vol, false);
 		                                      MountedDevice::new(dev, h)
