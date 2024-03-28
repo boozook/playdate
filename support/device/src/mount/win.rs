@@ -233,6 +233,7 @@ fn enumerate_volumes() -> impl Iterator<Item = Volume> {
 		// map with device address / DiskNumber:
 		res.map(|_| {
 			   if vde.NumberOfDiskExtents == 1 {
+					debug!("found device volume {letter}.");
 				   vde.Extents.first().map(|vol| {
 					                      Volume { letter,
 					                               disk_number: vol.DiskNumber }

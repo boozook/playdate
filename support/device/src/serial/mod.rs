@@ -23,6 +23,35 @@ pub struct Interface {
 }
 
 
+impl std::fmt::Display for Interface {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		use serialport::SerialPort;
+
+		let port_name = &self.info.port_name;
+		let name = self.port
+		               .as_ref()
+		               .map(|p| {
+			               p.try_borrow()
+			                .ok()
+			                .map(|p| p.name().filter(|s| s != port_name))
+			                .flatten()
+		               })
+		               .flatten();
+
+		write!(f, "serial:{}", name.as_deref().unwrap_or(port_name))
+	}
+}
+
+impl std::fmt::Debug for Interface {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("Interface")
+		 .field("name", &self.info.port_name)
+		 .field("opened", &self.port.is_some())
+		 .finish()
+	}
+}
+
+
 impl Interface {
 	#[cfg_attr(feature = "tracing", tracing::instrument)]
 	pub fn new(info: serialport::SerialPortInfo) -> Self { Self { info, port: None } }
@@ -43,10 +72,10 @@ impl Interface {
 	pub fn info(&self) -> &serialport::SerialPortInfo { &self.info }
 	pub fn is_open(&self) -> bool { self.port.is_some() }
 
-	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self), fields(self.port_name = self.info().port_name)))]
+	#[cfg_attr(feature = "tracing", tracing::instrument)]
 	pub fn set_port(&mut self, port: Port) { self.port = Some(RefCell::new(port)); }
 
-	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self), fields(self.port_name = self.info().port_name)))]
+	#[cfg_attr(feature = "tracing", tracing::instrument)]
 	pub fn open(&mut self) -> Result<(), Error> {
 		if self.port.is_some() {
 			Ok(())
@@ -58,7 +87,7 @@ impl Interface {
 	}
 
 
-	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self), fields(self.port_name = self.info().port_name)))]
+	#[cfg_attr(feature = "tracing", tracing::instrument)]
 	pub fn close(&mut self) { self.port.take(); }
 }
 

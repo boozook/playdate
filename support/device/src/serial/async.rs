@@ -15,15 +15,14 @@ use super::Interface;
 
 impl crate::interface::r#async::Out for Interface {
 	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
-	async fn send_cmd(&self, cmd: crate::device::command::Command) -> Result<usize, Error> {
-		trace!("sending `{cmd}` to {}", self.info.port_name);
+	async fn send(&self, data: &[u8]) -> Result<usize, Error> {
+		trace!("writing {} bytes to {}", data.len(), self.info.port_name);
 		if let Some(ref port) = self.port {
-			let cmd = cmd.with_break();
 			let mut port = port.try_borrow_mut()?;
 			let port = port.deref_mut();
-			port.write_all(cmd.as_bytes()).await?;
+			port.write_all(data).await?;
 			port.flush().await?;
-			Ok(cmd.as_bytes().len())
+			Ok(data.len())
 		} else {
 			Err(Error::not_ready())
 		}
@@ -49,25 +48,3 @@ impl crate::interface::r#async::Out for Interface {
 impl crate::interface::r#async::In for Interface {
 	// type Error = crate::error::Error;
 }
-
-
-// impl futures::AsyncWrite for Interface {
-// 	fn poll_write(self: std::pin::Pin<&mut Self>,
-// 	              cx: &mut std::task::Context<'_>,
-// 	              buf: &[u8])
-// 	              -> std::task::Poll<std::io::Result<usize>> {
-// 		todo!()
-// 	}
-
-// 	fn poll_flush(self: std::pin::Pin<&mut Self>,
-// 	              cx: &mut std::task::Context<'_>)
-// 	              -> std::task::Poll<std::io::Result<()>> {
-// 		todo!()
-// 	}
-
-// 	fn poll_close(self: std::pin::Pin<&mut Self>,
-// 	              cx: &mut std::task::Context<'_>)
-// 	              -> std::task::Poll<std::io::Result<()>> {
-// 		todo!()
-// 	}
-// }

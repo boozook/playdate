@@ -75,7 +75,6 @@ impl std::fmt::Debug for Device {
 		 .field("sn", &self.info.serial_number())
 		 .field("mode", &self.mode)
 		 .field("open", &self.is_open())
-		 .field("ready", &self.is_ready())
 		 .field("interface", &self.interface)
 		 .finish()
 	}

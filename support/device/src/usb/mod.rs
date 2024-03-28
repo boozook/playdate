@@ -5,6 +5,7 @@ use std::task::Context;
 use std::task::Poll;
 
 use futures::FutureExt;
+use futures::TryFutureExt;
 use nusb::transfer::RequestBuffer;
 use nusb::transfer::TransferError;
 use nusb::DeviceInfo;
@@ -27,19 +28,46 @@ pub mod io;
 
 const BULK_IN: u8 = 0x81;
 const BULK_OUT: u8 = 0x01;
+
+#[allow(dead_code)]
 const INTERRUPT_IN: u8 = 0x82;
 
 
 pub trait HaveDataInterface {
-	fn data_interface(&self) -> Option<&InterfaceInfo>;
-	fn have_data_interface(&self) -> bool;
+	fn data_interface_number(&self) -> Option<u8>;
+	fn have_data_interface(&self) -> bool { self.data_interface_number().is_some() }
 }
 
 impl HaveDataInterface for DeviceInfo {
 	#[cfg_attr(feature = "tracing", tracing::instrument)]
-	fn data_interface(&self) -> Option<&InterfaceInfo> { self.interfaces().find(|i| i.class() == 0xA | 2) }
+	fn data_interface_number(&self) -> Option<u8> {
+		self.interfaces()
+		    .find(|i| i.class() == 0xA | 2)
+		    .map(|i| i.interface_number())
+	}
+}
+
+impl HaveDataInterface for nusb::Device {
+	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
+	fn data_interface_number(&self) -> Option<u8> {
+		let cfg = self.active_configuration().ok()?;
+		for i in cfg.interfaces() {
+			let bulk = i.alt_settings().find(|i| i.class() == 0xA | 2);
+			if bulk.is_some() {
+				return bulk.map(|i| i.interface_number());
+			}
+		}
+		None
+	}
+}
+
+impl HaveDataInterface for Device {
 	#[cfg_attr(feature = "tracing", tracing::instrument)]
-	fn have_data_interface(&self) -> bool { self.data_interface().is_some() }
+	fn data_interface_number(&self) -> Option<u8> {
+		self.info
+		    .data_interface_number()
+		    .or_else(|| self.inner.as_ref()?.data_interface_number())
+	}
 }
 
 pub trait MassStorageInterface {
@@ -118,7 +146,7 @@ impl Device {
 			return Ok(());
 		}
 
-		if self.info.have_data_interface() {
+		if self.have_data_interface() {
 			let bulk = self.try_bulk().map(|_| {});
 			if let Some(err) = bulk.err() {
 				self.try_serial().map_err(|err2| Error::chain(err, [err2]))
@@ -136,11 +164,20 @@ impl Device {
 		if let Some(ref io) = self.interface {
 			Ok(io)
 		} else if let Some(ref dev) = self.inner {
-			self.interface = Some(Interface::new(dev.claim_interface(1)?).into());
+			let id = self.info
+			             .data_interface_number()
+			             .or_else(|| dev.data_interface_number())
+			             .ok_or_else(|| Error::not_found())?;
+			// previously used 0x01.
+			self.interface = Some(Interface::from(dev.claim_interface(id)?).into());
 			Ok(self.interface.as_ref().unwrap())
 		} else {
 			let dev = self.info.open()?;
-			self.interface = Some(Interface::new(dev.claim_interface(1)?).into());
+			let id = self.info
+			             .data_interface_number()
+			             .or_else(|| dev.data_interface_number())
+			             .ok_or_else(|| Error::not_found())?;
+			self.interface = Some(Interface::from(dev.claim_interface(id)?).into());
 			self.inner = Some(dev);
 			Ok(self.interface.as_ref().unwrap())
 		}
@@ -221,21 +258,21 @@ impl Device {
 
 
 /// Print debug information about device.
-pub fn inspect_device(dev: &DeviceInfo) {
+pub fn inspect_device(info: &DeviceInfo) {
 	println!(
 	         "Device {:03}.{:03} ({:04x}:{:04x}) {} {}",
-	         dev.bus_number(),
-	         dev.device_address(),
-	         dev.vendor_id(),
-	         dev.product_id(),
-	         dev.manufacturer_string().unwrap_or(""),
-	         dev.product_string().unwrap_or("")
+	         info.bus_number(),
+	         info.device_address(),
+	         info.vendor_id(),
+	         info.product_id(),
+	         info.manufacturer_string().unwrap_or(""),
+	         info.product_string().unwrap_or("")
 	);
 
-	println!("  {dev:#?}");
+	println!("  {info:#?}");
 
 
-	let bulk = dev.data_interface();
+	let bulk = info.data_interface_number();
 	let mut has_data_interface = bulk.is_some();
 	let mut bulk_interface_number = None;
 	println!("bulk interface: {:#?}", bulk);
@@ -268,7 +305,7 @@ pub fn inspect_device(dev: &DeviceInfo) {
 	{
 		use usb_ids::FromId;
 
-		let interfaces = dev.interfaces().collect::<Vec<_>>();
+		let interfaces = info.interfaces().collect::<Vec<_>>();
 		println!("interfaces: ({})", interfaces.len());
 		for i in interfaces {
 			let class = usb_ids::Class::from_id(i.class());
@@ -284,7 +321,7 @@ pub fn inspect_device(dev: &DeviceInfo) {
 	println!("---");
 
 
-	let dev = match dev.open() {
+	let dev = match info.open() {
 		Ok(dev) => dev,
 		Err(e) => {
 			println!("Failed to open device: {}", e);
@@ -299,7 +336,6 @@ pub fn inspect_device(dev: &DeviceInfo) {
 	}
 
 
-	let mut bulk_found = false;
 	for config in dev.configurations() {
 		let active = if let Ok(ref cfg) = active_configuration {
 			if config.configuration_value() == cfg.configuration_value() {
@@ -313,7 +349,8 @@ pub fn inspect_device(dev: &DeviceInfo) {
 
 		println!("  {active}{config:#?}");
 
-		if !has_data_interface {
+		// if !has_data_interface
+		{
 			println!("  |");
 			println!("  |");
 			println!("  \\---");
@@ -340,15 +377,16 @@ pub fn inspect_device(dev: &DeviceInfo) {
 	println!("---");
 
 	if has_data_interface && bulk_interface_number.is_some() {
-		let i = bulk_interface_number.unwrap();
-		println!("trying to open interface: {i}");
-		let interf = Interface::new(dev.claim_interface(i).unwrap());
+		let id = bulk_interface_number.unwrap();
+		println!("trying to open interface: {id}");
+		let i = Interface::from(dev.claim_interface(id).unwrap());
 		{
 			use crate::device::command::SystemPath;
 			use crate::device::command::Switch;
 
-			interf.send_cmd(Command::Echo { value: Switch::On }).unwrap();
-			interf.send_cmd(Command::RunSystem { path: SystemPath::Settings }).unwrap();
+			i.send_cmd(Command::Echo { value: Switch::On }).unwrap();
+			i.send_cmd(Command::RunSystem { path: SystemPath::Settings })
+			 .unwrap();
 		}
 	}
 
@@ -356,51 +394,46 @@ pub fn inspect_device(dev: &DeviceInfo) {
 }
 
 
-// impl crate::interface::blocking::Out for Device {
-// 	// fn send(&self, data: &[u8]) -> Result<usize, Self::Error> { todo!() }
-
-// 	// fn send_cmd(&self, cmd: Command) -> Result<usize, Self::Error> { todo!() }
-// }
-
 impl crate::interface::blocking::Out for Interface {
-	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
+	#[cfg_attr(feature = "tracing", tracing::instrument)]
 	fn send_cmd(&self, cmd: Command) -> Result<usize, Error> {
-		futures_lite::future::block_on(self.write_cmd(cmd)).map_err(Into::into)
+		use crate::interface::r#async;
+		let fut = <Self as r#async::Out>::send_cmd(self, cmd);
+		futures_lite::future::block_on(fut).map_err(Into::into)
 	}
 }
 
-impl crate::interface::blocking::In for Interface {
-	// type Error = crate::error::Error;
-}
+impl crate::interface::blocking::In for Interface {}
 
 
 impl crate::interface::r#async::Out for Interface {
-	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
-	async fn send_cmd(&self, cmd: Command) -> Result<usize, Error> {
-		self.write_cmd(cmd).await.map_err(Into::into)
-	}
+	#[cfg_attr(feature = "tracing", tracing::instrument)]
+	async fn send(&self, data: &[u8]) -> Result<usize, Error> { self.write(data).map_err(Into::into).await }
 }
 
-impl crate::interface::r#async::In for Interface {
-	// type Error = Error;
-}
+impl crate::interface::r#async::In for Interface {}
 
 
 pub struct Interface {
 	inner: nusb::Interface,
 }
 
+impl From<nusb::Interface> for Interface {
+	fn from(interface: nusb::Interface) -> Self { Self { inner: interface } }
+}
+
+impl std::fmt::Display for Interface {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { write!(f, "usb") }
+}
+
+impl std::fmt::Debug for Interface {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { write!(f, "usb") }
+}
+
 impl Interface {
-	#[cfg_attr(feature = "tracing", tracing::instrument(skip(inner)))]
-	pub fn new(inner: nusb::Interface) -> Self { Self { inner } }
-
-	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
-	pub fn write_cmd(&self, cmd: Command) -> impl std::future::Future<Output = Result<usize, TransferError>> {
-		self.write(cmd.with_break().as_bytes())
-	}
-
-	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
+	#[cfg_attr(feature = "tracing", tracing::instrument)]
 	pub fn write(&self, data: &[u8]) -> impl std::future::Future<Output = Result<usize, TransferError>> {
+		trace!("writing {} bytes", data.len());
 		self.inner.bulk_out(BULK_OUT, data.to_vec()).map(|comp| {
 			                                            // TODO: attach data to the pool
 			                                            let written = comp.data.actual_length();

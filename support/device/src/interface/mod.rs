@@ -1,3 +1,5 @@
+use futures::FutureExt;
+
 use crate::error::Error;
 
 pub mod blocking;
@@ -18,6 +20,16 @@ impl From<crate::serial::Interface> for Interface {
 }
 
 
+impl std::fmt::Display for Interface {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Interface::Usb(interface) => interface.fmt(f),
+			Interface::Serial(interface) => interface.fmt(f),
+		}
+	}
+}
+
+
 impl std::fmt::Debug for Interface {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
@@ -32,6 +44,14 @@ impl r#async::Out for Interface
 	where crate::usb::Interface: r#async::Out,
 	      crate::serial::Interface: r#async::Out
 {
+	#[inline(always)]
+	fn send(&self, data: &[u8]) -> impl futures::Future<Output = Result<usize, Error>> {
+		match self {
+			Self::Usb(i) => i.send(data).left_future(),
+			Self::Serial(i) => i.send(data).right_future(),
+		}
+	}
+
 	#[inline(always)]
 	async fn send_cmd(&self, cmd: crate::device::command::Command) -> Result<usize, Error> {
 		match self {
@@ -61,31 +81,4 @@ impl blocking::Out for Interface {
 
 impl blocking::In for Interface {
 	// type Error = crate::error::Error;
-}
-
-
-pub trait AsyncSend {
-	fn send_cmd(&mut self,
-	            cmd: crate::device::command::Command)
-	            -> impl std::future::Future<Output = Result<usize, Error>>;
-}
-
-
-mod ext {
-	use super::*;
-
-
-	impl<T> AsyncSend for T
-		where T: tokio::io::AsyncWriteExt,
-		      Self: Unpin
-	{
-		#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
-		async fn send_cmd(&mut self, cmd: crate::device::command::Command) -> Result<usize, Error> {
-			let cmd = cmd.with_break();
-			let bytes = cmd.as_bytes();
-			self.write_all(bytes).await?;
-			self.flush().await?;
-			Ok(bytes.len())
-		}
-	}
 }

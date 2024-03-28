@@ -2,8 +2,6 @@ use nusb::DeviceInfo;
 
 use crate::PRODUCT_ID_DATA;
 use crate::PRODUCT_ID_STORAGE;
-use super::HaveDataInterface;
-use super::MassStorageInterface;
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -29,9 +27,6 @@ impl std::fmt::Display for Mode {
 pub trait DeviceMode {
 	/// USB device mode determined by the product ID.
 	fn mode(&self) -> Mode;
-
-	/// Actual USB device mode determined by available interfaces.
-	fn mode_actual(&self) -> Mode;
 }
 
 
@@ -43,22 +38,9 @@ impl DeviceMode for DeviceInfo {
 			_ => Mode::Unknown,
 		}
 	}
-
-	fn mode_actual(&self) -> Mode {
-		if self.have_data_interface() {
-			Mode::Data
-		} else {
-			if self.have_storage_interface() {
-				Mode::Storage
-			} else {
-				Mode::Unknown
-			}
-		}
-	}
 }
 
 
 impl DeviceMode for super::Device {
 	fn mode(&self) -> Mode { self.info().mode() }
-	fn mode_actual(&self) -> Mode { self.info().mode_actual() }
 }

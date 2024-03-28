@@ -8,13 +8,14 @@ use crate::device::query::DeviceQueryValue as QueryValue;
 use crate::device::serial::SerialNumber as Sn;
 use crate::device::{wait_mode_storage, wait_mode_data, Device};
 use crate::error::Error;
+use crate::interface::r#async::Out;
 use crate::mount::{MountAsync, MountHandle};
 use crate::mount::MountedDevice;
 use crate::mount::volume::volumes_for_map;
 use crate::usb::discover::devices_storage;
 use crate::usb;
 use crate::serial::{self, dev_with_port};
-use crate::interface::{self, AsyncSend};
+use crate::interface;
 
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
@@ -176,9 +177,11 @@ pub async fn mount_by_port_name<S: AsRef<str>>(
 				Ok(dev) => futures.push(mount_dev(dev)?.left_future()),
 				Err(err) => {
 					let name = port;
-					let mut port = serial::open(name)?;
 					error!("Unable to map specified port {name} to device: {err}");
-					port.send_cmd(crate::device::command::Command::Datadisk).await?;
+					let port = serial::open(name)?;
+					let interface = serial::Interface::new_with(port, Some(name.to_string()));
+					interface.send_cmd(crate::device::command::Command::Datadisk)
+					         .await?;
 					futures.push(err_not_found().right_future());
 				},
 			}
@@ -190,8 +193,10 @@ pub async fn mount_by_port_name<S: AsRef<str>>(
 				Err(err) => {
 					let name = port;
 					error!("Unable to map specified port {name} to device: {err}");
-					let mut port = serial::open(name)?;
-					port.send_cmd(crate::device::command::Command::Datadisk).await?;
+					let port = serial::open(name)?;
+					let interface = serial::Interface::new_with(port, Some(name.to_string()));
+					interface.send_cmd(crate::device::command::Command::Datadisk)
+					         .await?;
 					futures.push(err_not_found().right_future());
 				},
 			}

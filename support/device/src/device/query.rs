@@ -8,7 +8,7 @@ use super::serial::SerialNumber;
 pub const DEVICE_SERIAL_ENV: &str = "PLAYDATE_SERIAL_DEVICE";
 
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[cfg_attr(feature = "clap", derive(clap::Parser))]
 #[cfg_attr(feature = "clap", command(author, version, about, long_about = None, name = "device"))]
 pub struct DeviceQuery {
@@ -25,6 +25,34 @@ impl Default for DeviceQuery {
 		Self { value: std::env::var(DEVICE_SERIAL_ENV).map(|s| DeviceQueryValue::from_str(&s).ok())
 		                                              .ok()
 		                                              .flatten() }
+	}
+}
+
+impl std::fmt::Display for DeviceQuery {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self.value {
+			Some(ref value) => value.fmt(f),
+			None => write!(f, "None"),
+		}
+	}
+}
+
+impl std::fmt::Debug for DeviceQuery {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self.value.as_ref() {
+			Some(value) => f.debug_tuple("Query").field(&value.to_string()).finish(),
+			None => f.debug_tuple("Query").field(&None::<()>).finish(),
+		}
+	}
+}
+
+impl std::fmt::Display for DeviceQueryValue {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			DeviceQueryValue::Serial(sn) => write!(f, "sn:{sn}"),
+			DeviceQueryValue::Path(path) => write!(f, "serial:{}", path.display()),
+			DeviceQueryValue::Com(port) => write!(f, "serial:COM{port}"),
+		}
 	}
 }
 
