@@ -19,7 +19,7 @@ object-pool = "0.5"
 regex.workspace = true
 log.workspace = true
 miette = "7.2"
-thiserror = "1.0"
+thiserror.workspace = true
 
 nusb = "0.1"
 usb-ids = { version = "1.2024.2" }
@@ -34,10 +34,6 @@ tracing = { version = "0.1", optional = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 hex = "0.4"
-
-[dependencies.utils]
-workspace = true
-default-features = false
 
 [dependencies.tokio]
 version = "1.36"

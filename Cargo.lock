@@ -3507,7 +3507,6 @@ dependencies = [
  "miette",
  "nusb",
  "object-pool",
- "playdate-build-utils",
  "plist",
  "regex",
  "serde",
@@ -3564,6 +3563,16 @@ dependencies = [
  "erased_set",
  "playdate-sys",
  "playdate-system",
+]
+
+[[package]]
+name = "playdate-simulator-utils"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "playdate-build-utils",
+ "thiserror",
+ "tracing",
 ]
 
 [[package]]
@@ -3631,6 +3640,7 @@ dependencies = [
  "log",
  "miette",
  "playdate-device",
+ "playdate-simulator-utils",
  "serde",
  "serde_json",
  "thiserror",

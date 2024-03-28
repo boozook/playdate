@@ -14,7 +14,6 @@ extern crate tracing;
 extern crate log;
 
 pub extern crate serialport;
-pub extern crate utils;
 
 pub mod error;
 pub mod serial;

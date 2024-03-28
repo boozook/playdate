@@ -1,3 +1,5 @@
+#![feature(exitcode_exit_method)]
+
 #[cfg(feature = "tracing")]
 #[macro_use]
 extern crate tracing;
@@ -9,6 +11,7 @@ extern crate log;
 extern crate device as pddev;
 
 use std::path::PathBuf;
+use std::process::Termination;
 
 use futures::{FutureExt, StreamExt, TryFutureExt};
 use pddev::device::query::DeviceQueryValue;
@@ -94,17 +97,19 @@ async fn main() -> miette::Result<()> {
 		cli::Command::Unmount { query, wait } => unmount(query, wait, cfg.format).await,
 		cli::Command::Install(cli::Install { pdx, query, force }) => install(query, pdx, force, cfg.format).await,
 		cli::Command::Run(cli::Run { destination:
-		                                cli::Destination::Device(cli::DeviceDestination { install:
-		                                                                                     cli::Install { pdx,
-		                                                                                                    query,
-		                                                                                                    force, },
-		                                                                                  no_install,
-		                                                                                  no_read, }), }) => {
+		                                cli::Destination::Device(cli::Dev { install:
+		                                                                       cli::Install { pdx,
+		                                                                                      query,
+		                                                                                      force, },
+		                                                                    no_install,
+		                                                                    no_read, }), }) => {
 			run_dev(query, pdx, no_install, no_read, force, cfg.format).await
 		},
-		cli::Command::Run(cli::Run { destination:
-		                                cli::Destination::Simulator(cli::SimDestination { pdx, sdk }), }) => {
-			run_sim(pdx, sdk, cfg.format).await
+		cli::Command::Run(cli::Run { destination: cli::Destination::Simulator(cli::Sim { pdx, sdk }), }) => {
+			simulator::run::run_with_sim(pdx, sdk).await
+			                                      .inspect(|_| trace!("sim execution is done"))
+			                                      .report()
+			                                      .exit_process();
 		},
 		cli::Command::Send(cli::Send { command, query, read }) => send(query, command, read, cfg.format).await,
 
@@ -159,13 +164,6 @@ async fn run_dev(query: DeviceQuery,
 	}
 
 	Ok(())
-}
-
-
-#[cfg_attr(feature = "tracing", tracing::instrument())]
-async fn run_sim(pdx: PathBuf, sdk: Option<PathBuf>, _format: cli::Format) -> Result<(), error::Error> {
-	run::run_with_sim(pdx, sdk).await
-	                           .inspect(|_| trace!("sim execution is done"))
 }
 
 

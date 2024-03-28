@@ -1,0 +1,22 @@
+[package]
+name = "playdate-simulator-utils"
+version = "0.1.0"
+readme = "README.md"
+description = "Cross-platform utils to deal with Simulator in the Playdate SDK."
+keywords = ["playdate", "sdk", "utils"]
+categories = ["development-tools"]
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+
+[dependencies]
+thiserror.workspace = true
+log.workspace = true
+tracing = { version = "0.1", optional = true }
+
+[dependencies.utils]
+workspace = true
+default-features = false

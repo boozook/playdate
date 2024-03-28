@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, ValueEnum};
+use simulator::utils::consts::SDK_ENV_VAR;
 
 use crate::device::query::DeviceQuery;
-use crate::utils::consts::SDK_ENV_VAR;
 
 
 pub fn parse() -> Cfg { Cfg::parse() }
@@ -135,6 +135,8 @@ pub struct Send {
 
 pub use run::*;
 mod run {
+	use std::borrow::Cow;
+
 	use super::*;
 
 
@@ -154,27 +156,29 @@ mod run {
 		/// But in case of '--no-install' given path will be interpreted as on-device relative to it's root path,
 		/// e.g. "/Games/my-game.pdx".
 		#[clap(visible_alias("dev"))]
-		Device(DeviceDestination),
+		Device(Dev),
 
 		/// Run with simulator.
 		/// Playdate required to be installed.
 		#[clap(visible_alias("sim"))]
-		Simulator(SimDestination),
+		Simulator(Sim),
 	}
 
 	impl std::fmt::Display for Destination {
 		fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-			let name = match self {
-				Destination::Device(_) => "device",
-				Destination::Simulator(_) => "simulator",
+			let name: Cow<str> = match self {
+				Destination::Device(Dev { install: Install { query, .. },
+				                          .. }) => format!("device:{query}").into(),
+				Destination::Simulator(_) => "simulator".into(),
 			};
-			write!(f, "{name}")
+			name.fmt(f)
 		}
 	}
 
 
 	#[derive(Clone, Debug, clap::Parser)]
-	pub struct SimDestination {
+	/// Simulator destination
+	pub struct Sim {
 		/// Path to the PDX package.
 		#[arg(value_name = "PACKAGE")]
 		pub pdx: PathBuf,
@@ -186,7 +190,8 @@ mod run {
 
 
 	#[derive(Clone, Debug, clap::Parser)]
-	pub struct DeviceDestination {
+	/// Hardware destination
+	pub struct Dev {
 		#[command(flatten)]
 		pub install: super::Install,
 

@@ -30,7 +30,7 @@ serde_json.workspace = true
 # CLI:
 log.workspace = true
 env_logger.workspace = true
-thiserror = "1.0"
+thiserror.workspace = true
 miette = { version = "7.2", features = ["fancy"] }
 
 tracing = { version = "0.1", optional = true }
@@ -48,10 +48,14 @@ workspace = true
 features = ["async", "tokio", "clap", "tokio-serial"]
 workspace = true
 
+[dependencies.simulator]
+# features = ["async", "tokio", "clap", "tokio-serial"]
+workspace = true
+
 
 [features]
 default = ["tracing"]
-tracing = ["dep:tracing", "tracing-subscriber", "device/tracing"]
+tracing = ["dep:tracing", "tracing-subscriber", "device/tracing", "simulator/tracing"]
 
 # use with tokio-console, https://tokio.rs/tokio/topics/tracing-next-steps
 tokio-tracing = ["tracing", "tokio/tracing", "console-subscriber", "tracing"]
