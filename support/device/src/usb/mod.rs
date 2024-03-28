@@ -135,15 +135,20 @@ impl Device {
 
 	/// Open USB interface if available,
 	/// otherwise try open serial port if available.
-	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
+	#[cfg_attr(feature = "tracing", tracing::instrument)]
 	pub fn open(&mut self) -> Result<(), Error> {
 		if !matches!(self.mode, Mode::Data) {
 			return Err(Error::WrongState(self.mode));
 		}
 
+		trace!("opening device");
+
 		// Special case: if we already have an interface, mostly possible serial:
 		if self.interface.is_some() {
-			return Ok(());
+			return match self.interface_mut()? {
+				crate::interface::Interface::Serial(i) => i.open(),
+				_ => Ok(()),
+			};
 		}
 
 		if self.have_data_interface() {
