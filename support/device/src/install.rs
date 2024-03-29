@@ -71,7 +71,7 @@ pub async fn install<'dev>(drive: &'dev MountedDevice,
 	use std::process::Command;
 
 
-	let retry = Retries::new(Duration::from_millis(150), Duration::from_secs(60));
+	let retry = Retries::new(Duration::from_millis(500), Duration::from_secs(60));
 	mount::wait_fs_available(drive, retry).await?;
 	validate_host_package(path).await?;
 

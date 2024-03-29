@@ -26,7 +26,7 @@ type Result<T = (), E = Error> = std::result::Result<T, E>;
 /// Recommended total time for retries is 30 seconds or more.
 ///
 /// ```ignore
-/// let retry = Retries::new(DefaultIterTime, Duration::from_secs(60));
+/// let retry = Retries::new(Duration::from_secs(1), Duration::from_secs(60));
 /// mount::wait_fs_available(drive, retry).await?;
 /// ```
 #[cfg_attr(feature = "tracing", tracing::instrument(fields(dev = mount.device.to_string(),
@@ -120,7 +120,7 @@ pub async fn mount_and(query: Query, wait: bool) -> Result<impl Stream<Item = Re
 					                   Ok(drive) => {
 					                      if wait {
 						                      let retry =
-							                      Retries::new(Duration::from_millis(150), Duration::from_secs(60));
+							                      Retries::new(Duration::from_millis(500), Duration::from_secs(60));
 						                      wait_fs_available(&drive, retry).await?
 					                      }
 					                      Ok(drive)
