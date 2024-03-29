@@ -4,7 +4,7 @@ use futures_lite::stream;
 use crate::device::command::Command;
 use crate::{device, usb, interface};
 use crate::error::Error;
-use device::query::Query as Query;
+use device::query::Query;
 use interface::r#async::Out;
 
 

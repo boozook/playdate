@@ -38,12 +38,6 @@ pub enum Error {
 		source: std::cell::BorrowMutError,
 	},
 
-	// #[error(transparent)]
-	// UsbDrive {
-	// 	#[backtrace]
-	// 	#[from]
-	// 	source: usbenum::error::Error,
-	// },
 	#[error("Awaiting device timeout `{device}`.")]
 	#[diagnostic()]
 	DeviceTimeout {

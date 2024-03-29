@@ -254,7 +254,6 @@ fn mount_dev(mut dev: Device) -> Result<impl Future<Output = Result<MountedDevic
 }
 
 
-// TODO: make timeout configurable
 #[cfg_attr(feature = "tracing", tracing::instrument(fields(dev = dev.info().serial_number())))]
 async fn wait_mount_point<T>(dev: Device, retry: Retries<T>) -> Result<MountedDevice>
 	where T: Clone + std::fmt::Debug + IterTime {

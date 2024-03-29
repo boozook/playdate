@@ -150,6 +150,8 @@ mod debug {
 		Ok(())
 	}
 
+	// ExitStatus always 0 :(
+	// Err if stderr is not empty OR stdout is empty
 	pub async fn vol_sn_2(letter: char) -> Result<(), Error> {
 		use tokio::process::Command;
 

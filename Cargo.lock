@@ -3632,7 +3632,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-tool2"
-version = "0.2.0"
+version = "0.2.0-alpha1"
 dependencies = [
  "clap",
  "console-subscriber",
