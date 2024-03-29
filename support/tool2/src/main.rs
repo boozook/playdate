@@ -1,4 +1,5 @@
 #![feature(exitcode_exit_method)]
+#![feature(exit_status_error)]
 
 #[cfg(feature = "tracing")]
 #[macro_use]
@@ -113,19 +114,85 @@ async fn main() -> miette::Result<()> {
 		},
 		cli::Command::Send(cli::Send { command, query, read }) => send(query, command, read, cfg.format).await,
 
-		cli::Command::Debug => {
-			use mount::volume::volumes_for_map;
-
-			volumes_for_map(usb::discover::devices()?).await?
-			                                          .into_iter()
-			                                          .map(|(dev, vol)| (dev, vol.map(|v| v.path().to_path_buf())))
-			                                          .for_each(|(mut dev, path)| {
-				                                          dev.debug_inspect();
-				                                          println!("vol: {path:?}");
-			                                          });
-			Ok(())
-		},
+		cli::Command::Debug(cli::Dbg { cmd, query }) => debug::debug(cmd, query).await,
 	}.into_diagnostic()
+}
+
+
+mod debug {
+	use super::*;
+
+
+	pub async fn debug(cmd: cli::DbgCmd, _query: Query) -> Result<(), Error> {
+		use cli::DbgCmd as Cmd;
+		match cmd {
+			Cmd::Inspect => inspect().await?,
+			Cmd::Probe => probe().await?,
+			Cmd::VolSn1 { vol } => vol_sn_1(vol).await?,
+			Cmd::VolSn2 { vol } => vol_sn_2(vol).await?,
+			Cmd::Eject { vol } => eject(vol).await?,
+		}
+
+		Ok(())
+	}
+
+	pub async fn vol_sn_1(letter: char) -> Result<(), Error> {
+		use tokio::process::Command;
+
+		let arg =
+			format!("Get-Partition -DriveLetter {letter} | Get-Disk | select-object -ExpandProperty SerialNumber");
+		let mut cmd = Command::new("powershell");
+		cmd.arg(arg);
+		let output = cmd.output().await?;
+		println!("out: {:?}", std::str::from_utf8(&output.stdout));
+		println!("err: {:?}", std::str::from_utf8(&output.stderr));
+		println!("---\n> {output:#?}");
+		Ok(())
+	}
+
+	pub async fn vol_sn_2(letter: char) -> Result<(), Error> {
+		use tokio::process::Command;
+
+		let arg = format!("Get-CimInstance -ClassName Win32_DiskDrive | Get-CimAssociatedInstance -Association Win32_DiskDriveToDiskPartition | Get-CimAssociatedInstance -Association Win32_LogicalDiskToPartition | Where-Object DeviceId -eq '{letter}:' | Get-CimAssociatedInstance -Association Win32_LogicalDiskToPartition | Get-CimAssociatedInstance -Association Win32_DiskDriveToDiskPartition | Select-Object -Property DiskIndex,SerialNumber");
+		let mut cmd = Command::new("powershell");
+		cmd.arg(arg);
+		let output = cmd.output().await?;
+		println!("out: {:?}", std::str::from_utf8(&output.stdout));
+		println!("err: {:?}", std::str::from_utf8(&output.stderr));
+		println!("---\n> {output:#?}");
+		Ok(())
+	}
+
+	pub async fn eject(letter: char) -> Result<(), Error> {
+		use tokio::process::Command;
+
+		let arg = format!("(New-Object -comObject Shell.Application).NameSpace(17).ParseName('{letter}:').InvokeVerb('Eject') | Wait-Process");
+		let mut cmd = Command::new("powershell");
+		cmd.arg(arg);
+		cmd.status().await?.exit_ok()?;
+		Ok(())
+	}
+
+	pub async fn probe() -> Result<(), Error> {
+		use tokio::process::Command;
+
+		Command::new("powershell").status().await?.exit_ok()?;
+		Ok(())
+	}
+
+	pub async fn inspect() -> Result<(), Error> {
+		use usb::discover::devices;
+		use mount::volume::volumes_for_map;
+		volumes_for_map(devices()?).await?
+		                           .into_iter()
+		                           .map(|(dev, vol)| (dev, vol.map(|v| v.path().to_path_buf())))
+		                           .for_each(|(mut dev, path)| {
+			                           dev.debug_inspect();
+			                           println!("vol: {path:?}");
+		                           });
+
+		Ok(())
+	}
 }
 
 

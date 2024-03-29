@@ -79,8 +79,37 @@ pub enum Command {
 	// #[command(hide = true)]
 	Send(#[command(flatten)] Send),
 
-	Debug,
+	/// Debug functions, only for development purposes.
+	#[cfg(debug_assertions)]
+	Debug(#[command(flatten)] Dbg),
 }
+
+
+#[derive(Clone, Debug, clap::Parser)]
+pub struct Dbg {
+	/// Command to send:
+	#[clap(subcommand)]
+	pub cmd: DbgCmd,
+
+	/// Device selector.
+	#[command(flatten)]
+	pub query: Query,
+}
+
+#[derive(Debug, Clone, clap::Subcommand)]
+pub enum DbgCmd {
+	/// Inspect device(s) state.
+	Inspect,
+	/// Probe powershell
+	Probe,
+	/// Retrieve sn of dev that behind the mounted volume.
+	VolSn1 { vol: char },
+	/// Retrieve sn of dev that behind the mounted volume.
+	VolSn2 { vol: char },
+	/// Eject device by mounted volume letter.
+	Eject { vol: char },
+}
+
 
 #[derive(ValueEnum, Debug, Clone, Copy)]
 pub enum DeviceKind {
