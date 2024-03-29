@@ -203,11 +203,17 @@ fn enumerate_volumes() -> impl Iterator<Item = Volume> {
 		                                      .then_some(letter)
 	       })
 	       .map(|letter| {
-		       trace!("Seems to {letter} is a Playdate.");
-		       let dn = ps::vol_dn(letter).inspect_err(|err| debug!("{letter}: {err}"))
-		                                  .ok();
 		       let sn = ps::vol_sn(letter).inspect_err(|err| debug!("{letter}: {err}"))
 		                                  .ok();
+		       // Get DN if no SN:
+		       let dn = sn.is_none()
+		                  .then(|| {
+			                  ps::vol_dn(letter).inspect_err(|err| debug!("{letter}: {err}"))
+			                                    .ok()
+		                  })
+		                  .flatten();
+
+		       trace!("Seems to {letter} is a Playdate: {dn:?}, {sn:?}");
 		       Volume { letter,
 		                disk_number: dn,
 		                serial_number: sn }

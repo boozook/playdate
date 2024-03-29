@@ -79,6 +79,14 @@ pub fn ports_with_or_single<SN>(sn: Option<SN>) -> Result<impl IntoIterator<Item
 
 	if ports.len() == 1 && devs.len() == 1 {
 		trace!("Auto-match single found dev with port without sn match.");
+		let psn = match &ports[0].port_type {
+			SerialPortType::UsbPort(usb) => usb.serial_number.as_deref(),
+			SerialPortType::PciPort => None,
+			SerialPortType::BluetoothPort => None,
+			SerialPortType::Unknown => None,
+		};
+		let name = &ports[0].port_name;
+		trace!("Found serial port: {name}, sn: {psn:?} for dev: {sn:?}",);
 		Ok(ports)
 	} else {
 		let ports =
