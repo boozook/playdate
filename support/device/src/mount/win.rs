@@ -257,7 +257,10 @@ mod winapi {
 		.map_err(std::io::Error::from)?;
 
 		let drive_name = std::str::from_utf8(&name_buf)?.trim();
-		trace!("found drive: {letter} {drive_name} ({serial})");
+
+		let temp_drive_name = (!drive_name.is_empty()).then_some(drive_name)
+		                                              .unwrap_or("unnamed");
+		trace!("found drive: {letter} '{temp_drive_name}' ({serial})");
 
 		Ok(drive_name.to_string())
 	}

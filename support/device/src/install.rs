@@ -157,7 +157,7 @@ pub async fn mount_and_install(query: Query,
                                -> Result<impl Stream<Item = Result<MountedDevicePath>> + '_> {
 	validate_host_package(path).await?;
 
-	// TODO: also check if query is path and this is mounted volume.
+	// TODO: Check query is path and this is mounted volume.
 
 	let fut = mount::mount_and(query, true).await?.flat_map(move |res| {
 		                                              async move {

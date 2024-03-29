@@ -89,7 +89,14 @@ impl FromStr for Value {
 		#[cfg(windows)]
 		match name.strip_prefix("COM").map(|s| s.parse::<u16>()) {
 			Some(Ok(com)) => return Ok(Value::Com(com)),
-			Some(Err(err)) => todo!("Invalid format, seems to COM port, but {err}."),
+			Some(Err(err)) => {
+				use std::io::{Error, ErrorKind};
+
+				return Err(Error::new(
+					ErrorKind::InvalidInput,
+					format!("Invalid format, seems to COM port, but {err}."),
+				).into());
+			},
 			None => { /* nothing there */ },
 		}
 

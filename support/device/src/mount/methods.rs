@@ -304,6 +304,7 @@ async fn wait_mount_point<T>(dev: Device, retry: Retries<T>) -> Result<MountedDe
 pub async fn unmount(query: Query) -> Result<Unordered<impl Future<Output = (Device, Result)>>> {
 	match query.value {
 		Some(QueryValue::Path(path)) => {
+			// TODO: Check query is path and this is mounted volume.
 			// check is `path` is a a path of existing __volume__,
 			// try find device behind the volume,
 			// unmount the volume anyway
