@@ -1,5 +1,3 @@
-#![cfg(target_os = "windows")]
-
 extern crate windows;
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -55,7 +53,7 @@ mod unmount {
 					                                                 .and_then(|res| {
 						                                                 res.exit_ok().map_err(Error::from)
 					                                                 })
-					                                                 .map_err(|err2| Error::chain(err, [err2]))
+					                                                 .map_err(|err2| Error::chain(err2, [err]))
 				                            } else {
 					                            Err(err)
 				                            }
@@ -64,7 +62,7 @@ mod unmount {
 				                            eject_pw(self.letter).status()
 				                                                 .map_err(Error::from)
 				                                                 .and_then(|res| res.exit_ok().map_err(Error::from))
-				                                                 .map_err(|err2| Error::chain(err, [err2]))
+				                                                 .map_err(|err2| Error::chain(err2, [err]))
 			                            })
 		}
 	}
@@ -79,7 +77,7 @@ mod unmount {
 			futures::future::lazy(|_| winapi::unmount(self.letter)).or_else(|err| {
 				                                                       if std::env::var_os("SHELL").is_some() {
 					                                                       Command::from(eject_sh(self.letter)).status()
-																							.map_err(|err2| Error::chain(err, [err2]))
+																							.map_err(|err2| Error::chain(err2, [err]))
 																							.and_then(|res| ready(res.exit_ok().map_err(Error::from)))
 												                                 .left_future()
 				                                                       } else {
@@ -88,7 +86,7 @@ mod unmount {
 			                                                       })
 			                                                       .or_else(|err| {
 				                                                       Command::from(eject_pw(self.letter)).status()
-																						.map_err(|err2| Error::chain(err, [err2]))
+																						.map_err(|err2| Error::chain(err2, [err]))
 																						.and_then(|res| ready(res.exit_ok().map_err(Error::from)))
 			                                                       })
 			                                                       .await
@@ -104,6 +102,7 @@ mod unmount {
 	}
 
 	fn eject_pw(letter: char) -> std::process::Command {
+		// let arg = format!("(New-Object -comObject Shell.Application).NameSpace(17).ParseName('{letter}:').InvokeVerb('Eject') | Wait-Process");
 		let arg = format!("(new-object -COM Shell.Application).NameSpace(17).ParseName('{letter}:').InvokeVerb('Eject') | Wait-Process");
 		let mut cmd = std::process::Command::new("powershell");
 		cmd.arg(arg);
@@ -332,7 +331,7 @@ mod winapi {
 			debug!("{err}, trying fallback method...");
 			let (string, s) = winapi::pcstr_short(letter);
 			unsafe { DeleteVolumeMountPointA(s) }.map(|_| drop(string))
-			                                     .map_err(|err2| Error::chain(err, [err2]))
+			                                     .map_err(|err2| Error::chain(err2, [err]))
 		})
 	}
 

@@ -1,5 +1,3 @@
-// #![cfg(target_os = "macos")]
-
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::path::Path;

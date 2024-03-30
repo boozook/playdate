@@ -33,8 +33,6 @@ pub enum Command {
 
 	/// Turn console echo on or off.
 	Echo {
-		// #[cfg_attr(feature = "clap", arg(default_value_t = true))]
-		// value: bool,
 		#[cfg_attr(feature = "clap", arg(default_value_t = Switch::On))]
 		value: Switch,
 	},

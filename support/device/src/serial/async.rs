@@ -1,12 +1,8 @@
 #![cfg(feature = "tokio-serial")]
+#![cfg(feature = "tokio")]
 
 use std::ops::DerefMut;
 
-// use futures::TryFutureExt;
-// use futures::AsyncWriteExt;
-// use futures_lite::AsyncWriteExt;
-// #[allow(unused_imports)]
-// use tokio::io::AsyncWrite;
 use tokio::io::AsyncWriteExt;
 
 use crate::error::Error;
@@ -30,21 +26,4 @@ impl crate::interface::r#async::Out for Interface {
 }
 
 
-// impl<T> crate::interface::blocking::Out for T where T: serialport::SerialPort {}
-// impl<T> crate::interface::r#async::In for T where T: DerefMut<Target = tokio_serial::SerialStream> {}
-
-// impl<T> crate::interface::r#async::Out for T where T: DerefMut<Target = tokio_serial::SerialStream> {
-// impl<T> crate::interface::r#async::Out for T where T: DerefMut<Target = tokio_serial::SerialStream> {
-// 	async fn send_cmd(&self, cmd: crate::device::command::Command) -> Result<usize, Error> {
-// 		let port = self.deref_mut();
-// 		let cmd = cmd.with_break();
-// 		port.write_all(cmd.as_bytes()).await?;
-// 		port.flush().await?;
-// 		Ok(cmd.as_bytes().len())
-// 	}
-// }
-
-
-impl crate::interface::r#async::In for Interface {
-	// type Error = crate::error::Error;
-}
+impl crate::interface::r#async::In for Interface {}

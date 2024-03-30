@@ -35,6 +35,7 @@ pub fn port<SN>(sn: &SN) -> Result<SerialPortInfo, Error>
 		                      _ => false,
 		                   }
 	                   });
+	// TODO: error: serial not found for sn
 	port.ok_or_else(|| Error::not_found())
 }
 
@@ -44,28 +45,9 @@ pub fn port<SN>(sn: &SN) -> Result<SerialPortInfo, Error>
 #[cfg_attr(feature = "tracing", tracing::instrument())]
 pub fn ports_with<SN>(sn: Option<SN>) -> Result<impl Iterator<Item = SerialPortInfo>, Error>
 	where SN: PartialEq<str> + Debug {
-	let ports = ports()?.filter(move |port| {
-		                    match port.port_type {
-			                    SerialPortType::UsbPort(ref info) => {
-			                       if let Some(sn) = sn.as_ref() {
-				                       trace!("found port: {}, dev sn: {:?}", port.port_name, info.serial_number);
-				                       info.serial_number
-				                           .as_ref()
-				                           .filter(|s| {
-					                           let res = sn.eq(s);
-					                           trace!("sn is ≈ {res}");
-					                           res
-				                           })
-				                           .is_some()
-			                       } else {
-				                       true
-			                       }
-		                       },
-		                       _ => false,
-		                    }
-	                    });
-	Ok(ports)
+	Ok(ports()?.filter(move |port| sn.as_ref().map(|sn| port_sn_matches(port, sn)).unwrap_or(true)))
 }
+
 
 /// Search serial ports for device with same serial number,
 /// or __any__ Playdate- serial port if `sn` is `None`.
@@ -89,28 +71,30 @@ pub fn ports_with_or_single<SN>(sn: Option<SN>) -> Result<impl IntoIterator<Item
 		trace!("Found serial port: {name}, sn: {psn:?} for dev: {sn:?}",);
 		Ok(ports)
 	} else {
-		let ports =
-			ports.into_iter().filter(move |port| {
-				                 match port.port_type {
-					                 SerialPortType::UsbPort(ref info) => {
-					                    if let Some(sn) = sn.as_ref() {
-						                    trace!("found port: {}, dev sn: {:?}", port.port_name, info.serial_number);
-						                    info.serial_number
-						                        .as_ref()
-						                        .filter(|s| {
-							                        let res = sn.eq(s);
-							                        trace!("sn is ≈ {res}");
-							                        res
-						                        })
-						                        .is_some()
-					                    } else {
-						                    true
-					                    }
-				                    },
-				                    _ => false,
-				                 }
-			                 });
+		let ports = ports.into_iter()
+		                 .filter(move |port| sn.as_ref().map(|sn| port_sn_matches(port, sn)).unwrap_or(true));
 		Ok(ports.collect())
+	}
+}
+
+
+fn port_sn_matches<SN>(port: &SerialPortInfo, sn: &SN) -> bool
+	where SN: PartialEq<str> + Debug {
+	match port.port_type {
+		SerialPortType::UsbPort(ref info) => {
+			trace!("found port: {}, dev sn: {:?}", port.port_name, info.serial_number);
+			info.serial_number
+			    .as_deref()
+			    .map(|s| s.trim())
+			    .filter(|s| !s.is_empty())
+			    .filter(|s| {
+				    let res = sn.eq(s);
+				    trace!("sn is ≈ {res}");
+				    res
+			    })
+			    .is_some()
+		},
+		_ => false,
 	}
 }
 

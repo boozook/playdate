@@ -21,6 +21,12 @@ mod methods;
 pub use methods::*;
 
 
+// TODO: If unmount fails, do warn!("Please press 'A' on the Playdate to exit Data Disk mode.")
+
+
+// TODO: MountError for this module
+
+
 pub trait Volume {
 	/// This volume's path.
 	fn path(&self) -> Cow<'_, Path>;

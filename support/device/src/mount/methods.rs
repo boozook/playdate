@@ -237,7 +237,6 @@ fn mount_dev(mut dev: Device) -> Result<impl Future<Output = Result<MountedDevic
 		usb::mode::Mode::Data => {
 			trace!("create sending fut");
 			async move {
-				use interface::r#async::Out;
 				dev.open()?;
 				dev.interface()?
 				   .send_cmd(crate::device::command::Command::Datadisk)

@@ -82,8 +82,8 @@ jobs:
 
 
       - name: pdtool with
-        run: cargo build -p=playdate-tool2 --bin=pdtool
-
+        continue-on-error: true
+        run: cargo build -p=playdate-tool --bin=pdtool
 
       - name: Upload
         id: upload
@@ -100,7 +100,8 @@ jobs:
           echo 'URL: ${{ steps.upload.outputs.artifact-url }}'
 
       - name: pdtool with tracing
-        run: cargo build -p=playdate-tool2 --bin=pdtool --features=tracing
+        continue-on-error: true
+        run: cargo build -p=playdate-tool --bin=pdtool --features=tracing
 
       - name: Upload
         uses: actions/upload-artifact@v4

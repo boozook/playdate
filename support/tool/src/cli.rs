@@ -100,14 +100,6 @@ pub struct Dbg {
 pub enum DbgCmd {
 	/// Inspect device(s) state.
 	Inspect,
-	/// Probe powershell
-	Probe,
-	/// Retrieve sn of dev that behind the mounted volume.
-	VolSn1 { vol: char },
-	/// Retrieve sn of dev that behind the mounted volume.
-	VolSn2 { vol: char },
-	/// Eject device by mounted volume letter.
-	Eject { vol: char },
 }
 
 

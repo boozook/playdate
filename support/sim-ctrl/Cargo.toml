@@ -2,7 +2,7 @@
 name = "playdate-simulator-utils"
 version = "0.1.0"
 readme = "README.md"
-description = "Cross-platform utils to deal with Simulator in the Playdate SDK."
+description = "Cross-platform utils to deal with Playdate Simulator."
 keywords = ["playdate", "sdk", "utils"]
 categories = ["development-tools"]
 edition.workspace = true
@@ -22,6 +22,7 @@ workspace = true
 default-features = false
 
 [dependencies.tokio]
-version = "1.36"
 features = ["process"]
+default-features = false
+workspace = true
 optional = true

@@ -5,8 +5,8 @@ use crate::error::Error;
 
 
 pub mod discover;
-pub mod blocking;
-pub mod r#async;
+mod blocking;
+mod r#async;
 
 mod methods;
 pub use methods::*;
@@ -95,17 +95,27 @@ impl Interface {
 #[cfg_attr(feature = "tracing", tracing::instrument)]
 pub fn open<'a, S: Into<std::borrow::Cow<'a, str>>>(port_name: S) -> Result<Port, Error>
 	where S: std::fmt::Debug {
+	trace!("opening port {port_name:?}");
 	let builder = port_builder(port_name);
 
+	let port;
 	#[cfg(not(feature = "tokio-serial"))]
 	{
-		Ok(builder.open()?)
+		port = builder.open()?;
 	}
 	#[cfg(feature = "tokio-serial")]
 	{
 		use tokio_serial::SerialPortBuilderExt;
-		Ok(builder.open_native_async().map(Box::new)?)
+		port = builder.open_native_async().map(Box::new)?;
 	}
+
+	{
+		use serialport::SerialPort;
+		let name = port.as_ref().name();
+		let name = name.as_deref().unwrap_or("n/a");
+		trace!("opened port: {name}");
+	}
+	Ok(port)
 }
 
 fn port_builder<'a>(port_name: impl Into<std::borrow::Cow<'a, str>>) -> serialport::SerialPortBuilder {

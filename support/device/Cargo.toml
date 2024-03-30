@@ -13,7 +13,6 @@ repository.workspace = true
 
 
 [dependencies]
-# TODO: remove probably
 object-pool = "0.5"
 
 regex.workspace = true
@@ -28,7 +27,7 @@ tokio-serial = { version = "5.4", optional = true }
 
 tracing = { version = "0.1", optional = true }
 
-# mb. read mount-points:
+# mb. read mount-points more correctly:
 # rustix = "0.38"
 
 serde = { workspace = true, features = ["derive"] }
@@ -36,8 +35,8 @@ serde_json.workspace = true
 hex = "0.4"
 
 [dependencies.tokio]
-version = "1.36"
 features = ["fs", "process", "time", "io-std"]
+workspace = true
 optional = true
 
 [dependencies.futures-lite]

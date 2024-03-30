@@ -16,7 +16,6 @@ pub async fn dev_with_port<S: AsRef<str>>(port: S) -> Result<Device> {
 
 	let name = port.as_ref();
 	let port = super::open(name)?;
-	trace!("opened port {name}");
 
 	let dev = port.as_ref()
 	              .name()
@@ -32,6 +31,7 @@ pub async fn dev_with_port<S: AsRef<str>>(port: S) -> Result<Device> {
 		              Some(dev)
 	              });
 
+	// TODO: error: device not found for serial port
 	dev.ok_or_else(|| Error::not_found())
 }
 

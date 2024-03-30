@@ -1,5 +1,3 @@
-// #![cfg(target_os = "linux")]
-
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -71,19 +69,19 @@ mod unmount {
 				                     unmount(self).status()
 				                                  .map_err(Error::from)
 				                                  .and_then(|res| res.exit_ok().map_err(Error::from))
-				                                  .map_err(|err2| Error::chain(err, [err2]))
+				                                  .map_err(|err2| Error::chain(err2, [err]))
 			                     })
 			                     .or_else(move |err| -> Result<(), Error> {
 				                     udisksctl_unmount(self).status()
 				                                            .map_err(Error::from)
 				                                            .and_then(|res| res.exit_ok().map_err(Error::from))
-				                                            .map_err(|err2| Error::chain(err, [err2]))
+				                                            .map_err(|err2| Error::chain(err2, [err]))
 			                     })
 			                     .or_else(move |err| -> Result<(), Error> {
 				                     udisks_unmount(self).status()
 				                                         .map_err(Error::from)
 				                                         .and_then(|res| res.exit_ok().map_err(Error::from))
-				                                         .map_err(|err2| Error::chain(err, [err2]))
+				                                         .map_err(|err2| Error::chain(err2, [err]))
 			                     })
 			                     .inspect(|_| trace!("unmounted {self}"));
 
@@ -93,7 +91,7 @@ mod unmount {
 			                                        .and_then(|res| res.exit_ok().map_err(Error::from))
 			                                        .map_err(move |err2| {
 				                                        if let Some(err) = res.err() {
-					                                        Error::chain(err, [err2])
+					                                        Error::chain(err2, [err])
 				                                        } else {
 					                                        err2
 				                                        }
@@ -114,7 +112,7 @@ mod unmount {
 			                          .and_then(|res| ready(res.exit_ok().map_err(Error::from)))
 			                          .or_else(|err| {
 				                          Command::from(unmount(self)).status()
-				                                                      .map_err(|err2| Error::chain(err, [err2]))
+				                                                      .map_err(|err2| Error::chain(err2, [err]))
 				                                                      .and_then(|res| {
 					                                                      ready(res.exit_ok().map_err(Error::from))
 				                                                      })
@@ -122,7 +120,7 @@ mod unmount {
 			                          .or_else(|err| {
 				                          Command::from(udisksctl_unmount(self)).status()
 				                                                                .map_err(|err2| {
-					                                                                Error::chain(err, [err2])
+					                                                                Error::chain(err2, [err])
 				                                                                })
 				                                                                .and_then(|res| {
 					                                                                ready(
@@ -134,7 +132,7 @@ mod unmount {
 			                          .or_else(|err| {
 				                          Command::from(udisks_unmount(self)).status()
 				                                                             .map_err(|err2| {
-					                                                             Error::chain(err, [err2])
+					                                                             Error::chain(err2, [err])
 				                                                             })
 				                                                             .and_then(|res| {
 					                                                             ready(
@@ -156,7 +154,7 @@ mod unmount {
 				                                                                  })
 				                                                                  .map_err(|err2| {
 					                                                                  if let Some(err) = res.err() {
-						                                                                  Error::chain(err, [err2])
+						                                                                  Error::chain(err2, [err])
 					                                                                  } else {
 						                                                                  err2
 					                                                                  }

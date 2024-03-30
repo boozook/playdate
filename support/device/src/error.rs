@@ -92,7 +92,7 @@ pub enum Error {
 		source: windows::core::Error,
 	},
 
-	#[error("Chain of errors ending with: {source}")]
+	#[error("Chain of errors: {source}\n\t{others:#?}")]
 	#[diagnostic()]
 	Chain {
 		#[backtrace]

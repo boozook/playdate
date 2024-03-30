@@ -16,7 +16,6 @@ use object_pool::Reusable;
 use crate::device::command::Command;
 use crate::device::Device;
 use crate::error::Error;
-use crate::interface::blocking::Out;
 
 use self::mode::DeviceMode;
 use self::mode::Mode;
@@ -154,7 +153,7 @@ impl Device {
 		if self.have_data_interface() {
 			let bulk = self.try_bulk().map(|_| {});
 			if let Some(err) = bulk.err() {
-				self.try_serial().map_err(|err2| Error::chain(err, [err2]))
+				self.try_serial().map_err(|err2| Error::chain(err2, [err]))
 			} else {
 				self.interface()
 			}
@@ -247,157 +246,7 @@ impl Device {
 			dev.reset().map_err(|err| error!("{err}")).ok();
 		}
 	}
-
-
-	pub fn debug_inspect(&mut self) {
-		inspect_device(self.info());
-
-		// try interfaces:
-
-		self.open().unwrap();
-		// let device = self.
-
-		//
-	}
 }
-
-
-/// Print debug information about device.
-pub fn inspect_device(info: &DeviceInfo) {
-	println!(
-	         "Device {:03}.{:03} ({:04x}:{:04x}) {} {}",
-	         info.bus_number(),
-	         info.device_address(),
-	         info.vendor_id(),
-	         info.product_id(),
-	         info.manufacturer_string().unwrap_or(""),
-	         info.product_string().unwrap_or("")
-	);
-
-	println!("  {info:#?}");
-
-
-	let bulk = info.data_interface_number();
-	let mut has_data_interface = bulk.is_some();
-	let mut bulk_interface_number = None;
-	println!("bulk interface: {:#?}", bulk);
-	println!("---");
-
-
-	let describe_class = |class: u8, subclass: u8, protocol: u8, indent: &'static str| {
-		use usb_ids::FromId;
-
-		let class = usb_ids::Class::from_id(class);
-
-		let subs = class.unwrap()
-		                .sub_classes()
-		                .filter(|sub| sub.id() == subclass)
-		                .collect::<Vec<_>>();
-
-
-		for sub in subs {
-			println!("{indent}sub: ({:#02x}) {}", sub.id(), sub.name());
-			let protocols = sub.protocols().filter(|p| p.id() == protocol).collect::<Vec<_>>();
-			if protocols.is_empty() {
-				println!("{indent}{indent}unknown protocol: {protocol:#02x}");
-			}
-			for p in protocols {
-				println!("{indent}{indent}protocol: ({:#02x}) {}", p.id(), p.name());
-			}
-		}
-	};
-
-	{
-		use usb_ids::FromId;
-
-		let interfaces = info.interfaces().collect::<Vec<_>>();
-		println!("interfaces: ({})", interfaces.len());
-		for i in interfaces {
-			let class = usb_ids::Class::from_id(i.class());
-
-			let n = i.interface_number();
-			let name = i.interface_string().unwrap_or("_");
-
-			println!("{n}: {name}");
-			println!("class: ({:#02x})  {:?}", i.class(), class.map(|c| c.name()));
-			describe_class(i.class(), i.subclass(), i.protocol(), "  ");
-		}
-	}
-	println!("---");
-
-
-	let dev = match info.open() {
-		Ok(dev) => dev,
-		Err(e) => {
-			println!("Failed to open device: {}", e);
-			return;
-		},
-	};
-
-	let active_configuration = dev.active_configuration();
-	match &active_configuration {
-		Ok(config) => println!("Active configuration is {}", config.configuration_value()),
-		Err(e) => println!("Unknown active configuration: {e}"),
-	}
-
-
-	for config in dev.configurations() {
-		let active = if let Ok(ref cfg) = active_configuration {
-			if config.configuration_value() == cfg.configuration_value() {
-				"[ACTIVE] "
-			} else {
-				""
-			}
-		} else {
-			""
-		};
-
-		println!("  {active}{config:#?}");
-
-		// if !has_data_interface
-		{
-			println!("  |");
-			println!("  |");
-			println!("  \\---");
-			for i in config.interfaces() {
-				let bulk = i.alt_settings().find(|i| i.class() == 0xA | 2);
-				if let Some(bulk) = bulk {
-					println!("I JUST FOUND BULK INTERFACE!");
-					println!("{bulk:#?}");
-					has_data_interface = true;
-					bulk_interface_number = Some(bulk.interface_number());
-				} else {
-					for i in i.alt_settings() {
-						describe_class(i.class(), i.subclass(), i.protocol(), "    ");
-						println!("    endpoints: ({})", i.num_endpoints());
-						for endpoint in i.endpoints() {
-							println!("    {endpoint:#?}");
-						}
-					}
-				}
-			}
-		}
-	}
-
-	println!("---");
-
-	if has_data_interface && bulk_interface_number.is_some() {
-		let id = bulk_interface_number.unwrap();
-		println!("trying to open interface: {id}");
-		let i = Interface::from(dev.claim_interface(id).unwrap());
-		{
-			use crate::device::command::SystemPath;
-			use crate::device::command::Switch;
-
-			i.send_cmd(Command::Echo { value: Switch::On }).unwrap();
-			i.send_cmd(Command::RunSystem { path: SystemPath::Settings })
-			 .unwrap();
-		}
-	}
-
-	println!("----------------\n");
-}
-
 
 impl crate::interface::blocking::Out for Interface {
 	#[cfg_attr(feature = "tracing", tracing::instrument)]
