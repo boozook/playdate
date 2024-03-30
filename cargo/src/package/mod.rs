@@ -6,13 +6,13 @@ use std::process::Command;
 
 use anyhow::anyhow;
 use anyhow::bail;
-use cargo::util_schemas::manifest::TomlDebugInfo;
 use cargo::CargoResult;
 use cargo::core::Package;
 use cargo::core::compiler::CompileKind;
 use cargo::core::compiler::CrateType;
 use cargo::core::profiles::DebugInfo;
 use cargo::core::profiles::Profiles;
+use cargo_util_schemas::manifest::TomlDebugInfo;
 use clap_lex::OsStrExt;
 use playdate::io::soft_link_checked;
 use playdate::layout::Layout;

@@ -8,8 +8,7 @@ use clap::{Arg, ArgAction, value_parser, Args};
 use clap::Command;
 use playdate::consts::{SDK_ENV_VAR, DEVICE_TARGET};
 use playdate::toolchain::gcc::ARM_GCC_PATH_ENV_VAR;
-use tool::cli::run::DeviceDestination;
-use tool::cli::mount::Mount;
+// use tool::cli::mount::Mount;
 
 
 use super::{Cmd, CMD_NAME, BIN_NAME};
@@ -48,7 +47,7 @@ pub fn special_args_for(cmd: &Cmd) -> Vec<Arg> {
 		Cmd::Run => {
 			let mut args = mount();
 			args.append(&mut shorthands_for(cmd));
-			args.push(flag_no_wait());
+			args.push(flag_no_read());
 			args.push(flag_no_info_file());
 			args.push(flag_pdc_skip_unknown());
 			args.push(flag_pdc_skip_prebuild());
@@ -231,6 +230,12 @@ fn init_crate() -> Command {
 }
 
 
+#[derive(clap::Parser, Debug, Clone, Default)]
+pub struct Mount {
+	#[command(flatten)]
+	pub device: device::device::query::Query,
+}
+
 fn mount() -> Vec<Arg> {
 	let mount: Command =
 		Mount::augment_args(Command::new("mount")).mut_arg("device", |arg| arg.long("device").num_args(0..=1));
@@ -240,11 +245,11 @@ fn mount() -> Vec<Arg> {
 	     .collect()
 }
 
-fn flag_no_wait() -> Arg {
-	DeviceDestination::augment_args(Command::new("dest")).get_arguments()
-	                                                     .find(|arg| arg.get_id().as_str() == "no-wait")
-	                                                     .expect("Arg no-wait")
-	                                                     .to_owned()
+fn flag_no_read() -> Arg {
+	flag(
+	     "no-read",
+	     "Do not wait & read the device's output after execution.",
+	)
 }
 
 

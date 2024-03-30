@@ -203,22 +203,22 @@ fn execute(config: &Config) -> CargoResult<()> {
 
 			// run:
 			{
-				use tool::cli::run::run;
-				use tool::cli::run::{Run, Destination, SimDestination, DeviceDestination};
-				use tool::cli::install::Install;
+				use futures_lite::future::block_on;
+				use device::run::run as run_dev;
+				use simulator::run::run as run_sim;
 
-				let destination = if ck.is_playdate() {
-					Destination::Device(DeviceDestination { install: Install { pdx: package.path.to_owned(),
-					                                                           mount: config.mounting
-					                                                                        .clone()
-					                                                                        .unwrap_or_default() },
-					                                        no_install: false,
-					                                        no_wait: config.no_wait })
+				if ck.is_playdate() {
+					let query = config.mounting.clone().unwrap_or_default().device;
+					let pdx = package.path.to_owned();
+					let no_install = false;
+					let no_read = config.no_read;
+					let force = false;
+					let fut = run_dev(query, pdx, no_install, no_read, force);
+					block_on(fut)?;
 				} else {
-					Destination::Simulator(SimDestination { pdx: package.path.to_owned() })
+					let fut = run_sim(&package.path, config.sdk_path.as_deref());
+					block_on(fut)?;
 				};
-
-				run(Run { destination })?;
 			}
 
 			std::process::exit(0)
