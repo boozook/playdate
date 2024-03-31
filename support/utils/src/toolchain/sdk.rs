@@ -45,18 +45,19 @@ impl Sdk {
 impl Sdk {
 	/// Create new `Sdk` with auto-determining the SDK path
 	pub fn try_new() -> Result<Self, Error> {
-		let try_with = |f: fn() -> Result<Self, Error>| {
-			move |err: Error| {
-				let result = f();
-				if result.is_err() {
-					crate::error!("{err}");
-				}
-				result
+		let try_with = move |f: fn() -> Result<Self, Error>| {
+			let result = f();
+			match result {
+				Err(ref result_error) => crate::error!("{result_error}"),
+				Ok(ref sdk) => {
+					crate::info!("Found SDK in {}", sdk.path().display())
+				},
 			}
+			result
 		};
 
-		Self::try_from_default_env().or_else(try_with(Self::try_from_default_config))
-		                            .or_else(try_with(Self::try_from_default_path))
+		try_with(Self::try_from_default_env).or_else(|_| try_with(Self::try_from_default_config))
+		                                    .or_else(|_| try_with(Self::try_from_default_path))
 	}
 
 	/// Create new `Sdk` with exact passed SDK path
