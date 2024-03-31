@@ -27,9 +27,11 @@ Tested on following platforms:
 
 To build playdate-tool you're need:
 1. Rust __nightly__ toolchain
-2. Linux only:
+1. Linux only:
   - `libudev`, follow [instructions for udev crate][udev-crate-deps].
-3. [Playdate SDK][sdk] with simulator
+1. Windows only:
+  - `powershell` (used as fallback)
+1. [Playdate SDK][sdk] with simulator
    - Ensure that env var `PLAYDATE_SDK_PATH` points to the SDK root. _This is optional, but good move to help the tool to find SDK, and also useful if you have more then one version of SDK._
 
 

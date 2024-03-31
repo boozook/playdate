@@ -26,9 +26,10 @@ Supported platforms:
 ## Prerequisites
 
 1. Rust __nightly__ toolchain
-2. Linux only:
+1. Linux only:
   - `libudev`, follow [instructions for udev crate][udev-crate-deps].
-
+1. Windows only:
+  - `powershell` (used as fallback)
 
 
 [playdate-website]: https://play.date

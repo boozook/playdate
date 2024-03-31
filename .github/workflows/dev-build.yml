@@ -81,7 +81,20 @@ jobs:
           sudo apt install libudev-dev -y
 
 
-      - name: pdtool with
+      - name: cargo
+        continue-on-error: true
+        run: cargo build --bin=cargo-playdate
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: cargo-playdate-${{ runner.os }}-${{ runner.arch }}${{ ((runner.os == 'Windows') && '.exe') || ' ' }}
+          path: target/debug/cargo-playdate${{ ((runner.os == 'Windows') && '.exe') || ' ' }}
+          if-no-files-found: warn
+          retention-days: 3
+          overwrite: true
+
+
+      - name: pdtool
         continue-on-error: true
         run: cargo build -p=playdate-tool --bin=pdtool
 
