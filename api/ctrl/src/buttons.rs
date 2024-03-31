@@ -4,7 +4,6 @@ use core::ops::BitAnd;
 use sys::ffi::PDButtons;
 
 
-#[const_trait]
 pub trait PDButtonsExt: Sized + BitAnd<Self> {
 	#![allow(non_snake_case)]
 
