@@ -30,19 +30,13 @@ pub trait LogErr<T, E> {
 }
 
 
-impl<T, E: Display> LogErr<T, E> for Result<T, E> {
-	fn log_err(self) -> Self {
-		self.map_err(|err| {
-			    ::log::error!("{err}");
-			    err
-		    })
-	}
+impl<T, E: Display + std::fmt::Debug> LogErr<T, E> for Result<T, E> {
+	fn log_err(self) -> Self { self.inspect_err(|err| ::log::error!("{err}")) }
 
 	fn log_err_cargo(self, config: &Config) -> Self {
-		self.map_err(|err| {
+		self.inspect_err(|err| {
 			    config.log().error(&err);
 			    ::log::error!("{err}");
-			    err
 		    })
 	}
 }

@@ -31,7 +31,7 @@ clap_lex = "0.7"
 dirs.workspace = true
 fs_extra.workspace = true
 
-cargo = "0.78.0"
+cargo = "0.78.1"
 cargo-util = "0.2.10"
 cargo-platform = "0.1.8"
 cargo-util-schemas = "0.2.0"
