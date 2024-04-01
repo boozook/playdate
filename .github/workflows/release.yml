@@ -29,9 +29,77 @@ jobs:
 
       - name: Page
         id: release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           draft: true
           tag_name: ${{ (startsWith(github.ref, 'refs/tags/') && github.ref) || steps.date.outputs.value }}
           name: ${{ steps.title.outputs.value }}
           generate_release_notes: true
+    outputs:
+      url: ${{ steps.release.outputs.url }}
+      id: ${{ steps.release.outputs.id }}
+      upload_url: ${{ steps.release.outputs.upload_url }}
+      assets: ${{ steps.release.outputs.assets }}
+
+  build:
+    continue-on-error: true
+    name: Build
+    needs: draft
+    permissions:
+      contents: write
+    runs-on:
+      - macos-14
+      - macos-latest
+      - ubuntu-latest
+      - windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt install pkg-config -y
+          sudo apt install libudev-dev -y
+
+      - name: Cache LLVM
+        id: cache-llvm
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4.0.1
+        with:
+          path: ${{ runner.temp }}/llvm
+          key: llvm-14.0
+
+      # See:
+      # https://github.com/rust-lang/rust-bindgen/issues/1797
+      # https://rust-lang.github.io/rust-bindgen/requirements.html#windows
+      - name: Install LLVM
+        if: runner.os == 'Windows'
+        uses: KyleMayes/install-llvm-action@v1.8.3
+        with:
+          version: "14.0"
+          directory: ${{ runner.temp }}/llvm
+          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
+
+
+      - name: pdtool
+        continue-on-error: true
+        run: cargo build --release -p=playdate-tool
+
+      - name: bindgen
+        continue-on-error: true
+        run: cargo build --release -p=playdate-bindgen --all-features
+
+      - name: cargo
+        continue-on-error: true
+        run: cargo build --release -p=cargo-playdate --all-features
+
+      - name: Upload
+        uses: AButler/upload-release-assets@v3.0
+        with:
+          release-id: ${{ needs.draft.outputs.id }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          files: >-
+            target/release/pdtool${{ ((runner.os == 'Windows') && '.exe') || '' }};
+            target/release/pdbindgen${{ ((runner.os == 'Windows') && '.exe') || '' }};
+            target/release/cargo-playdate${{ ((runner.os == 'Windows') && '.exe') || '' }};
