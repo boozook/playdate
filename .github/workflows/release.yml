@@ -49,7 +49,7 @@ jobs:
       contents: write
     runs-on:
       - macos-14
-      - macos-latest
+      - macos-12
       - ubuntu-latest
       - windows-latest
     steps:
@@ -94,7 +94,38 @@ jobs:
         continue-on-error: true
         run: cargo build --release -p=cargo-playdate --all-features
 
-      - name: Upload
+      - name: Upload pdtool
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cargo-playdate-${{ runner.arch }}
+          path: target/release/pdtool
+          if-no-files-found: warn
+          retention-days: 1
+          overwrite: false
+
+      - name: Upload pdbindgen
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cargo-playdate-${{ runner.arch }}
+          path: target/release/pdbindgen
+          if-no-files-found: warn
+          retention-days: 1
+          overwrite: false
+
+      - name: Upload cargo
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cargo-playdate-${{ runner.arch }}
+          path: target/release/cargo-playdate
+          if-no-files-found: warn
+          retention-days: 1
+          overwrite: false
+
+      - name: Upload Release Artifacts
+        if: runner.os != 'macOS'
         uses: AButler/upload-release-assets@v3.0
         with:
           release-id: ${{ needs.draft.outputs.id }}
@@ -103,3 +134,32 @@ jobs:
             target/release/pdtool${{ ((runner.os == 'Windows') && '.exe') || '' }};
             target/release/pdbindgen${{ ((runner.os == 'Windows') && '.exe') || '' }};
             target/release/cargo-playdate${{ ((runner.os == 'Windows') && '.exe') || '' }};
+
+
+  lipo:
+    continue-on-error: true
+    name: Build Universal
+    needs: [build, draft]
+    permissions:
+      contents: write
+    runs-on: macos-14
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: target/release/cargo-playdate
+          # name: `name` omited to download all artifact
+
+      - name: Build Universal
+        run: ls -R # TODO: prepare for upload to release - call lipo
+        # pdtool-X86 # FIXME: ensure arch name is correct
+        # pdtool-ARM64 # FIXME: ensure arch name is correct
+        # https://docs.github.com/en/actions/learn-github-actions/contexts#runner-context
+
+      - name: Upload Release Artifacts
+        if: runner.os != 'macOS'
+        uses: AButler/upload-release-assets@v3.0
+        with:
+          release-id: ${{ needs.draft.outputs.id }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          files: pdtool;pdbindgen;cargo-playdate
