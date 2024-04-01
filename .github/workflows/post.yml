@@ -36,7 +36,7 @@ jobs:
 
             ${{ steps.url.outputs.value }}
 
-            #rust #rustdev #playdate
+            #RustLang #playdate
 
           # TODO: Write good-look link like [github.event.repository.name](url)
 
