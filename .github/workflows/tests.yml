@@ -97,6 +97,14 @@ jobs:
           version: ${{ matrix.sdk }}
           custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
 
+
+      - name: Install linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt install pkg-config -y
+          sudo apt install libudev-dev -y
+
+
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
 
@@ -200,6 +208,12 @@ jobs:
         with:
           version: ${{ matrix.sdk }}
 
+      - name: Install linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt install pkg-config -y
+          sudo apt install libudev-dev -y
+
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
 
@@ -271,6 +285,12 @@ jobs:
           choco install pkgconfiglite
           pkg-config --cflags --libs libusb-1.0
           pkg-config --cflags --libs libusb
+
+      - name: Install linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt install pkg-config -y
+          sudo apt install libudev-dev -y
 
       - name: Install Playdate SDK ${{ matrix.sdk }}
         id: sdk
@@ -373,6 +393,13 @@ jobs:
         with:
           version: ${{ matrix.sdk }}
           custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
+
+      - name: Install linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt install pkg-config -y
+          sudo apt install libudev-dev -y
+
 
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
