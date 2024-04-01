@@ -47,7 +47,7 @@ jobs:
       matrix:
         os:
           - macos-14
-          - macos-latest
+          # - macos-latest
           - ubuntu-latest
           # - windows-latest
         sdk:
@@ -175,7 +175,7 @@ jobs:
       matrix:
         os:
           - macos-14
-          - macos-latest
+          # - macos-latest
           - ubuntu-latest
           # - windows-latest
         sdk:
@@ -238,7 +238,7 @@ jobs:
       matrix:
         os:
           - macos-14
-          - macos-latest
+          # - macos-latest
           - ubuntu-latest
           # - windows-latest
         sdk:
@@ -343,7 +343,7 @@ jobs:
       matrix:
         os:
           - macos-14
-          - macos-latest
+          # - macos-latest
           - ubuntu-latest
           # - windows-latest
         sdk:

@@ -158,7 +158,8 @@ jobs:
       fail-fast: true
       matrix:
         os:
-          - macos-latest
+          - macos-14
+          # - macos-latest
           - ubuntu-latest
           # - windows-latest
         sdk:
