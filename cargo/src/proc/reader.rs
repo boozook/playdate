@@ -119,8 +119,10 @@ impl SerializedTarget {
 
 pub mod format {
 	#![allow(dead_code)]
+	use std::path::Path;
 	use std::path::PathBuf;
 	use cargo::core::compiler::CrateType;
+	use cargo::core::SourceId;
 	use cargo::util::interning::InternedString;
 	use cargo::util::machine_message::Message;
 	use serde::Serialize;
@@ -160,6 +162,7 @@ pub mod format {
 
 	#[derive(Debug, Serialize, Deserialize)]
 	pub struct Artifact {
+		#[serde(deserialize_with = "deserialize_package_id")]
 		pub package_id: PackageId,
 		pub manifest_path: PathBuf,
 		pub target: SerializedTarget,
@@ -168,6 +171,49 @@ pub mod format {
 		pub filenames: Vec<PathBuf>,
 		pub executable: Option<PathBuf>,
 		pub fresh: bool,
+	}
+
+	/// Try deserialize using actual deserializer.
+	/// If fails, try to deserialize as old format.
+	/// Fixes breaking change between old and new format in cargo ~0.78.1.
+	fn deserialize_package_id<'de, D>(deserializer: D) -> Result<PackageId, D::Error>
+		where D: Deserializer<'de> {
+		use serde::de::Error;
+
+		let mut line = String::deserialize(deserializer)?;
+		// wrap into quotes for deserializer:
+		line.insert(0, '\"');
+		line.push('\"');
+		// preserve original value:
+		let value = &line[1..(line.len() - 1)];
+
+		// try actual format first:
+		let res = serde_json::from_str::<PackageId>(&line).map_err(|err| Error::custom(err));
+
+		// otherwise try old formats:
+		res.or_else(move |err| {
+			   if let Some((uri, name_ver)) = value.split_once('#') {
+				   let sid = SourceId::from_url(uri).map_err(|err| Error::custom(err))?;
+
+				   if let Some((name, ver)) = name_ver.split_once('@') {
+					   let ver = ver.parse().map_err(|err| Error::custom(err))?;
+					   let id = PackageId::new(name.into(), ver, sid);
+					   return Ok(id);
+				   } else {
+					   let sid_temp = SourceId::from_url(value).map_err(|err| Error::custom(err))?;
+					   let url = sid_temp.url();
+					   if let Some(ver) = url.fragment() {
+						   let ver = ver.parse().map_err(|err| Error::custom(err))?;
+						   let name = Path::new(url.path()).file_name()
+						                                   .ok_or_else(|| Error::custom("Package name missed"))?
+						                                   .to_string_lossy();
+						   let id = PackageId::new(name.as_ref().into(), ver, sid);
+						   return Ok(id);
+					   }
+				   }
+			   }
+			   Err(err)
+		   })
 	}
 
 	impl Message for Artifact {
@@ -237,5 +283,49 @@ pub mod format {
 		file_name: String,
 		line_start: usize,
 		line_end: usize,
+	}
+
+
+	#[cfg(test)]
+	mod tests {
+		use super::*;
+
+
+		#[derive(Debug, Serialize, Deserialize)]
+		pub struct PackageIdWrapped {
+			#[serde(deserialize_with = "super::deserialize_package_id")]
+			pub package_id: PackageId,
+		}
+
+
+		/// Before cargo 0.78
+		#[test]
+		fn message_format_old_a() {
+			let msg = r#"{"package_id": "path+file:///Users/U/Developer/Projects/Playdate/playdate-rs/api/sys#playdate-sys@0.3.3"}"#;
+			serde_json::from_str::<PackageIdWrapped>(msg).unwrap();
+		}
+
+		/// Before cargo 0.78
+		#[test]
+		fn message_format_old_b() {
+			let msg = r#"{"package_id": "path+file:///Users/U/Developer/Projects/Playdate/playdate-rs/cargo/tests/crates/simple/with-cfg#0.1.0"}"#;
+			serde_json::from_str::<PackageIdWrapped>(msg).unwrap();
+		}
+
+
+		/// From cargo 0.78
+		#[test]
+		fn message_format_new() {
+			let msg = r#"{"package_id": "playdate-sys 0.3.3 (path+file:///Users/U/Developer/Projects/Playdate/playdate-rs/api/sys)"}"#;
+			serde_json::from_str::<PackageIdWrapped>(msg).unwrap();
+		}
+
+
+		/// Before cargo 0.78
+		#[test]
+		fn msg_message_format_old() {
+			let msg = r#"{"reason":"compiler-artifact","package_id":"path+file:///Users/U/Developer/Projects/Playdate/playdate-rs/api/sys#playdate-sys@0.3.3","manifest_path":"/Users/U/Developer/Projects/Playdate/playdate-rs/api/sys/Cargo.toml","target":{"kind":["example"],"crate_types":["dylib","staticlib"],"name":"hello-world","src_path":"/Users/U/Developer/Projects/Playdate/playdate-rs/api/sys/examples/hello-world.rs","edition":"2021","required-features":["lang-items"],"doc":false,"doctest":false,"test":false},"profile":{"opt_level":"0","debuginfo":2,"debug_assertions":true,"overflow_checks":true,"test":false},"features":["allocator","arrayvec","bindgen","bindgen-runtime","bindings-derive-debug","default","eh-personality","lang-items","panic-handler"],"filenames":["/Users/U/Developer/Projects/Playdate/playdate-rs/target/aarch64-apple-darwin/debug/examples/libhello_world.dylib","/Users/U/Developer/Projects/Playdate/playdate-rs/target/aarch64-apple-darwin/debug/examples/libhello_world.a"],"executable":null,"fresh":false}"#;
+			serde_json::from_str::<Artifact>(msg).unwrap();
+		}
 	}
 }

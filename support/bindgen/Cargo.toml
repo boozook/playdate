@@ -1,6 +1,6 @@
 [package]
 name = "playdate-bindgen"
-version = "0.1.5"
+version = "0.1.6"
 readme = "README.md"
 description = "Bindgen configuration for Playdate API and utils."
 keywords = ["playdate", "bindings", "ffi", "code-generation"]
@@ -32,7 +32,7 @@ utils.workspace = true
 bindgen-cfg = { workspace = true, features = ["clap"] }
 
 [dependencies.bindgen]
-version = "=0.69.4"
+version = "0.69.4"
 default-features = false
 
 [dependencies.clap]
