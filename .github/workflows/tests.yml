@@ -46,6 +46,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
+          - macos-14
           - macos-latest
           - ubuntu-latest
           # - windows-latest
@@ -55,6 +56,7 @@ jobs:
           - 2.4.0
 
     steps:
+      - run: arch
       - uses: actions/checkout@v4
 
       - name: Cache
