@@ -65,7 +65,7 @@ jobs:
           path: |
             target/
             ~/.cargo
-          key: ${{ runner.os }}-cargo-tests-${{ hashFiles('Cargo.lock') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
       - name: Config
         run: |
@@ -174,6 +174,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
+          - macos-14
           - macos-latest
           - ubuntu-latest
           # - windows-latest
@@ -189,7 +190,7 @@ jobs:
           path: |
             target/
             ~/.cargo
-          key: ${{ runner.os }}-cargo-tests-${{ hashFiles('Cargo.lock') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
       - name: Config
         run: |
@@ -236,6 +237,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
+          - macos-14
           - macos-latest
           - ubuntu-latest
           # - windows-latest
@@ -253,7 +255,7 @@ jobs:
           path: |
             target/
             ~/.cargo
-          key: ${{ runner.os }}-cargo-tests-${{ hashFiles('Cargo.lock') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
       - name: Config
         run: |
@@ -340,6 +342,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
+          - macos-14
           - macos-latest
           - ubuntu-latest
           # - windows-latest
@@ -356,10 +359,10 @@ jobs:
         with:
           path: |
             ~/.cargo
-          key: ${{ runner.os }}-cargo-tests-examples-${{ hashFiles('Cargo.lock') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-examples-${{ hashFiles('Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-tests-examples-${{ hashFiles('Cargo.lock') }}
-            ${{ runner.os }}-cargo-tests-${{ hashFiles('Cargo.lock') }}
+            ${{ runner.os }}-${{ runner.arch }}-cargo-examples-${{ hashFiles('Cargo.lock') }}
+            ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
       - name: Config
         run: |
