@@ -177,7 +177,7 @@ jobs:
           - macos-14
           # - macos-latest
           - ubuntu-latest
-          # - windows-latest
+          - windows-latest
         sdk:
           - latest
 
