@@ -164,6 +164,8 @@ workflows:
     triggering:
       events:
         - pull_request
+      branch_patterns:
+        - pattern: dev/magic/**
       cancel_previous_builds: true
     when:
       condition: not event.pull_request.draft
