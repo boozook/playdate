@@ -60,6 +60,9 @@ impl Sdk {
 		#[cfg(unix)]
 		let res = res.or_else(|_| try_with(Self::try_xdg_unix_path));
 
+		#[cfg(windows)]
+		let res = res.or_else(|_| try_with(Self::try_windows_registry));
+
 		res.or_else(|_| try_with(Self::try_from_default_path))
 	}
 
@@ -83,6 +86,13 @@ impl Sdk {
 		} else {
 			Err(err(&path))
 		}
+	}
+
+	#[cfg(windows)]
+	pub fn try_windows_registry() -> Result<Self, Error> {
+		let key: String = windows_registry::CURRENT_USER.open(r#"Software\\PlaydateSDK"#)?
+		                                                .get_string("")?;
+		return Self::try_new_exact(key);
 	}
 
 	/// Create new `Sdk` with default env var

@@ -16,6 +16,8 @@ repository.workspace = true
 dirs.workspace = true
 log = { workspace = true, optional = true }
 
+[target.'cfg(target_os = "windows")'.dependencies.windows-registry]
+version = "0.1.0"
 
 [features]
 default = ["log", "cargo-message"]
