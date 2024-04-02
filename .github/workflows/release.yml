@@ -75,7 +75,7 @@ jobs:
           echo "os=-${{ runner.os }}" >> "$GITHUB_OUTPUT"
           echo "ext=${{ ((runner.os == 'Windows') && '.exe') || ' ' }}" >> "$GITHUB_OUTPUT"
           echo "suffix=${{ (runner.os == 'Windows' && format('-{0}', runner.arch)) || format('-{0}-{1}', runner.os, runner.arch) }}" >> "$GITHUB_OUTPUT"
-          echo "full=${{ (runner.os == 'Windows' && format('-{0}.exe', runner.arch)) || format('-{0}-{1}.exe', runner.os, runner.arch) }}" >> "$GITHUB_OUTPUT"
+          echo "full=${{ (runner.os == 'Windows' && format('-{0}.exe', runner.arch)) || format('-{0}-{1}', runner.os, runner.arch) }}" >> "$GITHUB_OUTPUT"
 
 
       - name: prepare dir
