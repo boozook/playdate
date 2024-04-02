@@ -56,10 +56,10 @@ mod unmount {
 			#[cfg(feature = "async-std")]
 			use async_std::process::Command;
 			Command::from(cmd(self)).status()
-			                                        .await?
-			                                        .exit_ok()
-			                                        .map(|_| trace!("unmounted {self}"))
-			                                        .map_err(Into::into)
+			                        .await?
+			                        .exit_ok()
+			                        .map(|_| trace!("unmounted {self}"))
+			                        .map_err(Into::into)
 		}
 	}
 

@@ -76,7 +76,7 @@ pub async fn wait_fs_available<T>(mount: &MountedDevice, retry: Retries<T>) -> R
 		#[cfg(feature = "async-std")]
 		async_std::task::sleep(iter_ms).await;
 		#[cfg(all(not(feature = "tokio"), not(feature = "async-std")))]
-      std::thread::sleep(iter_ms);
+		std::thread::sleep(iter_ms);
 
 		if check() {
 			return Ok(());
@@ -286,7 +286,7 @@ async fn wait_mount_point<T>(dev: Device, retry: Retries<T>) -> Result<MountedDe
 		#[cfg(feature = "async-std")]
 		async_std::task::sleep(iter_ms).await;
 		#[cfg(all(not(feature = "tokio"), not(feature = "async-std")))]
-      std::thread::sleep(iter_ms);
+		std::thread::sleep(iter_ms);
 
 		let mode = dev.mode_cached();
 		trace!(
