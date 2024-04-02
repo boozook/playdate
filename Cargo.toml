@@ -29,7 +29,7 @@ sys = { version = "0.3", path = "api/sys", package = "playdate-sys", default-fea
 tool = { version = "0.1", path = "support/tool", package = "playdate-tool" }
 build = { version = "0.2", path = "support/build", package = "playdate-build", default-features = false }
 utils = { version = "0.2", path = "support/utils", package = "playdate-build-utils", default-features = false }
-device = { version = "0.1", path = "support/device", package = "playdate-device" }
+device = { version = "0.2", path = "support/device", package = "playdate-device" }
 simulator = { version = "0.1", path = "support/sim-ctrl", package = "playdate-simulator-utils", default-features = false }
 bindgen = { version = "0.1", path = "support/bindgen", package = "playdate-bindgen", default-features = false }
 bindgen-cfg = { version = "0.1", path = "support/bindgen-cfg", package = "playdate-bindgen-cfg", default-features = false }
@@ -49,3 +49,4 @@ toml = "0.8"
 futures-lite = "2.3"
 thiserror = "1.0"
 tokio = { version = "1.37", default-features = false }
+async-std = { version = "1.12", default-features = false }

@@ -47,15 +47,19 @@ mod unmount {
 		}
 	}
 
-	#[cfg(feature = "tokio")]
+
 	impl UnmountAsync for Volume {
 		#[cfg_attr(feature = "tracing", tracing::instrument())]
 		async fn unmount(&self) -> Result<(), Error> {
-			tokio::process::Command::from(cmd(self)).status()
-			                                        .await?
-			                                        .exit_ok()
-			                                        .map(|_| trace!("unmounted {self}"))
-			                                        .map_err(Into::into)
+			#[cfg(all(feature = "tokio", not(feature = "async-std")))]
+			use tokio::process::Command;
+			#[cfg(feature = "async-std")]
+			use async_std::process::Command;
+			Command::from(cmd(self)).status()
+			                        .await?
+			                        .exit_ok()
+			                        .map(|_| trace!("unmounted {self}"))
+			                        .map_err(Into::into)
 		}
 	}
 

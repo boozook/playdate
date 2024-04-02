@@ -65,9 +65,11 @@ pub async fn install<'dev>(drive: &'dev MountedDevice,
                            path: &Path,
                            force: bool)
                            -> Result<MountedDevicePathBorrowed<'dev>> {
-	#[cfg(feature = "tokio")]
+	#[cfg(all(feature = "tokio", not(feature = "async-std")))]
 	use tokio::process::Command;
-	#[cfg(not(feature = "tokio"))]
+	#[cfg(feature = "async-std")]
+	use async_std::process::Command;
+	#[cfg(all(not(feature = "tokio"), not(feature = "async-std")))]
 	use std::process::Command;
 
 
@@ -87,9 +89,10 @@ pub async fn install<'dev>(drive: &'dev MountedDevice,
 		async {
 			if cfg!(unix) {
 				let mut cmd = Command::new("cp");
+				cmd.arg("-r");
 
 				if force {
-					cmd.arg("-r");
+					cmd.arg("-f");
 				}
 
 				cmd.arg(path);

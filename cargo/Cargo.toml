@@ -1,6 +1,6 @@
 [package]
 name = "cargo-playdate"
-version = "0.4.0-alpha.1"
+version = "0.4.0-alpha.2"
 readme = "README.md"
 description = "Build tool for neat yellow console."
 keywords = ["playdate", "build", "cargo", "plugin", "cargo-subcommand"]
@@ -62,10 +62,9 @@ features = ["assets-report", "toml"]
 
 [dependencies.device]
 workspace = true
-features = ["clap", "async", "tokio-serial", "tokio"]
+features = ["clap", "tokio", "async-std", "tokio-serial"]
 
 [dependencies.simulator]
-# features = ["tokio"]
 workspace = true
 
 [dependencies.clap]

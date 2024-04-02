@@ -1,6 +1,3 @@
-#![cfg(feature = "tokio")]
-
-
 use crate::retry::{IterTime, Retries};
 use crate::usb::mode::Mode;
 use crate::error::Error;
@@ -30,6 +27,7 @@ pub async fn wait_mode_change(mut dev: Device, to: Mode, retry: Retries<impl Ite
 	debug!("retries: {retries_num} * {iter_ms:?} ≈ {total:?}.");
 
 	let mut counter = retries_num;
+	#[cfg(all(feature = "tokio", not(feature = "async-std")))]
 	let mut interval = tokio::time::interval(iter_ms);
 
 	while {
@@ -37,7 +35,12 @@ pub async fn wait_mode_change(mut dev: Device, to: Mode, retry: Retries<impl Ite
 		counter
 	} != 0
 	{
+		#[cfg(all(not(feature = "async-std"), feature = "tokio"))]
 		interval.tick().await;
+		#[cfg(feature = "async-std")]
+		async_std::task::sleep(iter_ms).await;
+		#[cfg(all(not(feature = "tokio"), not(feature = "async-std")))]
+		std::thread::sleep(iter_ms);
 
 		let mode = dev.mode_cached();
 		trace!(
