@@ -22,7 +22,7 @@ jobs:
       - name: Repo Url
         id: url
         run: |
-          URL="${{ format('{0}/{1}', github.server_url, github.repository) }}"
+          URL="${{ github.event_name == 'release' && github.event.release.html_url || format('{0}/{1}', github.server_url, github.repository) }}"
           echo "value=$URL" >> "$GITHUB_OUTPUT"
 
       - name: Toot
@@ -32,7 +32,7 @@ jobs:
           message: |
             🦀 Rusty Playdate Updated!
 
-            ${{ inputs.message || (github.event_name == 'release' && 'New release published.' || '') }}
+            ${{ inputs.message || (github.event_name == 'release' && format('New release published: {0}', github.event.release.name) || '') }}
 
             ${{ steps.url.outputs.value }}
 
