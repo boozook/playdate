@@ -59,30 +59,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install linux deps
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt install pkg-config -y
-          sudo apt install libudev-dev -y
-
-      - name: Cache LLVM
-        id: cache-llvm
-        if: runner.os == 'Windows'
-        uses: actions/cache@v4.0.1
-        with:
-          path: ${{ runner.temp }}/llvm
-          key: llvm-14.0
-
-      # See:
-      # https://github.com/rust-lang/rust-bindgen/issues/1797
-      # https://rust-lang.github.io/rust-bindgen/requirements.html#windows
-      - name: Install LLVM
-        if: runner.os == 'Windows'
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "14.0"
-          directory: ${{ runner.temp }}/llvm
-          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
+      - name: Install Deps
+        uses: ./.github/actions/tools-deps
 
       - name: add target x86-64
         if: runner.os == 'macOS'

@@ -47,9 +47,8 @@ jobs:
       matrix:
         os:
           - macos-14
-          # - macos-latest
           - ubuntu-latest
-          # - windows-latest
+          - windows-latest
         sdk:
           # - beta
           - latest
@@ -60,7 +59,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Cache
-        uses: actions/cache@v4.0.1
+        uses: actions/cache@v4
         with:
           path: |
             target/
@@ -72,25 +71,8 @@ jobs:
           mkdir -p .cargo
           cp -rf .github/config.toml .cargo/config.toml
 
-      - name: Cache LLVM
-        id: cache-llvm
-        if: runner.os == 'Windows'
-        uses: actions/cache@v4.0.1
-        with:
-          path: ${{ runner.temp }}/llvm
-          key: llvm-14.0
-
-      # See:
-      # https://github.com/rust-lang/rust-bindgen/issues/1797
-      # https://rust-lang.github.io/rust-bindgen/requirements.html#windows
-      - name: Install LLVM
-        if: runner.os == 'Windows'
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "14.0"
-          directory: ${{ runner.temp }}/llvm
-          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
-          env: true
+      - name: Install Deps
+        uses: ./.github/actions/tools-deps
 
       - name: Install Playdate SDK ${{ matrix.sdk }}
         id: sdk
@@ -98,13 +80,6 @@ jobs:
         with:
           version: ${{ matrix.sdk }}
           custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
-
-
-      - name: Install linux deps
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt install pkg-config -y
-          sudo apt install libudev-dev -y
 
 
       - name: SDK ${{ steps.sdk.outputs.version }} installed
@@ -175,7 +150,6 @@ jobs:
       matrix:
         os:
           - macos-14
-          # - macos-latest
           - ubuntu-latest
           - windows-latest
         sdk:
@@ -185,7 +159,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Cache
-        uses: actions/cache@v4.0.1
+        uses: actions/cache@v4
         with:
           path: |
             target/
@@ -197,25 +171,14 @@ jobs:
           mkdir -p .cargo
           cp -rf .github/config.toml .cargo/config.toml
 
-      # - name: Install Deps
-      #   if: runner.os == 'Windows'
-      #   run: |
-      #     # mingw-w64-x86_64-libusb
-      #     choco install pkgconfiglite
-      #     pkg-config --cflags --libs libusb-1.0
-      #     pkg-config --cflags --libs libusb
+      - name: Install Deps
+        uses: ./.github/actions/tools-deps
 
       - name: Install Playdate SDK ${{ matrix.sdk }}
         id: sdk
         uses: pd-rs/get-playdate-sdk@main
         with:
           version: ${{ matrix.sdk }}
-
-      - name: Install linux deps
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt install pkg-config -y
-          sudo apt install libudev-dev -y
 
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
@@ -238,9 +201,8 @@ jobs:
       matrix:
         os:
           - macos-14
-          # - macos-latest
           - ubuntu-latest
-          # - windows-latest
+          - windows-latest
         sdk:
           # - beta
           - latest
@@ -250,7 +212,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Cache
-        uses: actions/cache@v4.0.1
+        uses: actions/cache@v4
         with:
           path: |
             target/
@@ -262,39 +224,8 @@ jobs:
           mkdir -p .cargo
           cp -rf .github/config.toml .cargo/config.toml
 
-      - name: Cache LLVM
-        id: cache-llvm
-        if: runner.os == 'Windows'
-        uses: actions/cache@v4.0.1
-        with:
-          path: ${{ runner.temp }}/llvm
-          key: llvm-14.0
-
-      # See:
-      # https://github.com/rust-lang/rust-bindgen/issues/1797
-      # https://rust-lang.github.io/rust-bindgen/requirements.html#windows
-      - name: Install LLVM
-        if: runner.os == 'Windows'
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "14.0"
-          directory: ${{ runner.temp }}/llvm
-          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
-          env: true
-
       - name: Install Deps
-        if: runner.os == 'Windows'
-        run: |
-          # mingw-w64-x86_64-libusb
-          choco install pkgconfiglite
-          pkg-config --cflags --libs libusb-1.0
-          pkg-config --cflags --libs libusb
-
-      - name: Install linux deps
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt install pkg-config -y
-          sudo apt install libudev-dev -y
+        uses: ./.github/actions/tools-deps
 
       - name: Install Playdate SDK ${{ matrix.sdk }}
         id: sdk
@@ -343,7 +274,6 @@ jobs:
       matrix:
         os:
           - macos-14
-          # - macos-latest
           - ubuntu-latest
           # - windows-latest
         sdk:
@@ -355,7 +285,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Cache
-        uses: actions/cache@v4.0.1
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo
@@ -372,25 +302,8 @@ jobs:
           cp -rf .github/config.toml .cargo/config.toml
           cargo clean
 
-      - name: Cache LLVM
-        id: cache-llvm
-        if: runner.os == 'Windows'
-        uses: actions/cache@v4.0.1
-        with:
-          path: ${{ runner.temp }}/llvm
-          key: llvm-14.0
-
-      # See:
-      # https://github.com/rust-lang/rust-bindgen/issues/1797
-      # https://rust-lang.github.io/rust-bindgen/requirements.html#windows
-      - name: Install LLVM
-        if: runner.os == 'Windows'
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "14.0"
-          directory: ${{ runner.temp }}/llvm
-          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
-          env: true
+      - name: Install Deps
+        uses: ./.github/actions/tools-deps
 
       - name: Install Playdate SDK ${{ matrix.sdk }}
         id: sdk
@@ -398,13 +311,6 @@ jobs:
         with:
           version: ${{ matrix.sdk }}
           custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
-
-      - name: Install linux deps
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt install pkg-config -y
-          sudo apt install libudev-dev -y
-
 
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
