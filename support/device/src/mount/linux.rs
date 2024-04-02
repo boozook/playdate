@@ -99,12 +99,14 @@ mod unmount {
 		}
 	}
 
-	#[cfg(feature = "tokio")]
 	impl UnmountAsync for Volume {
 		#[cfg_attr(feature = "tracing", tracing::instrument())]
 		async fn unmount(&self) -> Result<(), Error> {
-			use tokio::process::Command;
 			use futures_lite::future::ready;
+			#[cfg(all(feature = "tokio", not(feature = "async-std")))]
+			use tokio::process::Command;
+			#[cfg(feature = "async-std")]
+			use async_std::process::Command;
 
 
 			Command::from(eject(self)).status()

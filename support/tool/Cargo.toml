@@ -1,6 +1,6 @@
 [package]
 name = "playdate-tool"
-version = "0.2.1"
+version = "0.2.2"
 readme = "README.md"
 description = "Tool for interaction with Playdate device and sim."
 keywords = ["playdate", "usb", "utility"]
@@ -46,7 +46,7 @@ workspace = true
 
 # PD:
 [dependencies.device]
-features = ["async", "tokio", "clap", "tokio-serial"]
+features = ["clap", "tokio", "tokio-serial"]
 workspace = true
 
 [dependencies.simulator]

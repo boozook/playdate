@@ -40,6 +40,7 @@ pub async fn wait_fs_available<T>(mount: &MountedDevice, retry: Retries<T>) -> R
 	debug!("retries: {retries_num} * {iter_ms:?} ≈ {total:?}.");
 
 	let mut counter = retries_num;
+	#[cfg(all(feature = "tokio", not(feature = "async-std")))]
 	let mut interval = tokio::time::interval(iter_ms);
 
 	let check = || {
@@ -70,7 +71,12 @@ pub async fn wait_fs_available<T>(mount: &MountedDevice, retry: Retries<T>) -> R
 		counter
 	} != 0
 	{
+		#[cfg(all(not(feature = "async-std"), feature = "tokio"))]
 		interval.tick().await;
+		#[cfg(feature = "async-std")]
+		async_std::task::sleep(iter_ms).await;
+		#[cfg(all(not(feature = "tokio"), not(feature = "async-std")))]
+      std::thread::sleep(iter_ms);
 
 		if check() {
 			return Ok(());
@@ -262,6 +268,7 @@ async fn wait_mount_point<T>(dev: Device, retry: Retries<T>) -> Result<MountedDe
 	debug!("retries: {retries_num} * {iter_ms:?} ≈ {total:?}.");
 
 	let mut counter = retries_num;
+	#[cfg(all(feature = "tokio", not(feature = "async-std")))]
 	let mut interval = tokio::time::interval(iter_ms);
 
 	let sn = dev.info()
@@ -274,7 +281,12 @@ async fn wait_mount_point<T>(dev: Device, retry: Retries<T>) -> Result<MountedDe
 		counter
 	} != 0
 	{
+		#[cfg(all(not(feature = "async-std"), feature = "tokio"))]
 		interval.tick().await;
+		#[cfg(feature = "async-std")]
+		async_std::task::sleep(iter_ms).await;
+		#[cfg(all(not(feature = "tokio"), not(feature = "async-std")))]
+      std::thread::sleep(iter_ms);
 
 		let mode = dev.mode_cached();
 		trace!(
