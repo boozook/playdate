@@ -249,7 +249,7 @@ jobs:
 
       - name: Test
         run: |
-          cargo test -p=cargo-playdate -- --nocapture
+          cargo test -p=cargo-playdate -- --nocapture ${{ runner.os == 'Windows' && '--test-threads=1' || '' }}
           rm -rf ./target/tmp
 
       # This test is flickering on GH CI 🤷🏻‍♂️
