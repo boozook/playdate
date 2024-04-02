@@ -114,6 +114,7 @@ async fn main() -> miette::Result<()> {
 		},
 		cli::Command::Send(cli::Send { command, query, read }) => send(query, command, read, cfg.format).await,
 
+		#[cfg(debug_assertions)]
 		cli::Command::Debug(cli::Dbg { cmd, query }) => debug::debug(cmd, query).await,
 	}.into_diagnostic()
 }

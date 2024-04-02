@@ -1,6 +1,6 @@
 [package]
 name = "playdate-tool"
-version = "0.2.0"
+version = "0.2.1"
 readme = "README.md"
 description = "Tool for interaction with Playdate device and sim."
 keywords = ["playdate", "usb", "utility"]
@@ -62,5 +62,6 @@ tracing = [
 	"simulator/tracing",
 ]
 
-# Useful with [tokio-console](https://tokio.rs/tokio/topics/tracing-next-steps)
+# Useful with `RUSTFLAGS="--cfg tokio_unstable"` &
+# [tokio-console](https://tokio.rs/tokio/topics/tracing-next-steps)
 tokio-tracing = ["tracing", "tokio/tracing", "console-subscriber", "tracing"]
