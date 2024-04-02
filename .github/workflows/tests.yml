@@ -83,7 +83,7 @@ jobs:
       # https://rust-lang.github.io/rust-bindgen/requirements.html#windows
       - name: Install LLVM
         if: runner.os == 'Windows'
-        uses: KyleMayes/install-llvm-action@v1.8.3
+        uses: KyleMayes/install-llvm-action@v2
         with:
           version: "14.0"
           directory: ${{ runner.temp }}/llvm
@@ -257,7 +257,7 @@ jobs:
       # https://rust-lang.github.io/rust-bindgen/requirements.html#windows
       - name: Install LLVM
         if: runner.os == 'Windows'
-        uses: KyleMayes/install-llvm-action@v1.8.3
+        uses: KyleMayes/install-llvm-action@v2
         with:
           version: "14.0"
           directory: ${{ runner.temp }}/llvm
@@ -360,7 +360,7 @@ jobs:
       # https://rust-lang.github.io/rust-bindgen/requirements.html#windows
       - name: Install LLVM
         if: runner.os == 'Windows'
-        uses: KyleMayes/install-llvm-action@v1.8.3
+        uses: KyleMayes/install-llvm-action@v2
         with:
           version: "14.0"
           directory: ${{ runner.temp }}/llvm

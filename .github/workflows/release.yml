@@ -47,11 +47,14 @@ jobs:
     needs: draft
     permissions:
       contents: write
-    runs-on:
-      - macos-14
-      - macos-12
-      - ubuntu-latest
-      - windows-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-14
+          - ubuntu-latest
+          - windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -75,91 +78,168 @@ jobs:
       # https://rust-lang.github.io/rust-bindgen/requirements.html#windows
       - name: Install LLVM
         if: runner.os == 'Windows'
-        uses: KyleMayes/install-llvm-action@v1.8.3
+        uses: KyleMayes/install-llvm-action@v2
         with:
           version: "14.0"
           directory: ${{ runner.temp }}/llvm
           cached: ${{ steps.cache-llvm.outputs.cache-hit }}
 
-
-      - name: pdtool
+      - name: add target x86-64
+        if: runner.os == 'macOS'
         continue-on-error: true
-        run: cargo build --release -p=playdate-tool
+        run: rustup target add x86_64-apple-darwin
+
+
+      - name: prepare names
+        id: names
+        shell: bash
+        run: |
+          echo "os=-${{ runner.os }}" >> "$GITHUB_OUTPUT"
+          echo "ext=${{ ((runner.os == 'Windows') && '.exe') || ' ' }}" >> "$GITHUB_OUTPUT"
+          echo "suffix=${{ (runner.os == 'Windows' && format('-{0}', runner.arch)) || format('-{0}-{1}', runner.os, runner.arch) }}" >> "$GITHUB_OUTPUT"
+          echo "full=${{ (runner.os == 'Windows' && format('-{0}.exe', runner.arch)) || format('-{0}-{1}.exe', runner.os, runner.arch) }}" >> "$GITHUB_OUTPUT"
+
+
+      - name: prepare dir
+        shell: bash
+        run: mkdir -p target/upload
+
+
+      - name: pdtool ${{ runner.os == 'macOS' && '(both targets)' || '' }}
+        id: pdtool
+        continue-on-error: true
+        run: >-
+          cargo build --release --bin=pdtool
+          ${{ runner.os == 'macOS' && '--target=x86_64-apple-darwin --target=aarch64-apple-darwin' || '' }}
+
+      - name: pdtool to upload
+        if: steps.pdtool.outcome == 'success' && runner.os != 'macOS'
+        shell: bash
+        run: cp target/release/pdtool${{ steps.names.outputs.ext }} target/upload/pdtool${{ steps.names.outputs.full }}
 
       - name: bindgen
+        id: bindgen
         continue-on-error: true
-        run: cargo build --release -p=playdate-bindgen --all-features
+        run: >-
+          cargo build --release --bin=pdbindgen --no-default-features
+          --features=cli,documentation,extra-codegen,logging,pretty-please,which-rustfmt,runtime
+        # ${{ ((runner.os == 'Windows') && 'static') || 'runtime' }}
+
+      - name: bindgen to upload
+        if: steps.bindgen.outcome == 'success' && runner.os != 'macOS'
+        shell: bash
+        run: cp target/release/pdbindgen${{ steps.names.outputs.ext }} target/upload/pdbindgen${{ steps.names.outputs.full }}
 
       - name: cargo
+        id: cargo
         continue-on-error: true
-        run: cargo build --release -p=cargo-playdate --all-features
+        run: cargo build --release --bin=cargo-playdate --all-features
 
-      - name: Upload pdtool
-        if: runner.os == 'macOS'
-        uses: actions/upload-artifact@v4
-        with:
-          name: cargo-playdate-${{ runner.arch }}
-          path: target/release/pdtool
-          if-no-files-found: warn
-          retention-days: 1
-          overwrite: false
+      - name: cargo to upload
+        if: steps.cargo.outcome == 'success' && runner.os != 'macOS'
+        shell: bash
+        run: cp target/release/cargo-playdate${{ steps.names.outputs.ext }} target/upload/cargo-playdate${{ steps.names.outputs.full }}
 
-      - name: Upload pdbindgen
-        if: runner.os == 'macOS'
-        uses: actions/upload-artifact@v4
-        with:
-          name: cargo-playdate-${{ runner.arch }}
-          path: target/release/pdbindgen
-          if-no-files-found: warn
-          retention-days: 1
-          overwrite: false
 
-      - name: Upload cargo
+      - name: merge universal
         if: runner.os == 'macOS'
-        uses: actions/upload-artifact@v4
-        with:
-          name: cargo-playdate-${{ runner.arch }}
-          path: target/release/cargo-playdate
-          if-no-files-found: warn
-          retention-days: 1
-          overwrite: false
+        continue-on-error: true
+        run: |
+          lipo -create -output target/upload/pdtool${{ steps.names.outputs.os }} target/*/release/pdtool
 
       - name: Upload Release Artifacts
-        if: runner.os != 'macOS'
         uses: AButler/upload-release-assets@v3.0
         with:
           release-id: ${{ needs.draft.outputs.id }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          files: >-
-            target/release/pdtool${{ ((runner.os == 'Windows') && '.exe') || '' }};
-            target/release/pdbindgen${{ ((runner.os == 'Windows') && '.exe') || '' }};
-            target/release/cargo-playdate${{ ((runner.os == 'Windows') && '.exe') || '' }};
+          files: target/upload/*
+
+      - name: Upload for next jobs
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          path: |
+            target/release/pdbindgen
+            target/release/cargo-playdate
+          if-no-files-found: warn
+          retention-days: 1
+          overwrite: false
 
 
-  lipo:
+  build-universal:
     continue-on-error: true
-    name: Build Universal
+    name: Build (macos-12)
     needs: [build, draft]
     permissions:
       contents: write
-    runs-on: macos-14
+    runs-on: macos-12
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: prepare dir
+        run: |
+          mkdir -p target/upload
+          mkdir -p target/download
+
       - name: Download artifacts
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
-          path: target/release/cargo-playdate
-          # name: `name` omited to download all artifact
+          path: target/download/
 
-      - name: Build Universal
-        run: ls -R # TODO: prepare for upload to release - call lipo
-        # pdtool-X86 # FIXME: ensure arch name is correct
-        # pdtool-ARM64 # FIXME: ensure arch name is correct
-        # https://docs.github.com/en/actions/learn-github-actions/contexts#runner-context
+      - name: ls download dir
+        run: ls -R target/download
+
+      - name: bindgen
+        id: bindgen
+        continue-on-error: true
+        run: >-
+          cargo build --release --bin=pdbindgen
+          --features=cli,documentation,extra-codegen,logging,pretty-please,which-rustfmt,runtime
+          --no-default-features
+      # fallback: if build fails => upload downloaded build:
+      - if: steps.bindgen.outcome == 'failure'
+        continue-on-error: true
+        name: bindgen to upload
+        run: mv target/download/*/pdbindgen target/upload/pdbindgen-${{ runner.os }}-ARM64
+
+      - name: cargo
+        id: cargo
+        continue-on-error: true
+        run: |
+          cargo build --release --bin=cargo-playdate --all-features
+      # fallback: if build fails => upload downloaded build:
+      - if: steps.cargo.outcome == 'failure'
+        continue-on-error: true
+        name: cargo to upload
+        run: mv target/download/*/cargo-playdate target/upload/cargo-playdate-${{ runner.os }}-ARM64
+
+      - name: merge pdbindgen
+        id: bindgen_merge
+        if: steps.bindgen.outcome == 'success'
+        continue-on-error: true
+        run: lipo -create -output target/upload/pdbindgen-${{ runner.os }} target/release/pdbindgen target/download/*/pdbindgen
+      # fallback: if merge fails or skipped => try upload new build:
+      - if: steps.bindgen_merge.outcome != 'success'
+        continue-on-error: true
+        name: cargo to upload
+        run: mv target/release/pdbindgen target/upload/pdbindgen-${{ runner.os }}-${{ runner.arch }}
+
+      - name: merge cargo-playdate
+        id: cargo_merge
+        if: steps.cargo.outcome == 'success'
+        continue-on-error: true
+        run: lipo -create -output target/upload/cargo-playdate-${{ runner.os }} target/release/cargo-playdate target/download/*/cargo-playdate
+      # fallback: if merge fails or skipped => try upload new build:
+      - if: steps.cargo_merge.outcome != 'success'
+        continue-on-error: true
+        name: cargo to upload
+        run: mv target/release/cargo-playdate target/upload/cargo-playdate-${{ runner.os }}-${{ runner.arch }}
 
       - name: Upload Release Artifacts
-        if: runner.os != 'macOS'
         uses: AButler/upload-release-assets@v3.0
         with:
           release-id: ${{ needs.draft.outputs.id }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          files: pdtool;pdbindgen;cargo-playdate
+          files: target/upload/*
