@@ -45,18 +45,25 @@ impl Sdk {
 impl Sdk {
 	/// Create new `Sdk` with auto-determining the SDK path
 	pub fn try_new() -> Result<Self, Error> {
-		let try_with = |f: fn() -> Result<Self, Error>| {
-			move |err: Error| {
-				let result = f();
-				if result.is_err() {
-					crate::error!("{err}");
-				}
-				result
+		let try_with = move |f: fn() -> Result<Self, Error>| {
+			let result = f();
+			match result {
+				Err(ref result_error) => crate::error!("{result_error}"),
+				Ok(ref sdk) => {
+					crate::info!("Found SDK in {}", sdk.path().display())
+				},
 			}
+			result
 		};
 
-		Self::try_from_default_env().or_else(try_with(Self::try_from_default_config))
-		                            .or_else(try_with(Self::try_from_default_path))
+		let res = try_with(Self::try_from_default_env).or_else(|_| try_with(Self::try_from_default_config));
+		#[cfg(unix)]
+		let res = res.or_else(|_| try_with(Self::try_xdg_unix_path));
+
+		#[cfg(windows)]
+		let res = res.or_else(|_| try_with(Self::try_windows_registry));
+
+		res.or_else(|_| try_with(Self::try_from_default_path))
 	}
 
 	/// Create new `Sdk` with exact passed SDK path
@@ -79,6 +86,13 @@ impl Sdk {
 		} else {
 			Err(err(&path))
 		}
+	}
+
+	#[cfg(windows)]
+	pub fn try_windows_registry() -> Result<Self, Error> {
+		let key: String = windows_registry::CURRENT_USER.open(r#"Software\\PlaydateSDK"#)?
+		                                                .get_string("")?;
+		return Self::try_new_exact(key);
 	}
 
 	/// Create new `Sdk` with default env var
@@ -105,6 +119,18 @@ impl Sdk {
 
 		let home = utils::home_dir()?;
 		Self::try_new_exact(home.join(SDK_HOME_DIR).join("PlaydateSDK"))
+	}
+
+	#[cfg(unix)]
+	pub fn try_xdg_unix_path() -> Result<Self, Error> {
+		const XDG_CONFIG_DATA_ENV: &'static str = "XDG_CONFIG_DATA";
+
+		let xdg_data_path = match std::env::var(XDG_CONFIG_DATA_ENV) {
+			Ok(ref variable) => PathBuf::from(variable),
+			Err(_) => utils::home_dir()?.join(".local").join("share"),
+		};
+
+		Self::try_new_exact(xdg_data_path.join("playdate-sdk"))
 	}
 }
 
@@ -147,6 +173,10 @@ mod config {
 	use std::path::PathBuf;
 	use std::str::FromStr;
 
+	#[cfg(unix)]
+	const DEFAULT_XDG_CONFIG_DIR: &'static str = ".config";
+	#[cfg(unix)]
+	const XDG_CONFIG_HOME_ENV: &'static str = "XDG_CONFIG_HOME";
 	const CFG_DIR: &'static str = ".Playdate";
 	const CFG_FILENAME: &'static str = "config";
 	const CFG_KEY_SDK_ROOT: &'static str = "SDKRoot";
@@ -155,8 +185,31 @@ mod config {
 
 	impl Cfg {
 		pub fn try_default() -> Result<Self, Error> {
-			let cfg_path = utils::home_dir()?.join(CFG_DIR).join(CFG_FILENAME);
-			std::fs::read_to_string(cfg_path)?.parse()
+			fn find_config_folder() -> Result<PathBuf, Error> {
+				#[cfg(unix)]
+				{
+					let xdg_cfg_path = match std::env::var(XDG_CONFIG_HOME_ENV) {
+						                   Ok(ref variable) => PathBuf::from(variable),
+					                      Err(_) => utils::home_dir()?.join(DEFAULT_XDG_CONFIG_DIR),
+					                   }.join(CFG_DIR)
+					                   .join(CFG_FILENAME);
+
+					if xdg_cfg_path.exists() {
+						return Ok(xdg_cfg_path);
+					}
+					// Fallback to ~/.Playdate/config
+				}
+
+				let cfg_path = utils::home_dir()?.join(CFG_DIR).join(CFG_FILENAME);
+
+				if cfg_path.exists() {
+					return Ok(cfg_path);
+				}
+
+				return Err(Error::new(std::io::ErrorKind::NotFound, "Config file not found"));
+			}
+
+			std::fs::read_to_string(find_config_folder()?)?.parse()
 		}
 
 		pub fn sdk_path(&self) -> Option<PathBuf> { self.0.get(CFG_KEY_SDK_ROOT).map(PathBuf::from) }

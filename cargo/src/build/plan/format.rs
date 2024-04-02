@@ -73,7 +73,7 @@ pub enum CompileModeProxy {
 	Bench,
 	/// A target that will be documented with `rustdoc`.
 	/// If `deps` is true, then it will also document all dependencies.
-	Doc { deps: bool },
+	Doc { deps: bool, json: bool },
 	/// A target that will be tested with `rustdoc`.
 	Doctest,
 	/// An example or library that will be scraped for function calls by `rustdoc`.

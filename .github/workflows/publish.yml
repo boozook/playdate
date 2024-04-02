@@ -49,6 +49,12 @@ jobs:
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
 
+      - name: Install deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt install pkg-config -y
+          sudo apt install libudev-dev -y
+
       - name: Publish
         id: publisher
         uses: katyo/publish-crates@v2
