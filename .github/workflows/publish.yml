@@ -1,6 +1,8 @@
 name: Publish
 on:
-  # pull_request_target:
+  pull_request_target:
+    types: ready_for_review
+    branches: [main, master]
   workflow_dispatch:
     inputs:
       sdk:
@@ -75,9 +77,20 @@ jobs:
           LIST="${{ join(fromJSON(steps.publisher.outputs.published).*.name, ', ') }}"
           echo "Published $CRATES_NUM crates: $LIST"
 
+      - name: Message
+        id: message
+        env:
+          CRATES: ${{ steps.publisher.outputs.published }}
+        run: |
+          MESSAGE_LIST=$(echo $CRATES | jq -r 'to_entries[] | "Crates updated:\n\(.key+1). \(.value.name): v\(.value.version)"')
+          MESSAGE_LINE=$(echo $CRATES | jq -r 'to_entries[] | "Crate updated: \(.value.name) v\(.value.version)"')
+          MESSAGE="${{ steps.counter.outputs.value > 1 && '${MESSAGE_LIST}' || ' ${MESSAGE_LINE}' }}"
+          echo 'value="${MESSAGE?}"' >> "$GITHUB_OUTPUT"
+
     outputs:
       published: ${{ steps.publisher.outputs.published }}
       counter: ${{ steps.counter.outputs.value }}
+      message: ${{ steps.message.outputs.value }}
 
   post:
     needs: crates-io
@@ -85,4 +98,4 @@ jobs:
     uses: ./.github/workflows/post.yml
     secrets: inherit
     with:
-      message: "Crate${{ needs.crates-io.outputs.counter > 1 && 's' || '' }} updated: ${{ join(fromJSON(needs.crates-io.outputs.published).*.name, ', ') }}."
+      message: "${{ needs.crates-io.outputs.message }}"
