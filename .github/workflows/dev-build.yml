@@ -9,7 +9,7 @@ on:
         description: "Source SHA used to build bindings. Uses `github.sha`` by default."
         required: false
   push:
-    branches: [dev/**, refactor/**]
+    branches: [dev*, refactor*, dev/**, refactor/**]
 
 env:
   CARGO_NET_RETRY: 10
@@ -29,7 +29,7 @@ jobs:
       matrix:
         os:
           - macos-14
-          # - macos-latest
+          - macos-12
           - ubuntu-latest
           - windows-latest
     defaults:
@@ -42,7 +42,7 @@ jobs:
           ref: ${{ github.event.inputs.source || github.ref || github.event.ref }}
 
       - name: Cache
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4
         with:
           path: |
             target/
@@ -57,54 +57,49 @@ jobs:
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
-      - name: cargo
-        continue-on-error: true
-        run: cargo build --bin=cargo-playdate
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: cargo-playdate-${{ runner.os }}-${{ runner.arch }}${{ ((runner.os == 'Windows') && '.exe') || ' ' }}
-          path: target/debug/cargo-playdate${{ ((runner.os == 'Windows') && '.exe') || ' ' }}
-          if-no-files-found: warn
-          retention-days: 3
-          overwrite: true
-
+      - name: prepare names
+        id: names
+        shell: bash
+        run: |
+          echo "os=-${{ runner.os }}" >> "$GITHUB_OUTPUT"
+          echo "ext=${{ ((runner.os == 'Windows') && '.exe') || ' ' }}" >> "$GITHUB_OUTPUT"
+          echo "suffix=${{ (runner.os == 'Windows' && format('-{0}', runner.arch)) || format('-{0}-{1}', runner.os, runner.arch) }}" >> "$GITHUB_OUTPUT"
+          echo "full=${{ (runner.os == 'Windows' && format('-{0}.exe', runner.arch)) || format('-{0}-{1}', runner.os, runner.arch) }}" >> "$GITHUB_OUTPUT"
 
       - name: pdtool
         continue-on-error: true
-        run: cargo build -p=playdate-tool --bin=pdtool
-
-      - name: Upload
-        id: upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: pdtool-${{ runner.os }}-${{ runner.arch }}${{ ((runner.os == 'Windows') && '.exe') || ' ' }}
-          path: target/debug/pdtool${{ ((runner.os == 'Windows') && '.exe') || ' ' }}
-          if-no-files-found: warn
-          retention-days: 3
-          overwrite: true
-      - name: Artifact
-        run: |
-          echo 'ID: ${{ steps.upload.outputs.artifact-id }}'
-          echo 'URL: ${{ steps.upload.outputs.artifact-url }}'
-
-      - name: pdtool with tracing
-        continue-on-error: true
         run: cargo build -p=playdate-tool --bin=pdtool --features=tracing
-
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: pdtool+tracing-${{ runner.os }}-${{ runner.arch }}${{ ((runner.os == 'Windows') && '.exe') || ' ' }}
-          path: target/debug/pdtool${{ ((runner.os == 'Windows') && '.exe') || ' ' }}
+          name: pdtool${{ steps.names.outputs.full }}
+          path: target/debug/pdtool${{ steps.names.outputs.ext }}
           if-no-files-found: warn
           retention-days: 3
           overwrite: true
-      - name: Artifact
-        run: |
-          echo 'ID: ${{ steps.upload.outputs.artifact-id }}'
-          echo 'URL: ${{ steps.upload.outputs.artifact-url }}'
 
-    outputs:
-      artifact-id: ${{ steps.upload.outputs.artifact-id }}
-      artifact-url: ${{ steps.upload.outputs.artifact-url }}
+      - name: bindgen
+        continue-on-error: true
+        run: >-
+          cargo build --bin=pdbindgen --no-default-features
+          --features=cli,documentation,extra-codegen,logging,pretty-please,which-rustfmt,runtime
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdbindgen${{ steps.names.outputs.full }}
+          path: target/debug/pdbindgen${{ steps.names.outputs.ext }}
+          if-no-files-found: warn
+          retention-days: 3
+          overwrite: true
+
+      - name: cargo
+        continue-on-error: true
+        run: cargo build --bin=cargo-playdate --all-features
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: cargo-playdate${{ steps.names.outputs.full }}
+          path: target/debug/cargo-playdate${{ steps.names.outputs.ext }}
+          if-no-files-found: warn
+          retention-days: 3
+          overwrite: true
