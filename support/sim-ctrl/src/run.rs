@@ -6,16 +6,21 @@ use utils::toolchain::sdk::Sdk;
 
 #[cfg_attr(feature = "tracing", tracing::instrument)]
 pub async fn run(pdx: &Path, sdk: Option<&Path>) -> Result<(), Error> {
+	#[cfg(all(feature = "tokio", not(feature = "async-std")))]
+	use tokio::process::Command;
+	#[cfg(feature = "async-std")]
+	use async_std::process::Command;
+
 	#[allow(unused_mut)]
 	let mut cmd = command(&pdx, sdk.as_deref())?;
-	#[cfg(feature = "tokio")]
-	let mut cmd = tokio::process::Command::from(cmd);
+	#[cfg(any(feature = "tokio", feature = "async-std"))]
+	let mut cmd = Command::from(cmd);
 
 	trace!("executing: {cmd:?}");
 
-	#[cfg(feature = "tokio")]
+	#[cfg(any(feature = "tokio", feature = "async-std"))]
 	cmd.status().await?.exit_ok()?;
-	#[cfg(not(feature = "tokio"))]
+	#[cfg(all(not(feature = "tokio"), not(feature = "async-std")))]
 	cmd.status()?.exit_ok()?;
 
 	Ok(())

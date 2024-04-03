@@ -1,6 +1,6 @@
 [package]
 name = "playdate-simulator-utils"
-version = "0.1.0"
+version = "0.1.1"
 readme = "README.md"
 description = "Cross-platform utils to deal with Playdate Simulator."
 keywords = ["playdate", "sdk", "utils"]
@@ -26,3 +26,12 @@ features = ["process"]
 default-features = false
 workspace = true
 optional = true
+
+[dependencies.async-std]
+features = ["futures-lite", "unstable", "default"]
+workspace = true
+optional = true
+
+
+[features]
+tokio = ["dep:tokio", "async-std?/tokio1"]
