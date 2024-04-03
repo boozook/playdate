@@ -248,12 +248,19 @@ jobs:
       #     sudo apt -y install libwebkit2gtk-4.0-dev
 
       - name: Test
+        run: cargo test -p=cargo-playdate -- --nocapture
+
+      - name: Test (init::)
+        env:
+          RUSTFLAGS: --cfg init_tests
         run: |
-          cargo test -p=cargo-playdate -- --nocapture ${{ runner.os == 'Windows' && '--test-threads=1' || '' }}
-          rm -rf ./target/tmp
+          cargo test -p=cargo-playdate init:: -- --nocapture ${{ runner.os == 'Windows' && '--test-threads=1' || '' }}
+
+      - name: Clean tmp
+        run: rm -rf ./target/tmp
 
       # This test is flickering on GH CI 🤷🏻‍♂️
-      - name: Execution
+      - name: Test Execution
         if: runner.os == 'macOS' && contains(github.event.head_commit.message, 'execution')
         env:
           RUSTFLAGS: --cfg exec_tests

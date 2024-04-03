@@ -37,6 +37,7 @@ fn run(crate_name: &str,
 
 
 #[test]
+#[cfg_attr(not(init_tests), ignore = "set RUSTFLAGS='--cfg init_tests' to enable.")]
 fn create_lib() -> Result<()> {
 	let args = ["--full-config", "--full-metadata"].into_iter().map(OsStr::new);
 
@@ -51,6 +52,7 @@ fn create_lib() -> Result<()> {
 
 
 #[test]
+#[cfg_attr(not(init_tests), ignore = "set RUSTFLAGS='--cfg init_tests' to enable.")]
 fn create_bin() -> Result<()> {
 	let args = ["--full-config", "--full-metadata"].into_iter().map(OsStr::new);
 
@@ -64,6 +66,7 @@ fn create_bin() -> Result<()> {
 }
 
 #[test]
+#[cfg_attr(not(init_tests), ignore = "set RUSTFLAGS='--cfg init_tests' to enable.")]
 fn create_default() -> Result<()> {
 	let args = ["--full-config", "--full-metadata"].into_iter().map(OsStr::new);
 
