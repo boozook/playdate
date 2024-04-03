@@ -101,7 +101,6 @@ jobs:
         run: >-
           cargo build --release --bin=pdbindgen --no-default-features
           --features=cli,documentation,extra-codegen,logging,pretty-please,which-rustfmt,runtime
-        # ${{ ((runner.os == 'Windows') && 'static') || 'runtime' }}
 
       - name: bindgen to upload
         if: steps.bindgen.outcome == 'success' && runner.os != 'macOS'
