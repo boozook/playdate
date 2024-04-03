@@ -1,7 +1,5 @@
 name: Auto-merge
 on:
-  pull_request:
-    types: ready_for_review
   pull_request_target:
     types: ready_for_review
 
@@ -17,9 +15,17 @@ jobs:
     env:
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
     steps:
+      - name: count requested reviewers
+        id: counter
+        run: |
+          REVIEWERS_NUM=$(echo $REQUESTED_REVIEWERS | jq '. | length')
+          echo "value=$REVIEWERS_NUM" >> "$GITHUB_OUTPUT"
+        env:
+          REQUESTED_REVIEWERS: ${{ toJson(github.event.pull_request.requested_reviewers) }}
+
       - name: Approve
         # if there is no requested reviewers specified:
-        if: !github.event.pull_request.requested_reviewers
+        if: steps.counter.outputs.value == '0'
         run: gh pr review --approve "${{github.event.pull_request.html_url}}"
 
       - name: Auto-merge
