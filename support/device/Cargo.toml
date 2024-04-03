@@ -88,7 +88,7 @@ features = [
 
 
 [features]
-default = ["tokio", "tokio-serial"]
-tokio-serial = ["futures", "dep:tokio-serial", "tokio?/io-util", "tokio?/rt"]
-tokio = ["futures", "dep:tokio", "async-std?/tokio1"]                         # use async-std reactor
-async-std = ["futures", "dep:async-std"]                                      # use async-std reactor and features
+default = ["tokio-serial"]
+tokio-serial = ["dep:tokio-serial", "tokio", "tokio/io-util", "tokio/rt"]
+tokio = ["futures", "dep:tokio", "async-std?/tokio1"]                     # use async-std reactor
+async-std = ["futures", "dep:async-std"]                                  # use async-std reactor and features

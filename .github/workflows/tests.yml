@@ -183,11 +183,21 @@ jobs:
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
 
-      - name: Test
+      - name: Build Utils
         run: |
           cargo test -p=playdate-build-utils --all-features
           cargo test -p=playdate-build --all-features
-          cargo test -p=playdate-tool --all-features
+
+      - name: Device
+        run: |
+          cargo test -p=playdate-device
+          cargo test -p=playdate-device --no-default-features
+          cargo test -p=playdate-device --no-default-features --features=tokio
+          cargo test -p=playdate-device --no-default-features --features=tokio-serial
+          cargo test -p=playdate-device --no-default-features --features=async-std
+
+      - name: PdTool
+        run: cargo test -p=playdate-tool --all-features
 
   tool:
     name: Tool

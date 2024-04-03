@@ -9,7 +9,6 @@ use nusb::{DeviceInfo, Interface};
 
 use crate::device::Device;
 use crate::error::Error;
-use crate::serial::redirect_interface_to_stdout as redirect_serial_to_stdout;
 use crate::usb::mode::DeviceMode;
 use crate::usb::mode::Mode;
 use crate::usb::BULK_IN;
@@ -138,8 +137,10 @@ pub async fn redirect_interface_to_stdout(interface: &mut crate::interface::Inte
 			}
 		},
 		crate::interface::Interface::Serial(interface) => {
+			use crate::serial::redirect_interface_to_stdout;
+
 			interface.open()?;
-			redirect_serial_to_stdout(interface).await?;
+			redirect_interface_to_stdout(interface).await?;
 		},
 	}
 	Ok(())
