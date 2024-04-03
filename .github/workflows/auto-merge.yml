@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: Approve
         # if there is no requested reviewers specified:
-        if: join(fromJSON(github.event.pull_request.requested_reviewers).*, '') == ''
+        if: !github.event.pull_request.requested_reviewers
         run: gh pr review --approve "${{github.event.pull_request.html_url}}"
 
       - name: Auto-merge
