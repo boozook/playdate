@@ -11,24 +11,34 @@ jobs:
   approve:
     continue-on-error: true
     runs-on: ubuntu-latest
-    if: ${{ github.actor == github.repository_owner }}
+    if: ${{ github.actor_id == github.repository_owner_id }}
     env:
-      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: count requested reviewers
-        id: counter
+        id: reviewers
         run: |
           REVIEWERS_NUM=$(echo $REQUESTED_REVIEWERS | jq '. | length')
           echo "value=$REVIEWERS_NUM" >> "$GITHUB_OUTPUT"
         env:
           REQUESTED_REVIEWERS: ${{ toJson(github.event.pull_request.requested_reviewers) }}
 
+      - name: Linked issue
+        id: issue
+        if: github.event.pull_request.issue_url
+        continue-on-error: true
+        run: |
+          USERNAME=$(gh issue view ${{ github.event.pull_request.issue_url }} --json=author | jq -r '.[].login')
+          AUTHOR_ID=$(gh issue view ${{ github.event.pull_request.issue_url }} --json=author | jq -r '.[].id')
+          echo "author_username=${USERNAME:-${{ github.actor }}}" >> "$GITHUB_OUTPUT"
+          echo "author_id=${AUTHOR_ID:-${{ github.actor_id }}}" >> "$GITHUB_OUTPUT"
+
       - name: Approve
-        # if there is no requested reviewers specified:
-        if: steps.counter.outputs.value == '0'
-        run: gh pr review --approve "${{github.event.pull_request.html_url}}"
+        # if there is no requested reviewers specified  and  linked issue's author is author of this PR:
+        if: steps.reviewers.outputs.value == '0' && (steps.issue.outcome == 'cancelled' || steps.issue.outputs.author_id == github.actor_id)
+        run: gh pr review --approve "${{ github.event.pull_request.html_url }}"
 
       - name: Auto-merge
-        run: gh pr merge --auto --rebase "${{github.event.pull_request.html_url}}"
-
-
+        # only if no linked issue  or  linked issue's author is actor of this PR:
+        if: steps.issue.outcome == 'cancelled' || steps.issue.outputs.author_id == github.actor_id
+        run: gh pr merge --auto --merge "${{ github.event.pull_request.html_url }}"
