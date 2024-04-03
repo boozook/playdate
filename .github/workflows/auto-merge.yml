@@ -23,22 +23,40 @@ jobs:
         env:
           REQUESTED_REVIEWERS: ${{ toJson(github.event.pull_request.requested_reviewers) }}
 
-      - name: Linked issue
-        id: issue
-        if: github.event.pull_request.issue_url
-        continue-on-error: true
+      - name: Linked issues
+        id: issues
         run: |
-          USERNAME=$(gh issue view ${{ github.event.pull_request.issue_url }} --json=author | jq -r '.[].login')
-          AUTHOR_ID=$(gh issue view ${{ github.event.pull_request.issue_url }} --json=author | jq -r '.[].id')
-          echo "author_username=${USERNAME:-${{ github.actor }}}" >> "$GITHUB_OUTPUT"
-          echo "author_id=${AUTHOR_ID:-${{ github.actor_id }}}" >> "$GITHUB_OUTPUT"
+          QUERY='query ($prNumber: Int!, $repositoryName: String!, $repositoryOwner: String!) {
+            repository(name: $repositoryName, owner: $repositoryOwner) {
+              pullRequest(number: $prNumber) {
+                closingIssuesReferences(first: 10) {
+                  nodes {
+                    number
+                  }
+                }
+              }
+            }
+          }'
+
+          ISSUES=$(gh api graphql -f query="$QUERY" -F prNumber=${{ github.event.pull_request.number }} -F repositoryName=${{ github.event.repository.name }} -F repositoryOwner=${{ github.event.repository.owner.login }} -q '.data.repository.pullRequest.closingIssuesReferences.nodes[] | .number')
+
+          echo "num=$ISSUES" >> "$GITHUB_OUTPUT"
+          if [ -z "$ISSUES" ]
+          then
+            echo "No issues linked to this PR."
+            echo "have=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Issue(s) linked: $ISSUES"
+            echo "have=true" >> "$GITHUB_OUTPUT"
+          fi
+      # better criteria is "is this PR have only one issue and it authored by author of this PR?"
 
       - name: Approve
-        # if there is no requested reviewers specified  and  linked issue's author is author of this PR:
-        if: steps.reviewers.outputs.value == '0' && (steps.issue.outcome == 'cancelled' || steps.issue.outputs.author_id == github.actor_id)
+        # if there is no requested reviewers specified  and  PR don't have any linked issue's:
+        if: success() && steps.reviewers.outputs.value == '0'
         run: gh pr review --approve "${{ github.event.pull_request.html_url }}"
 
       - name: Auto-merge
-        # only if no linked issue  or  linked issue's author is actor of this PR:
-        if: steps.issue.outcome == 'cancelled' || steps.issue.outputs.author_id == github.actor_id
+        # only if no linked issue:
+        if: success() && steps.reviewers.outputs.value == '0' && steps.issues.outputs.have == 'false'
         run: gh pr merge --auto --merge "${{ github.event.pull_request.html_url }}"
