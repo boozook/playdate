@@ -87,11 +87,12 @@ jobs:
           # CRATES: ${{ steps.publisher.outputs.published }}
           CRATES: '[ { "name":"foo", "version":"0.0.1" }, { "name":"bar", "version":"42.0.0" } ]'
         run: |
-          MESSAGE_LIST="Crates updated:\n"
-          MESSAGE_LIST=${MESSAGE_LIST}$(echo $CRATES | jq -r 'to_entries[] | "\(.key+1). \(.value.name): v\(.value.version)"')
-          MESSAGE_LINE=$(echo $CRATES | jq -r 'to_entries[] | "Crate updated: \(.value.name) v\(.value.version)"')
-          # MESSAGE="${{ steps.counter.outputs.value > 1 && '${MESSAGE_LIST}' || ' ${MESSAGE_LINE}' }}"
+          INTRO=${{ 2 > 1 && 'Crates updated: \n' || 'Crate updated: ' }}
+          # INTRO=${{ steps.counter.outputs.value > 1 && 'Crates updated: \n' || 'Crate updated: ' }}
+          MESSAGE_LIST=${INTRO}$(echo $CRATES | jq -r 'to_entries[] | "\(.key+1). \(.value.name): v\(.value.version)"')
+          MESSAGE_LINE=${INTRO}$(echo $CRATES | jq -r 'to_entries[] | "\(.value.name) v\(.value.version)"')
           MESSAGE="${{ 2 > 1 && '${MESSAGE_LIST}' || ' ${MESSAGE_LINE}' }}"
+          # MESSAGE="${{ steps.counter.outputs.value > 1 && '${MESSAGE_LIST}' || ' ${MESSAGE_LINE}' }}"
           # echo "value=${MESSAGE?}" >> "$GITHUB_OUTPUT"
 
           echo "value<<EOF" >> $GITHUB_OUTPUT
