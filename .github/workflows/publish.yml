@@ -2,8 +2,8 @@ name: Publish
 on:
   pull_request_target:
     branches: [main, master]
-  # pull_request:
-  #   branches: [main, master]
+  pull_request:
+    branches: [main, master]
   workflow_dispatch:
     inputs:
       sdk:
@@ -93,6 +93,7 @@ jobs:
           echo "value<<EOF" >> $GITHUB_OUTPUT
           echo $MESSAGE >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+          echo "$MESSAGE"
 
     outputs:
       published: ${{ steps.publisher.outputs.published }}
