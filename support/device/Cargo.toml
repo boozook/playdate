@@ -1,6 +1,6 @@
 [package]
 name = "playdate-device"
-version = "0.2.0"
+version = "0.2.1"
 readme = "README.md"
 description = "Cross-platform interface Playdate device, async & blocking."
 keywords = ["playdate", "usb", "serial"]
@@ -92,3 +92,12 @@ default = ["tokio", "tokio-serial"]
 tokio-serial = ["futures", "dep:tokio-serial", "tokio?/io-util", "tokio?/rt"]
 tokio = ["futures", "dep:tokio", "async-std?/tokio1"]                         # use async-std reactor
 async-std = ["futures", "dep:async-std"]                                      # use async-std reactor and features
+
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--show-type-layout"]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
+
+[badges.maintenance]
+status = "actively-developed"
