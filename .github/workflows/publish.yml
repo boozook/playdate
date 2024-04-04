@@ -86,6 +86,7 @@ jobs:
           MESSAGE_LINE=$(echo $CRATES | jq -r 'to_entries[] | "Crate updated: \(.value.name) v\(.value.version)"')
           MESSAGE="${{ steps.counter.outputs.value > 1 && '${MESSAGE_LIST}' || ' ${MESSAGE_LINE}' }}"
           echo "value=${MESSAGE?}" >> "$GITHUB_OUTPUT"
+          echo 'EOF' >> $GITHUB_OUTPUT
 
     outputs:
       published: ${{ steps.publisher.outputs.published }}
