@@ -1,6 +1,6 @@
 [package]
 name = "playdate-simulator-utils"
-version = "0.1.1"
+version = "0.1.2"
 readme = "README.md"
 description = "Cross-platform utils to deal with Playdate Simulator."
 keywords = ["playdate", "sdk", "utils"]
@@ -35,3 +35,12 @@ optional = true
 
 [features]
 tokio = ["dep:tokio", "async-std?/tokio1"]
+
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--show-type-layout"]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
+
+[badges.maintenance]
+status = "actively-developed"

@@ -1,6 +1,6 @@
 [package]
 name = "playdate-tool"
-version = "0.2.2"
+version = "0.2.3"
 readme = "README.md"
 description = "Tool for interaction with Playdate device and sim."
 keywords = ["playdate", "usb", "utility"]
@@ -65,3 +65,12 @@ tracing = [
 # Useful with `RUSTFLAGS="--cfg tokio_unstable"` &
 # [tokio-console](https://tokio.rs/tokio/topics/tracing-next-steps)
 tokio-tracing = ["tracing", "tokio/tracing", "console-subscriber", "tracing"]
+
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--show-type-layout"]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
+all-features = false
+
+[badges.maintenance]
+status = "actively-developed"

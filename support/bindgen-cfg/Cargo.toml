@@ -1,6 +1,6 @@
 [package]
 name = "playdate-bindgen-cfg"
-version = "0.1.2"
+version = "0.1.3"
 readme = "README.md"
 description = "Minimal configuration for playdate-bindgen."
 keywords = ["playdate", "bindings", "ffi", "code-generation"]
@@ -20,3 +20,12 @@ optional = true
 
 [features]
 default = []
+
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--show-type-layout"]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
+
+[badges.maintenance]
+status = "actively-developed"

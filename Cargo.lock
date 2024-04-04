@@ -3744,7 +3744,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-bindgen"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "bindgen",
  "clap",
@@ -3764,14 +3764,14 @@ dependencies = [
 
 [[package]]
 name = "playdate-bindgen-cfg"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "clap",
 ]
 
 [[package]]
 name = "playdate-build"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "crate-metadata",
  "dirs",
@@ -3788,7 +3788,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-build-utils"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "dirs",
  "log",
@@ -3814,7 +3814,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-device"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "async-std",
  "clap",
@@ -3887,7 +3887,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-simulator-utils"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "async-std",
  "log",
@@ -3935,7 +3935,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-tool"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "clap",
  "console-subscriber",
