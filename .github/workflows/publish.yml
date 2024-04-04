@@ -1,7 +1,7 @@
 name: Publish
 on:
-  pull_request:
-    types: ready_for_review
+  pull_request_target:
+    types: [opened, ready_for_review, synchronize]
     branches: [main, master]
   workflow_dispatch:
     inputs:
