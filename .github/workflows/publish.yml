@@ -79,8 +79,10 @@ jobs:
 
       - name: Message
         id: message
+        # if: success()
         env:
-          CRATES: ${{ steps.publisher.outputs.published }}
+          # CRATES: ${{ steps.publisher.outputs.published }}
+          CRATES: '[{"foo":"0.0.1", "bar":"42.0.0"}]'
         run: |
           MESSAGE_LIST=$(echo $CRATES | jq -r 'to_entries[] | "Crates updated:\n\(.key+1). \(.value.name): v\(.value.version)"')
           MESSAGE_LINE=$(echo $CRATES | jq -r 'to_entries[] | "Crate updated: \(.value.name) v\(.value.version)"')
