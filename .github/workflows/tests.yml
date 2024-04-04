@@ -348,18 +348,29 @@ jobs:
     defaults:
       run:
         shell: bash
-
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v4
 
-      # - name: Check
-      #   if: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
-      #   uses: clechasseur/rs-fmt-check@v2.0.1
-      #   # with:
-      #   #   toolchain: nightly
-
       - name: Check
-        # if: ${{ github.event_name != 'pull_request' && github.event_name != 'pull_request_target' }}
-        run: cargo fmt -- --check
+        id: check
+        continue-on-error: true
+        run: >-
+          cargo fmt --all -- --check ||
+          (echo "::error::Rust format error." && exit 1)
+
+      - name: Format
+        id: format
+        if: steps.check.outcome == 'failure' && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
+        run: cargo fmt --all
+
+      - name: Suggest Changes
+        if: success() && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
+        # https://docs.github.com/en/rest/pulls/reviews?apiVersion=2022-11-28#create-a-review-for-a-pull-request
+        uses: parkerbxyz/suggest-changes@v1
+        # with: comment: Rustfmt suggested the formatting changes.
