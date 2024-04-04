@@ -1,7 +1,8 @@
 name: Publish
 on:
   pull_request_target:
-    types: ready_for_review
+    branches: [main, master]
+  pull_request:
     branches: [main, master]
   workflow_dispatch:
     inputs:
@@ -34,6 +35,7 @@ env:
 
 jobs:
   crates-io:
+    name: crates.io
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -79,17 +81,19 @@ jobs:
 
       - name: Message
         id: message
+        if: success()
         env:
           CRATES: ${{ steps.publisher.outputs.published }}
         run: |
-          MESSAGE_LIST=$(echo $CRATES | jq -r 'to_entries[] | "Crates updated:\n\(.key+1). \(.value.name): v\(.value.version)"')
-          MESSAGE_LINE=$(echo $CRATES | jq -r 'to_entries[] | "Crate updated: \(.value.name) v\(.value.version)"')
+          INTRO="${{ steps.counter.outputs.value > 1 && 'Crates updated: \n' || 'Crate updated: ' }}"
+          MESSAGE_LIST=${INTRO}$(echo $CRATES | jq -r 'to_entries[] | "\(.key+1). \(.value.name): v\(.value.version)"')
+          MESSAGE_LINE=${INTRO}$(echo $CRATES | jq -r 'to_entries[] | "\(.value.name) v\(.value.version)"')
           MESSAGE="${{ steps.counter.outputs.value > 1 && '${MESSAGE_LIST}' || ' ${MESSAGE_LINE}' }}"
-          # echo "value=${MESSAGE?}" >> "$GITHUB_OUTPUT"
 
           echo "value<<EOF" >> $GITHUB_OUTPUT
           echo $MESSAGE >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+          echo "$MESSAGE"
 
     outputs:
       published: ${{ steps.publisher.outputs.published }}
