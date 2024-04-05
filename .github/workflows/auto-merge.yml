@@ -58,5 +58,8 @@ jobs:
 
       - name: Auto-merge
         # only if no linked issue:
-        if: success() && steps.reviewers.outputs.value == '0' && steps.issues.outputs.have == 'false'
-        run: gh pr merge --auto --merge "${{ github.event.pull_request.html_url }}"
+        if: success() && steps.reviewers.outputs.value == '0' && steps.issues.outputs.have != 'true'
+        run: >-
+          gh pr merge --auto
+          --${{ github.event.pull_request.commits > 1 && 'squash' || 'merge' }}
+          "${{ github.event.pull_request.html_url }}"
