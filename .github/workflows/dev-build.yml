@@ -29,7 +29,6 @@ jobs:
       matrix:
         os:
           - macos-14
-          - macos-12
           - ubuntu-latest
           - windows-latest
     defaults:

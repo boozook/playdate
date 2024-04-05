@@ -30,7 +30,7 @@ pub struct Volume {
 }
 
 impl Volume {
-	fn new(path: PathBuf, part: PathBuf, disk: PathBuf, dev_sysfs: PathBuf) -> Self {
+	pub fn new(path: PathBuf, part: PathBuf, disk: PathBuf, dev_sysfs: PathBuf) -> Self {
 		Self { path,
 		       part_node: part,
 		       disk_node: disk,
@@ -48,7 +48,7 @@ impl Volume {
 }
 
 
-mod unmount {
+pub mod unmount {
 	use futures::TryFutureExt;
 
 	use super::*;
@@ -61,29 +61,32 @@ mod unmount {
 		fn unmount_blocking(&self) -> Result<(), Error> {
 			use std::process::Command;
 
-
-			let res = eject(self).status()
-			                     .map_err(Error::from)
-			                     .and_then(|res| res.exit_ok().map_err(Error::from))
-			                     .or_else(|err| -> Result<(), Error> {
-				                     unmount(self).status()
-				                                  .map_err(Error::from)
-				                                  .and_then(|res| res.exit_ok().map_err(Error::from))
-				                                  .map_err(|err2| Error::chain(err2, [err]))
-			                     })
-			                     .or_else(move |err| -> Result<(), Error> {
-				                     udisksctl_unmount(self).status()
-				                                            .map_err(Error::from)
-				                                            .and_then(|res| res.exit_ok().map_err(Error::from))
-				                                            .map_err(|err2| Error::chain(err2, [err]))
-			                     })
-			                     .or_else(move |err| -> Result<(), Error> {
-				                     udisks_unmount(self).status()
-				                                         .map_err(Error::from)
-				                                         .and_then(|res| res.exit_ok().map_err(Error::from))
-				                                         .map_err(|err2| Error::chain(err2, [err]))
-			                     })
-			                     .inspect(|_| trace!("unmounted {self}"));
+			let res =
+				unmount_eject(&self).or_else(|err| {
+					                    eject(self).status()
+					                               .map_err(Error::from)
+					                               .and_then(|res| res.exit_ok().map_err(Error::from))
+					                               .map_err(|err2| Error::chain(err2, [err]))
+				                    })
+				                    .or_else(|err| -> Result<(), Error> {
+					                    unmount(self).status()
+					                                 .map_err(Error::from)
+					                                 .and_then(|res| res.exit_ok().map_err(Error::from))
+					                                 .map_err(|err2| Error::chain(err2, [err]))
+				                    })
+				                    .or_else(move |err| -> Result<(), Error> {
+					                    udisksctl_unmount(self).status()
+					                                           .map_err(Error::from)
+					                                           .and_then(|res| res.exit_ok().map_err(Error::from))
+					                                           .map_err(|err2| Error::chain(err2, [err]))
+				                    })
+				                    .or_else(move |err| -> Result<(), Error> {
+					                    udisks_unmount(self).status()
+					                                        .map_err(Error::from)
+					                                        .and_then(|res| res.exit_ok().map_err(Error::from))
+					                                        .map_err(|err2| Error::chain(err2, [err]))
+				                    })
+				                    .inspect(|_| trace!("unmounted {self}"));
 
 			// TODO: use `udisks_power_off` also as fallback for `udisksctl_power_off`:
 			Command::from(udisksctl_power_off(self)).status()
@@ -108,62 +111,77 @@ mod unmount {
 			#[cfg(feature = "async-std")]
 			use async_std::process::Command;
 
-
-			Command::from(eject(self)).status()
-			                          .map_err(Error::from)
-			                          .and_then(|res| ready(res.exit_ok().map_err(Error::from)))
-			                          .or_else(|err| {
-				                          Command::from(unmount(self)).status()
-				                                                      .map_err(|err2| Error::chain(err2, [err]))
-				                                                      .and_then(|res| {
-					                                                      ready(res.exit_ok().map_err(Error::from))
-				                                                      })
-			                          })
-			                          .or_else(|err| {
-				                          Command::from(udisksctl_unmount(self)).status()
-				                                                                .map_err(|err2| {
-					                                                                Error::chain(err2, [err])
-				                                                                })
-				                                                                .and_then(|res| {
-					                                                                ready(
-					                                                                      res.exit_ok()
-					                                                                         .map_err(Error::from),
+			async { unmount_eject(&self) }.or_else(|err| {
+				                              Command::from(eject(self)).status()
+				                                                        .map_err(|err2| Error::chain(err2, [err]))
+				                                                        .and_then(|res| {
+					                                                        ready(res.exit_ok().map_err(Error::from))
+				                                                        })
+			                              })
+			                              .or_else(|err| {
+				                              Command::from(unmount(self)).status()
+				                                                          .map_err(|err2| Error::chain(err2, [err]))
+				                                                          .and_then(|res| {
+					                                                          ready(res.exit_ok().map_err(Error::from))
+				                                                          })
+			                              })
+			                              .or_else(|err| {
+				                              Command::from(udisksctl_unmount(self)).status()
+				                                                                    .map_err(|err2| {
+					                                                                    Error::chain(err2, [err])
+				                                                                    })
+				                                                                    .and_then(|res| {
+					                                                                    ready(
+					                                                                          res.exit_ok()
+					                                                                             .map_err(Error::from),
 					)
-				                                                                })
-			                          })
-			                          .or_else(|err| {
-				                          Command::from(udisks_unmount(self)).status()
-				                                                             .map_err(|err2| {
-					                                                             Error::chain(err2, [err])
-				                                                             })
-				                                                             .and_then(|res| {
-					                                                             ready(
-					                                                                   res.exit_ok()
-					                                                                      .map_err(Error::from),
+				                                                                    })
+			                              })
+			                              .or_else(|err| {
+				                              Command::from(udisks_unmount(self)).status()
+				                                                                 .map_err(|err2| {
+					                                                                 Error::chain(err2, [err])
+				                                                                 })
+				                                                                 .and_then(|res| {
+					                                                                 ready(
+					                                                                       res.exit_ok()
+					                                                                          .map_err(Error::from),
 					)
-				                                                             })
-			                          })
-			                          .inspect_ok(|_| trace!("unmounted {self}"))
-			                          .then(|res| {
-				                          // TODO: use `udisks_power_off` also as fallback for `udisksctl_power_off`:
-				                          Command::from(udisksctl_power_off(self)).status()
-				                                                                  .map_err(Error::from)
-				                                                                  .and_then(|res| {
-					                                                                  ready(
+				                                                                 })
+			                              })
+			                              .inspect_ok(|_| trace!("unmounted {self}"))
+			                              .then(|res| {
+				                              // TODO: use `udisks_power_off` also as fallback for `udisksctl_power_off`:
+				                              Command::from(udisksctl_power_off(self)).status()
+				                                                                      .map_err(Error::from)
+				                                                                      .and_then(|res| {
+					                                                                      ready(
 					                                                                        res.exit_ok()
 					                                                                           .map_err(Error::from),
 					)
-				                                                                  })
-				                                                                  .map_err(|err2| {
-					                                                                  if let Some(err) = res.err() {
-						                                                                  Error::chain(err2, [err])
-					                                                                  } else {
-						                                                                  err2
-					                                                                  }
-				                                                                  })
-			                          })
-			                          .await
+				                                                                      })
+				                                                                      .map_err(|err2| {
+					                                                                      if let Some(err) = res.err()
+					                                                                      {
+						                                                                      Error::chain(err2, [err])
+					                                                                      } else {
+						                                                                      err2
+					                                                                      }
+				                                                                      })
+			                              })
+			                              .await
 		}
+	}
+
+
+	#[cfg_attr(feature = "tracing", tracing::instrument())]
+	pub fn unmount_eject(vol: &Volume) -> Result<(), Error> {
+		use eject::device::Device;
+
+		let drive = Device::open(&vol.disk_node).map_err(std::io::Error::from)?;
+		drive.eject().map_err(std::io::Error::from)?;
+		trace!("Ejected {}", &vol.disk_node.display());
+		Ok(())
 	}
 
 

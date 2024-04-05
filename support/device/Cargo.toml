@@ -1,6 +1,6 @@
 [package]
 name = "playdate-device"
-version = "0.2.1"
+version = "0.2.2"
 readme = "README.md"
 description = "Cross-platform interface Playdate device, async & blocking."
 keywords = ["playdate", "usb", "serial"]
@@ -73,6 +73,10 @@ const-hex = "1.11"
 [target.'cfg(target_os = "linux")'.dependencies]
 udev = "0.8"
 lfs-core = "0.11"
+eject = "0.1"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+eject = "0.1"
 
 [target.'cfg(target_os = "windows")'.dependencies.windows]
 version = "0.54.0"

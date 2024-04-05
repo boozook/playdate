@@ -100,6 +100,18 @@ pub struct Dbg {
 pub enum DbgCmd {
 	/// Inspect device(s) state.
 	Inspect,
+
+	/// New way to eject.
+	///
+	/// Argument `query` - The path of the device.
+	///
+	/// On **Linux** this is the path of the device's file, which almost always
+	/// will be inside `/dev`. For example: `/dev/cdrom`. Do not use paths to a drive's mount point.
+	///
+	/// On **Windows** this is the path you would use with `CreateFile` but
+	/// without the `\\?\` or `\\.\` prefix. Examples of correct paths
+	/// include `D:` (but not `D:\`), `CdRom0` and `Volume{26a21bda-a627-11d7-9931-806e6f6e6963}`.
+	Eject { path: PathBuf },
 }
 
 
