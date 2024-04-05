@@ -121,6 +121,7 @@ pub mod unmount {
 	}
 
 
+	#[cfg(feature = "eject")]
 	#[cfg_attr(feature = "tracing", tracing::instrument())]
 	pub fn unmount_eject(vol: &Volume) -> Result<(), Error> {
 		use eject::device::Device;
