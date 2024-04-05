@@ -78,7 +78,7 @@ async fn main() -> miette::Result<()> {
 	#[cfg(not(feature = "tracing"))]
 	{
 		#[cfg(debug_assertions)]
-		std::env::set_var("RUST_LOG", "trace");
+		std::env::set_var("RUST_LOG", "trace,nusb=info");
 		env_logger::Builder::from_env(env_logger::Env::default()).format_indent(Some(3))
 		                                                         .format_module_path(false)
 		                                                         .format_target(true)
@@ -120,6 +120,7 @@ async fn main() -> miette::Result<()> {
 }
 
 
+#[cfg(debug_assertions)]
 mod debug {
 	use super::*;
 
@@ -128,6 +129,7 @@ mod debug {
 		use cli::DbgCmd as Cmd;
 		match cmd {
 			Cmd::Inspect => inspect().await?,
+			Cmd::Eject { path } => eject(path).await?,
 		}
 		Ok(())
 	}
@@ -142,6 +144,31 @@ mod debug {
 			                           println!("dev: {dev:#?}");
 			                           println!("vol: {path:?}");
 		                           });
+
+		Ok(())
+	}
+
+	pub async fn eject(path: PathBuf) -> Result<(), Error> {
+		println!("Ejecting {path:?}");
+
+		#[cfg(target_os = "linux")]
+		{
+			let vol = pddev::mount::volume::Volume::new(PathBuf::new(), PathBuf::new(), path, PathBuf::new());
+			pddev::mount::volume::unmount::unmount_eject(&vol)?;
+		}
+
+		#[cfg(all(target_os = "windows", feature = "device/eject"))]
+		{
+			let vol = pddev::mount::volume::Volume::new(
+			                                            path.file_name()
+			                                                .expect("drive name expected")
+			                                                .to_string_lossy()
+			                                                .chars()
+			                                                .next()
+			                                                .expect("volume name letter"),
+			);
+			pddev::mount::volume::unmount::unmount_eject(&vol)?;
+		}
 
 		Ok(())
 	}
@@ -369,6 +396,10 @@ async fn list(format: cli::Format, kind: cli::DeviceKind) -> Result<(), error::E
 	                 cli::DeviceKind::Storage => volumes_for_map(usb::discover::devices_storage()?).await?,
 	                 cli::DeviceKind::Data => usb::discover::devices_data()?.map(|dev| (dev, None)).collect(),
 	              }.into_iter()
+	              .inspect(|(dev, vol)| {
+		              debug!("dev: {dev:?}");
+		              debug!("vol: {vol:?}");
+	              })
 	              .map(|(dev, vol)| (dev, vol.map(|v| v.path().to_path_buf())));
 
 	match format {

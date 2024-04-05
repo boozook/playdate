@@ -17,6 +17,10 @@ pub struct Volume {
 	path: PathBuf,
 }
 
+impl Volume {
+	pub fn new(path: PathBuf) -> Self { Self { path } }
+}
+
 impl From<PathBuf> for Volume {
 	fn from(path: PathBuf) -> Self { Self { path } }
 }
@@ -31,7 +35,7 @@ impl Volume {
 }
 
 
-mod unmount {
+pub mod unmount {
 	use super::*;
 	use crate::mount::Unmount;
 	use crate::mount::UnmountAsync;

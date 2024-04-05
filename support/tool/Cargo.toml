@@ -1,6 +1,6 @@
 [package]
 name = "playdate-tool"
-version = "0.2.3"
+version = "0.3.0"
 readme = "README.md"
 description = "Tool for interaction with Playdate device and sim."
 keywords = ["playdate", "usb", "utility"]
@@ -55,6 +55,8 @@ workspace = true
 
 
 [features]
+eject = ["device/eject"] # windows only, enable one more unmount method
+
 tracing = [
 	"dep:tracing",
 	"tracing-subscriber",

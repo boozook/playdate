@@ -25,6 +25,14 @@ pub struct Volume {
 	serial_number: Option<SerialNumber>,
 }
 
+impl Volume {
+	pub fn new(letter: char) -> Self {
+		Self { letter,
+		       disk_number: None,
+		       serial_number: None }
+	}
+}
+
 impl std::fmt::Display for Volume {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { self.letter.fmt(f) }
 }
@@ -34,7 +42,7 @@ impl Volume {
 	pub fn path(&self) -> Cow<'_, Path> { PathBuf::from(format!("{}:", self.letter)).into() }
 }
 
-mod unmount {
+pub mod unmount {
 	use futures::FutureExt;
 	use futures::TryFutureExt;
 
@@ -46,24 +54,29 @@ mod unmount {
 	impl Unmount for Volume {
 		#[cfg_attr(feature = "tracing", tracing::instrument())]
 		fn unmount_blocking(&self) -> Result<(), Error> {
-			winapi::unmount(self.letter).or_else(|err| {
-				                            if std::env::var_os("SHELL").is_some() {
-					                            eject_sh(self.letter).status()
-					                                                 .map_err(Error::from)
-					                                                 .and_then(|res| {
-						                                                 res.exit_ok().map_err(Error::from)
-					                                                 })
-					                                                 .map_err(|err2| Error::chain(err2, [err]))
-				                            } else {
-					                            Err(err)
-				                            }
-			                            })
-			                            .or_else(|err| {
-				                            eject_pw(self.letter).status()
-				                                                 .map_err(Error::from)
-				                                                 .and_then(|res| res.exit_ok().map_err(Error::from))
-				                                                 .map_err(|err2| Error::chain(err2, [err]))
-			                            })
+			#[cfg(feature = "eject")]
+			let res = unmount_eject(&self).or_else(|err| {
+				                     winapi::unmount(self.letter).map_err(|err2| Error::chain(err2, [err]))
+			                     });
+			#[cfg(not(feature = "eject"))]
+			let res = winapi::unmount(self.letter);
+
+			res.or_else(|err| {
+				   if std::env::var_os("SHELL").is_some() {
+					   eject_sh(self.letter).status()
+					                        .map_err(Error::from)
+					                        .and_then(|res| res.exit_ok().map_err(Error::from))
+					                        .map_err(|err2| Error::chain(err2, [err]))
+				   } else {
+					   Err(err)
+				   }
+			   })
+			   .or_else(|err| {
+				   eject_pw(self.letter).status()
+				                        .map_err(Error::from)
+				                        .and_then(|res| res.exit_ok().map_err(Error::from))
+				                        .map_err(|err2| Error::chain(err2, [err]))
+			   })
 		}
 	}
 
@@ -71,28 +84,53 @@ mod unmount {
 		#[cfg_attr(feature = "tracing", tracing::instrument())]
 		async fn unmount(&self) -> Result<(), Error> {
 			use futures_lite::future::ready;
+			use futures::future::lazy;
 			#[cfg(all(feature = "tokio", not(feature = "async-std")))]
 			use tokio::process::Command;
 			#[cfg(feature = "async-std")]
 			use async_std::process::Command;
 
-			futures::future::lazy(|_| winapi::unmount(self.letter)).or_else(|err| {
-				                                                       if std::env::var_os("SHELL").is_some() {
-					                                                       Command::from(eject_sh(self.letter)).status()
-																							.map_err(|err2| Error::chain(err2, [err]))
-																							.and_then(|res| ready(res.exit_ok().map_err(Error::from)))
-												                                 .left_future()
-				                                                       } else {
-					                                                       ready(Err(err)).right_future()
-				                                                       }
-			                                                       })
-			                                                       .or_else(|err| {
-				                                                       Command::from(eject_pw(self.letter)).status()
-																						.map_err(|err2| Error::chain(err2, [err]))
-																						.and_then(|res| ready(res.exit_ok().map_err(Error::from)))
-			                                                       })
-			                                                       .await
+			#[cfg(feature = "eject")]
+			let fut = lazy(|_| unmount_eject(&self)).or_else(|err| {
+				                               lazy(|_| {
+					                               winapi::unmount(self.letter).map_err(|err2| {
+						                                                           Error::chain(err2, [err])
+					                                                           })
+				                               })
+			                               });
+			#[cfg(not(feature = "eject"))]
+			let fut = lazy(|_| winapi::unmount(self.letter));
+
+			fut.or_else(|err| {
+				   if std::env::var_os("SHELL").is_some() {
+					   Command::from(eject_sh(self.letter)).status()
+					                                       .map_err(|err2| Error::chain(err2, [err]))
+					                                       .and_then(|res| ready(res.exit_ok().map_err(Error::from)))
+					                                       .left_future()
+				   } else {
+					   ready(Err(err)).right_future()
+				   }
+			   })
+			   .or_else(|err| {
+				   Command::from(eject_pw(self.letter)).status()
+				                                       .map_err(|err2| Error::chain(err2, [err]))
+				                                       .and_then(|res| ready(res.exit_ok().map_err(Error::from)))
+			   })
+			   .await
 		}
+	}
+
+
+	#[cfg(feature = "eject")]
+	#[cfg_attr(feature = "tracing", tracing::instrument())]
+	pub fn unmount_eject(vol: &Volume) -> Result<(), Error> {
+		use eject::device::Device;
+
+		let path = to_vol_path_short(vol.letter);
+		let drive = Device::open(&path).map_err(std::io::Error::from)?;
+		drive.eject().map_err(std::io::Error::from)?;
+		trace!("Ejected {}", vol.letter);
+		Ok(())
 	}
 
 
