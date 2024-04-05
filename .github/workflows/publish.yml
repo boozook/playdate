@@ -83,8 +83,8 @@ jobs:
         env:
           CRATES: ${{ steps.publisher.outputs.published }}
         run: |
-          INTRO="${{ steps.counter.outputs.value > 1 && 'Crates updated: \n' || 'Crate updated: ' }}"
-          MESSAGE_LIST=${INTRO}$(echo $CRATES | jq -r 'to_entries[] | "\(.key+1). \(.value.name): v\(.value.version)"')
+          INTRO="${{ steps.counter.outputs.value > 1 && 'Crates' || 'Crate' }} updated: "
+          MESSAGE_LIST=${INTRO}$(echo $CRATES | jq -r 'to_entries[] | "\n- \(.value.name): v\(.value.version)"')
           MESSAGE_LINE=${INTRO}$(echo $CRATES | jq -r 'to_entries[] | "\(.value.name) v\(.value.version)"')
           MESSAGE="${{ steps.counter.outputs.value > 1 && '${MESSAGE_LIST}' || ' ${MESSAGE_LINE}' }}"
 
