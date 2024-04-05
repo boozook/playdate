@@ -54,25 +54,29 @@ pub mod unmount {
 	impl Unmount for Volume {
 		#[cfg_attr(feature = "tracing", tracing::instrument())]
 		fn unmount_blocking(&self) -> Result<(), Error> {
-			unmount_eject(&self).or_else(|err| {
-				                    winapi::unmount(self.letter).map_err(|err2| Error::chain(err2, [err]))
-			                    })
-			                    .or_else(|err| {
-				                    if std::env::var_os("SHELL").is_some() {
-					                    eject_sh(self.letter).status()
-					                                         .map_err(Error::from)
-					                                         .and_then(|res| res.exit_ok().map_err(Error::from))
-					                                         .map_err(|err2| Error::chain(err2, [err]))
-				                    } else {
-					                    Err(err)
-				                    }
-			                    })
-			                    .or_else(|err| {
-				                    eject_pw(self.letter).status()
-				                                         .map_err(Error::from)
-				                                         .and_then(|res| res.exit_ok().map_err(Error::from))
-				                                         .map_err(|err2| Error::chain(err2, [err]))
-			                    })
+			#[cfg(feature = "eject")]
+			let res = unmount_eject(&self).or_else(|err| {
+				                     winapi::unmount(self.letter).map_err(|err2| Error::chain(err2, [err]))
+			                     });
+			#[cfg(not(feature = "eject"))]
+			let res = winapi::unmount(self.letter);
+
+			res.or_else(|err| {
+				   if std::env::var_os("SHELL").is_some() {
+					   eject_sh(self.letter).status()
+					                        .map_err(Error::from)
+					                        .and_then(|res| res.exit_ok().map_err(Error::from))
+					                        .map_err(|err2| Error::chain(err2, [err]))
+				   } else {
+					   Err(err)
+				   }
+			   })
+			   .or_else(|err| {
+				   eject_pw(self.letter).status()
+				                        .map_err(Error::from)
+				                        .and_then(|res| res.exit_ok().map_err(Error::from))
+				                        .map_err(|err2| Error::chain(err2, [err]))
+			   })
 		}
 	}
 
@@ -86,40 +90,33 @@ pub mod unmount {
 			#[cfg(feature = "async-std")]
 			use async_std::process::Command;
 
-			lazy(|_| unmount_eject(&self)).or_else(|err| {
-				                              lazy(|_| {
-					                              winapi::unmount(self.letter).map_err(|err2| {
-						                                                          Error::chain(err2, [err])
-					                                                          })
-				                              })
-			                              })
-			                              .or_else(|err| {
-				                              if std::env::var_os("SHELL").is_some() {
-					                              Command::from(eject_sh(self.letter)).status()
-					                                                                  .map_err(|err2| {
-						                                                                  Error::chain(err2, [err])
-					                                                                  })
-					                                                                  .and_then(|res| {
-						                                                                  ready(res.exit_ok().map_err(Error::from))
-					                                                                  })
-					                                                                  .left_future()
-				                              } else {
-					                              ready(Err(err)).right_future()
-				                              }
-			                              })
-			                              .or_else(|err| {
-				                              Command::from(eject_pw(self.letter)).status()
-				                                                                  .map_err(|err2| {
-					                                                                  Error::chain(err2, [err])
-				                                                                  })
-				                                                                  .and_then(|res| {
-					                                                                  ready(
-					                                                                        res.exit_ok()
-					                                                                           .map_err(Error::from),
-					)
-				                                                                  })
-			                              })
-			                              .await
+			#[cfg(feature = "eject")]
+			let fut = lazy(|_| unmount_eject(&self)).or_else(|err| {
+				                               lazy(|_| {
+					                               winapi::unmount(self.letter).map_err(|err2| {
+						                                                           Error::chain(err2, [err])
+					                                                           })
+				                               })
+			                               });
+			#[cfg(not(feature = "eject"))]
+			let fut = lazy(|_| winapi::unmount(self.letter));
+
+			fut.or_else(|err| {
+				   if std::env::var_os("SHELL").is_some() {
+					   Command::from(eject_sh(self.letter)).status()
+					                                       .map_err(|err2| Error::chain(err2, [err]))
+					                                       .and_then(|res| ready(res.exit_ok().map_err(Error::from)))
+					                                       .left_future()
+				   } else {
+					   ready(Err(err)).right_future()
+				   }
+			   })
+			   .or_else(|err| {
+				   Command::from(eject_pw(self.letter)).status()
+				                                       .map_err(|err2| Error::chain(err2, [err]))
+				                                       .and_then(|res| ready(res.exit_ok().map_err(Error::from)))
+			   })
+			   .await
 		}
 	}
 
