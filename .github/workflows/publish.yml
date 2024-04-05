@@ -83,11 +83,7 @@ jobs:
         env:
           CRATES: ${{ steps.publisher.outputs.published }}
         run: |
-          INTRO="${{ steps.counter.outputs.value > 1 && 'Crates updated: \n' || 'Crate updated: ' }}"
-          MESSAGE_LIST=${INTRO}$(echo $CRATES | jq -r 'to_entries[] | "\(.key+1). \(.value.name): v\(.value.version)"')
-          MESSAGE_LINE=${INTRO}$(echo $CRATES | jq -r 'to_entries[] | "\(.value.name) v\(.value.version)"')
-          MESSAGE="${{ steps.counter.outputs.value > 1 && '${MESSAGE_LIST}' || ' ${MESSAGE_LINE}' }}"
-
+          MESSAGE=$(echo $CRATES | jq -r 'if length == 1 then "Crate updated: \(.[0].name) v\(.[0].version)" else ("Crates updated:"), (to_entries[] | "\(.key + 1). \(.value.name): v\(.value.version)") end')
           echo "value<<EOF" >> $GITHUB_OUTPUT
           echo $MESSAGE >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
