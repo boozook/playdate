@@ -25,6 +25,12 @@ jobs:
           URL="${{ github.event_name == 'release' && github.event.release.html_url || format('{0}/{1}', github.server_url, github.repository) }}"
           echo "value=$URL" >> "$GITHUB_OUTPUT"
 
+      - name: Prepare Words
+        id: words
+        env:
+          XRELEASE: ${{ github.event_name == 'release' && (github.event.release.prerelease && 'pre-release' || 'release') || '' }}
+        run: echo "release=$XRELEASE" >> "$GITHUB_OUTPUT"
+
       - name: Toot
         id: mastodon
         uses: cbrgm/mastodon-github-action@v2.0.4
@@ -32,7 +38,7 @@ jobs:
           message: |
             🦀 Rusty Playdate Updated!
 
-            ${{ inputs.message || (github.event_name == 'release' && format('New release published: {0}', github.event.release.name) || '') }}
+            ${{ inputs.message || (github.event_name == 'release' && format('New {0} published: {1}', steps.words.outputs.release, github.event.release.name) || '') }}
 
             ${{ steps.url.outputs.value }}
 
