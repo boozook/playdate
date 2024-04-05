@@ -55,6 +55,8 @@ workspace = true
 
 
 [features]
+eject = ["device/eject"] # windows only, enable one more unmount method
+
 tracing = [
 	"dep:tracing",
 	"tracing-subscriber",

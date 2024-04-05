@@ -46,6 +46,11 @@ To build playdate-tool you're need:
 cargo install playdate-tool
 ```
 
+Also with optional feature `eject`, windows only:
+```bash
+cargo install playdate-tool --feature=eject
+```
+
 
 ## Usage
 

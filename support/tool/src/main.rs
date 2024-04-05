@@ -157,18 +157,18 @@ mod debug {
 			pddev::mount::volume::unmount::unmount_eject(&vol)?;
 		}
 
-		// #[cfg(target_os = "windows")]
-		// {
-		// 	let vol = pddev::mount::volume::Volume::new(
-		// 	                                            path.file_name()
-		// 	                                                .expect("drive name expected")
-		// 	                                                .to_string_lossy()
-		// 	                                                .chars()
-		// 	                                                .next()
-		// 	                                                .expect("volume name letter"),
-		// 	);
-		// 	pddev::mount::volume::unmount::unmount_eject(&vol)?;
-		// }
+		#[cfg(all(target_os = "windows", feature = "device/eject"))]
+		{
+			let vol = pddev::mount::volume::Volume::new(
+			                                            path.file_name()
+			                                                .expect("drive name expected")
+			                                                .to_string_lossy()
+			                                                .chars()
+			                                                .next()
+			                                                .expect("volume name letter"),
+			);
+			pddev::mount::volume::unmount::unmount_eject(&vol)?;
+		}
 
 		Ok(())
 	}
