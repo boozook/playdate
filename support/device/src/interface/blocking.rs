@@ -5,8 +5,7 @@ pub trait Out: In {
 	fn send_cmd(&self, cmd: Command) -> Result<usize, Error>;
 }
 
-pub trait In {
-}
+pub trait In {}
 
 pub trait Interface: In + Out {}
 // impl<T: In<Error = Err> + Out<Error = Err>, Err> Interface for T {}
