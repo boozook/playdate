@@ -88,3 +88,28 @@ impl IterTime for Duration {
 		calc_interval(total_wait, self)
 	}
 }
+
+
+pub fn retry_blocking<F, R, E>(retry: Retries<impl IterTime>, f: F) -> Result<R, crate::error::Error>
+	where F: Fn() -> Result<R, E>,
+	      E: Into<crate::error::Error> {
+	let total = &retry.total;
+	let iteration = retry.iters.interval(total);
+	let retries_num = total.as_millis() / iteration.as_millis();
+	trace!("start retries: {retries_num} * {iteration:?} ≈ {total:?}.");
+
+	let mut counter = retries_num;
+	loop {
+		trace!("try: {}/{retries_num}", retries_num - counter);
+		match f() {
+			Ok(r) => return Ok(r),
+			Err(e) => {
+				counter -= 1;
+				if counter == 0 {
+					return Err(e.into());
+				}
+				std::thread::sleep(iteration);
+			},
+		}
+	}
+}

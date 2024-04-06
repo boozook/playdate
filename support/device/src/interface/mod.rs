@@ -65,7 +65,6 @@ impl r#async::In for Interface
 	where crate::usb::Interface: r#async::In,
 	      crate::serial::Interface: r#async::In
 {
-	// type Error = Error;
 }
 
 
@@ -79,6 +78,4 @@ impl blocking::Out for Interface {
 	}
 }
 
-impl blocking::In for Interface {
-	// type Error = crate::error::Error;
-}
+impl blocking::In for Interface {}

@@ -1,6 +1,6 @@
 [package]
 name = "playdate-device"
-version = "0.2.2"
+version = "0.2.3"
 readme = "README.md"
 description = "Cross-platform interface Playdate device, async & blocking."
 keywords = ["playdate", "usb", "serial"]

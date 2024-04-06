@@ -189,7 +189,7 @@ fn execute(config: &Config) -> CargoResult<()> {
 					                           .map(|m| m.device.value.as_ref())
 					                           .flatten()
 					{
-						format!("on the '{}'", query.to_printable_string()).into()
+						format!("on the '{}'", query.to_value_string()).into()
 					} else {
 						"on a device".into()
 					}
