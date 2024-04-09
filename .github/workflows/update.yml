@@ -249,7 +249,7 @@ jobs:
         uses: EndBug/add-and-commit@v9
         with:
           add: ./api/sys/gen/*.rs
-          author_name: Alex Koz
+          author_name: Update Bot
           author_email: boozook@users.noreply.github.com
           committer_name: Update Workflow
           message: Automated build pre-built bindings
@@ -291,7 +291,7 @@ jobs:
         uses: EndBug/add-and-commit@v9.1.4
         with:
           add: ./api/sys/Cargo.toml
-          author_name: Alex Koz
+          author_name: Bump Bot
           author_email: boozook@users.noreply.github.com
           committer_name: Bump sys version
           message: Automated bump sys crate version
