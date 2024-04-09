@@ -2,6 +2,16 @@ name: Auto-merge
 on:
   pull_request_target:
     types: ready_for_review
+  workflow_call:
+    inputs:
+      pr:
+        description: "Pull Request number"
+        type: number
+        required: true
+      url:
+        description: "Pull Request URL (HTML, not API)"
+        type: string
+        required: false
 
 permissions:
   contents: write
@@ -11,7 +21,7 @@ jobs:
   approve:
     continue-on-error: true
     runs-on: ubuntu-latest
-    if: ${{ github.actor_id == github.repository_owner_id }}
+    if: ${{ github.actor_id == github.repository_owner_id || inputs.pr }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -38,7 +48,7 @@ jobs:
             }
           }'
 
-          ISSUES=$(gh api graphql -f query="$QUERY" -F prNumber=${{ github.event.pull_request.number }} -F repositoryName=${{ github.event.repository.name }} -F repositoryOwner=${{ github.event.repository.owner.login }} -q '.data.repository.pullRequest.closingIssuesReferences.nodes[] | .number')
+          ISSUES=$(gh api graphql -f query="$QUERY" -F prNumber=${{ github.event.pull_request.number || inputs.pr }} -F repositoryName=${{ github.event.repository.name }} -F repositoryOwner=${{ github.event.repository.owner.login }} -q '.data.repository.pullRequest.closingIssuesReferences.nodes[] | .number')
 
           echo "num=$ISSUES" >> "$GITHUB_OUTPUT"
           if [ -z "$ISSUES" ]
@@ -52,9 +62,10 @@ jobs:
       # better criteria is "is this PR have only one issue and it authored by author of this PR?"
 
       - name: Approve
+        continue-on-error: true
         # if there is no requested reviewers specified  and  PR don't have any linked issue's:
         if: success() && steps.reviewers.outputs.value == '0'
-        run: gh pr review --approve "${{ github.event.pull_request.html_url }}"
+        run: gh pr review --approve "${{ github.event.pull_request.html_url || inputs.url || inputs.pr }}"
 
       - name: Auto-merge
         # only if no linked issue:
@@ -62,4 +73,4 @@ jobs:
         run: >-
           gh pr merge --auto
           --${{ github.event.pull_request.commits > 1 && 'squash' || 'merge' }}
-          "${{ github.event.pull_request.html_url }}"
+          "${{ github.event.pull_request.html_url || inputs.url || inputs.pr }}"
