@@ -160,9 +160,8 @@ jobs:
       matrix:
         os:
           - macos-14
-          # - macos-latest
           - ubuntu-latest
-          - windows-latest
+          # - windows-latest
         sdk:
           - ${{ github.event.inputs.sdk || 'latest' }}
         features:
@@ -306,7 +305,7 @@ jobs:
 
   pr:
     name: Make PR
-    needs: [new-branch, pre-gen, pre-gen-arm]
+    needs: [new-branch, pre-gen, pre-gen-arm, bump]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -333,7 +332,7 @@ jobs:
           PULL_REQUEST_TITLE: Update pre-built bindings
           PULL_REQUEST_BODY: |
             - [x] Pre-built bindings just updated.
-            - [ ] Bump sys crate
+            - [${{ needs.bump.result == 'success' && 'x' || ' ' }}] Bump sys crate
           PULL_REQUEST_IS_DRAFT: false
           CONTENT_COMPARISON: true
           REVIEWERS: '["boozook"]'
