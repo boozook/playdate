@@ -161,7 +161,7 @@ jobs:
         os:
           - macos-14
           - ubuntu-latest
-          # - windows-latest
+          - windows-latest
         sdk:
           - ${{ github.event.inputs.sdk || 'latest' }}
         features:
@@ -244,6 +244,7 @@ jobs:
           cargo build -p=playdate-sys --features="lang-items ${{ matrix.features.v }}" --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc --release
 
       - name: Commit
+        continue-on-error: true
         id: commit
         uses: EndBug/add-and-commit@v9
         with:
