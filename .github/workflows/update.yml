@@ -366,4 +366,4 @@ jobs:
       pull-requests: write
     with:
       pr: ${{ fromJSON(needs.pr.outputs.number) }}
-      url: ${{ needs.pr.outputs.url }}
+      # url: ${{ needs.pr.outputs.url }} <- API URL
