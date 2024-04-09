@@ -62,6 +62,7 @@ jobs:
       # better criteria is "is this PR have only one issue and it authored by author of this PR?"
 
       - name: Approve
+        continue-on-error: true
         # if there is no requested reviewers specified  and  PR don't have any linked issue's:
         if: success() && steps.reviewers.outputs.value == '0'
         run: gh pr review --approve "${{ github.event.pull_request.html_url || inputs.url || inputs.pr }}"
