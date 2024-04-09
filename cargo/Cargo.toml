@@ -93,3 +93,7 @@ rand = "0.8"
 
 [target.'cfg(unix)'.dev-dependencies]
 nix = { version = "0.28", features = ["signal"] }
+
+
+[features]
+eject = ["device/eject"] # windows only, enable one more unmount method
