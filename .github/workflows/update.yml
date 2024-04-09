@@ -354,16 +354,3 @@ jobs:
       pull-requests: write
     with:
       ref: ${{ needs.new-branch.outputs.working }}
-
-  approve:
-    name: Approve
-    needs: [tests, bump, pr]
-    if: needs.bump.result == 'success' && needs.tests.result == 'success'
-    uses: ./.github/workflows/auto-merge.yml
-    secrets: inherit
-    permissions:
-      contents: write
-      pull-requests: write
-    with:
-      pr: ${{ fromJSON(needs.pr.outputs.number) }}
-      # url: ${{ needs.pr.outputs.url }} <- API URL
