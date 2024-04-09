@@ -8,7 +8,6 @@ use clap::{Arg, ArgAction, value_parser, Args};
 use clap::Command;
 use playdate::consts::{SDK_ENV_VAR, DEVICE_TARGET};
 use playdate::toolchain::gcc::ARM_GCC_PATH_ENV_VAR;
-// use tool::cli::mount::Mount;
 
 
 use super::{Cmd, CMD_NAME, BIN_NAME};
