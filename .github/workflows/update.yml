@@ -159,9 +159,8 @@ jobs:
       matrix:
         os:
           - macos-14
-          # - macos-latest
           - ubuntu-latest
-          # - windows-latest
+          - windows-latest
         sdk:
           - ${{ github.event.inputs.sdk || 'latest' }}
         features:
@@ -244,11 +243,12 @@ jobs:
           cargo build -p=playdate-sys --features="lang-items ${{ matrix.features.v }}" --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc --release
 
       - name: Commit
+        continue-on-error: true
         id: commit
         uses: EndBug/add-and-commit@v9
         with:
           add: ./api/sys/gen/*.rs
-          author_name: Alex Koz
+          author_name: Update Bot
           author_email: boozook@users.noreply.github.com
           committer_name: Update Workflow
           message: Automated build pre-built bindings
@@ -290,7 +290,7 @@ jobs:
         uses: EndBug/add-and-commit@v9.1.4
         with:
           add: ./api/sys/Cargo.toml
-          author_name: Alex Koz
+          author_name: Bump Bot
           author_email: boozook@users.noreply.github.com
           committer_name: Bump sys version
           message: Automated bump sys crate version
@@ -305,7 +305,7 @@ jobs:
 
   pr:
     name: Make PR
-    needs: [new-branch, pre-gen, pre-gen-arm]
+    needs: [new-branch, pre-gen, pre-gen-arm, bump, tests]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -324,6 +324,7 @@ jobs:
           ref: ${{ needs.new-branch.outputs.working }}
 
       - name: Create PR
+        id: pr
         uses: TreTuna/sync-branches@1.4.0
         with:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -332,12 +333,23 @@ jobs:
           PULL_REQUEST_TITLE: Update pre-built bindings
           PULL_REQUEST_BODY: |
             - [x] Pre-built bindings just updated.
-            - [ ] Bump sys crate
+            - [${{ needs.bump.result == 'success' && 'x' || ' ' }}] Bump sys crate
+            - [${{ needs.tests.result == 'success' && 'x' || ' ' }}] Tests passed
           PULL_REQUEST_IS_DRAFT: false
           CONTENT_COMPARISON: true
           REVIEWERS: '["boozook"]'
+    outputs:
+      number: ${{ steps.pr.outputs.PULL_REQUEST_NUMBER }}
+      url: ${{ steps.pr.outputs.PULL_REQUEST_URL }}
+
   tests:
     name: Tests
     needs: [new-branch, pre-gen, pre-gen-arm]
     uses: ./.github/workflows/tests.yml
     secrets: inherit
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    with:
+      ref: ${{ needs.new-branch.outputs.working }}
