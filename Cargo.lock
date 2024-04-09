@@ -710,7 +710,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-playdate"
-version = "0.4.0-beta.2"
+version = "0.4.0-beta.3"
 dependencies = [
  "anstyle",
  "anyhow",
@@ -3849,7 +3849,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-device"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "async-std",
  "clap",

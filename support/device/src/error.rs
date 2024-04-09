@@ -108,7 +108,7 @@ pub enum Error {
 	DeviceSerial {
 		#[backtrace]
 		#[from]
-		source: crate::device::serial::DeviceSerialFormatError,
+		source: crate::device::serial::error::SerialNumberFormatError,
 	},
 
 	#[error(transparent)]

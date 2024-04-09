@@ -312,7 +312,7 @@ async fn wait_mount_point<T>(dev: Device, retry: Retries<T>) -> Result<MountedDe
 
 
 #[cfg_attr(feature = "tracing", tracing::instrument())]
-pub async fn unmount(query: Query) -> Result<Unordered<impl Future<Output = (Device, Result)>>> {
+pub async fn unmount(query: Query) -> Result<impl Stream<Item = (Device, Result)>> {
 	match query.value {
 		Some(QueryValue::Path(path)) => {
 			// TODO: Check query is path and this is mounted volume.
@@ -324,7 +324,15 @@ pub async fn unmount(query: Query) -> Result<Unordered<impl Future<Output = (Dev
 		Some(QueryValue::Com(_)) => todo!("ERROR: not supported (impossible)"),
 		Some(QueryValue::Serial(sn)) => unmount_mb_sn(Some(sn)),
 		_ => unmount_mb_sn(None),
-	}.await
+	}.map_ok(|stream| {
+		stream.inspect(|(dev, res)| {
+			      if let Some(err) = res.as_ref().err() {
+				      error!("{dev}: {err}");
+				      warn!("Please press 'A' on the Playdate to exit Data Disk mode.");
+			      }
+		      })
+	})
+	.await
 }
 
 /// Unmount device(s), then wait for state change to [`Data`][usb::mode::Mode::Data].

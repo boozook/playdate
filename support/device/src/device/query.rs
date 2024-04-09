@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use super::serial::SerialNumber;
+use self::error::DeviceQueryError as Error;
 
 
 pub const DEVICE_SERIAL_ENV: &str = "PLAYDATE_SERIAL_DEVICE";
@@ -76,26 +77,20 @@ pub enum Value {
 	Com(u16),
 }
 
-type ParseError = <SerialNumber as FromStr>::Err;
 impl FromStr for Value {
-	type Err = crate::error::Error;
+	type Err = Error;
 
 	fn from_str(dev: &str) -> Result<Self, Self::Err> {
 		let name = dev.trim();
 		if name.is_empty() {
-			return Err(ParseError::from(name).into());
+			return Err(error::ParseError::from(name).into());
 		}
 
 		#[cfg(windows)]
 		match name.strip_prefix("COM").map(|s| s.parse::<u16>()) {
 			Some(Ok(com)) => return Ok(Value::Com(com)),
 			Some(Err(err)) => {
-				use std::io::{Error, ErrorKind};
-
-				return Err(Error::new(
-					ErrorKind::InvalidInput,
-					format!("Invalid format, seems to COM port, but {err}."),
-				).into());
+				return Err(Error::invalid(format!("Invalid format, seems to COM port, but {err}.")));
 			},
 			None => { /* nothing there */ },
 		}
@@ -124,16 +119,52 @@ impl FromStr for Value {
 }
 
 impl<'s> TryFrom<&'s str> for Value {
-	type Error = crate::error::Error;
+	type Error = Error;
 	fn try_from(dev: &'s str) -> Result<Self, Self::Error> { Self::from_str(dev) }
 }
 
 impl Value {
-	pub fn to_printable_string(&self) -> String {
+	pub fn to_value_string(&self) -> String {
 		match self {
 			Self::Serial(sn) => sn.to_string(),
 			Self::Path(p) => p.display().to_string(),
 			Self::Com(n) => format!("COM{n}"),
+		}
+	}
+}
+
+
+pub mod error {
+	use std::backtrace::Backtrace;
+	use std::str::FromStr;
+	use thiserror::Error;
+	use miette::Diagnostic;
+
+	pub type ParseError = <super::SerialNumber as FromStr>::Err;
+
+
+	#[derive(Error, Debug, Diagnostic)]
+	pub enum DeviceQueryError {
+		#[error(transparent)]
+		#[diagnostic(transparent)]
+		DeviceSerial {
+			#[backtrace]
+			#[from]
+			source: ParseError,
+		},
+
+		#[error("Invalid query format: {message}")]
+		Invalid {
+			message: String,
+			#[backtrace]
+			backtrace: Backtrace,
+		},
+	}
+
+	impl DeviceQueryError {
+		pub fn invalid(message: String) -> Self {
+			Self::Invalid { message,
+			                backtrace: Backtrace::capture() }
 		}
 	}
 }

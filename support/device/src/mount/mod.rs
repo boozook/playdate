@@ -21,9 +21,6 @@ mod methods;
 pub use methods::*;
 
 
-// TODO: If unmount fails, do warn!("Please press 'A' on the Playdate to exit Data Disk mode.")
-
-
 // TODO: MountError for this module
 
 

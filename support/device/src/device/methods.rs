@@ -49,7 +49,7 @@ pub async fn wait_mode_change(mut dev: Device, to: Mode, retry: Retries<impl Ite
 		);
 
 		if mode == to {
-			dev.info().serial_number().map(|s| trace!("{s} is in {to} mode."));
+			trace!("{dev} is in {to} mode.");
 			return Ok(dev);
 		}
 

@@ -37,9 +37,9 @@ impl SerialNumber {
 }
 
 impl FromStr for SerialNumber {
-	type Err = DeviceSerialFormatError;
+	type Err = error::SerialNumberFormatError;
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Self::contained_in(s).ok_or_else(|| DeviceSerialFormatError::from(s))
+		Self::contained_in(s).ok_or_else(|| error::SerialNumberFormatError::from(s))
 	}
 }
 
@@ -82,30 +82,33 @@ impl std::fmt::Display for SerialNumber {
 }
 
 
-use std::backtrace::Backtrace;
-use thiserror::Error;
-use miette::Diagnostic;
+pub mod error {
+
+	use std::backtrace::Backtrace;
+	use thiserror::Error;
+	use miette::Diagnostic;
 
 
-#[derive(Error, Debug, Diagnostic)]
-#[error("Invalid serial number: {value}, expected format: PDUN-XNNNNNN.")]
-pub struct DeviceSerialFormatError {
-	pub value: String,
-	#[backtrace]
-	backtrace: Backtrace,
-}
-
-impl DeviceSerialFormatError {
-	fn new(value: String) -> Self {
-		Self { value,
-		       backtrace: Backtrace::capture() }
+	#[derive(Error, Debug, Diagnostic)]
+	#[error("invalid serial number `{value}`, expected format `PDUN-XNNNNNN`.")]
+	pub struct SerialNumberFormatError {
+		pub value: String,
+		#[backtrace]
+		backtrace: Backtrace,
 	}
-}
 
-impl From<String> for DeviceSerialFormatError {
-	fn from(value: String) -> Self { Self::new(value) }
-}
+	impl SerialNumberFormatError {
+		fn new(value: String) -> Self {
+			Self { value,
+			       backtrace: Backtrace::capture() }
+		}
+	}
 
-impl From<&str> for DeviceSerialFormatError {
-	fn from(value: &str) -> Self { Self::new(value.to_owned()) }
+	impl From<String> for SerialNumberFormatError {
+		fn from(value: String) -> Self { Self::new(value) }
+	}
+
+	impl From<&str> for SerialNumberFormatError {
+		fn from(value: &str) -> Self { Self::new(value.to_owned()) }
+	}
 }

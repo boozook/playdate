@@ -370,6 +370,7 @@ jobs:
         run: cargo fmt --all
 
       - name: Suggest Changes
+        continue-on-error: true
         if: success() && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
         # https://docs.github.com/en/rest/pulls/reviews?apiVersion=2022-11-28#create-a-review-for-a-pull-request
         uses: parkerbxyz/suggest-changes@v1
