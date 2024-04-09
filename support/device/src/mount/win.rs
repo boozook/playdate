@@ -158,7 +158,7 @@ pub async fn volume_for(dev: &Device) -> Result<Volume, Error> {
 	}
 
 	let sn = dev.info().serial_number().ok_or_else(|| {
-		Error::DeviceSerial { source: crate::device::serial::error::DeviceSerialFormatError::from("missed sn") }
+		Error::DeviceSerial { source: crate::device::serial::error::SerialNumberFormatError::from("missed sn") }
 	})?;
 	let sn = SerialNumber::try_from(sn)?;
 	let dev_addr = dev.info().device_address() as u32;
