@@ -306,7 +306,7 @@ jobs:
 
   pr:
     name: Make PR
-    needs: [new-branch, pre-gen, pre-gen-arm, bump]
+    needs: [new-branch, pre-gen, pre-gen-arm, bump, tests]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -325,6 +325,7 @@ jobs:
           ref: ${{ needs.new-branch.outputs.working }}
 
       - name: Create PR
+        id: pr
         uses: TreTuna/sync-branches@1.4.0
         with:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -334,9 +335,14 @@ jobs:
           PULL_REQUEST_BODY: |
             - [x] Pre-built bindings just updated.
             - [${{ needs.bump.result == 'success' && 'x' || ' ' }}] Bump sys crate
+            - [${{ needs.tests.result == 'success' && 'x' || ' ' }}] Tests passed
           PULL_REQUEST_IS_DRAFT: false
           CONTENT_COMPARISON: true
           REVIEWERS: '["boozook"]'
+    outputs:
+      number: ${{ steps.pr.outputs.PULL_REQUEST_NUMBER }}
+      url: ${{ steps.pr.outputs.PULL_REQUEST_URL }}
+
   tests:
     name: Tests
     needs: [new-branch, pre-gen, pre-gen-arm]
@@ -346,3 +352,18 @@ jobs:
       actions: read
       contents: read
       pull-requests: write
+    with:
+      ref: ${{ needs.new-branch.outputs.working }}
+
+  approve:
+    name: Approve
+    needs: [tests, bump, pr]
+    if: needs.bump.result == 'success' && needs.tests.result == 'success'
+    uses: ./.github/workflows/auto-merge.yml
+    secrets: inherit
+    permissions:
+      contents: write
+      pull-requests: write
+    with:
+      pr: ${{ needs.pr.outputs.number }}
+      url: ${{ needs.pr.outputs.url }}

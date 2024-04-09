@@ -1,6 +1,11 @@
 name: Tests
 on:
   workflow_call:
+    inputs:
+      ref:
+        description: git branch, tag or SHA to checkout.
+        type: string
+        required: true
   pull_request:
   push:
     branches: [main, master]
@@ -57,6 +62,8 @@ jobs:
     steps:
       - run: arch
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Cache
         uses: actions/cache@v4
@@ -157,6 +164,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Cache
         uses: actions/cache@v4
@@ -210,6 +219,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Cache
         uses: actions/cache@v4
@@ -290,6 +301,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Cache
         uses: actions/cache@v4
@@ -356,6 +369,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Check
         id: check
