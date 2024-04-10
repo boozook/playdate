@@ -84,10 +84,15 @@ jobs:
           CRATES: ${{ steps.publisher.outputs.published }}
         run: |
           MESSAGE=$(echo $CRATES | jq -r 'if length == 1 then "Crate updated: \(.[0].name) v\(.[0].version)" else ("Crates updated:"), (to_entries[] | "\(.key + 1). \(.value.name): v\(.value.version)") end')
+          echo "$MESSAGE"
+
+          # Replace \n->\n is really nessessary! This encodes string to json string.
+          MESSAGE="\"${MESSAGE//$'\n'/'\n'}\""
+          echo "encoded: $MESSAGE"
+
           echo "value<<EOF" >> $GITHUB_OUTPUT
           echo $MESSAGE >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-          echo "$MESSAGE"
 
     outputs:
       published: ${{ steps.publisher.outputs.published }}
@@ -100,4 +105,4 @@ jobs:
     uses: ./.github/workflows/post.yml
     secrets: inherit
     with:
-      message: "${{ needs.crates-io.outputs.message }}"
+      message: ${{ needs.crates-io.outputs.message }}
