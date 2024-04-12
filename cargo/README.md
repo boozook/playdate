@@ -1,8 +1,8 @@
 # Build System for Playdate applications
 
-Cargo-playdate is a plugin for cargo that can build programs for [Playdate handheld gaming system](https://play.date) written in Rust.
+Cargo-playdate is a cross-platform plugin for cargo that can build programs for [Playdate handheld gaming system](https://play.date) written in Rust. It also works as standalone tool.
 
-It can build programs written in Rust, manage assets, build package for Playdate and run in sim or install and run on device.
+It can build programs written in Rust, manage assets, build package for Playdate and run on sim or device.
 Usually it builds static or dynamic libraries for sim and hardware,
 but also it can build executable binaries for hardware and this method produces highly optimized output with dramatically minimized size (thanks to DCE & LTO).
 _\* But for binaries you're need also patched pdc from [dev-forum][]._
@@ -11,31 +11,25 @@ _\* But for binaries you're need also patched pdc from [dev-forum][]._
 [dev-forum]: https://devforum.play.date/t/sdk-2-0-b2-pdc-produces-pdx-with-broken-binary/11345/28
 
 
-### Status
-
-Currently tested and works good on following platforms:
-- Unix (x86-64 and aarch64)
-  - macos 👍
-  - linux 👍
-- Windows (x86-64 and aarch64)
-  - build 👍
-  - package 👍
-  - install & run ⚠️ - issues, work in progress, see [troubleshooting](#troubleshooting).
-
-
 ## Prerequisites
 
-To build cargo-playdate you're need:
+To build `cargo-playdate` you're need:
 1. Rust __nightly__ toolchain
-2. Probably `libusb` and `pkg-config` or `vcpkg`, follow [instructions for rusb crate][rusb].
 
-To build programs using cargo-playdate you need:
+To build programs using `cargo-playdate` you need:
 1. Rust __nightly__ toolchain
-2. [Playdate SDK][sdk]
+1. [Playdate SDK][sdk]
    - Ensure that env var `PLAYDATE_SDK_PATH` points to the SDK root
-3. Follow the [official documentation][doc-prerequisites]
+1. Follow the [official documentation][doc-prerequisites]
    - Ensure that `arm-none-eabi-gcc` or `gcc-arm-none-eabi` in your `PATH`
-4. This tool.
+
+ <!-- TODO: Make gcc optional -->
+
+To run on sim or dev with `cargo-playdate`:
+1. Linux only:
+  - `libudev`, follow [instructions for udev crate][udev-crate-deps].
+2. Windows only:
+  - `powershell` (used as fallback)
 
 [sdk]: https://play.date/dev/#cardSDK
 [doc-prerequisites]: https://sdk.play.date/Inside%20Playdate%20with%20C.html#_prerequisites
@@ -109,13 +103,15 @@ path = "examples/demo.rs"
 ```
 
 
-3. Assets especially for `example` cargo-targets inherits from package assets. Currently there's no way to set assets for single cargo-target, but only for entire package. WiP, there will be "dev-assets" extra table inherited by main.
+3. Assets especially for `example` cargo-targets inherits from package assets. Currently there's no way to set assets for single cargo-target, but only for entire package __or for dev-targets__ - [there is `dev-assets` extra table][dev-assets-doc] inherited by main.
 
+
+[dev-assets-doc]: https://github.com/boozook/playdate/tree/main/support/build#dev-assets
 
 
 ## Troubleshooting
 
-* Is some cases (see [status](#status)) hardware cannot be detected. Try to build cargo-playdate with or without feature `usb`.
+* On windows in some cases hardware cannot be ejected because of no permissions. Try to give rights and/or build `cargo-playdate` with feature `eject`.
 
 * Welcome to [discussions](https://github.com/boozook/playdate/discussions) and [issues](https://github.com/boozook/playdate/issues).
 
