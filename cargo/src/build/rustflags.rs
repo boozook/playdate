@@ -5,10 +5,11 @@ use std::ops::Add;
 use anyhow::Context;
 use cargo::core::compiler::CompileKind;
 use cargo::core::compiler::CompileTarget;
-use cargo::util;
+use cargo::util::Filesystem;
 use playdate::compile::RUSTFLAGS_BIN_PLAYDATE;
 use playdate::compile::RUSTFLAGS_LIB_HOST;
 use playdate::compile::RUSTFLAGS_LIB_PLAYDATE;
+use playdate::compile::LINK_MAP_BIN_SRC;
 use playdate::consts::DEVICE_TARGET;
 
 use crate::config::Config;
@@ -54,12 +55,12 @@ impl Rustflags {
 				                       .config()
 				                       .target_dir()
 				                       .unwrap_or_default()
-				                       .unwrap_or_else(|| util::Filesystem::new("target".into()))
+				                       .unwrap_or_else(|| Filesystem::new("target".into()))
 				                       .into_path_unlocked()
 				                       .canonicalize()?;
 				let map = target_dir.join("pd.x");
 				if !map.exists() {
-					std::fs::write(&map, build::compile::LINK_MAP_BIN_SRC)?;
+					std::fs::write(&map, LINK_MAP_BIN_SRC)?;
 				}
 				let link_map = format!("-Clink-arg=-T{}", map.display());
 				Self::rustflags_bin_playdate().into_iter()
