@@ -6,6 +6,7 @@ use cargo::util::command_prelude::{CommandExt, flag, opt, multi_opt};
 use clap::builder::{Str, ArgPredicate};
 use clap::{Arg, ArgAction, value_parser, Args};
 use clap::Command;
+use device::device::query::DEVICE_SERIAL_ENV;
 use playdate::consts::{SDK_ENV_VAR, DEVICE_TARGET};
 use playdate::toolchain::gcc::ARM_GCC_PATH_ENV_VAR;
 
@@ -237,7 +238,27 @@ pub struct Mount {
 
 fn mount() -> Vec<Arg> {
 	let mount: Command =
-		Mount::augment_args(Command::new("mount")).mut_arg("device", |arg| arg.long("device").num_args(0..=1));
+		Mount::augment_args(Command::new("mount")).mut_arg("device", |arg| {
+			                                          let env = std::env::var_os(DEVICE_SERIAL_ENV);
+			                                          let arg = arg.long("device").num_args(0..=1);
+			                                          if let Some(value) = env {
+				                                          let help_env = {
+					                                          let s = value.to_string_lossy();
+					                                          format!("[env: {DEVICE_SERIAL_ENV}={s}]",)
+				                                          };
+
+				                                          let help_arg = {
+					                                          let help = arg.get_help().unwrap_or_default();
+					                                          format!("{help} {help_env}")
+				                                          };
+				                                          arg.env(format!("{DEVICE_SERIAL_ENV}_SET"))
+				                                             .hide_env(true)
+				                                             .default_missing_value(value)
+				                                             .help(help_arg)
+			                                          } else {
+				                                          arg
+			                                          }
+		                                          });
 	mount.get_arguments()
 	     .cloned()
 	     .map(|arg| arg.group("mounting"))
