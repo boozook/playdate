@@ -4,7 +4,7 @@
 
 
 /// Do not forget
-/// - fist positional - artifact path
+/// - first positional - artifact path
 /// - _this args_
 /// - output path `-o`
 pub const GCC_ARGS_LIB: &[&str] = &["-nostartfiles",
@@ -41,12 +41,15 @@ pub const RUSTFLAGS_BIN_PLAYDATE: &[&str] = &["-Ctarget-cpu=cortex-m7",
                                               "-Clink-arg=--gc-sections",
                                               "-Clink-arg=--entry=eventHandlerShim"];
 
-
+/// Bin that we giving to PDC.
 pub const PDX_BIN_NAME_ELF: &str = "pdex.elf";
+/// Bin that is product of PDC.
 pub const PDX_BIN_NAME_BIN: &str = "pdex.bin";
 /// File-stem for bin, elf, and dylib files.
 pub const PDX_BIN_NAME_STEM: &str = "pdex";
+/// Extension of Playdate package (dir).
 pub const PDX_PKG_EXT: &str = "pdx";
+/// Playdate package manifest filename.
 pub const PDX_PKG_MANIFEST_FILENAME: &str = "pdxinfo";
 
 
@@ -88,3 +91,13 @@ pub fn dylib_suffix_for_opt(target_family: &str, target_os: &str) -> Option<&'st
 }
 
 pub const fn static_lib_suffix() -> &'static str { "a" }
+
+
+/// Compile-time path to the linker-script [LINK_MAP_BIN_SRC].
+/// __Do note resolve, it contains file as dir.__
+/// Path is relative to crate root by default, it depends on your rustc configuration.
+pub const LINK_MAP_BIN_PATH: &str = concat!(file!(), "/../", "layout.x");
+
+/// Linker-script for elf that built with rustc,
+/// without arm-gcc and its std lib.
+pub const LINK_MAP_BIN_SRC: &str = include_str!("layout.x");

@@ -4,11 +4,10 @@ Cargo-playdate is a cross-platform plugin for cargo that can build programs for 
 
 It can build programs written in Rust, manage assets, build package for Playdate and run on sim or device.
 Usually it builds static or dynamic libraries for sim and hardware,
-but also it can build executable binaries for hardware and this method produces highly optimized output with dramatically minimized size (thanks to DCE & LTO).
-_\* But for binaries you're need also patched pdc from [dev-forum][]._
+but also it can build executable binaries for hardware and this method produces highly optimized output with dramatically minimized size (thanks to DCE & LTO)\*.
 
+\* For executable binaries use `--no-gcc` argument._
 
-[dev-forum]: https://devforum.play.date/t/sdk-2-0-b2-pdc-produces-pdx-with-broken-binary/11345/28
 
 
 ## Prerequisites
@@ -28,7 +27,7 @@ To build programs using `cargo-playdate` you need:
 To run on sim or dev with `cargo-playdate`:
 1. Linux only:
   - `libudev`, follow [instructions for udev crate][udev-crate-deps].
-2. Windows only:
+1. Windows only:
   - `powershell` (used as fallback)
 
 [sdk]: https://play.date/dev/#cardSDK
@@ -39,6 +38,8 @@ To run on sim or dev with `cargo-playdate`:
 ## Installation
 
 ```bash
+cargo install cargo-playdate
+# or
 cargo install --git="https://github.com/boozook/playdate.git" --bin=cargo-playdate
 ```
 
