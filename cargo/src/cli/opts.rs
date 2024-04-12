@@ -17,27 +17,27 @@ use super::target::PlaydateTarget;
 
 pub fn special_args_global() -> Vec<Arg> {
 	vec![
-	     Arg::new("sdk").help("Path to Playdate SDK")
-	                    .long("sdk")
-	                    .env(SDK_ENV_VAR)
-	                    .conflicts_with("no-sdk")
-	                    .value_name("DIRECTORY")
-	                    .value_hint(clap::ValueHint::DirPath)
-	                    .value_parser(clap::builder::ValueParser::path_buf())
-	                    .num_args(1)
-	                    .global(true),
-	     Arg::new("gcc").help("Path to GCC in ARM GNU toolchain, usually named 'arm-none-eabi-gcc'.")
-	                    .long("gcc")
-	                    .env(ARM_GCC_PATH_ENV_VAR)
-	                    .conflicts_with("no-gcc")
-	                    .value_name("EXECUTABLE")
-	                    .value_parser(clap::builder::ValueParser::path_buf())
-	                    .num_args(1)
-	                    .global(true),
-	     // XXX: no-sdk & no-gcc are hidden because not supported yet:
-	     flag("no-sdk", "Do not use Playdate SDK").global(true).hide(true),
-	     flag("no-gcc", "Do not use ARM GNU toolchain, but Rust & LLVM only.").global(true)
-	                                                                          .hide(true)
+		  Arg::new("sdk").help("Path to Playdate SDK")
+							  .long("sdk")
+							  .env(SDK_ENV_VAR)
+							  .conflicts_with("no-sdk")
+							  .value_name("DIRECTORY")
+							  .value_hint(clap::ValueHint::DirPath)
+							  .value_parser(clap::builder::ValueParser::path_buf())
+							  .num_args(1)
+							  .global(true),
+		  Arg::new("gcc").help("Path to GCC in ARM GNU toolchain, usually named 'arm-none-eabi-gcc'.")
+							  .long("gcc")
+							  .env(ARM_GCC_PATH_ENV_VAR)
+							  .conflicts_with("no-gcc")
+							  .value_name("EXECUTABLE")
+							  .value_parser(clap::builder::ValueParser::path_buf())
+							  .num_args(1)
+							  .global(true),
+		  // XXX: no-sdk are hidden because not supported yet:
+		  flag("no-sdk", "Do not use Playdate SDK").global(true).hide(true),
+		  flag("no-gcc", "Do not use ARM GNU toolchain, but Rust only.").global(true)
+		  .long_help("Do not use ARM GNU toolchain, but Rust only. Only for executable bins for device target.")
 	]
 }
 
@@ -475,7 +475,8 @@ fn add_globals(cmd: Command) -> Command {
 		                             .alias("dir")
 		                             .short_alias('D')
 		                             .value_hint(clap::ValueHint::DirPath)
-		                             .value_parser(clap::builder::ValueParser::path_buf()))
+		                             .value_parser(clap::builder::ValueParser::os_string())
+										)
 		   .arg(flag("frozen", "Require Cargo.lock and cache are up to date").global(true))
 		   .arg(flag("locked", "Require Cargo.lock is up to date").global(true))
 		   .arg(flag("offline", "Run without accessing the network").global(true))

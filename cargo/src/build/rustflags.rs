@@ -5,6 +5,7 @@ use std::ops::Add;
 use anyhow::Context;
 use cargo::core::compiler::CompileKind;
 use cargo::core::compiler::CompileTarget;
+use cargo::util;
 use playdate::compile::RUSTFLAGS_BIN_PLAYDATE;
 use playdate::compile::RUSTFLAGS_LIB_HOST;
 use playdate::compile::RUSTFLAGS_LIB_PLAYDATE;
@@ -46,21 +47,43 @@ impl Rustflags {
 			let sdk = config.sdk()
 			                .log_err_cargo(config)
 			                .with_context(|| "Playdate Sdk needed to build binaries")?;
-			let arm = config.gcc()
-			                .log_err_cargo(config)
-			                .with_context(|| "ARM GNU toolchain needed to build binaries")?;
 
-			let link_map = format!("-Clink-arg=-T{}", sdk.build_support().link_map().display());
-			let lib_search_paths = arm.lib_search_paths_for_playdate()
-			                          .or_else(|_| arm.lib_search_paths_default())?;
-			Self::rustflags_bin_playdate().into_iter()
-			                              .map(|s| Cow::from(*s))
-			                              .chain([link_map.into()])
-			                              .chain(lib_search_paths.into_iter().map(|s| {
-				                              "-L".to_owned().add(s.to_string_lossy().as_ref()).into()
-			                              }))
-			                              .chain(prevent_unwinding().into_iter())
-			                              .collect()
+			if config.no_gcc {
+				// export LINK MAP:
+				let target_dir = config.workspace
+				                       .config()
+				                       .target_dir()
+				                       .unwrap_or_default()
+				                       .unwrap_or_else(|| util::Filesystem::new("target".into()))
+				                       .into_path_unlocked()
+				                       .canonicalize()?;
+				let map = target_dir.join("pd.x");
+				if !map.exists() {
+					std::fs::write(&map, build::compile::LINK_MAP_BIN_SRC)?;
+				}
+				let link_map = format!("-Clink-arg=-T{}", map.display());
+				Self::rustflags_bin_playdate().into_iter()
+				                              .map(|s| Cow::from(*s))
+				                              .chain([link_map.into()])
+				                              .chain(prevent_unwinding().into_iter())
+				                              .collect()
+			} else {
+				let arm = config.gcc()
+				                .log_err_cargo(config)
+				                .with_context(|| "ARM GNU toolchain needed to build binaries")?;
+
+				let link_map = format!("-Clink-arg=-T{}", sdk.build_support().link_map().display());
+				let lib_search_paths = arm.lib_search_paths_for_playdate()
+				                          .or_else(|_| arm.lib_search_paths_default())?;
+				Self::rustflags_bin_playdate().into_iter()
+				                              .map(|s| Cow::from(*s))
+				                              .chain([link_map.into()])
+				                              .chain(lib_search_paths.into_iter().map(|s| {
+					                              "-L".to_owned().add(s.to_string_lossy().as_ref()).into()
+				                              }))
+				                              .chain(prevent_unwinding().into_iter())
+				                              .collect()
+			}
 		};
 
 

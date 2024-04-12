@@ -2,7 +2,7 @@
 
 Mainly there are utils to find existing (means already installed) Playdate SDK and GNU-ARM toolchain.
 
-Also there are some constants such as hardcoded compilation flags.
+Also there are some constants such as hardcoded compilation flags and linker-script.
 
 
 
