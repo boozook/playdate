@@ -36,7 +36,7 @@ jobs:
         uses: cbrgm/mastodon-github-action@v2.0.6
         with:
           message: |
-            🦀 Rusty Playdate Updated!
+            🎉 Rusty Playdate Update!
 
             ${{ ((inputs.message && startsWith(inputs.message, '"') && endsWith(inputs.message, '"')) && fromJson(inputs.message) || inputs.message) || (github.event_name == 'release' && format('New {0} published: {1}', steps.words.outputs.release, github.event.release.name) || '') }}
 
