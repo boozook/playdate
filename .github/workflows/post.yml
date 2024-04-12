@@ -42,7 +42,7 @@ jobs:
 
             ${{ steps.url.outputs.value }}
 
-            #RustLang #playdate
+            #RustLang #Rust #Playdate
 
           language: "en"
           visibility: public # use `private` for tests
