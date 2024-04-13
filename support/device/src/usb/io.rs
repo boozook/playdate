@@ -35,7 +35,7 @@ pub fn read_interface(interface: &Interface,
 			   inp.submit(RequestBuffer::reuse(data, buf_size));
 			   Ok(s)
 		   })
-		   .map(|out| Some(out))
+		   .map(Some)
 	});
 
 	Ok(stream)
@@ -94,7 +94,7 @@ pub fn read_once(device: DeviceInfo) -> Result<(String, Interface), Error> {
 	let inter = device.claim_interface(1)?;
 
 	let stream = read_while_map(&inter, 256, 2, |data| {
-		             match std::str::from_utf8(&data) {
+		             match std::str::from_utf8(data) {
 			             Ok(s) => {
 			                if s.trim().is_empty() {
 				                None

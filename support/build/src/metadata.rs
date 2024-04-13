@@ -180,7 +180,7 @@ pub mod format {
 			self.options
 			    .assets
 			    .as_ref()
-			    .map_or_else(Default::default, |ao| Cow::Borrowed(ao))
+			    .map_or_else(Default::default, Cow::Borrowed)
 		}
 	}
 

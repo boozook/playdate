@@ -27,7 +27,7 @@ pub struct MountedDevicePathBorrowed<'dev> {
 }
 
 impl<'dev> MountedDevicePathBorrowed<'dev> {
-	pub fn drive(&self) -> &MountedDevice { &self.drive }
+	pub fn drive(&self) -> &MountedDevice { self.drive }
 
 	/// Local on-device path.
 	pub fn path_local(&self) -> &str { &self.path }

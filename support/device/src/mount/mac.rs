@@ -89,7 +89,7 @@ pub struct SpusbInfo<Fut>
 pub async fn volume_for<Info>(dev: Info) -> Result<Volume, Error>
 	where Info: AsRef<nusb::DeviceInfo> {
 	if let Some(sn) = dev.as_ref().serial_number() {
-		let res = spusb(move |ref info| info.serial_num == sn).map(|mut iter| iter.next().map(|info| info.volume));
+		let res = spusb(move |info| info.serial_num == sn).map(|mut iter| iter.next().map(|info| info.volume));
 		match res {
 			Ok(None) => Err(Error::not_found()),
 			Ok(Some(fut)) => Ok(fut),
@@ -106,11 +106,10 @@ pub async fn volumes_for_map<I>(devs: I) -> Result<HashMap<Device, Option<Volume
 	where I: IntoIterator<Item = Device> {
 	let mut devs = devs.into_iter()
 	                   .filter_map(|dev| {
-		                   if let Some(sn) = dev.info().serial_number().map(ToOwned::to_owned) {
-			                   Some((dev, sn))
-		                   } else {
-			                   None
-		                   }
+		                   dev.info()
+		                      .serial_number()
+		                      .map(ToOwned::to_owned)
+		                      .map(|sn| (dev, sn))
 	                   })
 	                   .collect::<Vec<_>>();
 
@@ -181,7 +180,7 @@ fn spusb<F>(filter: F)
 		                                  serial_num: serial,
 		                                  media,
 		                                  .. } = item;
-		                 let volume = media.map(|media| {
+		                 let volume = media.and_then(|media| {
 			                                   media.into_iter()
 			                                        .flat_map(|root| root.volumes.into_iter())
 			                                        .filter_map(|par| {
@@ -202,8 +201,7 @@ fn spusb<F>(filter: F)
 				                                        }
 			                                        })
 			                                        .next()
-		                                   })
-		                                   .flatten();
+		                                   });
 		                 volume.map(|volume| SpusbInfo { name, serial, volume })
 	                 });
 	Ok(result)

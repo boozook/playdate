@@ -120,7 +120,7 @@ impl Command {
 			Command::Version => "version".into(),
 			Command::Button { button } => format!("btn {}", button.as_btn_str()).into(),
 			Command::Message { message } => format!("msg {message}").into(),
-			Command::Custom { cmd } => format!("{cmd}").into(),
+			Command::Custom { cmd } => cmd.into(),
 		}
 	}
 }
@@ -163,9 +163,9 @@ impl From<bool> for Switch {
 	fn from(value: bool) -> Self { if value { Switch::On } else { Switch::Off } }
 }
 
-impl Into<bool> for Switch {
-	fn into(self) -> bool {
-		match self {
+impl From<Switch> for bool {
+	fn from(val: Switch) -> Self {
+		match val {
 			Switch::On => true,
 			Switch::Off => false,
 		}

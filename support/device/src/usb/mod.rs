@@ -194,17 +194,17 @@ impl Device {
 
 		let mut errors = Vec::new();
 		let port = {
-			crate::serial::discover::ports_for(&self).map(|ports| ports.map(|port| Interface::new(port)))?
-			                                         .find_map(|mut port| {
-				                                         // try to open port, we could get an permission error
-				                                         match port.open() {
-					                                         Ok(_) => Some(port),
-				                                            Err(err) => {
-					                                            errors.push(err);
-					                                            None
-				                                            },
-				                                         }
-			                                         })
+			crate::serial::discover::ports_for(self).map(|ports| ports.map(Interface::new))?
+			                                        .find_map(|mut port| {
+				                                        // try to open port, we could get an permission error
+				                                        match port.open() {
+					                                        Ok(_) => Some(port),
+				                                           Err(err) => {
+					                                           errors.push(err);
+					                                           None
+				                                           },
+				                                        }
+			                                        })
 		};
 
 		if let Some(port) = port {

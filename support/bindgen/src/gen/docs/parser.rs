@@ -65,16 +65,12 @@ fn walk(handle: &Handle, results: &mut DocsMap) {
 				let attrs = attrs.borrow();
 				let attr = attrs.iter()
 				                .find(|attr| attr.name.local == *"id" && attr.value.starts_with("f-"));
-				if let Some(attr) = attr {
-					Some(
-					     attr.value
-					         .strip_prefix("f-")
-					         .expect("prefix 'f-' must be there")
-					         .to_string(),
-					)
-				} else {
-					None
-				}
+				attr.map(|attr| {
+					    attr.value
+					        .strip_prefix("f-")
+					        .expect("prefix 'f-' must be there")
+					        .to_string()
+				    })
 			} else {
 				None
 			};
@@ -112,7 +108,7 @@ fn walk(handle: &Handle, results: &mut DocsMap) {
 								                    attrs: attrs.clone(),
 								                    template_contents: template_contents.clone(),
 								                    mathml_annotation_xml_integration_point:
-									                    mathml_annotation_xml_integration_point.clone() }.into()
+									                    *mathml_annotation_xml_integration_point }.into()
 							},
 							_ => None,
 						}
@@ -151,8 +147,8 @@ fn walk(handle: &Handle, results: &mut DocsMap) {
 		struct PreAsIsTagFactory;
 		impl TagHandlerFactory for PreAsIsTagFactory {
 			fn instantiate(&self) -> Box<dyn TagHandler> {
-				return Box::new(CodeHandler { lang: "cpp",
-				                              ..Default::default() });
+				Box::new(CodeHandler { lang: "cpp",
+				                       ..Default::default() })
 			}
 		}
 		// TODO:

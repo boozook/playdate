@@ -18,7 +18,7 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 #[cfg_attr(feature = "tracing", tracing::instrument)]
 pub fn devices() -> Result<impl Iterator<Item = Device>> {
 	Ok(nusb::list_devices()?.filter(|d| d.vendor_id() == VENDOR_ID)
-	                        .map(|info| Device::new(info)))
+	                        .map(Device::new))
 }
 
 /// Search Playdate- devices that in data (serial/modem/telnet) mode.

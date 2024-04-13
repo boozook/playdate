@@ -13,7 +13,7 @@ use self::err::Error;
 
 
 /// Env var name that points to the arm-gcc executable.
-pub const ARM_GCC_PATH_ENV_VAR: &'static str = "ARM_GCC_PATH";
+pub const ARM_GCC_PATH_ENV_VAR: &str = "ARM_GCC_PATH";
 
 /// Variants of the compile's name - actual and old.
 pub const ARM_NONE_EABI_GCC: &[&str] = &["arm-none-eabi-gcc", "gcc-arm-none-eabi"];
@@ -78,7 +78,7 @@ impl Gcc {
 			}
 		}
 
-		return Err(Error::Err("Could not find ARM GCC in PATH"));
+		Err(Error::Err("Could not find ARM GCC in PATH"))
 	}
 
 	/// Create new with executable name or path
@@ -98,7 +98,7 @@ impl Gcc {
 		{
 			let paths = ["/usr/local/bin/", "/usr/bin/"].into_iter()
 			                                            .map(Path::new)
-			                                            .flat_map(|p| ARM_NONE_EABI_GCC.into_iter().map(|name| p.join(name)))
+			                                            .flat_map(|p| ARM_NONE_EABI_GCC.iter().map(|name| p.join(name)))
 			                                            .filter(|p| p.try_exists().ok().unwrap_or_default());
 			for path in paths {
 				match Self::try_from_path(&path) {
@@ -108,20 +108,14 @@ impl Gcc {
 			}
 
 			// Not found, so err:
-			return Err(Error::Err("Could not find ARM toolchain in default paths"));
+			Err(Error::Err("Could not find ARM toolchain in default paths"))
 		}
 
 		#[cfg(windows)]
 		{
-			println!("TRY_FROM_DEFAULT_PATH:: WIN...");
 			let path =
 				PathBuf::from(r"C:\Program Files (x86)\GNU Tools Arm Embedded\9 2019-q4-major\bin\").join(ARM_NONE_EABI_GCC[0])
 				                                                                                    .with_extension("exe");
-			println!(
-			         "TRY_FROM_DEFAULT_PATH:: WIN:: {} - {}",
-			         path.exists(),
-			         path.display()
-			);
 			Self::try_from_path(path).map_err(|_| Error::Err("Could not find ARM toolchain in default paths"))
 		}
 	}
@@ -235,7 +229,7 @@ impl ArmToolchain {
 	pub fn lib_search_paths_default(&self) -> Result<Vec<PathBuf>, Error> {
 		match self.lib_search_paths_for::<&str, _>([]) {
 			Ok(paths) if !paths.is_empty() => Ok(paths),
-			Ok(_) | Err(_) => Ok(vec![self.gcc().sysroot().and_then(|p| Ok(p.join("lib")))?]),
+			Ok(_) | Err(_) => Ok(vec![self.gcc().sysroot().map(|p| p.join("lib"))?]),
 		}
 	}
 
@@ -324,16 +318,16 @@ pub mod err {
 				Error::Utf8(err) => err.fmt(f),
 				Error::Err(err) => err.fmt(f),
 				Error::ExitStatusError { cmd, status, stderr } => {
-					let stderr = std::str::from_utf8(&stderr).map(str::trim)
-					                                         .map(|s| format!("with output: {s}"))
-					                                         .ok()
-					                                         .unwrap_or_else(|| {
-						                                         if stderr.is_empty() {
-							                                         "without output".into()
-						                                         } else {
-							                                         "with not decodable output".into()
-						                                         }
-					                                         });
+					let stderr = std::str::from_utf8(stderr).map(str::trim)
+					                                        .map(|s| format!("with output: {s}"))
+					                                        .ok()
+					                                        .unwrap_or_else(|| {
+						                                        if stderr.is_empty() {
+							                                        "without output".into()
+						                                        } else {
+							                                        "with not decodable output".into()
+						                                        }
+					                                        });
 					write!(f, "ExitStatusError: ({status}) {cmd} {stderr}.",)
 				},
 			}

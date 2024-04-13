@@ -98,7 +98,7 @@ impl Generator {
 		let bindings = self.builder.generate()?;
 
 		#[cfg(not(feature = "extra-codegen"))]
-		return Ok(bindings).map(Bindings::Bindgen);
+		return Ok(Bindings::Bindgen(bindings));
 
 		#[cfg(feature = "extra-codegen")]
 		gen::engage(&bindings, &self.features, &self.sdk, None).map(Bindings::Engaged)
@@ -116,7 +116,7 @@ fn create_generator(cfg: cfg::Cfg) -> Result<Generator, error::Error> {
 
 	let sdk = cfg.sdk
 	             .map(|p| Sdk::try_new_exact(p).or_else(|_| Sdk::try_new()))
-	             .unwrap_or_else(|| Sdk::try_new())?;
+	             .unwrap_or_else(Sdk::try_new)?;
 	let version_path = sdk.version_file();
 	let version_raw = sdk.read_version()?;
 	let version = check_sdk_version(&version_raw)?;
@@ -135,13 +135,13 @@ fn create_generator(cfg: cfg::Cfg) -> Result<Generator, error::Error> {
 		             Gcc::try_from_path(p).and_then(ArmToolchain::try_new_with)
 		                                  .or_else(|_| ArmToolchain::try_new())
 	             })
-	             .unwrap_or_else(|| ArmToolchain::try_new())?;
+	             .unwrap_or_else(ArmToolchain::try_new)?;
 	let mut builder = create_builder(&cargo_target_triple, &sdk_c_api, &main_header, &cfg.derive);
 	builder = apply_profile(builder, is_debug);
 	builder = apply_target(builder, &cargo_target_triple, &gcc);
 
 
-	let filename = Filename::new(version.to_owned(), &cfg.derive)?;
+	let filename = Filename::new(version.to_owned(), cfg.derive)?;
 
 	Ok(Generator { sdk,
 	               gcc,
@@ -194,6 +194,9 @@ fn create_builder(_target: &str, capi: &Path, header: &Path, derive: &cfg::Deriv
 	.allowlist_var("SEEK_END")
 	.allowlist_var("AUDIO_FRAMES_PER_CYCLE")
 	.allowlist_var("NOTE_C4")
+
+	// ignore unused methods that drifting in bindgen result:
+	.blocklist_function("vaFormatString")
 
 	// experimental:
 	.default_macro_constant_type(MacroTypeVariation::Unsigned)
@@ -425,15 +428,13 @@ pub fn rustfmt<'out>(mut rustfmt_path: Option<PathBuf>,
 	match String::from_utf8(output) {
 		Ok(bindings) => {
 			match status.code() {
-				Some(0) => Ok(bindings.into()),
-				Some(2) => {
-					Err(std::io::Error::new(std::io::ErrorKind::Other, "Rustfmt parsing errors.".to_string()).into())
-				},
+				Some(0) => Ok(bindings),
+				Some(2) => Err(std::io::Error::new(std::io::ErrorKind::Other, "Rustfmt parsing errors.".to_string())),
 				Some(3) => {
 					println!("cargo:warning=Rustfmt could not format some lines.");
-					Ok(bindings.into())
+					Ok(bindings)
 				},
-				_ => Err(std::io::Error::new(std::io::ErrorKind::Other, "Internal rustfmt error".to_string()).into()),
+				_ => Err(std::io::Error::new(std::io::ErrorKind::Other, "Internal rustfmt error".to_string())),
 			}
 		},
 		_ => Ok(source),

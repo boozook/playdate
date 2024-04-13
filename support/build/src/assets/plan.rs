@@ -48,7 +48,7 @@ pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
 	match assets {
 		PlayDateMetadataAssets::List(vec) => {
 			include_unresolved.extend(
-			                          vec.into_iter()
+			                          vec.iter()
 			                             .map(to_relative)
 			                             .map(Expr::from)
 			                             .map(|e| enver.expr(e, env)),
@@ -152,7 +152,7 @@ pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
 			// filter resolved includes:
 			let is_not_empty = |inc: &Match| !inc.target().as_os_str().is_empty();
 			let excluded: Vec<_> = resolved.extract_if(|inc| {
-				                               let target = target.join(&inc.target());
+				                               let target = target.join(inc.target());
 				                               !is_not_empty(inc) ||
 				                               glob_matches_any(&inc.source(), &exclude_globs) ||
 				                               glob_matches_any(&target, &exclude_globs)
@@ -238,7 +238,7 @@ impl BuildPlan<'_, '_> {
 	pub fn print(&self) {
 		info!("assets build plan:");
 
-		let print = |inc: &Match, &(ref left, ref right): &(Expr, Expr)| {
+		let print = |inc: &Match, (left, right): &(Expr, Expr)| {
 			info!(
 			      "  {} <- {}  ({left} = {right})",
 			      inc.target().display(),
@@ -268,40 +268,40 @@ impl BuildPlan<'_, '_> {
 	}
 
 	pub fn targets(&self) -> impl Iterator<Item = Cow<'_, Path>> {
-		self.as_inner().into_iter().flat_map(|mapping| {
-			                           match mapping {
-				                           Mapping::AsIs(inc, ..) => vec![inc.target()].into_iter(),
-			                              Mapping::Into(inc, ..) => vec![inc.target()].into_iter(),
-			                              Mapping::ManyInto { sources, target, .. } => {
-				                              sources.into_iter()
-				                                     .map(|inc| Cow::from(target.join(inc.target())))
-				                                     .collect::<Vec<_>>()
-				                                     .into_iter()
-			                              },
-			                           }
-		                           })
+		self.as_inner().iter().flat_map(|mapping| {
+			                      match mapping {
+				                      Mapping::AsIs(inc, ..) => vec![inc.target()].into_iter(),
+			                         Mapping::Into(inc, ..) => vec![inc.target()].into_iter(),
+			                         Mapping::ManyInto { sources, target, .. } => {
+				                         sources.iter()
+				                                .map(|inc| Cow::from(target.join(inc.target())))
+				                                .collect::<Vec<_>>()
+				                                .into_iter()
+			                         },
+			                      }
+		                      })
 	}
 
-	pub fn serializable_flatten<'t>(
-		&'t self)
-		-> impl Iterator<Item = (PathBuf, (PathBuf, Option<std::time::SystemTime>))> + 't {
+	pub fn serializable_flatten(
+		&self)
+		-> impl Iterator<Item = (PathBuf, (PathBuf, Option<std::time::SystemTime>))> + '_ {
 		let pair = |inc: &Match| (inc.target().to_path_buf(), inc.source().to_path_buf());
 
 		self.as_inner()
-		    .into_iter()
+		    .iter()
 		    .flat_map(move |mapping| {
 			    let mut rows = Vec::new();
 			    match mapping {
 				    Mapping::AsIs(inc, _) | Mapping::Into(inc, _) => rows.push(pair(inc)),
 			       Mapping::ManyInto { sources, target, .. } => {
-				       rows.extend(sources.into_iter()
+				       rows.extend(sources.iter()
 				                          .map(|inc| pair(&Match::new(inc.source(), target.join(inc.target())))));
 			       },
 			    };
 			    rows.into_iter()
 		    })
 		    .map(|(t, p)| {
-			    let time = p.metadata().ok().map(|m| m.modified().ok()).flatten();
+			    let time = p.metadata().ok().and_then(|m| m.modified().ok());
 			    (t, (p, time))
 		    })
 	}
@@ -355,7 +355,7 @@ impl Mapping<'_, '_> {
 
 	pub fn exprs(&self) -> (&Expr<'_>, &Expr<'_>) {
 		match self {
-			Mapping::AsIs(_, (left, right)) | Mapping::Into(_, (left, right)) => (&left, &right),
+			Mapping::AsIs(_, (left, right)) | Mapping::Into(_, (left, right)) => (left, right),
 			Mapping::ManyInto { exprs: (left, right), .. } => (left, right),
 		}
 	}

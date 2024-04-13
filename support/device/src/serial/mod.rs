@@ -28,15 +28,11 @@ impl std::fmt::Display for Interface {
 		use serialport::SerialPort;
 
 		let port_name = &self.info.port_name;
-		let name = self.port
-		               .as_ref()
-		               .map(|p| {
-			               p.try_borrow()
-			                .ok()
-			                .map(|p| p.name().filter(|s| s != port_name))
-			                .flatten()
-		               })
-		               .flatten();
+		let name = self.port.as_ref().and_then(|p| {
+			                             p.try_borrow()
+			                              .ok()
+			                              .and_then(|p| p.name().filter(|s| s != port_name))
+		                             });
 
 		write!(f, "serial:{}", name.as_deref().unwrap_or(port_name))
 	}

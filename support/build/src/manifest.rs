@@ -102,7 +102,7 @@ impl<'t, T> TryFrom<SourceRef<'t, T>> for Manifest where T: ManifestDataSource {
 		                          version: metadata.version
 		                                           .to_owned()
 		                                           .unwrap_or(source.version().to_string()),
-		                          build_number: metadata.build_number.as_ref().map(|v| v.parse().ok()).flatten(),
+		                          build_number: metadata.build_number.as_ref().and_then(|v| v.parse().ok()),
 		                          image_path: metadata.image_path.to_owned(),
 		                          launch_sound_path: metadata.launch_sound_path.to_owned(),
 		                          content_warning: metadata.content_warning.to_owned(),
