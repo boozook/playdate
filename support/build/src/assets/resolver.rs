@@ -4,7 +4,7 @@ use std::str;
 use std::path::{Path, PathBuf};
 
 use regex::Regex;
-use wax::{Glob, LinkBehavior, WalkError, WalkEntry, BuildError};
+use wax::{Glob, LinkBehavior, WalkError, WalkEntry};
 
 use crate::cargo;
 use crate::config::Env;
@@ -18,16 +18,16 @@ pub fn resolve_includes<S: AsRef<str>, Excl: AsRef<str>>(expr: S,
                                                          links: LinkBehavior)
                                                          -> Result<Vec<Match>, Error> {
 	let glob = Glob::new(expr.as_ref())?;
-	let exclude = exclude.into_iter().map(AsRef::as_ref).chain(["**/.*/**"]);
-	let walker = glob.walk_with_behavior(&crate_root, links)
+	let exclude = exclude.iter().map(AsRef::as_ref).chain(["**/.*/**"]);
+	let walker = glob.walk_with_behavior(crate_root, links)
 	                 .not(exclude)?
-	                 .map(|res| res.map(|entry| Match::from(entry)));
+	                 .map(|res| res.map(Match::from));
 
 	let files = walker.map(|res| {
 		                  let mut inc = res.map_err(log_err)?;
 		                  let target = inc.target();
 		                  // modify target path:
-		                  if target.is_absolute() && target.starts_with(crate_root) {
+		                  let new = if target.is_absolute() && target.starts_with(crate_root) {
 			                  // make it relative to crate_root:
 			                  let len = crate_root.components().count();
 			                  Some(target.components().skip(len).collect())
@@ -41,7 +41,10 @@ pub fn resolve_includes<S: AsRef<str>, Excl: AsRef<str>>(expr: S,
 		                  } else {
 			                  // as-is
 			                  None
-		                  }.and_then(|new| Some(inc.set_target(new)));
+		                  };
+		                  if let Some(new) = new {
+			                  inc.set_target(new)
+		                  }
 		                  Ok::<_, WalkError>(inc)
 	                  });
 
@@ -79,7 +82,10 @@ impl EnvResolver {
 				             .get(name)
 				             .map(Cow::from)
 				             .or_else(|| std::env::var(name).map_err(log_err).ok().map(Cow::from))
-				             .expect(&format!("Env var \"{name}\" not found"));
+				             .unwrap_or_else(|| {
+					             // XXX: should we panic here?
+					             panic!("Env var \"{name}\" not found")
+				             });
 
 				replaced = replaced.replace(full, &var);
 			}
@@ -99,7 +105,10 @@ impl EnvResolver {
 
 				let var = std::env::var(name).map_err(log_err)
 				                             .map(Cow::from)
-				                             .expect(&format!("Env var \"{name}\" not found"));
+				                             .unwrap_or_else(|_| {
+					                             // XXX: should we panic here?
+					                             panic!("Env var \"{name}\" not found")
+				                             });
 				replaced = replaced.replace(full, &var);
 			}
 		}
@@ -246,13 +255,13 @@ impl AsRef<str> for Expr<'_> {
 	fn as_ref(&self) -> &str { self.actual() }
 }
 
-impl Into<PathBuf> for &Expr<'_> {
-	fn into(self) -> PathBuf { self.actual().into() }
+impl From<&Expr<'_>> for PathBuf {
+	fn from(expr: &Expr<'_>) -> Self { expr.actual().into() }
 }
 
-impl Into<PathBuf> for Expr<'_> {
-	fn into(self) -> PathBuf {
-		let actual: PathBuf = match self {
+impl From<Expr<'_>> for PathBuf {
+	fn from(expr: Expr<'_>) -> Self {
+		let actual: PathBuf = match expr {
 			Expr::Original(original) => original.into(),
 			Expr::Modified { actual, .. } => actual.into_owned().into(),
 		};

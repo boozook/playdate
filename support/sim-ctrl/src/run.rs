@@ -12,7 +12,7 @@ pub async fn run(pdx: &Path, sdk: Option<&Path>) -> Result<(), Error> {
 	use async_std::process::Command;
 
 	#[allow(unused_mut)]
-	let mut cmd = command(&pdx, sdk.as_deref())?;
+	let mut cmd = command(pdx, sdk)?;
 	#[cfg(any(feature = "tokio", feature = "async-std"))]
 	let mut cmd = Command::from(cmd);
 
@@ -29,7 +29,7 @@ pub async fn run(pdx: &Path, sdk: Option<&Path>) -> Result<(), Error> {
 
 #[cfg_attr(feature = "tracing", tracing::instrument)]
 pub fn command(pdx: &Path, sdk: Option<&Path>) -> Result<std::process::Command, Error> {
-	let sdk = sdk.map_or_else(|| Sdk::try_new(), Sdk::try_new_exact)?;
+	let sdk = sdk.map_or_else(Sdk::try_new, Sdk::try_new_exact)?;
 
 	let (pwd, sim) = if cfg!(target_os = "macos") {
 		("Playdate Simulator.app/Contents/MacOs", "./Playdate Simulator")
@@ -43,7 +43,7 @@ pub fn command(pdx: &Path, sdk: Option<&Path>) -> Result<std::process::Command, 
 
 	let mut cmd = std::process::Command::new(sim);
 	cmd.current_dir(sdk.bin().join(pwd));
-	cmd.arg(&pdx);
+	cmd.arg(pdx);
 
 	Ok(cmd)
 }

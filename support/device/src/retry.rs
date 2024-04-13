@@ -57,7 +57,7 @@ impl<T: IterTime> IterTime for &'_ T {
 }
 
 pub fn calc_interval<T: IterTime>(wait: &Duration, cfg: T) -> Duration {
-	let iters = wait.as_millis() / cfg.preferred_iter_time().as_millis() as u128;
+	let iters = wait.as_millis() / cfg.preferred_iter_time().as_millis();
 	Duration::from_millis((wait.as_millis() / iters) as _)
 }
 
@@ -81,7 +81,7 @@ impl std::fmt::Debug for DefaultIterTime {
 
 
 impl IterTime for Duration {
-	fn preferred_iter_time(&self) -> Duration { self.clone() }
+	fn preferred_iter_time(&self) -> Duration { *self }
 
 	fn interval(&self, total_wait: &Duration) -> Duration
 		where for<'t> &'t Self: IterTime {

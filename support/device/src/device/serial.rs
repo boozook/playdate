@@ -16,8 +16,8 @@ impl SerialNumber {
 		let re = Regex::new(REGEX_NAME).expect("invalid regex");
 		let captures = re.captures(s.as_ref())?;
 		let serial = Self::unify(captures.get(1)?.as_str());
-		let serial = if serial.contains("_") {
-			serial.replace("_", "-")
+		let serial = if serial.contains('_') {
+			serial.replace('_', "-")
 		} else {
 			serial.to_string()
 		};
@@ -28,8 +28,8 @@ impl SerialNumber {
 
 	fn unify<'s, S: Into<Cow<'s, str>>>(s: S) -> Cow<'s, str> {
 		let s = s.into();
-		if s.contains("_") {
-			s.replace("_", "-").into()
+		if s.contains('_') {
+			s.replace('_', "-").into()
 		} else {
 			s
 		}

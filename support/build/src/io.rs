@@ -30,10 +30,8 @@ pub fn soft_link_checked<Po: AsRef<Path>, Pl: AsRef<Path>>(origin: Po,
 	let existing = link.as_ref().try_exists()?;
 	let symlink = link.as_ref().is_symlink();
 
-	if symlink {
-		if std::fs::read_link(&link)? == origin.as_ref() {
-			return Ok(false);
-		}
+	if symlink && std::fs::read_link(&link)? == origin.as_ref() {
+		return Ok(false);
 	}
 
 	if !existing && !symlink {
@@ -67,10 +65,8 @@ pub fn hard_link_forced<Po: AsRef<Path>, Pl: AsRef<Path>>(origin: Po,
 	let existing = link.as_ref().try_exists()?;
 	let symlink = link.as_ref().is_symlink();
 
-	if symlink {
-		if std::fs::read_link(&link)? == origin.as_ref() {
-			return Ok(false);
-		}
+	if symlink && std::fs::read_link(&link)? == origin.as_ref() {
+		return Ok(false);
 	}
 
 	if !existing && !symlink {
@@ -106,7 +102,7 @@ fn check_top_boundary<B: AsRef<Path>>(path: &Path, boundary: B) -> Result<bool> 
 	let path = path.parent()
 	               .ok_or_else(|| IoError::new(IoErrorKind::NotFound, format!("Parent of {}", path.display())))?;
 	let (existing, tail) = get_existing_ancestor(path)?;
-	Ok(existing.starts_with(&boundary) || existing.join(&tail).starts_with(&boundary))
+	Ok(existing.starts_with(&boundary) || existing.join(tail).starts_with(&boundary))
 }
 
 fn check_top_boundary_ok<B: AsRef<Path>>(path: &Path, boundary: B) -> Result<()> {
@@ -124,7 +120,7 @@ fn check_top_boundary_ok<B: AsRef<Path>>(path: &Path, boundary: B) -> Result<()>
 
 /// Returns canonicalized existing part of path,
 /// and non-existing tail of path.
-fn get_existing_ancestor<'p>(path: &'p Path) -> Result<(PathBuf, &'p Path)> {
+fn get_existing_ancestor(path: &Path) -> Result<(PathBuf, &Path)> {
 	use std::io::{Error, ErrorKind};
 
 	let parent = path.ancestors()
@@ -140,7 +136,7 @@ fn get_existing_ancestor<'p>(path: &'p Path) -> Result<(PathBuf, &'p Path)> {
 	let mut parent = parent.canonicalize()?;
 
 	for (i, comp) in tail.components().enumerate() {
-		let next = parent.join(&comp);
+		let next = parent.join(comp);
 		if next.try_exists()? {
 			// Note: this can fail if canonicalizing symlink pointing to nowhere.
 			parent = next.canonicalize()?;

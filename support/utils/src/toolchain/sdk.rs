@@ -25,7 +25,7 @@ impl Sdk {
 
 	pub fn pdc(&self) -> PathBuf {
 		#[cfg(unix)]
-		const PDC: &'static str = "pdc";
+		const PDC: &str = "pdc";
 		#[cfg(windows)]
 		const PDC: &'static str = "PDC.EXE";
 		self.bin().join(PDC)
@@ -33,7 +33,7 @@ impl Sdk {
 
 	pub fn pdutil(&self) -> PathBuf {
 		#[cfg(unix)]
-		const PDUTIL: &'static str = "pdutil";
+		const PDUTIL: &str = "pdutil";
 		#[cfg(windows)]
 		const PDUTIL: &'static str = "PDUTIL.EXE";
 		self.bin().join(PDUTIL)
@@ -113,7 +113,7 @@ impl Sdk {
 	/// Create new `Sdk` with default env var
 	pub fn try_from_default_path() -> Result<Self, Error> {
 		#[cfg(unix)]
-		const SDK_HOME_DIR: &'static str = "Developer";
+		const SDK_HOME_DIR: &str = "Developer";
 		#[cfg(windows)]
 		const SDK_HOME_DIR: &'static str = "Documents";
 
@@ -123,7 +123,7 @@ impl Sdk {
 
 	#[cfg(unix)]
 	pub fn try_xdg_unix_path() -> Result<Self, Error> {
-		const XDG_CONFIG_DATA_ENV: &'static str = "XDG_CONFIG_DATA";
+		const XDG_CONFIG_DATA_ENV: &str = "XDG_CONFIG_DATA";
 
 		let xdg_data_path = match std::env::var(XDG_CONFIG_DATA_ENV) {
 			Ok(ref variable) => PathBuf::from(variable),
@@ -174,12 +174,12 @@ mod config {
 	use std::str::FromStr;
 
 	#[cfg(unix)]
-	const DEFAULT_XDG_CONFIG_DIR: &'static str = ".config";
+	const DEFAULT_XDG_CONFIG_DIR: &str = ".config";
 	#[cfg(unix)]
-	const XDG_CONFIG_HOME_ENV: &'static str = "XDG_CONFIG_HOME";
-	const CFG_DIR: &'static str = ".Playdate";
-	const CFG_FILENAME: &'static str = "config";
-	const CFG_KEY_SDK_ROOT: &'static str = "SDKRoot";
+	const XDG_CONFIG_HOME_ENV: &str = "XDG_CONFIG_HOME";
+	const CFG_DIR: &str = ".Playdate";
+	const CFG_FILENAME: &str = "config";
+	const CFG_KEY_SDK_ROOT: &str = "SDKRoot";
 
 	pub(super) struct Cfg(HashMap<String, String>);
 
@@ -206,7 +206,7 @@ mod config {
 					return Ok(cfg_path);
 				}
 
-				return Err(Error::new(std::io::ErrorKind::NotFound, "Config file not found"));
+				Err(Error::new(std::io::ErrorKind::NotFound, "Config file not found"))
 			}
 
 			std::fs::read_to_string(find_config_folder()?)?.parse()
@@ -222,7 +222,7 @@ mod config {
 			Ok(Self(
 			        s.trim()
 			         .lines()
-			         .filter_map(|line| line.split_once("\t").map(|(k, v)| (k.to_owned(), v.to_owned())))
+			         .filter_map(|line| line.split_once('\t').map(|(k, v)| (k.to_owned(), v.to_owned())))
 			         .collect(),
 			))
 		}

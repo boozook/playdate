@@ -25,7 +25,7 @@ pub fn engage(source: &bindgen::Bindings,
 	#[cfg(feature = "documentation")]
 	let docset = if features.documentation {
 		let docset_new = docs::parser::parse(sdk)?;
-		docs::gen::engage(&mut bindings, &root_struct_name, &docset_new)?;
+		docs::gen::engage(&mut bindings, root_struct_name, &docset_new)?;
 		Some(docset_new)
 	} else {
 		None

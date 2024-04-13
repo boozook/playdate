@@ -48,7 +48,7 @@ pub fn apply_build_plan<'l, 'r, P: AsRef<Path>>(plan: BuildPlan<'l, 'r>,
 		}
 
 		let real = path.canonicalize()?;
-		if !real.starts_with(&target_root) {
+		if !real.starts_with(target_root) {
 			return Err(IoError::new(
 				IoErrorKind::AlreadyExists,
 				format!("Target points out from target directory: {}", real.display()),
@@ -62,35 +62,32 @@ pub fn apply_build_plan<'l, 'r, P: AsRef<Path>>(plan: BuildPlan<'l, 'r>,
 	let copy_method = |source: &Path, target: &Path, to_inside| -> Result<OpRes, FsExtraError> {
 		let into = target_root.join(target);
 		let copied = if source.is_dir() {
-			ensure_dir_exists(&into, &target_root)?;
+			ensure_dir_exists(&into, target_root)?;
 			ensure_out_of_root(&into)?;
 			let options = fs_extra::dir::CopyOptions { copy_inside: to_inside,
 			                                           ..def_options };
 			fs_extra::dir::copy(source, into, &options).map(OpRes::Write)?
+		} else if to_inside {
+			ensure_dir_exists(&into, target_root)?;
+			ensure_out_of_root(&into)?;
+			let filename = source.file_name().ok_or_else(|| {
+				                                  IoError::new(
+				                                               IoErrorKind::InvalidFilename,
+				                                               format!("Filename not found for {}", into.display()),
+				)
+			                                  })?;
+			let into = into.join(filename);
+			ensure_out_of_root(&into)?;
+			std::fs::copy(source, into).map(OpRes::Write)?
 		} else {
-			if to_inside {
-				ensure_dir_exists(&into, &target_root)?;
-				ensure_out_of_root(&into)?;
-				let filename =
-					source.file_name().ok_or_else(|| {
-						                   IoError::new(
-						                                IoErrorKind::InvalidFilename,
-						                                format!("Filename not found for {}", into.display()),
-						)
-					                   })?;
-				let into = into.join(filename);
-				ensure_out_of_root(&into)?;
+			let into_parent = parent_of(&into)?;
+			ensure_dir_exists(into_parent, target_root)?;
+			ensure_out_of_root(into_parent)?;
+
+			if !into.try_exists()? || overwrite {
 				std::fs::copy(source, into).map(OpRes::Write)?
 			} else {
-				let into_parent = parent_of(&into)?;
-				ensure_dir_exists(&into_parent, &target_root)?;
-				ensure_out_of_root(&into_parent)?;
-
-				if !into.try_exists()? || overwrite {
-					std::fs::copy(source, into).map(OpRes::Write)?
-				} else {
-					OpRes::Skip
-				}
+				OpRes::Skip
 			}
 		};
 		info!("  {copied:?} copy: {} <- {}", target.display(), source.display());
@@ -100,7 +97,7 @@ pub fn apply_build_plan<'l, 'r, P: AsRef<Path>>(plan: BuildPlan<'l, 'r>,
 	let link_method = |source: &Path, target: &Path, to_inside| -> Result<OpRes, FsExtraError> {
 		let into = target_root.join(target);
 		let linked = if to_inside {
-			             ensure_dir_exists(&into, &target_root)?;
+			             ensure_dir_exists(&into, target_root)?;
 			             let filename =
 				             source.file_name().ok_or_else(|| {
 					                                IoError::new(
@@ -109,12 +106,12 @@ pub fn apply_build_plan<'l, 'r, P: AsRef<Path>>(plan: BuildPlan<'l, 'r>,
 					)
 				                                })?;
 			             let into = into.join(filename);
-			             soft_link_checked(source, &into, overwrite, &target_root)
+			             soft_link_checked(source, into, overwrite, target_root)
 		             } else {
 			             let into_parent = parent_of(&into)?;
-			             ensure_dir_exists(&into_parent, &target_root)?;
-			             soft_link_checked(source, &into, overwrite, &target_root)
-		             }.map(|was| was.then(|| OpRes::Link).unwrap_or_else(|| OpRes::Skip))?;
+			             ensure_dir_exists(into_parent, target_root)?;
+			             soft_link_checked(source, &into, overwrite, target_root)
+		             }.map(|was| if was { OpRes::Link } else { OpRes::Skip })?;
 		info!("  {linked:?} link: {} <- {}", target.display(), source.display());
 		Ok(linked)
 	};

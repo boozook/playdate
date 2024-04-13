@@ -48,7 +48,7 @@ pub struct Runner;
 
 impl Runner {
 	/// Returns path and version of the `pdbindgen` executable if found.
-	pub fn find_tool<'t>(cfg: &'t Cfg) -> Option<(&'t Path, String)> {
+	pub fn find_tool(cfg: &Cfg) -> Option<(&Path, String)> {
 		Command::new(&cfg.bin).arg("-V")
 		                      .stdout(Stdio::piped())
 		                      .stderr(Stdio::inherit())
@@ -103,11 +103,10 @@ impl Runner {
 			               });
 
 		// Easiest way to get existing SDK version:
-		let sdk_version = path.map(|path| {
+		let sdk_version = path.and_then(|path| {
 			                      std::fs::read_to_string(path.join("VERSION.txt")).ok()
 			                                                                       .map(|s| s.trim().to_string())
 		                      })
-		                      .flatten()
 		                      .filter(|s| !s.is_empty());
 
 		// Alternative way is to execute the tool:
@@ -385,11 +384,10 @@ impl Target {
 		if var("TARGET")? == "thumbv7em-none-eabihf" {
 			Ok(Self::Playdate)
 		} else {
-			use core::mem::size_of;
 			use core::ffi::c_int;
 			let ptr = var("CARGO_CFG_TARGET_POINTER_WIDTH")?;
 			Ok(Self::Other { ptr,
-			                 c_int: size_of::<c_int>() * 8 })
+			                 c_int: c_int::BITS as usize })
 		}
 	}
 }
