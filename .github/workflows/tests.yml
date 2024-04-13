@@ -45,7 +45,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    needs: format
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -150,7 +149,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    needs: format
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -203,7 +201,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    needs: format
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -285,7 +282,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    needs: format
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -362,6 +358,7 @@ jobs:
       run:
         shell: bash
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
     permissions:
       actions: read
       contents: read
@@ -381,12 +378,95 @@ jobs:
 
       - name: Format
         id: format
-        if: steps.check.outcome == 'failure' && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
+        if: steps.check.outcome == 'failure'
         run: cargo fmt --all
 
-      - name: Suggest Changes
+      # - name: Suggestions
+      #   continue-on-error: true
+      #   uses: parkerbxyz/suggest-changes@v1.0.2
+      #   with: comment: Rustfmt suggested the formatting changes.
+
+      - name: Suggestions
+        if: steps.check.outcome == 'failure'
+        uses: reviewdog/action-suggester@v1
+        with:
+          filter_mode: diff_context
+          fail_on_error: false
+          tool_name: Rustfmt
+          cleanup: false
+
+      - name: Post Check
+        if: steps.check.outcome == 'failure'
+        run: exit 1
+
+  clippy:
+    name: Clippy
+    if: github.event_name == 'pull_request'
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      contents: read
+      checks: write
+      issues: write
+      pull-requests: write
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-14
+          - ubuntu-latest
+          - windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        # with: fetch-depth: 2
+
+      - name: Install Clippy
+        run: rustup component add clippy
+
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            target/
+            ~/.cargo
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
+
+      - name: Config
+        run: |
+          mkdir -p .cargo
+          cp -rf .github/config.toml .cargo/config.toml
+
+      - name: Install Deps
+        uses: ./.github/actions/tools-deps
+
+      - name: Cargo & Support
+        id: clippy
         continue-on-error: true
-        if: success() && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
-        # https://docs.github.com/en/rest/pulls/reviews?apiVersion=2022-11-28#create-a-review-for-a-pull-request
-        uses: parkerbxyz/suggest-changes@v1.0.4
-        # with: comment: Rustfmt suggested the formatting changes.
+        run: >-
+          cargo clippy --fix --allow-dirty
+          -p=cargo-playdate
+          -p=playdate-bindgen
+          -p=playdate-bindgen-cfg
+          -p=playdate-build
+          -p=playdate-device
+          -p=playdate-simulator-utils
+          -p=playdate-build-utils
+          -p=playdate-tool
+          --bins --examples --all-targets
+          -- -Aclippy::cargo
+          || (echo "::error::Rust format error." && exit 1)
+
+      - name: remove config
+        run: rm -rf .cargo
+
+      - name: Suggestions
+        uses: reviewdog/action-suggester@v1
+        with:
+          filter_mode: diff_context
+          fail_on_error: false
+          tool_name: Clippy
+          cleanup: false
+

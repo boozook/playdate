@@ -295,5 +295,7 @@ jobs:
       actions: read
       contents: read
       pull-requests: write
+      checks: write
+      issues: write
     with:
       ref: ${{ needs.new-branch.outputs.working }}
