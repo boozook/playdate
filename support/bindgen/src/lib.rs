@@ -197,6 +197,7 @@ fn create_builder(_target: &str, capi: &Path, header: &Path, derive: &cfg::Deriv
 
 	// ignore unused methods that drifting in bindgen result:
 	.blocklist_function("vaFormatString")
+	.blocklist_var("vaFormatString")
 
 	// experimental:
 	.default_macro_constant_type(MacroTypeVariation::Unsigned)
