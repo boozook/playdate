@@ -14,7 +14,8 @@ on:
         description: "Source SHA used to build bindings. Uses `github.sha`` by default."
         required: false
 
-  # push:
+  push:
+    branches: fix-prebuilt-filename-arch
   #   branches: [main, master]
 
   schedule:
@@ -101,6 +102,7 @@ jobs:
       fail-fast: true
       matrix:
         os:
+          - macos-12
           - macos-14
           - ubuntu-latest
           - windows-latest
@@ -193,8 +195,8 @@ jobs:
           add: ./api/sys/gen/*.rs
           author_name: Update Bot
           author_email: boozook@users.noreply.github.com
-          committer_name: Update Workflow
-          message: Automated build pre-built bindings
+          committer_name: Update Bot
+          message: Automated build pre-built bindings for ${{ steps.sdk.outputs.version }} on ${{ runner.os }}-${{ runner.arch }}
           pull: "--rebase --autostash"
           push: true
 
@@ -236,7 +238,7 @@ jobs:
           add: ./api/sys/Cargo.toml
           author_name: Bump Bot
           author_email: boozook@users.noreply.github.com
-          committer_name: Bump sys version
+          committer_name: Bump Bot
           message: Automated bump sys crate version
           pull: "--rebase --autostash"
           push: true
