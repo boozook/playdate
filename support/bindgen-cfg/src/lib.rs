@@ -372,9 +372,12 @@ pub enum Target {
 		/// Target arch.
 		arch: String,
 
-		/// Target enum size in bits.
+		/// Target OS.
+		os: String,
+
+		/// Target c_int size in bits.
 		/// For playdate usually it should be 1 byte if compiled with `-fshort-enums`.
-		/// For other targets usually it should be between size of `c_int` and `i32` (from 16 to 32 bits),
+		/// For other targets it should be between size of `16` and `64` bits, usually `32`,
 		/// before optimizations but it doesn't matter at all.
 		c_int: usize,
 	},
@@ -390,8 +393,10 @@ impl Target {
 			use core::ffi::c_int;
 			let ptr = var("CARGO_CFG_TARGET_POINTER_WIDTH")?;
 			let arch = var("CARGO_CFG_TARGET_ARCH")?;
-			Ok(Self::Other { ptr,
+			let os = var("CARGO_CFG_TARGET_OS")?;
+			Ok(Self::Other { os,
 			                 arch,
+			                 ptr,
 			                 c_int: c_int::BITS as usize })
 		}
 	}
@@ -401,7 +406,7 @@ impl std::fmt::Display for Target {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Target::Playdate => write!(f, "pd"),
-			Target::Other { ptr, arch, c_int } => write!(f, "{arch}-p{ptr}-i{c_int}"),
+			Target::Other { os, ptr, arch, c_int } => write!(f, "{os}-{arch}-{ptr}-i{c_int}"),
 		}
 	}
 }
