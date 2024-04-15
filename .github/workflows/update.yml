@@ -14,8 +14,7 @@ on:
         description: "Source SHA used to build bindings. Uses `github.sha`` by default."
         required: false
 
-  push:
-    branches: fix-prebuilt-filename-arch
+  # push:
   #   branches: [main, master]
 
   schedule:
@@ -92,25 +91,19 @@ jobs:
       base: ${{ github.event.inputs.source || steps.base.outputs.value || github.event.repository.default_branch }}
 
   pre-gen:
-    name: Gen (${{ matrix.os.os }}, ${{ matrix.features.name }})
+    name: Gen ${{ matrix.features.name }} (${{ matrix.os }})
     defaults:
       run:
         shell: bash
     needs: new-branch
-    runs-on: ${{ matrix.os.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
       matrix:
         os:
-          - os: macos-14
-            target: aarch64-apple-darwin
-          - os: macos-14
-            target: x86_64-apple-darwin
-          - os: ubuntu-latest
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-          - os: windows-latest
-            target: aarch64-pc-windows-msvc
+          - macos-14
+          - ubuntu-latest
+          - windows-latest
         sdk:
           - ${{ github.event.inputs.sdk || 'latest' }}
         features:
@@ -163,17 +156,29 @@ jobs:
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
 
-      - name: Install targets
-        if: matrix.os.target
-        run: rustup target add ${{ matrix.os.target }}
+      - name: Install targets (mac)
+        if: runner.os == 'macOS'
+        run: |
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
+
+      - name: Install targets (win)
+        if: runner.os == 'Windows'
+        run: |
+          rustup target add x86_64-pc-windows-msvc
+          rustup target add aarch64-pc-windows-msvc
+
+      - name: Git Pull
+        run: git pull
 
       - name: Host
         run: >-
           cargo build -p=playdate-sys --features="${{ matrix.features.v }}"
-          ${{ matrix.os.target && format('--target={0}', matrix.os.target) || '' }}
+          ${{ runner.os == 'macOS' && '--target=aarch64-apple-darwin --target=x86_64-apple-darwin' || '' }}
+          ${{ runner.os == 'Windows' && '--target=x86_64-pc-windows-msvc --target=aarch64-pc-windows-msvc' || '' }}
 
       - name: Device
-        if: ${{ matrix.os.os == 'ubuntu-latest' }}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --target=thumbv7em-none-eabihf
 
       - name: Format
@@ -188,7 +193,7 @@ jobs:
           cargo test -p=playdate-sys --features="lang-items ${{ matrix.features.v }}" --release
 
       - name: Test (device)
-        if: ${{ matrix.os.os == 'ubuntu-latest' }}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         # env: # uncomment when all bindings for min-supported-SDK will be there
         #   IGNORE_EXISTING_PLAYDATE_SDK: 1
         #   PLAYDATE_USE_PREBUILT_VERSION: ${{ steps.sdk.outputs.version }}
@@ -207,7 +212,7 @@ jobs:
           committer_name: Update Bot
           message: >-
             Automated build pre-built bindings for ${{ steps.sdk.outputs.version }}
-            on ${{ runner.os }}-${{ runner.arch }} ${{ matrix.os.target && format('target {0}', matrix.os.target) || '' }}
+            on ${{ runner.os }}-${{ runner.arch }}
             with features: ${{ matrix.features.name }}
           pull: "--rebase --autostash"
           push: true
