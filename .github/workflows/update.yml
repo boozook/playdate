@@ -92,7 +92,7 @@ jobs:
       base: ${{ github.event.inputs.source || steps.base.outputs.value || github.event.repository.default_branch }}
 
   pre-gen:
-    name: Gen (${{ matrix.os.os }}, ${{ matrix.features.name }})
+    name: Gen ${{ matrix.features.name }} ${{ matrix.os.target && format('for {0} on {1}', matrix.os.target, matrix.os.os) || format('on {0}', matrix.os.os) }}
     defaults:
       run:
         shell: bash
@@ -166,6 +166,9 @@ jobs:
       - name: Install targets
         if: matrix.os.target
         run: rustup target add ${{ matrix.os.target }}
+
+      - name: Git Pull
+        run: git pull
 
       - name: Host
         run: >-
