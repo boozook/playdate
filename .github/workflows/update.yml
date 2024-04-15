@@ -14,7 +14,8 @@ on:
         description: "Source SHA used to build bindings. Uses `github.sha`` by default."
         required: false
 
-  # push:
+  push:
+    branches: fix-prebuilt-filename-arch
   #   branches: [main, master]
 
   schedule:
@@ -91,19 +92,25 @@ jobs:
       base: ${{ github.event.inputs.source || steps.base.outputs.value || github.event.repository.default_branch }}
 
   pre-gen:
-    name: Gen (${{ matrix.os }}, ${{ matrix.features.name }})
+    name: Gen (${{ matrix.os.os }}, ${{ matrix.features.name }})
     defaults:
       run:
         shell: bash
     needs: new-branch
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.os }}
     strategy:
       fail-fast: true
       matrix:
         os:
-          - macos-14
-          - ubuntu-latest
-          - windows-latest
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: macos-14
+            target: x86_64-apple-darwin
+          - os: ubuntu-latest
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
         sdk:
           - ${{ github.event.inputs.sdk || 'latest' }}
         features:
@@ -156,13 +163,17 @@ jobs:
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
 
-      # TODO: check & stop if there's no changes or mb. save SDK version cached
+      - name: Install targets
+        if: matrix.os.target
+        run: rustup target add ${{ matrix.os.target }}
 
       - name: Host
-        run: cargo build -p=playdate-sys --features="${{ matrix.features.v }}" -vv
+        run: >-
+          cargo build -p=playdate-sys --features="${{ matrix.features.v }}"
+          ${{ matrix.os.target && format('--target={0}', matrix.os.target) || '' }}
 
       - name: Device
-        if: ${{ matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.os.os == 'ubuntu-latest' }}
         run: cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --target=thumbv7em-none-eabihf
 
       - name: Format
@@ -177,7 +188,7 @@ jobs:
           cargo test -p=playdate-sys --features="lang-items ${{ matrix.features.v }}" --release
 
       - name: Test (device)
-        if: ${{ matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.os.os == 'ubuntu-latest' }}
         # env: # uncomment when all bindings for min-supported-SDK will be there
         #   IGNORE_EXISTING_PLAYDATE_SDK: 1
         #   PLAYDATE_USE_PREBUILT_VERSION: ${{ steps.sdk.outputs.version }}
@@ -193,8 +204,11 @@ jobs:
           add: ./api/sys/gen/*.rs
           author_name: Update Bot
           author_email: boozook@users.noreply.github.com
-          committer_name: Update Workflow
-          message: Automated build pre-built bindings
+          committer_name: Update Bot
+          message: >-
+            Automated build pre-built bindings for ${{ steps.sdk.outputs.version }}
+            on ${{ runner.os }}-${{ runner.arch }} ${{ matrix.os.target && format('target {0}', matrix.os.target) || '' }}
+            with features: ${{ matrix.features.name }}
           pull: "--rebase --autostash"
           push: true
 
@@ -236,7 +250,7 @@ jobs:
           add: ./api/sys/Cargo.toml
           author_name: Bump Bot
           author_email: boozook@users.noreply.github.com
-          committer_name: Bump sys version
+          committer_name: Bump Bot
           message: Automated bump sys crate version
           pull: "--rebase --autostash"
           push: true

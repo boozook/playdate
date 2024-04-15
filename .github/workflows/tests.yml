@@ -421,7 +421,9 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-        # with: fetch-depth: 2
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          # fetch-depth: 2
 
       - name: Install Clippy
         run: rustup component add clippy
