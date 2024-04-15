@@ -195,10 +195,6 @@ fn create_builder(_target: &str, capi: &Path, header: &Path, derive: &cfg::Deriv
 	.allowlist_var("AUDIO_FRAMES_PER_CYCLE")
 	.allowlist_var("NOTE_C4")
 
-	// ignore unused methods that drifting in bindgen result:
-	.blocklist_function("vaFormatString")
-	.blocklist_var("vaFormatString")
-
 	// experimental:
 	.default_macro_constant_type(MacroTypeVariation::Unsigned)
 	.allowlist_var("LCDMakePattern")

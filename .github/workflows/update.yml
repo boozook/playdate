@@ -91,7 +91,7 @@ jobs:
       base: ${{ github.event.inputs.source || steps.base.outputs.value || github.event.repository.default_branch }}
 
   pre-gen:
-    name: Gen (${{ matrix.os }}, ${{ matrix.features.name }})
+    name: Gen ${{ matrix.features.name }} (${{ matrix.os }})
     defaults:
       run:
         shell: bash
@@ -156,10 +156,26 @@ jobs:
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
 
-      # TODO: check & stop if there's no changes or mb. save SDK version cached
+      - name: Install targets (mac)
+        if: runner.os == 'macOS'
+        run: |
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
+
+      - name: Install targets (win)
+        if: runner.os == 'Windows'
+        run: |
+          rustup target add x86_64-pc-windows-msvc
+          rustup target add aarch64-pc-windows-msvc
+
+      - name: Git Pull
+        run: git pull
 
       - name: Host
-        run: cargo build -p=playdate-sys --features="${{ matrix.features.v }}" -vv
+        run: >-
+          cargo build -p=playdate-sys --features="${{ matrix.features.v }}"
+          ${{ runner.os == 'macOS' && '--target=aarch64-apple-darwin --target=x86_64-apple-darwin' || '' }}
+          ${{ runner.os == 'Windows' && '--target=x86_64-pc-windows-msvc --target=aarch64-pc-windows-msvc' || '' }}
 
       - name: Device
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -193,8 +209,11 @@ jobs:
           add: ./api/sys/gen/*.rs
           author_name: Update Bot
           author_email: boozook@users.noreply.github.com
-          committer_name: Update Workflow
-          message: Automated build pre-built bindings
+          committer_name: Update Bot
+          message: >-
+            Automated build pre-built bindings for ${{ steps.sdk.outputs.version }}
+            on ${{ runner.os }}-${{ runner.arch }}
+            with features: ${{ matrix.features.name }}
           pull: "--rebase --autostash"
           push: true
 
@@ -236,7 +255,7 @@ jobs:
           add: ./api/sys/Cargo.toml
           author_name: Bump Bot
           author_email: boozook@users.noreply.github.com
-          committer_name: Bump sys version
+          committer_name: Bump Bot
           message: Automated bump sys crate version
           pull: "--rebase --autostash"
           push: true
