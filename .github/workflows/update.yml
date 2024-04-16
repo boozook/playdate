@@ -231,16 +231,17 @@ jobs:
     needs: [new-branch, pre-gen]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.new-branch.outputs.working }}
-          fetch-depth: 2
+      # - name: Checkout
+      #   uses: actions/checkout@v4
+      #   with:
+      #     ref: ${{ needs.new-branch.outputs.working }}
+      #     fetch-depth: 2
 
       - name: Changes
         id: changes
         uses: tj-actions/changed-files@v44
         with:
+          use_rest_api: "true"
           skip_initial_fetch: "false"
           sha: ${{ needs.new-branch.outputs.working }}
           base_sha: ${{ needs.new-branch.outputs.base || github.event.repository.default_branch }}
