@@ -14,8 +14,9 @@ on:
         description: "Source SHA used to build bindings. Uses `github.sha`` by default."
         required: false
 
-  # push:
-  #   branches: [main, master]
+  push:
+    branches: ci/fix-update-bump
+    # branches: [main, master]
 
   schedule:
     - cron: "0 0 * * 1"
@@ -131,7 +132,8 @@ jobs:
           echo "Base branch: ${{ needs.new-branch.outputs.base }}"
           echo "Working branch: ${{ needs.new-branch.outputs.working }}"
 
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           ref: ${{ needs.new-branch.outputs.working }}
 
@@ -224,11 +226,44 @@ jobs:
           echo "Pushed: ${{ steps.commit.outputs.pushed }}"
           echo "SHA: ${{ steps.commit.outputs.commit_sha }}"
 
-  bump:
-    name: Bump
+  changes:
+    name: Changes
     needs: [new-branch, pre-gen]
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.new-branch.outputs.working }}
+          fetch-depth: 2
+
+      - name: Changes
+        id: changes
+        uses: tj-actions/changed-files@v44
+        with:
+          skip_initial_fetch: "false"
+          sha: ${{ needs.new-branch.outputs.working }}
+          base_sha: ${{ needs.new-branch.outputs.base || github.event.repository.default_branch }}
+
+      - name: List changed files
+        env:
+          ALL_CHANGED_FILES: ${{ steps.changes.outputs.all_changed_files }}
+        run: |
+          for file in ${ALL_CHANGED_FILES}; do
+            echo "$file was changed"
+          done
+
+    outputs:
+      changes: ${{ steps.changes.outputs.all_changed_files }}
+      changed: ${{ steps.changes.outputs.all_changed_files && 'true' || ' ' }}
+
+
+  bump:
+    name: Bump
+    needs: [new-branch, pre-gen, changes]
+    runs-on: ubuntu-latest
     continue-on-error: true # Workspaces are not supported yet
+    if: needs.changes.outputs.changed == 'true'
     defaults:
       run:
         shell: bash
