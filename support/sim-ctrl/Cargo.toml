@@ -1,6 +1,6 @@
 [package]
 name = "playdate-simulator-utils"
-version = "0.1.4"
+version = "0.1.5"
 readme = "README.md"
 description = "Cross-platform utils to deal with Playdate Simulator."
 keywords = ["playdate", "sdk", "utils"]

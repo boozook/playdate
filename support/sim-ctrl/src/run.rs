@@ -13,6 +13,7 @@ pub async fn run(pdx: &Path, sdk: Option<&Path>) -> Result<(), Error> {
 
 	#[allow(unused_mut)]
 	let mut cmd = command(pdx, sdk)?;
+
 	#[cfg(any(feature = "tokio", feature = "async-std"))]
 	let mut cmd = Command::from(cmd);
 
@@ -29,6 +30,7 @@ pub async fn run(pdx: &Path, sdk: Option<&Path>) -> Result<(), Error> {
 
 #[cfg_attr(feature = "tracing", tracing::instrument)]
 pub fn command(pdx: &Path, sdk: Option<&Path>) -> Result<std::process::Command, Error> {
+	let pdx = pdx.canonicalize()?;
 	let sdk = sdk.map_or_else(Sdk::try_new, Sdk::try_new_exact)?;
 
 	let (pwd, sim) = if cfg!(target_os = "macos") {

@@ -141,7 +141,7 @@ pub struct Install {
 	pub pdx: PathBuf,
 
 	/// Allow to overwrite existing files.
-	#[arg(long, default_value_t = false)]
+	#[arg(long, short, default_value_t = false)]
 	pub force: bool,
 
 	#[command(flatten)]
