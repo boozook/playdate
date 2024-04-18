@@ -709,10 +709,11 @@ dependencies = [
 
 [[package]]
 name = "cargo-playdate"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "anstyle",
  "anyhow",
+ "async-std",
  "byteorder",
  "cargo",
  "cargo-platform",
