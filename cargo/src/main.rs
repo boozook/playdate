@@ -203,7 +203,6 @@ fn execute(config: &Config) -> CargoResult<()> {
 
 			// run:
 			{
-				use futures_lite::future::block_on;
 				use device::run::run as run_dev;
 				use simulator::run::run as run_sim;
 
@@ -212,12 +211,12 @@ fn execute(config: &Config) -> CargoResult<()> {
 					let pdx = package.path.to_owned();
 					let no_install = false;
 					let no_read = config.no_read;
-					let force = false;
+					let force = true;
 					let fut = run_dev(query, pdx, no_install, no_read, force);
-					block_on(fut)?;
+					async_std::task::block_on(fut)?;
 				} else {
 					let fut = run_sim(&package.path, config.sdk_path.as_deref());
-					block_on(fut)?;
+					futures_lite::future::block_on(fut)?;
 				};
 			}
 
