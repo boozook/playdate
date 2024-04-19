@@ -54,7 +54,7 @@ cargo playdate init --lib --full-metadata --deps="playdate"
 cargo playdate run
 ```
 
-> Note, there is more options for this commands, e.g. `--deps="sys:git, controls:git"`.
+> Note, there are more options for this command, e.g. `--deps="sys:git, controls:git"`.
 > Run `cargo playdate new --help` for more about it.
 
 New package will be created.

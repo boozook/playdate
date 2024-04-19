@@ -173,7 +173,7 @@ fn execute(config: &Config) -> CargoResult<()> {
 			let packages = package::build_all(&config, assets, products)?;
 			match packages.len() {
 				1 => (),
-				0 => bail!("No packages has been produced, nothing to run."),
+				0 => bail!("No packages have been produced, nothing to run."),
 				n => bail!("Produced {n} packages but should be 1, can't choose one."),
 			}
 			let package = packages.first().unwrap();
