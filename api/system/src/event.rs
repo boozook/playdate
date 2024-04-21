@@ -14,7 +14,7 @@ pub trait SystemEventExt {
 	///
 	/// If you don’t provide an update callback, the system initializes a Lua context
 	/// and calls your event handler again with event [`InitLua`](SystemEventExt::InitLua).
-	#[doc(alias = "sys::ffi::PDSystemEvent::kEventInitage")]
+	#[doc(alias = "sys::ffi::PDSystemEvent::kEventInit")]
 	const Init: SystemEvent = SystemEvent::kEventInit;
 
 	/// Program initialization in __lua context__.
@@ -30,7 +30,7 @@ pub trait SystemEventExt {
 	const Unlock: SystemEvent = SystemEvent::kEventUnlock;
 
 	/// Program execution paused.
-	#[doc(alias = "sys::ffi::PDSystemEvent::kEventPausee")]
+	#[doc(alias = "sys::ffi::PDSystemEvent::kEventPause")]
 	const Pause: SystemEvent = SystemEvent::kEventPause;
 
 	/// Program execution resumed after [pause](SystemEventExt::Pause).
