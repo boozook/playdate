@@ -16,6 +16,7 @@ Usage with [cargo-playdate][cargo-playdate] is strongly recommended.
 - [display](https://crates.io/crates/playdate-display)
 - [file system](https://crates.io/crates/playdate-fs)
 - [graphics](https://crates.io/crates/playdate-graphics) (with [color](https://crates.io/crates/playdate-color))
+- [lua](https://crates.io/crates/playdate-lua)
 - [scoreboards](https://crates.io/crates/playdate-scoreboards)
 - [sound](https://crates.io/crates/playdate-sound)
 - [sprite](https://crates.io/crates/playdate-sprite)
@@ -28,7 +29,6 @@ Plus some extensions to make it all more rust-ish.
 ### Not yet covered parts:
 
 - json
-- lua
 
 
 ## How to start

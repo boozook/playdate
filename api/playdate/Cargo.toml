@@ -17,6 +17,7 @@ ctrl = { workspace = true, default-features = false }
 display = { workspace = true, default-features = false }
 fs = { workspace = true, default-features = false }
 gfx = { workspace = true, default-features = false }
+lua = { workspace = true, default-features = false }
 menu = { workspace = true, default-features = false }
 scoreboards = { workspace = true, default-features = false }
 sound = { workspace = true, default-features = false }

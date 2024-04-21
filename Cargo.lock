@@ -3769,6 +3769,7 @@ dependencies = [
  "playdate-display",
  "playdate-fs",
  "playdate-graphics",
+ "playdate-lua",
  "playdate-menu",
  "playdate-scoreboards",
  "playdate-sound",
@@ -3901,6 +3902,13 @@ dependencies = [
  "playdate-fs",
  "playdate-sys",
  "playdate-system",
+]
+
+[[package]]
+name = "playdate-lua"
+version = "0.1.0"
+dependencies = [
+ "playdate-sys",
 ]
 
 [[package]]

@@ -19,6 +19,7 @@ ctrl = { version = "0.3", path = "api/ctrl", package = "playdate-controls", defa
 display = { version = "0.3", path = "api/display", package = "playdate-display", default-features = false }
 fs = { version = "0.2", path = "api/fs", package = "playdate-fs", default-features = false }
 gfx = { version = "0.3", path = "api/gfx", package = "playdate-graphics", default-features = false }
+lua = { version = "0.1", path = "api/lua", package = "playdate-lua", default-features = false }
 menu = { version = "0.2", path = "api/menu", package = "playdate-menu", default-features = false }
 scoreboards = { version = "0.1", path = "api/scoreboards", package = "playdate-scoreboards", default-features = false }
 sound = { version = "0.3", path = "api/sound", package = "playdate-sound", default-features = false }

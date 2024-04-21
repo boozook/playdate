@@ -34,6 +34,10 @@ pub mod fs {
 	pub use fs::prelude::*;
 }
 
+pub mod lua {
+	pub use lua::*;
+}
+
 
 pub mod ext {
 	use core::ptr::NonNull;
@@ -61,7 +65,9 @@ pub mod ext {
 		/// Playdate Sound API.
 		fn sound(&self) -> sound::Sound<sound::api::Cache>;
 
-		// fn lua() -> lua::Lua;
+		/// Playdate Lua API.
+		fn lua(&self) -> lua::Lua<lua::api::Cache>;
+
 		// fn json() -> json::Json;
 
 		fn scoreboards(&self) -> scoreboards::Scoreboards<scoreboards::api::Cache>;
@@ -97,6 +103,10 @@ pub mod ext {
 		fn scoreboards(&self) -> scoreboards::Scoreboards<scoreboards::api::Cache> {
 			scoreboards::Scoreboards::new_with(scoreboards::api::Cache::from(unsafe { self.as_ref() }.scoreboards))
 		}
+
+		fn lua(&self) -> lua::Lua<lua::api::Cache> {
+			lua::Lua::new_with(lua::api::Cache::from(unsafe { self.as_ref() }.lua))
+		}
 	}
 
 	impl PlaydateAPIExt for *const sys::ffi::PlaydateAPI {
@@ -128,6 +138,10 @@ pub mod ext {
 		fn scoreboards(&self) -> scoreboards::Scoreboards<scoreboards::api::Cache> {
 			let api = scoreboards::api::Cache::from(unsafe { self.as_ref() }.expect("api").scoreboards);
 			scoreboards::Scoreboards::new_with(api)
+		}
+
+		fn lua(&self) -> lua::Lua<lua::api::Cache> {
+			lua::Lua::new_with(lua::api::Cache::from(unsafe { self.as_ref() }.expect("api").lua))
 		}
 	}
 }
