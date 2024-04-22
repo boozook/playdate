@@ -159,7 +159,9 @@ fn execute(config: &Config) -> CargoResult<()> {
 						                    p == package &&
 						                    targets.iter()
 						                           .find(|t| {
-							                           name == t.name() && t.kind().rustc_crate_types().contains(&src_ct)
+							                           let crate_name = t.crate_name();
+							                           (name == &crate_name || &name.replace("-", "_") == &crate_name) &&
+							                           t.kind().rustc_crate_types().contains(&src_ct)
 						                           })
 						                           .is_some()
 					                    })
