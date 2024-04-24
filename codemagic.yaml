@@ -1,12 +1,5 @@
 scripts:
-  - &rustup_minimal
-    name: Rustup
-    script: >-
-      curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal
-      --default-toolchain nightly
-      -c rustfmt
-
-  - &rustup_full
+  - &rustup
     name: Rustup
     script: >-
       curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal
@@ -35,95 +28,8 @@ scripts:
       rm -rf __MACOSX
 
 workflows:
-  pre-gen:
-    name: Build
-    max_build_duration: 10
-    instance_type: mac_mini_m1
-    # when:
-    #   condition:
-
-    environment:
-      groups:
-        - github_credentials
-      vars:
-        FEATURES_MIN: >-
-          bindings-documentation
-          bindings-derive-debug
-        FEATURES_MAX: >-
-          bindings-documentation
-          bindings-derive-default
-          bindings-derive-eq
-          bindings-derive-copy
-          bindings-derive-debug
-          bindings-derive-hash
-          bindings-derive-ord
-          bindings-derive-partialeq
-          bindings-derive-partialord
-        SDK_VERSION: latest
-        PLAYDATE_SDK_PATH: ~/Developer/PlaydateSDK
-        # allow modify source for bindings generator:
-        PD_BUILD_PREBUILT: 1
-      xcode: latest
-
-    cache:
-      cache_paths:
-        - ~/.rustup
-        - ~/.cargo
-        # TODO: cache SDK installer
-
-    triggering:
-      # events:
-      #   - push
-      branch_patterns:
-        - pattern: api/sys/pre-build/**
-          include: true
-          source: true
-      cancel_previous_builds: true
-
-    scripts:
-      - *rustup_minimal
-      - *install_sdk
-
-      - name: Input
-        script: |
-          echo "X: $CM_SPECIAL_REQUEST_BY_GHA"
-
-      - name: Build
-        script: |
-          source "$HOME/.cargo/env"
-
-          cargo build -p=playdate-sys --features="${FEATURES_MIN?}"
-          cargo build -p=playdate-sys --features="${FEATURES_MAX?}"
-
-      - name: Status
-        script: git status -u
-
-    publishing:
-      scripts:
-        - name: Push
-          ignore_failure: true
-          script: |
-            #!/usr/bin/env bash
-            set -e # exit on first failed command
-            set -x # print all executed commands to the log
-
-            git pull
-
-            git config --global user.name 'Alex Koz'
-            git config --global user.email 'boozook@users.noreply.github.com'
-            git remote set-url origin https://x-access-token:${GITHUB_TOKEN?}@github.com/$CM_REPO_SLUG.git
-
-            git add ./api/sys/gen/*.rs
-            git commit -m "Automated build pre-built bindings" && git push
-
-        - name: Report
-          script: |
-            echo "TODO: report to gh"
-            # if [ "$CM_GH_JOB" = "success" ]
-            # then
-            # fi
   test:
-    name: Tests / All (macos, aarm64)
+    name: Tests / Execution
     max_build_duration: 20
     instance_type: mac_mini_m1
     environment:
@@ -137,20 +43,6 @@ workflows:
         CARGO_TERM_PROGRESS_WHEN: never
         RUST_LOG: trace
         CARGO_PLAYDATE_LOG: trace
-        FEATURES_MIN: >-
-          bindgen-runtime
-          bindings-derive-debug
-        FEATURES_MAX: >-
-          bindgen-runtime
-          bindings-documentation
-          bindings-derive-default
-          bindings-derive-eq
-          bindings-derive-copy
-          bindings-derive-debug
-          bindings-derive-hash
-          bindings-derive-ord
-          bindings-derive-partialeq
-          bindings-derive-partialord
         SDK_VERSION: latest
         PLAYDATE_SDK_PATH: ~/Developer/PlaydateSDK
       xcode: latest
@@ -164,83 +56,13 @@ workflows:
     triggering:
       events:
         - pull_request
-      branch_patterns:
-        - pattern: dev/magic/**
-      cancel_previous_builds: true
-    when:
-      condition: not event.pull_request.draft
+      cancel_previous_builds: false
+    # when:
+    #   condition: not event.pull_request.draft
 
     scripts:
-      - *rustup_full
+      - *rustup
       - *install_sdk
-
-      - name: Test (sys, host)
-        script: |
-          source "$HOME/.cargo/env"
-
-          cargo test -p=playdate-sys --features=lang-items -- --nocapture
-          cargo test -p=playdate-sys --features="lang-items ${FEATURES_MIN?}"
-          cargo test -p=playdate-sys --features="lang-items ${FEATURES_MAX?}"
-
-      - name: Build (sys, device)
-        script: |
-          source "$HOME/.cargo/env"
-
-          cargo build -p=playdate-sys -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
-          cargo build -p=playdate-sys --features="lang-items ${FEATURES_MIN?}" --examples -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
-          cargo build -p=playdate-sys --features="lang-items ${FEATURES_MAX?}" --examples -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
-
-      - name: Test Crates (host)
-        script: |
-          source "$HOME/.cargo/env"
-
-          cargo test \
-            -p=playdate-color \
-            -p=playdate-controls \
-            -p=playdate-display \
-            -p=playdate-fs \
-            -p=playdate-graphics \
-            -p=playdate-menu \
-            -p=playdate-scoreboards \
-            -p=playdate-sound \
-            -p=playdate-sprite \
-            -p=playdate-system \
-            -p=playdate \
-            --lib --no-default-features --features="${FEATURES_MIN?}" -- --nocapture
-
-      - name: Build Examples (device)
-        script: |
-          source "$HOME/.cargo/env"
-
-          cargo build --features="sys/lang-items ${FEATURES_MIN?}" -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf \
-            -p=playdate-color \
-            -p=playdate-controls \
-            -p=playdate-display \
-            -p=playdate-fs \
-            -p=playdate-graphics \
-            -p=playdate-menu \
-            -p=playdate-scoreboards \
-            -p=playdate-sound \
-            -p=playdate-sprite \
-            -p=playdate-system \
-            -p=playdate \
-            --examples --lib
-
-      - name: Check Tool
-        script: |
-          source "$HOME/.cargo/env"
-          cargo check --tests -p=cargo-playdate --all-features
-
-      - name: Test Tool
-        script: |
-          source "$HOME/.cargo/env"
-          cargo test -p=cargo-playdate -- --nocapture
-          rm -rf ./target/tmp
-
-      - name: Reset manifests
-        script: |
-          git checkout HEAD -- ./Cargo.toml
-          git checkout HEAD -- ./Cargo.lock
 
       - name: Execution
         script: |
@@ -248,37 +70,10 @@ workflows:
           RUSTFLAGS="--cfg exec_tests" cargo test -p=cargo-playdate run -- --nocapture
           sudo killall "Playdate Simulator"
 
-      - name: Clean
-        script: rm -rf ./target/tmp || true
-
-      - name: Install
-        script: |
-          source "$HOME/.cargo/env"
-          cargo install --path=./cargo --debug
-
-      - name: Pack Examples
-        script: |
-          set -e
-          source "$HOME/.cargo/env"
-          FEATURES=sys/lang-items,sys/entry-point
-          cargo playdate package --features=lang-items  --examples --device --simulator -p=playdate-sys
-          cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-color
-          cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-controls
-          cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-display
-          cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-fs
-          cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-graphics
-          cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-menu
-          cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-scoreboards
-          cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-sound
-          cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-sprite
-          cargo playdate package --features=$FEATURES   --examples --device --simulator -p=playdate-system
-          cargo playdate package --features=lang-items,entry-point --examples --device --simulator -p=playdate
-          cargo playdate package --features=lang-items,entry-point --examples --device             -p=playdate
-          cargo playdate package --features=lang-items,entry-point --examples                      -p=playdate
+      - name: Reset manifests
+        script: git checkout HEAD -- ./Cargo.*
 
       - name: Clean
         script: |
-          source "$HOME/.cargo/env"
-          cargo uninstall cargo-playdate
           rm -rf ./target/tmp || true
           rm -rf ./target/playdate || true
