@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use zip::result::ZipResult;
 use zip::{ZipWriter, CompressionMethod};
-use zip::write::FileOptions;
+use zip::write::{FileOptionExtension, FileOptions};
 use cargo::CargoResult;
 
 use crate::utils::path::AsRelativeTo;
@@ -26,15 +26,15 @@ pub fn build<'p>(source: Cow<'p, Path>) -> CargoResult<Cow<'p, Path>> {
 	let file = std::fs::File::create(&dst)?;
 
 	let mut ar = ZipWriter::new(file);
-	let options = FileOptions::default().compression_method(CompressionMethod::Deflated)
-	                                    .compression_level(Some(9));
+	let options = FileOptions::<()>::default().compression_method(CompressionMethod::Deflated)
+	                                          .compression_level(Some(9));
 	ar.set_comment(INFO_FULL);
 
-	fn zip_entry<T: Write + Seek>(zip: &mut ZipWriter<T>,
-	                              entry: DirEntry,
-	                              root: &Path,
-	                              options: FileOptions)
-	                              -> ZipResult<()> {
+	fn zip_entry<T: Write + Seek, Opts: FileOptionExtension + Copy>(zip: &mut ZipWriter<T>,
+	                                                                entry: DirEntry,
+	                                                                root: &Path,
+	                                                                options: FileOptions<Opts>)
+	                                                                -> ZipResult<()> {
 		let path = entry.path();
 		let relative = path.as_relative_to(&root.parent().expect("parent directory"));
 
