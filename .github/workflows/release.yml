@@ -87,7 +87,7 @@ jobs:
         id: symbolizer
         continue-on-error: true
         run: >-
-          cargo build --release -p=pd-addr2line --bins
+          cargo build --release -p=playdate-symbolize --bins
           ${{ runner.os == 'macOS' && '--target=x86_64-apple-darwin --target=aarch64-apple-darwin' || '' }}
 
       - name: symbolizer to upload

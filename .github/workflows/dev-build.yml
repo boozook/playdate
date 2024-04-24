@@ -67,7 +67,7 @@ jobs:
 
       - name: symbolizer
         continue-on-error: true
-        run: cargo build -p=pd-addr2line --bins
+        run: cargo build -p=playdate-symbolize --bins
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
