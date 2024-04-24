@@ -142,7 +142,8 @@ pub fn build<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<Vec<BuildProduct<'
 				},
 				CrateType::Staticlib if artifact.ck.is_playdate() => build_library(config, layout, artifact),
 				_ => {
-					let name = if package.name() == art.target.name {
+					let package_crate_name = package.name().replace("-", "_");
+					let name = if package_crate_name == *art.target.name {
 						Cow::Borrowed(art.target.name.as_str())
 					} else {
 						format!("{}, crate {}", package.name(), art.target.name).into()
@@ -295,7 +296,12 @@ fn map_artifacts<'cargo, 'cc>(
 		                .find(|(p, ..)| p.package_id() == art.package_id)
 		                .and_then(|(package, targets, ..)| {
 			                targets.into_iter()
-			                       .find(|t| t.name() == art.target.name.as_str() && t.kind() == &art.target.kind())
+			                       .find(|t| {
+				                       let crate_name = t.crate_name();
+				                       (crate_name == *art.target.name ||
+				                        crate_name == art.target.name.replace("-", "_")) &&
+				                       t.kind() == &art.target.kind()
+			                       })
 			                       .map(|target| (*package, *target, art))
 		                })
 	         })
@@ -389,9 +395,10 @@ fn build_binary<'cfg, Layout, S>(config: &'cfg Config,
 	        artifact.path.display()
 	);
 
+	let package_crate_name = artifact.package.name().replace("-", "_");
 	let mut pdl = ForTargetLayout::new(
 	                                   layout.as_ref(),
-	                                   artifact.package.name().as_str(),
+	                                   package_crate_name,
 	                                   Some(artifact.name.as_ref()),
 	).lock(config.workspace.config())?;
 	pdl.as_mut().prepare()?;
@@ -457,9 +464,10 @@ fn build_library<'cfg, Layout, S>(config: &'cfg Config,
 	        artifact.path.display()
 	);
 
+	let package_crate_name = artifact.package.name().replace("-", "_");
 	let mut pdl = ForTargetLayout::new(
 	                                   layout.as_ref(),
-	                                   artifact.package.name().as_str(),
+	                                   package_crate_name,
 	                                   Some(artifact.name.as_ref()),
 	).lock(config.workspace.config())?;
 	pdl.as_mut().prepare()?;
