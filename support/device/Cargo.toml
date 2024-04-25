@@ -1,6 +1,6 @@
 [package]
 name = "playdate-device"
-version = "0.2.4"
+version = "0.2.5"
 readme = "README.md"
 description = "Cross-platform interface Playdate device, async & blocking."
 keywords = ["playdate", "usb", "serial"]
@@ -95,8 +95,8 @@ features = [
 [features]
 default = ["tokio", "tokio-serial"]
 tokio-serial = ["futures", "dep:tokio-serial", "tokio?/io-util", "tokio?/rt"]
-tokio = ["futures", "dep:tokio", "async-std?/tokio1"]                         # use async-std reactor
-async-std = ["futures", "dep:async-std"]                                      # use async-std reactor and features
+tokio = ["futures", "dep:tokio", "async-std?/tokio1"]                         # use tokio reactor
+async-std = ["futures", "dep:async-std"]                                      # use async-std reactor
 
 
 [package.metadata.docs.rs]
