@@ -46,6 +46,12 @@ crate-type = ["dylib", "staticlib"]
 path = "examples/handler-pinned.rs"
 required-features = ["sys/entry-point", "sys/lang-items"]
 
+[[example]]
+name = "set-serial-message-callback"
+crate-type = ["dylib", "staticlib"]
+path = "examples/set-serial-message-callback.rs"
+required-features = ["sys/entry-point", "sys/lang-items"]
+
 [package.metadata.playdate]
 bundle-id = "rs.playdate.system"
 

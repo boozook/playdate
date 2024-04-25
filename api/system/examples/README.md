@@ -9,6 +9,8 @@ cargo playdate run -p=playdate-system --example=handler-static --features=sys/la
 cargo playdate run -p=playdate-system --example=handler-boxed --features=sys/lang-items,sys/entry-point
 
 cargo playdate run -p=playdate-system --example=handler-pinned --features=sys/lang-items,sys/entry-point
+
+cargo playdate run -p=playdate-system --example=set-serial-message-callback --features=sys/lang-items,sys/entry-point
 ```
 
 More information how to use [cargo-playdate][] in help: `cargo playdate --help`.
