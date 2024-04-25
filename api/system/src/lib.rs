@@ -4,6 +4,7 @@
 extern crate sys;
 extern crate alloc;
 
+use core::ffi::c_char;
 use core::ffi::c_float;
 use core::ffi::c_int;
 use core::ffi::c_uint;
@@ -247,10 +248,25 @@ impl<Api: api::Api> System<Api> {
 		let _ = dt; // this to prevent earlier drop.
 		epoch
 	}
+
+	/// Equivalent to [`sys::ffi::playdate_sys::setSerialMessageCallback`]
+	#[doc(alias = "sys::ffi::playdate_sys::setSerialMessageCallback")]
+	// NOTE: ideally this would be similar to our implementation of `fs::read_dir`
+	//
+	// i.e.
+	//
+	//   pub fn set_serial_message_callback<Fn>(&self, callback: Fn) where Fn: FnMut(String) {
+	//
+	// but we can't do that because of
+	// https://devforum.play.date/t/feature-request-add-a-userdata-argument-to-setserialmessagecallback/17333
+	pub fn set_serial_message_callback(&self, callback: Option<unsafe extern "C" fn(data: *const c_char)>) {
+		let f = self.0.set_serial_message_callback();
+		unsafe { f(callback) }
+	}
 }
 
-
 pub mod api {
+	use core::ffi::c_char;
 	use core::ffi::c_float;
 	use core::ffi::c_int;
 	use core::ffi::c_uint;
@@ -261,6 +277,9 @@ pub mod api {
 	use sys::ffi::PDDateTime;
 	use sys::ffi::PDLanguage;
 	use sys::ffi::playdate_sys;
+
+
+	pub type FnSerialMessageCallback = Option<unsafe extern "C" fn(data: *const c_char)>;
 
 
 	/// Default system api end-point, ZST.
@@ -418,6 +437,13 @@ pub mod api {
 		fn convert_date_time_to_epoch(&self) -> unsafe extern "C" fn(datetime: *mut PDDateTime) -> u32 {
 			self.0.convertDateTimeToEpoch.expect("convertDateTimeToEpoch")
 		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::setSerialMessageCallback`]
+		#[doc(alias = "sys::ffi::playdate_sys::setSerialMessageCallback")]
+		#[inline(always)]
+		fn set_serial_message_callback(&self) -> unsafe extern "C" fn(callback: FnSerialMessageCallback) {
+			self.0.setSerialMessageCallback.expect("setSerialMessageCallback")
+		}
 	}
 
 
@@ -517,6 +543,13 @@ pub mod api {
 		#[inline(always)]
 		fn convert_date_time_to_epoch(&self) -> unsafe extern "C" fn(datetime: *mut PDDateTime) -> u32 {
 			*sys::api!(system.convertDateTimeToEpoch)
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::setSerialMessageCallback`]
+		#[doc(alias = "sys::ffi::playdate_sys::setSerialMessageCallback")]
+		#[inline(always)]
+		fn set_serial_message_callback(&self) -> unsafe extern "C" fn(callback: FnSerialMessageCallback) {
+			*sys::api!(system.setSerialMessageCallback)
 		}
 	}
 }
