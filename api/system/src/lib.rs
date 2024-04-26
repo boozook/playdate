@@ -4,11 +4,14 @@
 extern crate sys;
 extern crate alloc;
 
-use core::ffi::c_char;
 use core::ffi::c_float;
 use core::ffi::c_int;
 use core::ffi::c_uint;
 use core::time::Duration;
+use alloc::string::String;
+
+mod storage;
+use storage::*;
 
 pub mod time;
 pub mod lang;
@@ -251,17 +254,14 @@ impl<Api: api::Api> System<Api> {
 
 	/// Equivalent to [`sys::ffi::playdate_sys::setSerialMessageCallback`]
 	#[doc(alias = "sys::ffi::playdate_sys::setSerialMessageCallback")]
-	// NOTE: ideally this would be similar to our implementation of `fs::read_dir`
-	//
-	// i.e.
-	//
-	//   pub fn set_serial_message_callback<Fn>(&self, callback: Fn) where Fn: FnMut(String) {
-	//
-	// but we can't do that because of
-	// https://devforum.play.date/t/feature-request-add-a-userdata-argument-to-setserialmessagecallback/17333
-	pub fn set_serial_message_callback(&self, callback: Option<unsafe extern "C" fn(data: *const c_char)>) {
+	pub fn set_serial_message_callback<F>(&self, callback: F)
+		where F: FnMut(String),
+		      F: 'static + Send {
+		init_store();
+		unsafe { STORE.as_mut() }.expect("impossible")
+		                         .insert::<F>(callback);
 		let f = self.0.set_serial_message_callback();
-		unsafe { f(callback) }
+		unsafe { f(Some(proxy_serial_message_callback::<F>)) }
 	}
 }
 
