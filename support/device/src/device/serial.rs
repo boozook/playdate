@@ -174,8 +174,8 @@ mod tests {
 					let path = format!("{path}{sn}{suffix}");
 					println!("parsing {path}");
 					let parsed = SerialNumber::from_str(&path).unwrap();
-					assert_eq!(false, parsed == SN);
-					assert_eq!(false, SN == parsed);
+					assert!(parsed != SN);
+					assert!(SN != parsed);
 				}
 			}
 		}
