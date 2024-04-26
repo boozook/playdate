@@ -194,6 +194,7 @@ jobs:
         run: |
           cargo test -p=playdate-build-utils --all-features
           cargo test -p=playdate-build --all-features
+          cargo test -p=playdate-device --all-features
           cargo test -p=playdate-tool --all-features
 
   tool:
