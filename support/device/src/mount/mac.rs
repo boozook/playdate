@@ -272,12 +272,14 @@ struct ControllerInfo {
 }
 
 
+/// Flatten untagged enum,
+/// represents normal `DeviceInfo`
+/// and any other not-complete `DeviceInfo`,
+/// e.g. without serial-number.
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
 enum AnyDeviceInfo {
-	#[serde(untagged)]
 	Known(DeviceInfo),
-	#[serde(untagged)]
 	Other {
 		#[serde(rename = "_name")]
 		name: String,
