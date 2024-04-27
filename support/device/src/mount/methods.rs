@@ -97,10 +97,11 @@ pub async fn wait_fs_available<T>(mount: &MountedDevice, retry: Retries<T>) -> R
 }
 
 
+/// Double wait time and notify user in between of halfs.
 pub async fn wait_fs_available_with_user<T>(mount: &MountedDevice, retry: Retries<T>) -> Result
 	where T: Clone + std::fmt::Debug + IterTime {
 	match wait_fs_available(mount, retry).await {
-		Ok(_) => todo!(),
+		Ok(_) => (),
 		Err(err) => {
 			error!("{err}");
 			warn!(
