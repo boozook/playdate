@@ -206,11 +206,16 @@ fn parse_spusb<F>(
 					                                        trace!("found mount-point: {}", path.display());
 					                                        Some(futures_lite::future::ready(Ok(path)).left_future())
 				                                        } else {
-					                                        let path = Path::new("/Volumes").join(&par.name);
-					                                        if !par.name.trim().is_empty() && path.exists() {
-						                                        trace!("existing, by name: {}", path.display());
-						                                        Some(futures_lite::future::ready(Ok(path)).left_future())
-					                                        } else if par.volume_uuid.is_some() {
+					                                        // This is ok for just one connected PD,
+					                                        // Otherwise, it can be mount of other PD, but not this PD.
+					                                        // Just commented for future and maybe could be configurable later.
+					                                        // Issue: #332
+					                                        //  let path = Path::new("/Volumes").join(&par.name);
+					                                        //  if !par.name.trim().is_empty() && path.exists() {
+					                                        //     trace!("existing, by name: {}", path.display());
+					                                        //     Some(futures_lite::future::ready(Ok(path)).left_future())
+					                                        //  } else
+					                                        if par.volume_uuid.is_some() {
 						                                        trace!("not mounted yet, create resolver fut");
 						                                        Some(mount_point_for_partition(par).right_future())
 					                                        } else {
