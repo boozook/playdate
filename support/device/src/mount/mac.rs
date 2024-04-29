@@ -182,6 +182,15 @@ fn parse_spusb<F>(
 	                 .into_iter()
 	                 .filter_map(|c| c.items)
 	                 .flatten()
+	                 .filter_map(|item| {
+		                 match item {
+			                 AnyDeviceInfo::Known(info) => Some(info),
+		                    AnyDeviceInfo::Other { name, .. } => {
+			                    trace!("Skip {name}");
+			                    None
+		                    },
+		                 }
+	                 })
 	                 .filter(|item| item.vendor_id == VENDOR_ID_ENC)
 	                 .filter(filter)
 	                 .filter_map(|item| {
@@ -197,11 +206,16 @@ fn parse_spusb<F>(
 					                                        trace!("found mount-point: {}", path.display());
 					                                        Some(futures_lite::future::ready(Ok(path)).left_future())
 				                                        } else {
-					                                        let path = Path::new("/Volumes").join(&par.name);
-					                                        if !par.name.trim().is_empty() && path.exists() {
-						                                        trace!("existing, by name: {}", path.display());
-						                                        Some(futures_lite::future::ready(Ok(path)).left_future())
-					                                        } else if par.volume_uuid.is_some() {
+					                                        // This is ok for just one connected PD,
+					                                        // Otherwise, it can be mount of other PD, but not this PD.
+					                                        // Just commented for future and maybe could be configurable later.
+					                                        // Issue: #332
+					                                        //  let path = Path::new("/Volumes").join(&par.name);
+					                                        //  if !par.name.trim().is_empty() && path.exists() {
+					                                        //     trace!("existing, by name: {}", path.display());
+					                                        //     Some(futures_lite::future::ready(Ok(path)).left_future())
+					                                        //  } else
+					                                        if par.volume_uuid.is_some() {
 						                                        trace!("not mounted yet, create resolver fut");
 						                                        Some(mount_point_for_partition(par).right_future())
 					                                        } else {
@@ -259,7 +273,22 @@ struct SystemProfilerResponse {
 #[derive(Deserialize, Debug)]
 struct ControllerInfo {
 	#[serde(rename = "_items")]
-	items: Option<Vec<DeviceInfo>>,
+	items: Option<Vec<AnyDeviceInfo>>,
+}
+
+
+/// Flatten untagged enum,
+/// represents normal `DeviceInfo`
+/// and any other not-complete `DeviceInfo`,
+/// e.g. without serial-number.
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+enum AnyDeviceInfo {
+	Known(DeviceInfo),
+	Other {
+		#[serde(rename = "_name")]
+		name: String,
+	},
 }
 
 #[derive(Deserialize, Debug)]
@@ -360,6 +389,76 @@ mod tests {
 		};
 
 		assert_eq!(dev.name, "Playdate");
+		assert_eq!(dev.serial, "PDU1-Y000042");
+
+		let vol = dev.volume.now_or_never().unwrap().unwrap();
+		assert_eq!("/Volumes/PLAYDATE", vol.to_string_lossy());
+	}
+
+	/// Tests parsing doc with multiple devices with one "dev of interest"
+	/// that with serial number.
+	#[test]
+	fn parse_spusb_mount_others() {
+		let data = r#"
+		{
+			"SPUSBDataType" : [
+			  {
+				 "_items" : [
+					{
+					  "_name" : "with-sn",
+					  "Media" : [
+						 {
+							"volumes" : [
+							  {
+								 "_name" : "PLAYDATE",
+								 "bsd_name" : "disk9s1",
+								 "mount_point" : "/Volumes/PLAYDATE",
+								 "volume_uuid" : "1AA11111-111A-311A-11A1-1AA111A1A1A1"
+							  }
+							]
+						 }
+					  ],
+					  "serial_num" : "PDU1-Y000042",
+					  "vendor_id" : "0x1331"
+					},
+					{
+					  "_name" : "with-sn-no-media",
+					  "serial_num" : "PDU1-Y000042",
+					  "vendor_id" : "0x1331"
+					},
+					{
+					  "_name" : "no-sn",
+					  "Media" : [
+						 {
+							"volumes" : [
+							  {
+								 "_name" : "PLAYDATE",
+								 "bsd_name" : "disk9s1",
+								 "mount_point" : "/Volumes/PLAYDATE",
+								 "volume_uuid" : "1AA11111-111A-311A-11A1-1AA111A1A1A1"
+							  }
+							]
+						 }
+					  ],
+					  "vendor_id" : "0x1331"
+					},
+					{
+					  "_name" : "no-sn",
+					  "vendor_id" : "0x1331"
+					}
+				 ]
+			  }
+			]
+		 }
+		"#;
+
+		let dev = {
+			let mut devs: Vec<_> = parse_spusb(|_| true, data.as_bytes()).unwrap().collect();
+			assert_eq!(1, devs.len());
+			devs.pop().unwrap()
+		};
+
+		assert_eq!(dev.name, "with-sn");
 		assert_eq!(dev.serial, "PDU1-Y000042");
 
 		let vol = dev.volume.now_or_never().unwrap().unwrap();
