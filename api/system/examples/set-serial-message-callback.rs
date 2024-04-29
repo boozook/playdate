@@ -17,10 +17,30 @@ use system::update::UpdateCtrl;
 /// Entry point, event handler
 #[no_mangle]
 fn event_handler(_api: NonNull<PlaydateAPI>, event: PDSystemEvent, _: u32) -> EventLoopCtrl {
-	if event == PDSystemEvent::Init {
-		System::Default().set_serial_message_callback(|data| println!("serial_message_callback: {}", data));
+	// Just for this example, ignore all events except init:
+	if event != PDSystemEvent::Init {
+		return EventLoopCtrl::Continue;
 	}
 
+
+	let mut counter: u32 = 0;
+
+	let callback = move |msg| {
+		counter += 1;
+
+		println!("[{counter}/3] serial_message_callback: '{}'", msg);
+
+		if counter == 3 {
+			println!("stop receiving serial messages");
+			System::Default().set_serial_message_callback(None::<fn(_)>);
+		}
+	};
+
+	// Register callback to start receiving serial messages:
+	System::Default().set_serial_message_callback(Some(callback));
+
+
+	// Also set update callback:
 	System::Default().set_update_callback_static(Some(on_update), ());
 
 	// Continue event-loop:

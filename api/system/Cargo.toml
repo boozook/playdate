@@ -23,10 +23,6 @@ bindgen-static = ["sys/bindgen-static"]
 bindings-derive-debug = ["sys/bindings-derive-debug"]
 
 
-[dependencies]
-erased_set = "0.8"
-
-
 [dependencies.sys]
 workspace = true
 default-features = false
