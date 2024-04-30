@@ -1,8 +1,6 @@
 use std::borrow::Cow;
 use std::cell::RefCell;
 
-use crate::error::Error;
-
 
 pub mod discover;
 mod blocking;
@@ -72,7 +70,7 @@ impl Interface {
 	pub fn set_port(&mut self, port: Port) { self.port = Some(RefCell::new(port)); }
 
 	#[cfg_attr(feature = "tracing", tracing::instrument)]
-	pub fn open(&mut self) -> Result<(), Error> {
+	pub fn open(&mut self) -> Result<(), serialport::Error> {
 		if self.port.is_some() {
 			Ok(())
 		} else {
@@ -89,7 +87,7 @@ impl Interface {
 
 
 #[cfg_attr(feature = "tracing", tracing::instrument)]
-pub fn open<'a, S: Into<std::borrow::Cow<'a, str>>>(port_name: S) -> Result<Port, Error>
+pub fn open<'a, S: Into<std::borrow::Cow<'a, str>>>(port_name: S) -> Result<Port, serialport::Error>
 	where S: std::fmt::Debug {
 	trace!("opening port {port_name:?}");
 	let builder = port_builder(port_name);
