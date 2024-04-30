@@ -30,7 +30,7 @@ pub fn build(config: &Config,
 			let src = layout.assets_dev();
 			let build = layout.build_dev();
 			std::fs::create_dir(&build).ok();
-			(src.into(), build.into())
+			(src, build)
 		},
 	};
 
@@ -50,10 +50,10 @@ fn build_in(config: &Config, package: &Package, src: &Path, build: &Path, root: 
 	                .unwrap_or_default();
 	let dst = build.with_file_name(format!("{prefix}.build.pdx"));
 
-	soft_link_checked(&build, &dst, true, root)?;
+	soft_link_checked(build, &dst, true, root)?;
 
 	// prepare src for pdc:
-	std::fs::write(&src.join("pdex.bin"), &[])?;
+	std::fs::write(src.join("pdex.bin"), [])?;
 
 	let mut cmd = Command::new(config.sdk()?.pdc());
 	if config.skip_unknown {

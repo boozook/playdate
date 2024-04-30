@@ -19,7 +19,7 @@ fn run_build(crate_path: &Path,
 	let args = args.into_iter()
 	               .map(Into::into)
 	               .chain([OsString::from(target_dir_arg)]);
-	let output = Tool::build(&crate_path, args)?;
+	let output = Tool::build(crate_path, args)?;
 	assert!(
 	        output.status.success(),
 	        "Tool failed with stderr:\n{}",

@@ -40,9 +40,9 @@ impl Rustflags {
 		};
 		let bins_targeted = true; // TODO: determine from config
 		let rustflags_device = if !bins_targeted {
-			Self::rustflags_lib_playdate().into_iter()
+			Self::rustflags_lib_playdate().iter()
 			                              .map(|s| Cow::from(*s))
-			                              .chain(prevent_unwinding().into_iter())
+			                              .chain(prevent_unwinding())
 			                              .collect()
 		} else {
 			let sdk = config.sdk()
@@ -63,10 +63,10 @@ impl Rustflags {
 					std::fs::write(&map, LINK_MAP_BIN_SRC)?;
 				}
 				let link_map = format!("-Clink-arg=-T{}", map.display());
-				Self::rustflags_bin_playdate().into_iter()
+				Self::rustflags_bin_playdate().iter()
 				                              .map(|s| Cow::from(*s))
 				                              .chain([link_map.into()])
-				                              .chain(prevent_unwinding().into_iter())
+				                              .chain(prevent_unwinding())
 				                              .collect()
 			} else {
 				let arm = config.gcc()
@@ -76,13 +76,13 @@ impl Rustflags {
 				let link_map = format!("-Clink-arg=-T{}", sdk.build_support().link_map().display());
 				let lib_search_paths = arm.lib_search_paths_for_playdate()
 				                          .or_else(|_| arm.lib_search_paths_default())?;
-				Self::rustflags_bin_playdate().into_iter()
+				Self::rustflags_bin_playdate().iter()
 				                              .map(|s| Cow::from(*s))
 				                              .chain([link_map.into()])
 				                              .chain(lib_search_paths.into_iter().map(|s| {
 					                              "-L".to_owned().add(s.to_string_lossy().as_ref()).into()
 				                              }))
-				                              .chain(prevent_unwinding().into_iter())
+				                              .chain(prevent_unwinding())
 				                              .collect()
 			}
 		};
@@ -90,9 +90,9 @@ impl Rustflags {
 
 		let mut flags: BTreeMap<CompileKind, Vec<_>> = BTreeMap::new();
 		let rustflags_lib_host = || {
-			Self::rustflags_lib_host().into_iter()
+			Self::rustflags_lib_host().iter()
 			                          .map(|s| Cow::from(*s))
-			                          .chain(prevent_unwinding().into_iter())
+			                          .chain(prevent_unwinding())
 			                          .collect()
 		};
 		flags.insert(CompileKind::Host, rustflags_lib_host());
@@ -101,7 +101,7 @@ impl Rustflags {
 
 
 		let existing = [&device_target, &config.host_target].into_iter()
-		                                                    .map(|ck| {
+		                                                    .filter_map(|ck| {
 			                                                    config.workspace
 			                                                          .config()
 			                                                          .target_cfg_triple(ck.short_name())
@@ -109,7 +109,6 @@ impl Rustflags {
 			                                                          .and_then(|tcfg| tcfg.rustflags)
 			                                                          .map(|flags| (ck, flags))
 		                                                    })
-		                                                    .flatten()
 		                                                    .collect::<HashMap<_, _>>();
 		// remove conflicting flags:
 		let mut drained = Vec::new();
@@ -120,15 +119,9 @@ impl Rustflags {
 						                    existing.val
 						                            .as_slice()
 						                            .iter()
-						                            .find(|f| f.as_str() == flag.as_ref())
-						                            .is_some()
+						                            .any(|f| f.as_str() == flag.as_ref())
 					                    }));
-					if existing.val
-					           .as_slice()
-					           .iter()
-					           .find(|f| f.contains("target-cpu"))
-					           .is_some()
-					{
+					if existing.val.as_slice().iter().any(|f| f.contains("target-cpu")) {
 						drained.extend(flags.extract_if(|flag| flag.starts_with("-Ctarget-cpu=")));
 					}
 				}
@@ -150,8 +143,8 @@ impl Rustflags {
 		// this to catch backslashes and then escape it:
 		let re = regex::Regex::new(r"([^\\])\\([^\\])").unwrap();
 		let fmt = |t, args: &[Cow<'_, str>]| {
-			let args: Vec<_> = args.into_iter()
-			                       .map(|s| (s, re.replace_all(&s, r"$1\\$2")))
+			let args: Vec<_> = args.iter()
+			                       .map(|s| (s, re.replace_all(s, r"$1\\$2")))
 			                       .map(|(src, esc)| {
 				                       if src.as_ref() != esc.as_ref() {
 					                       log::trace!("replace: {src}");

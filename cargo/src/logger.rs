@@ -7,7 +7,7 @@ use crate::config::Config;
 
 pub fn init(verbose: u32) -> anyhow::Result<()> {
 	let var = concat!(env!("CARGO_BIN_NAME"), "_LOG").to_uppercase()
-	                                                 .replace("-", "_");
+	                                                 .replace('-', "_");
 	let style = format!("{var}_STYLE");
 
 	let env = Env::new().filter(var).write_style(style);
@@ -35,7 +35,7 @@ impl<T, E: Display + std::fmt::Debug> LogErr<T, E> for Result<T, E> {
 
 	fn log_err_cargo(self, config: &Config) -> Self {
 		self.inspect_err(|err| {
-			    config.log().error(&err);
+			    config.log().error(err);
 			    ::log::error!("{err}");
 		    })
 	}

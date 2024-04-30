@@ -63,7 +63,7 @@ fn main() -> CargoResult<()> {
 fn execute(config: &Config) -> CargoResult<()> {
 	match config.cmd {
 		cli::cmd::Cmd::Assets => {
-			let _result = assets::build(&config)?;
+			let _result = assets::build(config)?;
 		},
 
 		cli::cmd::Cmd::Build => {
@@ -85,7 +85,7 @@ fn execute(config: &Config) -> CargoResult<()> {
 			log::debug!("assets artifacts: {}", assets.len());
 			log::debug!("build  artifacts: {}", products.len());
 
-			package::build_all(&config, assets, products)?;
+			package::build_all(config, assets, products)?;
 		},
 
 		cli::cmd::Cmd::Run => {
@@ -154,25 +154,22 @@ fn execute(config: &Config) -> CargoResult<()> {
 				                                          name,
 				                                          src_ct,
 				                                          .. } => {
-					           !expected.iter()
-					                    .find(|(p, targets)| {
-						                    p == package &&
-						                    targets.iter()
-						                           .find(|t| {
-							                           let crate_name = t.crate_name();
-							                           (name == &crate_name || &name.replace("-", "_") == &crate_name) &&
-							                           t.kind().rustc_crate_types().contains(&src_ct)
-						                           })
-						                           .is_some()
-					                    })
-					                    .is_some()
+					           !expected.iter().any(|(p, targets)| {
+						                           p == package &&
+						                           targets.iter().any(|t| {
+							                                         let crate_name = t.crate_name();
+							                                         (name == &crate_name ||
+							                                          name.replace('-', "_") == crate_name) &&
+							                                         t.kind().rustc_crate_types().contains(src_ct)
+						                                         })
+					                           })
 				           },
 				           _ => true,
 				        }
 			        })
 			        .count();
 
-			let packages = package::build_all(&config, assets, products)?;
+			let packages = package::build_all(config, assets, products)?;
 			match packages.len() {
 				1 => (),
 				0 => bail!("No packages have been produced, nothing to run."),
@@ -186,11 +183,7 @@ fn execute(config: &Config) -> CargoResult<()> {
 
 			{
 				let sim_or_dev: Cow<str> = if ck.is_playdate() {
-					if let Some(query) = config.mounting
-					                           .as_ref()
-					                           .map(|m| m.device.value.as_ref())
-					                           .flatten()
-					{
+					if let Some(query) = config.mounting.as_ref().and_then(|m| m.device.value.as_ref()) {
 						format!("on the '{}'", query.to_value_string()).into()
 					} else {
 						"on a device".into()

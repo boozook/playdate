@@ -28,8 +28,8 @@ pub trait Layout {
 }
 
 impl<T: Layout> Layout for &mut T {
-	fn root(&self) -> &Path { <T as Layout>::root(&self) }
-	fn dest(&self) -> Cow<Path> { <T as Layout>::dest(&self) }
+	fn root(&self) -> &Path { <T as Layout>::root(self) }
+	fn dest(&self) -> Cow<Path> { <T as Layout>::dest(self) }
 	fn create_dest_dir(&mut self) -> anyhow::Result<()> { <T as Layout>::create_dest_dir(self) }
 	fn prepare(&mut self) -> anyhow::Result<()> { <T as Layout>::prepare(self) }
 }

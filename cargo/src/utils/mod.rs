@@ -35,6 +35,6 @@ impl<'a, 'cfg> LazyBuildContext<'a, 'cfg> {
 
 	pub fn get(&'a self) -> CargoResult<&BuildContext<'a, 'cfg>> {
 		self.bcx
-		    .try_get_or_create(move || create_bcx(&self.workspace, &self.options, &self.interner))
+		    .try_get_or_create(move || create_bcx(self.workspace, &self.options, &self.interner))
 	}
 }

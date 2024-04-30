@@ -14,9 +14,7 @@ pub fn cmd_logged(config: &Config, mut cmd: Command) -> CargoResult<Command> {
 
 	let tool = &Path::new(cmd.get_program());
 	let tool = {
-		let s = tool.file_name()
-		            .unwrap_or_else(|| tool.as_os_str())
-		            .to_string_lossy();
+		let s = tool.file_name().unwrap_or(tool.as_os_str()).to_string_lossy();
 		let mut c = s.chars();
 		match c.next() {
 			None => String::new(),

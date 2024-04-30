@@ -71,7 +71,7 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 					            .or_else(|err| {
 					               match env::current_exe().map(|p|p.file_name().map(|s| s.to_string_lossy().to_string())) {
 					                  Ok(Some(result)) => Ok::<_, anyhow::Error>(result),
-					                  Ok(None) => Err(err.into()),
+					                  Ok(None) => Err(err),
 					                  Err(err) => Err(err.into()),
 					               }
 					            }
@@ -98,17 +98,14 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 	// Standalone mode compatibility.
 	// If subcommand name is allowed command, skip root command (tool name / cargo command).
 	let matches = if matches.subcommand_name()
-	                        .map(|s| Cmd::try_from(s).ok())
-	                        .flatten()
+	                        .and_then(|s| Cmd::try_from(s).ok())
 	                        .is_some()
 	{
 		// skip root command
 		matches.subcommand()
 	} else {
 		// get root, then subcommand
-		matches.subcommand_matches(CMD_NAME)
-		       .map(|m| m.subcommand())
-		       .flatten()
+		matches.subcommand_matches(CMD_NAME).and_then(|m| m.subcommand())
 	};
 
 
@@ -122,7 +119,7 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 		// disallow any changes in workspace:
 		let unstable_flags_ext: Vec<_> =
 			unstable_flags.into_iter()
-			              .chain(["unstable-options".to_owned(), "no-index-update".to_owned()].into_iter())
+			              .chain(["unstable-options".to_owned(), "no-index-update".to_owned()])
 			              .collect();
 
 		let verbose = matches.verbose();
@@ -133,7 +130,7 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 		config.configure(
 		                 verbose,
 		                 quiet,
-		                 matches.get_one::<&str>("color").map(|s| s.as_ref()),
+		                 matches.get_one::<&str>("color").copied(),
 		                 matches.get_flag("frozen"),
 		                 matches.get_flag("locked"), // TODO: || true, // disallow any changes in workspace
 		                 matches.get_flag("offline"),
@@ -220,7 +217,7 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 		}
 
 		let no_read = matches.flag("no-read");
-		let mounting = matches!(cmd, Cmd::Run).then(|| Mount::from_arg_matches(&matches).ok())
+		let mounting = matches!(cmd, Cmd::Run).then(|| Mount::from_arg_matches(matches).ok())
 		                                      .flatten();
 
 		// zip flag for package:
@@ -242,8 +239,8 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 			let mut create_deps: Vec<_> = matches._values_of("deps")
 			                                     .into_iter()
 			                                     .flat_map(|s| {
-				                                     s.replace(",", " ")
-				                                      .split(" ")
+				                                     s.replace(',', " ")
+				                                      .split(' ')
 				                                      .filter(|s| !s.trim().is_empty())
 				                                      .map(|s| deps::Dependency::from_str(s).log_err().unwrap())
 				                                      .collect::<Vec<_>>()
@@ -266,7 +263,7 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 		                                           &cmd,
 		                                           aliases.as_ref(),
 		                                           args.into_iter(),
-		                                           &matches,
+		                                           matches,
 		                                           &compile_options.build_config.requested_kinds,
 		                                           &host_target,
 		);
@@ -316,7 +313,7 @@ fn command_aliases<'s, 'c: 's>(cmd: &'c Cmd,
                                -> impl Iterator<Item = &'s OsStr> {
 	aliases.as_ref()
 	       .map(|m| {
-		       m.into_iter()
+		       m.iter()
 		        .filter(|(_, v)| v == &cmd.as_ref())
 		        .map(|(k, ..)| OsStr::new(k.as_str()))
 		        .collect::<Vec<_>>()
@@ -331,9 +328,8 @@ fn arg_all_aliases(arg: &Arg) -> (impl Iterator<Item = char>, impl Iterator<Item
 	let shorts = arg.get_short().into_iter().chain(arg.get_all_short_aliases()
 	                                                  .into_iter()
 	                                                  .flat_map(|a| a.into_iter()));
-	let longs =
-		[Cow::from(arg.get_id().as_str())].into_iter()
-		                                  .chain(arg.get_all_aliases().into_iter().flat_map(|v| v).map(Cow::from));
+	let longs = [Cow::from(arg.get_id().as_str())].into_iter()
+	                                              .chain(arg.get_all_aliases().into_iter().flatten().map(Cow::from));
 	(shorts, longs)
 }
 
@@ -345,7 +341,6 @@ fn presented_dangerous_global_args_values<'m>(matches: &'m ArgMatches,
 	let globals: Vec<_> = globals.get_arguments().collect();
 
 	matches.ids()
-	       .into_iter()
 	       .filter_map(|id| globals.iter().find(|arg| arg.get_id() == id))
 	       .filter_map(|arg| {
 		       let id = arg.get_id();
@@ -354,7 +349,7 @@ fn presented_dangerous_global_args_values<'m>(matches: &'m ArgMatches,
 			              let values: Vec<_> = matches.try_get_raw(id.as_str())
 			                                          .unwrap()
 			                                          .unwrap_or_default()
-			                                          .filter(|value| cmd_aliases.contains(&value))
+			                                          .filter(|value| cmd_aliases.contains(value))
 			                                          .collect();
 			              if !values.is_empty() {
 				              // there is double-ref to arg:
@@ -374,7 +369,7 @@ fn compile_options(cmd: &Cmd, matches: &ArgMatches, ws: &Workspace<'_>) -> Cargo
 	let mut compile_options = match cmd {
 		// allow multiple crates:
 		Cmd::Build | Cmd::Package | Cmd::Migrate | Cmd::Assets => {
-			matches.compile_options(cfg, CompileMode::Build, Some(&ws), ProfileChecking::Custom)?
+			matches.compile_options(cfg, CompileMode::Build, Some(ws), ProfileChecking::Custom)?
 		},
 
 		Cmd::New | Cmd::Init => {
@@ -387,12 +382,12 @@ fn compile_options(cmd: &Cmd, matches: &ArgMatches, ws: &Workspace<'_>) -> Cargo
 
 		// allow only one crate:
 		Cmd::Run => {
-			matches.compile_options_for_single_package(cfg, CompileMode::Build, Some(&ws), ProfileChecking::Custom)?
+			matches.compile_options_for_single_package(cfg, CompileMode::Build, Some(ws), ProfileChecking::Custom)?
 		},
 
 		// allow only one crate?
 		Cmd::Publish => {
-			matches.compile_options_for_single_package(cfg, CompileMode::Build, Some(&ws), ProfileChecking::Custom)?
+			matches.compile_options_for_single_package(cfg, CompileMode::Build, Some(ws), ProfileChecking::Custom)?
 		},
 	};
 
@@ -446,8 +441,8 @@ fn adapt_args_for_underlying_cargo<S, I>(cmd: &Cmd,
 	let raw_args = clap_lex::RawArgs::new(args);
 	let mut cursor = raw_args.cursor();
 
-	let cmd_aliases = command_aliases(&cmd, aliases.as_deref()).collect::<Vec<_>>();
-	let dangerous = presented_dangerous_global_args_values(&matches, &cmd_aliases);
+	let cmd_aliases = command_aliases(cmd, aliases).collect::<Vec<_>>();
+	let dangerous = presented_dangerous_global_args_values(matches, &cmd_aliases);
 	let dangerous = dangerous.iter().collect::<Vec<_>>();
 
 	// context:
@@ -515,10 +510,10 @@ fn adapt_args_for_underlying_cargo<S, I>(cmd: &Cmd,
 		};
 
 		if !matches!(cmd, Cmd::Init | Cmd::New) {
-			s.map(|s| {
-				 log::debug!("+arg: {s}");
-				 result.push(OsString::from(s))
-			 });
+			if let Some(s) = s {
+				log::debug!("+arg: {s}");
+				result.push(OsString::from(s))
+			}
 		}
 	}
 
@@ -557,10 +552,10 @@ fn adapt_args_for_underlying_cargo<S, I>(cmd: &Cmd,
 						let mut last_flag = prev.to_short()
 						                        .into_iter()
 						                        .filter_map(|k| k.last().and_then(|k| k.ok()))
-						                        .filter(|flag| shorts.find(|key| key == flag).is_some());
+						                        .filter(|flag| shorts.any(|ref key| key == flag));
 						let mut long = prev.to_long()
 						                   .and_then(|(key, value)| key.ok().map(|key| (key, value)))
-						                   .filter(|(arg, _)| longs.find(|key| key == arg).is_some())
+						                   .filter(|(arg, _)| longs.any(|ref key| key == arg))
 						                   .into_iter();
 						last_flag.next().is_some() || matches!(long.next(), Some((_, None)))
 					} else {
@@ -603,8 +598,7 @@ fn adapt_args_for_underlying_cargo<S, I>(cmd: &Cmd,
 		                    })
 		                    .filter(|(arg, _)| arg == &OsStr::new("target"))
 		                    .map(|(s, val)| (s, val.or_else(|| raw_args.next_os(&mut cursor))))
-		                    .map(|(s, val)| val.map(|val| (s, val)))
-		                    .flatten();
+		                    .and_then(|(s, val)| val.map(|val| (s, val)));
 		if let Some((..)) = target_arg {
 			continue;
 		} else if let Some(arg) = arg.to_long()

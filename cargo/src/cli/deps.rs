@@ -14,7 +14,7 @@ pub struct Dependency<'t> {
 
 impl Dependency<'_> {
 	pub const fn git(&self) -> Option<&'static str> {
-		const GIT: &'static str = env!("CARGO_PKG_REPOSITORY");
+		const GIT: &str = env!("CARGO_PKG_REPOSITORY");
 		match self.source {
 			DependencySource::CratesIo => None,
 			DependencySource::Git => {
@@ -82,10 +82,9 @@ impl ValueEnum for Dependency<'_> {
 
 		#[cfg(debug_assertions)]
 		{
-			let missed: Vec<_> =
-				DependencyName::value_variants().into_iter()
-				                                .filter(|name| res.iter().find(|dep| dep.name == **name).is_none())
-				                                .collect();
+			let missed: Vec<_> = DependencyName::value_variants().iter()
+			                                                     .filter(|name| !res.iter().any(|dep| dep.name == **name))
+			                                                     .collect();
 			debug_assert_eq!(0, missed.len(), "Missing dependencies: {:?}", missed);
 		}
 
@@ -123,7 +122,7 @@ impl FromStr for Dependency<'_> {
 	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let (name, source) = if let Some((name, source)) = s.trim().split_once(":") {
+		let (name, source) = if let Some((name, source)) = s.trim().split_once(':') {
 			let name = DependencyName::from_str(name)?;
 			let source = DependencySource::from_str(source)?;
 			(name, source)
@@ -209,8 +208,8 @@ impl<'t> DependencyName<'t> {
 			DependencyName::Color => &["color"],
 			DependencyName::Playdate => &["pd"],
 			DependencyName::Other(_) => &[],
-		}.into_iter()
-		.map(|s| *s)
+		}.iter()
+		.copied()
 	}
 }
 
@@ -229,15 +228,15 @@ impl FromStr for DependencyName<'_> {
 
 		let this = match s.trim().to_lowercase().as_str() {
 			"" => Sys, // default empty case
-			n if n == Sys.as_str() || Sys.aliases().find(|a| *a == n).is_some() => Sys,
-			n if n == System.as_str() || System.aliases().find(|a| *a == n).is_some() => System,
-			n if n == Controls.as_str() || Controls.aliases().find(|a| *a == n).is_some() => Controls,
-			n if n == Menu.as_str() || Menu.aliases().find(|a| *a == n).is_some() => Menu,
-			n if n == Fs.as_str() || Fs.aliases().find(|a| *a == n).is_some() => Fs,
-			n if n == Sound.as_str() || Sound.aliases().find(|a| *a == n).is_some() => Sound,
-			n if n == Graphics.as_str() || Graphics.aliases().find(|a| *a == n).is_some() => Graphics,
-			n if n == Color.as_str() || Color.aliases().find(|a| *a == n).is_some() => Color,
-			n if n == Playdate.as_str() || Playdate.aliases().find(|a| *a == n).is_some() => Playdate,
+			n if n == Sys.as_str() || Sys.aliases().any(|a| a == n) => Sys,
+			n if n == System.as_str() || System.aliases().any(|a| a == n) => System,
+			n if n == Controls.as_str() || Controls.aliases().any(|a| a == n) => Controls,
+			n if n == Menu.as_str() || Menu.aliases().any(|a| a == n) => Menu,
+			n if n == Fs.as_str() || Fs.aliases().any(|a| a == n) => Fs,
+			n if n == Sound.as_str() || Sound.aliases().any(|a| a == n) => Sound,
+			n if n == Graphics.as_str() || Graphics.aliases().any(|a| a == n) => Graphics,
+			n if n == Color.as_str() || Color.aliases().any(|a| a == n) => Color,
+			n if n == Playdate.as_str() || Playdate.aliases().any(|a| a == n) => Playdate,
 			other => Other(other.to_owned().into()),
 		};
 		Ok(this)
