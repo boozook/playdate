@@ -23,7 +23,7 @@ fn run(crate_name: &str,
 	}
 
 	let mut extra = vec![];
-	if let Some(cty_arg) = lib.map(|v| v.then_some("--lib").or(Some("--bin"))).flatten() {
+	if let Some(cty_arg) = lib.and_then(|v| v.then_some("--lib").or(Some("--bin"))) {
 		extra.push(OsString::from(cty_arg));
 	}
 

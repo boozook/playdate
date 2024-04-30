@@ -101,7 +101,7 @@ impl<'cfg> CrossTargetLayout<'cfg> {
 
 	/// Global assets layout for cross-target & cross-profile assets build.
 	pub fn assets_layout(&self, config: &Config) -> PlaydateAssets<PathBuf> {
-		PlaydateAssets::global(&self, config, self.package)
+		PlaydateAssets::global(self, config, self.package)
 	}
 }
 
@@ -184,15 +184,15 @@ impl PlaydateAssets<PathBuf> {
 
 	pub fn assets_plan_for_dev(&self, config: &Config, package: &Package) -> PathBuf {
 		let mut path = self.assets_plan_for(config, package);
-		let mut name = String::new();
-		path.file_stem().map(|stem| {
-			                name.push_str(stem.to_string_lossy().as_ref());
-		                });
+		let mut name = path.file_stem()
+		                   .map(std::ffi::OsStr::to_string_lossy)
+		                   .unwrap_or_default()
+		                   .into_owned();
 		name.push_str("-dev");
-		path.extension().map(|ext| {
-			                name.push_str(".");
-			                name.push_str(ext.to_string_lossy().as_ref());
-		                });
+		if let Some(ext) = path.extension() {
+			name.push('.');
+			name.push_str(ext.to_string_lossy().as_ref());
+		}
 		path.set_file_name(name);
 		path
 	}

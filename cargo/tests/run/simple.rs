@@ -63,7 +63,7 @@ fn run(crate_name: &str, crate_path: &Path, args: impl IntoIterator<Item = impl 
 		).ok();
 	}
 	handle.kill()
-	      .expect(&format!("Unable to kill child process (pid={pid}"));
+	      .unwrap_or_else(|_| panic!("Unable to kill child process (pid={pid}"));
 
 	println!("Child process killed");
 
@@ -88,11 +88,11 @@ fn test_value() -> String {
 	use rand::RngCore;
 	let mut values = [0u8; 8];
 	rand::thread_rng().fill_bytes(&mut values);
-	let rand = values.into_iter().fold(String::new(), |mut acc, n| {
-		                             acc.push_str(&n.to_string());
-		                             acc
-	                             });
-	rand
+
+	values.into_iter().fold(String::new(), |mut acc, n| {
+		                  acc.push_str(&n.to_string());
+		                  acc
+	                  })
 }
 
 
@@ -104,7 +104,7 @@ fn run_metadata_workspace_root_dev() -> Result<()> {
 	let args = ["--simulator", "-p", crate_name, "--lib"].into_iter()
 	                                                     .map(OsStr::new);
 	let ws = metadata_workspace()?;
-	run(crate_name, &ws, args)?;
+	run(crate_name, ws, args)?;
 
 	Ok(())
 }
@@ -117,7 +117,7 @@ fn run_metadata_workspace_root_release() -> Result<()> {
 	let args = ["--simulator", "-p", crate_name, "--lib", "--release"].into_iter()
 	                                                                  .map(OsStr::new);
 	let ws = metadata_workspace()?;
-	run(crate_name, &ws, args)?;
+	run(crate_name, ws, args)?;
 
 	Ok(())
 }

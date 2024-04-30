@@ -17,7 +17,7 @@ use crate::utils::path::AsRelativeTo;
 fn ar_path(source: &Path) -> PathBuf { source.with_extension("pdx.zip") }
 
 
-pub fn build<'p>(source: Cow<'p, Path>) -> CargoResult<Cow<'p, Path>> {
+pub fn build(source: Cow<'_, Path>) -> CargoResult<Cow<'_, Path>> {
 	assert!(source.exists(), "source does not exist");
 	assert!(source.is_dir(), "source is not a directory");
 

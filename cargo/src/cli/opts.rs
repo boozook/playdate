@@ -294,47 +294,47 @@ pub fn mapped_flags_playdate_target() -> HashMap<PlaydateTarget, CompileKind> {
 
 fn flag_playdate_device() -> Arg {
 	let name = PlaydateTarget::Device.as_str();
-	Arg::new(&name).long(&name)
-	               .help(format!("Shorthand for '--target={DEVICE_TARGET}'"))
-	               .action(ArgAction::SetTrue)
+	Arg::new(name).long(name)
+	              .help(format!("Shorthand for '--target={DEVICE_TARGET}'"))
+	              .action(ArgAction::SetTrue)
 }
 
 fn flag_playdate_simulator() -> Arg {
 	let name = PlaydateTarget::Simulator.as_str();
-	Arg::new(&name).long(&name)
-	               .help(format!("Shorthand for host target"))
+	Arg::new(name).long(name)
+	               .help("Shorthand for host target")
 	               .long_help("Shorthand for host target. Default target, so it can be omitted if there's only one target.")
 	               .action(ArgAction::SetTrue)
 }
 
 fn flag_pdc_skip_unknown() -> Arg {
 	let name = "skip-unknown";
-	Arg::new(&name).long(&name)
-	               .help(format!("Tell pdc to skip unknown files"))
-	               .conflicts_with("no-sdk")
-	               .action(ArgAction::SetTrue)
+	Arg::new(name).long(name)
+	              .help("Tell pdc to skip unknown files")
+	              .conflicts_with("no-sdk")
+	              .action(ArgAction::SetTrue)
 }
 
 fn flag_pdc_skip_prebuild() -> Arg {
 	let name = "no-pre-build";
-	Arg::new(&name).long(&name)
-	               .help(format!("Skip the pre-build assets step"))
-	               .conflicts_with("no-sdk")
-	               .action(ArgAction::SetTrue)
+	Arg::new(name).long(name)
+	              .help("Skip the pre-build assets step")
+	              .conflicts_with("no-sdk")
+	              .action(ArgAction::SetTrue)
 }
 
 fn flag_zip_package() -> Arg {
 	let name = "zip";
-	Arg::new(&name).long(&name)
-	               .help(format!("Make an archive with the produced package"))
-	               .action(ArgAction::SetTrue)
+	Arg::new(name).long(name)
+	              .help("Make an archive with the produced package")
+	              .action(ArgAction::SetTrue)
 }
 
 fn flag_no_info_file() -> Arg {
 	let name = "no-info-file";
-	Arg::new(&name).long(&name)
-	               .help(format!("Opt-out inclusion info file with builder version into the produced package"))
-	               .action(ArgAction::SetTrue)
+	Arg::new(name).long(name)
+	              .help("Opt-out inclusion info file with builder version into the produced package")
+	              .action(ArgAction::SetTrue)
 }
 
 fn flag_no_unwinding() -> Arg {
@@ -342,48 +342,48 @@ fn flag_no_unwinding() -> Arg {
 	const SHORT: &str =
 		"Prevents unwinding, shorthand for `panic=abort` rustc flag and `panic_immediate_abort` feature.";
 	const LONG: &str = "Prevents unwinding. Adds `-Cpanic=abort` to `RUSTFLAGS` so that build profiles do not need to specify `panic = \"abort\"` in the cargo manifest. Also adds `-Zbuild-std-features=panic_immediate_abort` to ensure that there is no `core::panicking` in the product.";
-	Arg::new(&name).long(&name)
-	               .help(SHORT)
-	               .long_help(LONG)
-	               .action(ArgAction::SetTrue)
+	Arg::new(name).long(name)
+	              .help(SHORT)
+	              .long_help(LONG)
+	              .action(ArgAction::SetTrue)
 }
 
 fn flag_create_full_config() -> Arg {
 	let name = "full-config";
-	let help = format!("Create a full cargo config file with hardcoded link-paths that required to compile bin.");
+	let help = "Create a full cargo config file with hardcoded link-paths that required to compile bin.";
 	let long = format!("{help} Usually you don't need to use this flag when using {BIN_NAME} because {BIN_NAME} adds them itself when compiling.");
-	Arg::new(&name).long(&name)
-	               .help(help)
-	               .long_help(long)
-	               .action(ArgAction::SetTrue)
+	Arg::new(name).long(name)
+	              .help(help)
+	              .long_help(long)
+	              .action(ArgAction::SetTrue)
 }
 
 fn flag_create_full_metadata() -> Arg {
 	let name = "full-metadata";
-	let help = format!("Create a template with complex metadata example.");
-	Arg::new(&name).long(&name).help(help).action(ArgAction::SetTrue)
+	let help = "Create a template with complex metadata example.";
+	Arg::new(name).long(name).help(help).action(ArgAction::SetTrue)
 }
 
 fn flag_create_deps_sys_only() -> Arg {
 	let name = "sys-only";
 	let help = r#"Add only "playdate-sys" dependency, use low-level template, don't add high-level dependencies."#;
-	Arg::new(&name).long(&name).help(help).action(ArgAction::SetTrue)
+	Arg::new(name).long(name).help(help).action(ArgAction::SetTrue)
 }
 
 fn flag_create_deps_list() -> Arg {
 	let name = "deps";
 	let help = r#"Space or comma separated list of dependencies to add. Format: 'crate-name[:git|crates]', source is usable for known crates only. "#;
 
-	let arg = Arg::new(&name).long(&name)
-	                         .help(help)
-	                         .required(false)
-	                         .num_args(1)
-	                         .value_name("DEPS")
-	                         .action(ArgAction::Append)
-	                         .default_values(["playdate"])
-	                         .default_missing_values(["playdate:git"])
-	                         .value_delimiter(',')
-	                         .default_value_if("sys-only", ArgPredicate::Equals("true".into()), "sys");
+	let arg = Arg::new(name).long(name)
+	                        .help(help)
+	                        .required(false)
+	                        .num_args(1)
+	                        .value_name("DEPS")
+	                        .action(ArgAction::Append)
+	                        .default_values(["playdate"])
+	                        .default_missing_values(["playdate:git"])
+	                        .value_delimiter(',')
+	                        .default_value_if("sys-only", ArgPredicate::Equals("true".into()), "sys");
 
 	let possible_values = arg.clone()
 	                         .value_parser(value_parser!(super::deps::Dependency))
@@ -403,19 +403,19 @@ fn flag_create_deps_list() -> Arg {
 fn ide_template() -> Arg {
 	let name = "ide";
 	let help = r#"Add configuration files for given IDE."#;
-	Arg::new(&name).long(&name)
-	               .help(help)
-	               .num_args(1)
-	               .required(false)
-	               .action(ArgAction::Set)
-	               .value_hint(clap::ValueHint::Other)
-	               .value_parser(value_parser!(super::ide::Ide))
+	Arg::new(name).long(name)
+	              .help(help)
+	              .num_args(1)
+	              .required(false)
+	              .action(ArgAction::Set)
+	              .value_hint(clap::ValueHint::Other)
+	              .value_parser(value_parser!(super::ide::Ide))
 }
 
 fn set_aliases(cmd: Command, aliases: Option<&HashMap<impl Into<Str> + Clone, impl AsRef<str>>>) -> Command {
 	if let Some(aliases) = aliases {
 		let name = cmd.get_name();
-		let aliases = aliases.into_iter()
+		let aliases = aliases.iter()
 		                     .filter(|(_, v)| v.as_ref() == name)
 		                     .map(|(k, _)| k.clone().into())
 		                     .collect::<Vec<Str>>();
@@ -428,7 +428,7 @@ fn set_aliases(cmd: Command, aliases: Option<&HashMap<impl Into<Str> + Clone, im
 
 fn cargo() -> Command {
 	let usage = usage();
-	clap::command!("cargo").override_usage(&usage)
+	clap::command!("cargo").override_usage(usage)
 	                       .propagate_version(true)
 	                       .bin_name("cargo")
 }

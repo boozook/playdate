@@ -28,7 +28,7 @@ impl Default for Tool<'static> {
 #[cfg(test)]
 impl Tool<'_> {
 	pub fn path() -> &'static Path {
-		const BIN_PATH: &'static str = env!("CARGO_BIN_EXE_cargo-playdate");
+		const BIN_PATH: &str = env!("CARGO_BIN_EXE_cargo-playdate");
 		Path::new(BIN_PATH)
 	}
 }
@@ -58,17 +58,17 @@ impl Tool<'_> {
 
 
 	#[track_caller]
-	pub fn build_with<I, S>(pwd: &Path,
-	                        args_before_cmd: Option<impl IntoIterator<Item = S>>,
-	                        args: impl IntoIterator<Item = S>)
-	                        -> Result<Output>
+	pub fn build_with<S>(pwd: &Path,
+	                     args_before_cmd: Option<impl IntoIterator<Item = S>>,
+	                     args: impl IntoIterator<Item = S>)
+	                     -> Result<Output>
 		where S: AsRef<OsStr> + From<&'static OsStr>
 	{
 		Self::execute(
 		              pwd,
 		              args_before_cmd.into_iter()
-		                             .flat_map(|i| i)
-		                             .chain([OsStr::new("build").into()].into_iter())
+		                             .flatten()
+		                             .chain([OsStr::new("build").into()])
 		                             .chain(args),
 		)
 	}
@@ -93,7 +93,7 @@ pub fn simple_crates() -> Result<impl Iterator<Item = PathBuf>> {
 
 	let crates = std::fs::read_dir(root)?.filter_map(|entry| entry.ok())
 	                                     .filter(|entry| entry.path().is_dir())
-	                                     .filter(|entry| !entry.file_name().to_string_lossy().starts_with("."))
+	                                     .filter(|entry| !entry.file_name().to_string_lossy().starts_with('.'))
 	                                     .map(|entry| entry.path());
 	Ok(crates)
 }

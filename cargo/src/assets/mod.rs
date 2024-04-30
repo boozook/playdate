@@ -35,7 +35,7 @@ pub type AssetsArtifacts<'cfg> = HashMap<&'cfg Package, AssetsArtifact<'cfg>>;
 
 
 pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
-	let bcx = LazyBuildContext::new(&config)?;
+	let bcx = LazyBuildContext::new(config)?;
 	let mut artifacts = AssetsArtifacts::new();
 
 	for (package, targets, ..) in config.possible_targets()? {
@@ -111,7 +111,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 				                        .map(|plan| (plan, AssetKind::Package))
 				                        .chain(plan.dev.as_ref().into_iter().map(|plan| (plan, AssetKind::Dev)))
 				{
-					let message = plan.printable_serializable(&package, kind);
+					let message = plan.printable_serializable(package, kind);
 					config.workspace.config().shell().print_json(&message)?;
 				}
 			}
@@ -127,7 +127,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 					                      .chain(plan.dev.as_ref().into_iter())
 					      {
 						      shell.status("Assets", format!("build plan for {}", package.package_id()))?;
-						      plan.pretty_print(shell, &config.workspace.root())?;
+						      plan.pretty_print(shell, config.workspace.root())?;
 					      }
 				      }
 				      Ok(())
@@ -174,11 +174,11 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 
 			for (package, plan) in plans.iter() {
 				if let Some(plan) = plan.main.as_ref() {
-					check_duplicates(*package, AssetKind::Package, plan.as_inner().targets());
+					check_duplicates(package, AssetKind::Package, plan.as_inner().targets());
 				}
 				if package.package_id() == target_pid {
 					if let Some(plan) = plan.dev.as_ref() {
-						check_duplicates(*package, AssetKind::Dev, plan.as_inner().targets());
+						check_duplicates(package, AssetKind::Dev, plan.as_inner().targets());
 					}
 				}
 			}
@@ -264,10 +264,8 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 						}
 					}
 
-					if report.has_errors() {
-						if !config.compile_options.build_config.keep_going {
-							bail!("Assets build failed.");
-						}
+					if report.has_errors() && !config.compile_options.build_config.keep_going {
+						bail!("Assets build failed.");
 					}
 
 
@@ -383,7 +381,7 @@ fn deps_tree_metadata<'cfg: 'r, 't: 'r, 'r>(package: &'cfg Package,
 			if let Some(deps) = root.and_then(|root| bcx.unit_graph.get(root)) {
 				// find all dependencies:
 				dependencies.extend(
-				                    deps.into_iter()
+				                    deps.iter()
 				                        .flat_map(|ud| bcx.unit_graph.get_key_value(&ud.unit).map(|(u, _)| u)),
 				);
 
@@ -395,11 +393,11 @@ fn deps_tree_metadata<'cfg: 'r, 't: 'r, 'r>(package: &'cfg Package,
 					let next = dependencies.iter()
 					                       .flat_map(|u| {
 						                       bcx.unit_graph.get(u).into_iter().flat_map(|deps| {
-							                                                        deps.into_iter().flat_map(|ud| {
-								                                                                        bcx.unit_graph
+							                                                        deps.iter().flat_map(|ud| {
+								                                                                   bcx.unit_graph
 								                                                                           .get_key_value(&ud.unit)
 								                                                                           .map(|(u, _)| u)
-							                                                                        })
+							                                                                   })
 						                                                        })
 					                       })
 					                       .filter(|u| !dependencies.contains(u))
@@ -436,8 +434,7 @@ fn deps_tree_metadata<'cfg: 'r, 't: 'r, 'r>(package: &'cfg Package,
 				dependencies.retain(|u| {
 					            let key = (u.pkg.name(), u.pkg.package_id().source_id());
 					            id_ver.get(&key)
-					                  .map(|vec| vec.last())
-					                  .flatten()
+					                  .and_then(|vec| vec.last())
 					                  .map(|(_, u)| *u)
 					                  .filter(|u1| u == u1)
 					                  .is_some()
@@ -466,11 +463,8 @@ fn deps_tree_metadata<'cfg: 'r, 't: 'r, 'r>(package: &'cfg Package,
 pub fn playdate_metadata(package: &Package) -> Option<TomlMetadata> {
 	package.manifest()
 	       .custom_metadata()
-	       .map(|m| m.as_table().map(|t| t.get(METADATA_FIELD)))
+	       .and_then(|m| m.as_table().map(|t| t.get(METADATA_FIELD)))
 	       .flatten()
-	       .flatten()
-	       .map(|v| v.to_owned().try_into::<TomlMetadata>().log_err().ok())
-	       .flatten()
-	       .map(|mut m| m.merge_opts().map(|_| m).log_err().ok())
-	       .flatten()
+	       .and_then(|v| v.to_owned().try_into::<TomlMetadata>().log_err().ok())
+	       .and_then(|mut m| m.merge_opts().map(|_| m).log_err().ok())
 }
