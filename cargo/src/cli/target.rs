@@ -62,7 +62,7 @@ impl Display for PlaydateTarget {
 impl From<&'_ PlaydateTarget> for CompileKind {
 	fn from(value: &'_ PlaydateTarget) -> Self {
 		match value {
-			PlaydateTarget::Device => CompileKind::Target(CompileTarget::new(DEVICE_TARGET).expect(&format!("Target {DEVICE_TARGET} must be valid CompileTarget"))),
+			PlaydateTarget::Device => CompileKind::Target(CompileTarget::new(DEVICE_TARGET).unwrap_or_else(|_| panic!("Target {DEVICE_TARGET} must be valid CompileTarget"))),
 			PlaydateTarget::Simulator => CompileKind::Host,
 		}
 	}
