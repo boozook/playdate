@@ -4274,7 +4274,6 @@ dependencies = [
 name = "playdate-system"
 version = "0.3.10"
 dependencies = [
- "erased_set",
  "playdate-sys",
 ]
 
