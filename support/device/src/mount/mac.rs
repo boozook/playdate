@@ -176,7 +176,15 @@ fn parse_spusb<F>(
 	-> Result<impl Iterator<Item = SpusbInfo<impl Future<Output = Result<PathBuf, Error>>>>, Error>
 	where F: FnMut(&DeviceInfo) -> bool
 {
-	let data: SystemProfilerResponse = serde_json::from_slice(data)?;
+	let data: SystemProfilerResponse = {
+		serde_json::from_slice(data).inspect_err(|err| {
+			                            // Debug print for #326,
+			                            // temp, do not merge in the main!
+			                            error!("{err:?}");
+			                            let src = std::str::from_utf8(data).unwrap();
+			                            eprintln!("{src}");
+		                            })
+	}?;
 
 	let result = data.data
 	                 .into_iter()
