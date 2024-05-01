@@ -59,18 +59,17 @@ impl Display for PlaydateTarget {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { write!(f, "{}", self.as_str()) }
 }
 
-
-impl Into<CompileKind> for &'_ PlaydateTarget {
-	fn into(self) -> CompileKind {
-		match self {
-			PlaydateTarget::Device => CompileKind::Target(CompileTarget::new(DEVICE_TARGET).expect(&format!("Target {DEVICE_TARGET} must be valid CompileTarget"))),
+impl From<&'_ PlaydateTarget> for CompileKind {
+	fn from(value: &'_ PlaydateTarget) -> Self {
+		match value {
+			PlaydateTarget::Device => CompileKind::Target(CompileTarget::new(DEVICE_TARGET).unwrap_or_else(|_| panic!("Target {DEVICE_TARGET} must be valid CompileTarget"))),
 			PlaydateTarget::Simulator => CompileKind::Host,
 		}
 	}
 }
 
-impl Into<CompileKind> for PlaydateTarget {
-	fn into(self) -> CompileKind { (&self).into() }
+impl From<PlaydateTarget> for CompileKind {
+	fn from(value: PlaydateTarget) -> Self { (&value).into() }
 }
 
 

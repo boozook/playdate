@@ -1,6 +1,5 @@
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
-use std::time::Duration;
 
 use futures::{FutureExt, Stream, StreamExt, TryFutureExt};
 
@@ -8,7 +7,6 @@ use crate::device::query::Query;
 use crate::error::Error;
 use crate::mount::MountedDevice;
 use crate::mount;
-use crate::retry::Retries;
 
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
@@ -73,8 +71,8 @@ pub async fn install<'dev>(drive: &'dev MountedDevice,
 	use std::process::Command;
 
 
-	let retry = Retries::new(Duration::from_millis(500), Duration::from_secs(60));
-	mount::wait_fs_available(drive, retry).await?;
+	let retry = mount::fs_available_wait_time();
+	mount::wait_fs_available_with_user(drive, retry).await?;
 	validate_host_package(path).await?;
 
 	trace!(

@@ -55,7 +55,10 @@ impl<S: DerefMut<Target = Shell>> CargoLogger<S> {
 	pub fn verbose<F>(&mut self, mut callback: F)
 		where F: FnMut(CargoLogger<&mut Shell>) {
 		self.0
-		    .verbose(|shell| Ok(callback(CargoLogger(shell, self.1))))
+		    .verbose(|shell| {
+			    callback(CargoLogger(shell, self.1));
+			    Ok(())
+		    })
 		    .log_err()
 		    .ok();
 	}

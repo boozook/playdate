@@ -50,28 +50,26 @@ impl<'t> Config<'t> {
 		members.into_iter().filter_map(move |p| {
 			                   let filter = &self.compile_options.filter;
 			                   let targets = p.targets()
-			                                  .into_iter()
+			                                  .iter()
 			                                  .filter(|t| filter.is_all_targets() || filter.target_run(t))
 			                                  .collect::<Vec<_>>();
-			                   (!targets.is_empty()).then(|| (p, targets))
+			                   (!targets.is_empty()).then_some((p, targets))
 		                   })
 	}
 
 	pub fn possible_compile_kinds(&'t self) -> CargoResult<Vec<CompileKind>> {
-		let member_kinds =
-			self.members_with_features()?.into_iter().flat_map(|(p, _)| {
-				                                         p.manifest().default_kind().into_iter().chain(
-				                                                                                       p.manifest()
-				                                                                                        .forced_kind()
-				                                                                                        .into_iter(),
-				)
-			                                         });
+		let member_kinds = self.members_with_features()?.into_iter().flat_map(|(p, _)| {
+			                                                            p.manifest()
+			                                                             .default_kind()
+			                                                             .into_iter()
+			                                                             .chain(p.manifest().forced_kind())
+		                                                            });
 		let mut kinds: Vec<CompileKind> = Vec::new();
 		kinds.extend(&self.compile_options.build_config.requested_kinds);
 		kinds.extend(member_kinds);
 
 		if kinds.contains(&CompileKind::Host) {
-			let exact = CompileKind::Target(self.host_target.clone());
+			let exact = CompileKind::Target(self.host_target);
 			if !kinds.contains(&exact) {
 				kinds.push(exact);
 			}

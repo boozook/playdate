@@ -21,16 +21,16 @@ fn run(crate_name: &str,
 
 	let crate_parent = crate_path.parent().expect("parent");
 	if !crate_parent.try_exists()? {
-		std::fs::create_dir_all(&crate_parent)?;
+		std::fs::create_dir_all(crate_parent)?;
 	}
 
 	let mut extra = vec![OsString::from(&crate_path)];
-	if let Some(cty_arg) = lib.map(|v| v.then_some("--lib").or(Some("--bin"))).flatten() {
+	if let Some(cty_arg) = lib.and_then(|v| v.then_some("--lib").or(Some("--bin"))) {
 		extra.push(OsString::from(cty_arg));
 	}
 
 	let args = extra.into_iter().chain(args.into_iter().map(Into::into));
-	let output = Tool::new(&crate_parent, args)?;
+	let output = Tool::new(crate_parent, args)?;
 	assert!(output.status.success());
 	Ok((output, crate_path))
 }

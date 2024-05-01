@@ -136,7 +136,7 @@ impl<'cfg> Config<'cfg> {
 
 
 	pub fn rustflags(&self) -> CargoResult<&Rustflags> {
-		self.rustflags.try_get_or_create(|| Rustflags::try_default(&self))
+		self.rustflags.try_get_or_create(|| Rustflags::try_default(self))
 	}
 
 	pub fn sdk(&self) -> CargoResult<&Sdk> {
@@ -165,7 +165,7 @@ impl<'cfg> Config<'cfg> {
 
 	pub fn build_plan(&self) -> CargoResult<&crate::build::plan::format::BuildPlan> {
 		self.build_plan
-		    .try_get_or_create(|| crate::build::plan::build_plan(&self))
+		    .try_get_or_create(|| crate::build::plan::build_plan(self))
 	}
 
 	pub fn target_info_for(&self, kind: CompileKind) -> CargoResult<&TargetInfo> {
@@ -182,7 +182,7 @@ impl<'cfg> Config<'cfg> {
 
 
 	pub fn create_bcx<'t: 'cfg>(&'t self) -> CargoResult<LazyBuildContext<'t, 'cfg>> {
-		Ok(LazyBuildContext::new(self)?)
+		LazyBuildContext::new(self)
 	}
 }
 
