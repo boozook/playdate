@@ -1,6 +1,6 @@
 [package]
 name = "playdate-system"
-version = "0.3.9"
+version = "0.3.11"
 readme = "README.md"
 description = "High-level System API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -44,6 +44,12 @@ required-features = ["sys/entry-point", "sys/lang-items"]
 name = "handler-pinned"
 crate-type = ["dylib", "staticlib"]
 path = "examples/handler-pinned.rs"
+required-features = ["sys/entry-point", "sys/lang-items"]
+
+[[example]]
+name = "set-serial-message-callback"
+crate-type = ["dylib", "staticlib"]
+path = "examples/set-serial-message-callback.rs"
 required-features = ["sys/entry-point", "sys/lang-items"]
 
 [package.metadata.playdate]

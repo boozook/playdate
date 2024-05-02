@@ -97,6 +97,58 @@ pub async fn wait_fs_available<T>(mount: &MountedDevice, retry: Retries<T>) -> R
 }
 
 
+/// Double wait time and notify user in between of halfs.
+pub async fn wait_fs_available_with_user<T>(mount: &MountedDevice, retry: Retries<T>) -> Result
+	where T: Clone + std::fmt::Debug + IterTime {
+	match wait_fs_available(mount, retry).await {
+		Ok(_) => (),
+		Err(err) => {
+			error!("{err}");
+			warn!(
+			      "Still waiting mounted device at {}.",
+			      mount.handle.volume.path().display()
+			);
+
+			let last_chance = fs_available_wait_time();
+			wait_fs_available(mount, last_chance).await?
+		},
+	}
+
+	Ok(())
+}
+
+
+pub const FS_AVAILABLE_AWAIT_ENV: &str = "PD_MOUNT_TIMEOUT";
+const FS_AVAILABLE_AWAIT_TIMEOUT: Duration = Duration::from_secs(60);
+
+pub fn fs_available_wait_time() -> Retries<Duration> {
+	let t = match std::env::var_os(FS_AVAILABLE_AWAIT_ENV).map(|s| s.to_string_lossy().trim().parse::<u64>()) {
+		Some(Ok(v)) => Duration::from_millis(v as _),
+		Some(Err(err)) => {
+			error!("Invalid ms value of {FS_AVAILABLE_AWAIT_ENV}: {err}, using default timeout.");
+			FS_AVAILABLE_AWAIT_TIMEOUT
+		},
+		None => FS_AVAILABLE_AWAIT_TIMEOUT,
+	};
+	Retries::new(Duration::from_millis(200), t)
+}
+
+pub const UNMOUNT_AWAIT_ENV: &str = "PD_UNMOUNT_TIMEOUT";
+const UNMOUNT_AWAIT_TIMEOUT: Duration = Duration::from_secs(60);
+
+pub fn unmount_wait_time() -> Retries<Duration> {
+	let t = match std::env::var_os(UNMOUNT_AWAIT_ENV).map(|s| s.to_string_lossy().trim().parse::<u64>()) {
+		Some(Ok(v)) => Duration::from_millis(v as _),
+		Some(Err(err)) => {
+			error!("Invalid ms value of '{UNMOUNT_AWAIT_ENV}': {err}, using default timeout.");
+			UNMOUNT_AWAIT_TIMEOUT
+		},
+		None => UNMOUNT_AWAIT_TIMEOUT,
+	};
+	Retries::new(Duration::from_millis(100), t)
+}
+
+
 #[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn mount(query: Query) -> Result<impl Stream<Item = Result<MountedDevice>>> {
 	match query.value {
@@ -119,22 +171,20 @@ pub async fn mount(query: Query) -> Result<impl Stream<Item = Result<MountedDevi
 /// depending on `wait` parameter.
 #[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn mount_and(query: Query, wait: bool) -> Result<impl Stream<Item = Result<MountedDevice>>> {
-	let fut =
-		mount(query).await?.flat_map(move |res| {
-			                   async move {
-				                   match res {
-					                   Ok(drive) => {
-					                      if wait {
-						                      let retry =
-							                      Retries::new(Duration::from_millis(500), Duration::from_secs(60));
-						                      wait_fs_available(&drive, retry).await?
-					                      }
-					                      Ok(drive)
-				                      },
-				                      Err(err) => Err(err),
-				                   }
-			                   }.into_stream()
-		                   });
+	let fut = mount(query).await?.flat_map(move |res| {
+		                             async move {
+			                             match res {
+				                             Ok(drive) => {
+				                                if wait {
+					                                let retry = fs_available_wait_time();
+					                                wait_fs_available_with_user(&drive, retry).await?
+				                                }
+				                                Ok(drive)
+			                                },
+			                                Err(err) => Err(err),
+			                             }
+		                             }.into_stream()
+	                             });
 	Ok(fut)
 }
 
@@ -359,7 +409,7 @@ pub async fn unmount_and_wait<T>(query: Query, retry: Retries<T>) -> Result<impl
 #[cfg_attr(feature = "tracing", tracing::instrument())]
 pub async fn unmount_and(query: Query, wait: bool) -> Result<impl Stream<Item = Result<Device>>> {
 	let results = if wait {
-		let retry = Retries::<DefaultIterTime>::default();
+		let retry = unmount_wait_time();
 		unmount_and_wait(query, retry).await?.left_stream()
 	} else {
 		unmount(query).await?

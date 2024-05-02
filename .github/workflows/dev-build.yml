@@ -65,6 +65,22 @@ jobs:
           echo "suffix=${{ (runner.os == 'Windows' && format('-{0}', runner.arch)) || format('-{0}-{1}', runner.os, runner.arch) }}" >> "$GITHUB_OUTPUT"
           echo "full=${{ (runner.os == 'Windows' && format('-{0}.exe', runner.arch)) || format('-{0}-{1}', runner.os, runner.arch) }}" >> "$GITHUB_OUTPUT"
 
+      - name: symbolizer
+        continue-on-error: true
+        run: cargo build -p=playdate-symbolize --bins
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: symbolize-utils${{ steps.names.outputs.suffix }}
+          path: |
+            target/debug/pd-addr2line${{ steps.names.outputs.ext }}
+            target/debug/pd-symbolize-trace${{ steps.names.outputs.ext }}
+            target/debug/pd-symbolize-crashlog${{ steps.names.outputs.ext }}
+          compression-level: 9
+          if-no-files-found: warn
+          retention-days: 3
+          overwrite: true
+
       - name: pdtool
         continue-on-error: true
         run: cargo build -p=playdate-tool --bin=pdtool --features=tracing

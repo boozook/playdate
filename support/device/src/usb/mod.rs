@@ -144,10 +144,11 @@ impl Device {
 
 		// Special case: if we already have an interface, mostly possible serial:
 		if self.interface.is_some() {
-			return match self.interface_mut()? {
-				crate::interface::Interface::Serial(i) => i.open(),
-				_ => Ok(()),
+			match self.interface_mut()? {
+				crate::interface::Interface::Serial(i) => i.open()?,
+				_ => {},
 			};
+			return Ok(());
 		}
 
 		if self.have_data_interface() {

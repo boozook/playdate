@@ -8,6 +8,8 @@ use core::ffi::c_float;
 use core::ffi::c_int;
 use core::ffi::c_uint;
 use core::time::Duration;
+use alloc::string::String;
+
 
 pub mod time;
 pub mod lang;
@@ -247,10 +249,53 @@ impl<Api: api::Api> System<Api> {
 		let _ = dt; // this to prevent earlier drop.
 		epoch
 	}
+
+	/// Equivalent to [`sys::ffi::playdate_sys::setSerialMessageCallback`]
+	#[doc(alias = "sys::ffi::playdate_sys::setSerialMessageCallback")]
+	pub fn set_serial_message_callback<F>(&self, callback: Option<F>)
+		where F: 'static + FnMut(String) + Sized {
+		use core::ffi::c_char;
+		use core::ffi::CStr;
+		use alloc::boxed::Box;
+		use alloc::string::String;
+
+
+		static mut STORE: Option<Box<dyn FnMut(String)>> = None;
+
+		pub unsafe extern "C" fn proxy_serial_message_callback<F: FnMut(String)>(data: *const c_char) {
+			let data = CStr::from_ptr(data as _).to_string_lossy().into_owned();
+			if let Some(ref mut f) = STORE.as_mut() {
+				f(data)
+			} else {
+				// Highly unlikely, mostly impossible case.
+				// Should be unreachable, but still possible in case when
+				// 0. new callback is None, we have to register it in the System;
+				// 1. write callback to `STORE`
+				// 2. interrupt, proxy_serial_message_callback called, BOOM!
+				// 3. call API::set_serial_message_callback to set our new (None) callback
+				// So, see difference in how to store & reg callback at couple lines below.
+				panic!("missed callback")
+			}
+		}
+
+
+		let f = self.0.set_serial_message_callback();
+
+		if let Some(callback) = callback {
+			let boxed = Box::new(callback);
+			// Store firstly, then register it.
+			unsafe { STORE = Some(boxed as _) }
+			unsafe { f(Some(proxy_serial_message_callback::<F>)) }
+		} else {
+			// Set firstly, then clear the `STORE`.
+			unsafe { f(None) }
+			unsafe { STORE = None }
+		}
+	}
 }
 
-
 pub mod api {
+	use core::ffi::c_char;
 	use core::ffi::c_float;
 	use core::ffi::c_int;
 	use core::ffi::c_uint;
@@ -261,6 +306,9 @@ pub mod api {
 	use sys::ffi::PDDateTime;
 	use sys::ffi::PDLanguage;
 	use sys::ffi::playdate_sys;
+
+
+	pub type FnSerialMessageCallback = Option<unsafe extern "C" fn(data: *const c_char)>;
 
 
 	/// Default system api end-point, ZST.
@@ -418,6 +466,13 @@ pub mod api {
 		fn convert_date_time_to_epoch(&self) -> unsafe extern "C" fn(datetime: *mut PDDateTime) -> u32 {
 			self.0.convertDateTimeToEpoch.expect("convertDateTimeToEpoch")
 		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::setSerialMessageCallback`]
+		#[doc(alias = "sys::ffi::playdate_sys::setSerialMessageCallback")]
+		#[inline(always)]
+		fn set_serial_message_callback(&self) -> unsafe extern "C" fn(callback: FnSerialMessageCallback) {
+			self.0.setSerialMessageCallback.expect("setSerialMessageCallback")
+		}
 	}
 
 
@@ -517,6 +572,13 @@ pub mod api {
 		#[inline(always)]
 		fn convert_date_time_to_epoch(&self) -> unsafe extern "C" fn(datetime: *mut PDDateTime) -> u32 {
 			*sys::api!(system.convertDateTimeToEpoch)
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_sys::setSerialMessageCallback`]
+		#[doc(alias = "sys::ffi::playdate_sys::setSerialMessageCallback")]
+		#[inline(always)]
+		fn set_serial_message_callback(&self) -> unsafe extern "C" fn(callback: FnSerialMessageCallback) {
+			*sys::api!(system.setSerialMessageCallback)
 		}
 	}
 }

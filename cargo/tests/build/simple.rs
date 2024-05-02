@@ -19,7 +19,7 @@ fn run_build(crate_path: &Path,
 	let args = args.into_iter()
 	               .map(Into::into)
 	               .chain([OsString::from(target_dir_arg)]);
-	let output = Tool::build(&crate_path, args)?;
+	let output = Tool::build(crate_path, args)?;
 	assert!(
 	        output.status.success(),
 	        "Tool failed with stderr:\n{}",
@@ -63,10 +63,10 @@ fn dev_lib_release() -> Result<()> {
 
 	for path in simple_crates()? {
 		let (_, target_dir) = run_build(&path, args.clone())?;
-		let export_dir = export_dir(&target_dir, target, "release");
+		let export_dir = export_dir(target_dir, target, "release");
 
 		// check expectations:
-		let cargo_package_name = path.file_name().unwrap().to_str().unwrap();
+		let cargo_package_name = to_cargo_package_crate_name(&path).expect("package_crate_name");
 		let cargo_target_fullname = format!("{cargo_package_name}-{LIB_NAME}");
 		let artifact = export_dir.join("playdate")
 		                         .join(cargo_target_fullname)
@@ -84,10 +84,10 @@ fn dev_lib_debug() -> Result<()> {
 
 	for path in simple_crates()? {
 		let (_, target_dir) = run_build(&path, args.clone())?;
-		let export_dir = export_dir(&target_dir, target, "debug");
+		let export_dir = export_dir(target_dir, target, "debug");
 
 		// check expectations:
-		let cargo_package_name = path.file_name().unwrap().to_str().unwrap();
+		let cargo_package_name = to_cargo_package_crate_name(&path).expect("package_crate_name");
 		let cargo_target_fullname = format!("{cargo_package_name}-{LIB_NAME}");
 		let artifact = export_dir.join("playdate")
 		                         .join(cargo_target_fullname)
@@ -111,10 +111,10 @@ fn sim_host_release() -> Result<()> {
 
 	for path in simple_crates()? {
 		let (_, target_dir) = run_build(&path, args.clone())?;
-		let export_dir = export_dir_host(&target_dir, "release");
+		let export_dir = export_dir_host(target_dir, "release");
 
 		// check expectations:
-		let cargo_package_name = path.file_name().unwrap().to_str().unwrap();
+		let cargo_package_name = to_cargo_package_crate_name(&path).expect("package_crate_name");
 		let cargo_target_fullname = format!("{cargo_package_name}-{LIB_NAME}");
 		let artifact = export_dir.join("playdate")
 		                         .join(cargo_target_fullname)
@@ -130,10 +130,10 @@ fn sim_host_release() -> Result<()> {
 fn sim_host_debug() -> Result<()> {
 	for path in simple_crates()? {
 		let (_, target_dir) = run_build(&path, None::<&OsStr>)?;
-		let export_dir = export_dir_host(&target_dir, "debug");
+		let export_dir = export_dir_host(target_dir, "debug");
 
 		// check expectations:
-		let cargo_package_name = path.file_name().unwrap().to_str().unwrap();
+		let cargo_package_name = to_cargo_package_crate_name(&path).expect("package_crate_name");
 		let cargo_target_fullname = format!("{cargo_package_name}-{LIB_NAME}");
 		let artifact = export_dir.join("playdate")
 		                         .join(cargo_target_fullname)
@@ -151,10 +151,10 @@ fn sim_host_release_exp() -> Result<()> {
 
 	for path in simple_crates()? {
 		let (_, target_dir) = run_build(&path, args.clone())?;
-		let export_dir = export_dir_host(&target_dir, "release");
+		let export_dir = export_dir_host(target_dir, "release");
 
 		// check expectations:
-		let cargo_package_name = path.file_name().unwrap().to_str().unwrap();
+		let cargo_package_name = to_cargo_package_crate_name(&path).expect("package_crate_name");
 		let cargo_target_fullname = format!("{cargo_package_name}-{LIB_NAME}");
 		let artifact = export_dir.join("playdate")
 		                         .join(cargo_target_fullname)
@@ -181,13 +181,13 @@ fn dev_sim_release_exp() -> Result<()> {
 	];
 
 	for path in simple_crates()? {
-		let package_name = path.file_name().expect("package_name").to_str().unwrap();
+		let cargo_package_name = to_cargo_package_crate_name(&path).expect("package_crate_name");
 		let (_, target_dir) = run_build(&path, args.clone())?;
 
 		// check expectations:
 		for (filename, target, dev) in &expectations {
-			let export_dir = export_dir(&target_dir, target, "release");
-			let cargo_target_fullname = format!("{package_name}-{LIB_NAME}");
+			let export_dir = export_dir(target_dir, target, "release");
+			let cargo_target_fullname = format!("{cargo_package_name}-{LIB_NAME}");
 			let artifact = export_dir.join("playdate")
 			                         .join(cargo_target_fullname)
 			                         .join("build")
@@ -197,6 +197,12 @@ fn dev_sim_release_exp() -> Result<()> {
 	}
 
 	Ok(())
+}
+
+
+// (issue: #315) Convert dir-name to package-name, then to crate_name
+fn to_cargo_package_crate_name(path: &Path) -> Option<String> {
+	Some(path.file_name()?.to_str()?.replace('-', "_"))
 }
 
 
@@ -214,10 +220,10 @@ mod examples {
 
 		for path in simple_crates()? {
 			let (_, target_dir) = run_build(&path, args.clone())?;
-			let export_dir = export_dir(&target_dir, target, "release");
+			let export_dir = export_dir(target_dir, target, "release");
 
 			// check expectations:
-			let cargo_package_name = path.file_name().unwrap().to_str().unwrap();
+			let cargo_package_name = to_cargo_package_crate_name(&path).expect("package_crate_name");
 			let cargo_target_fullname = format!("{cargo_package_name}-{EXAMPLE_PREFIX}-lib");
 			let artifact = export_dir.join("playdate")
 			                         .join(cargo_target_fullname)
@@ -237,10 +243,10 @@ mod examples {
 
 		for path in simple_crates()? {
 			let (_, target_dir) = run_build(&path, args.clone())?;
-			let export_dir = export_dir(&target_dir, target, "release");
+			let export_dir = export_dir(target_dir, target, "release");
 
 			// check expectations:
-			let cargo_package_name = path.file_name().unwrap().to_str().unwrap();
+			let cargo_package_name = to_cargo_package_crate_name(&path).expect("package_crate_name");
 			let cargo_target_fullname = format!("{cargo_package_name}-{EXAMPLE_PREFIX}-bin");
 			let artifact = export_dir.join("playdate")
 			                         .join(cargo_target_fullname)
@@ -258,10 +264,10 @@ mod examples {
 
 		for path in simple_crates()? {
 			let (_, target_dir) = run_build(&path, args.clone())?;
-			let export_dir = export_dir(&target_dir, target, "debug");
+			let export_dir = export_dir(target_dir, target, "debug");
 
 			// check expectations:
-			let cargo_package_name = path.file_name().unwrap().to_str().unwrap();
+			let cargo_package_name = to_cargo_package_crate_name(&path).expect("package_crate_name");
 			let cargo_target_fullname = format!("{cargo_package_name}-{EXAMPLE_PREFIX}-bin");
 			let artifact = export_dir.join("playdate")
 			                         .join(cargo_target_fullname)
@@ -297,8 +303,8 @@ mod examples {
 
 			// check expectations:
 			for (filename, target, dev) in &expectations {
-				let export_dir = export_dir(&target_dir, target, "release");
-				let cargo_package_name = path.file_name().unwrap().to_str().unwrap();
+				let export_dir = export_dir(target_dir, target, "release");
+				let cargo_package_name = to_cargo_package_crate_name(&path).expect("package_crate_name");
 				let cargo_target_fullname = format!("{cargo_package_name}-{EXAMPLE_PREFIX}-lib");
 				let artifact = export_dir.join("playdate")
 				                         .join(cargo_target_fullname)

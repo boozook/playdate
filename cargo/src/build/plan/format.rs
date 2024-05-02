@@ -86,7 +86,7 @@ pub enum CompileModeProxy {
 fn deserialize_compile_kind<'de, D>(deserializer: D) -> Result<CompileKind, D::Error>
 	where D: Deserializer<'de> {
 	let res = if let Some(s) = Option::<&str>::deserialize(deserializer)? {
-		let target = CompileTarget::new(&s).map_err(serde::de::Error::custom)?;
+		let target = CompileTarget::new(s).map_err(serde::de::Error::custom)?;
 		CompileKind::Target(target)
 	} else {
 		CompileKind::Host

@@ -89,7 +89,7 @@ pub fn plan_for<'cfg, 'env, 'l>(config: &'cfg Config,
 	                  .ok_or(anyhow!("No parent of manifest-path"))?;
 
 	let main = if !metadata.assets.is_empty() {
-		let plan = assets_build_plan(&env, &metadata.assets, opts.as_ref(), Some(root))?;
+		let plan = assets_build_plan(env, &metadata.assets, opts.as_ref(), Some(root))?;
 
 		// main-assets plan:
 		let path = layout.as_inner().assets_plan_for(config, package);
@@ -107,7 +107,7 @@ pub fn plan_for<'cfg, 'env, 'l>(config: &'cfg Config,
 	// dev-assets plan:
 	let dev = if has_dev_assets && metadata.dev_assets.is_some() {
 		let assets = metadata.dev_assets.as_ref().unwrap();
-		let dev_plan = assets_build_plan(&env, assets, opts.as_ref(), Some(root))?;
+		let dev_plan = assets_build_plan(env, assets, opts.as_ref(), Some(root))?;
 
 		let path = layout.as_inner().assets_plan_for_dev(config, package);
 		let mut dev_cached = CachedPlan::new(path, dev_plan)?;
@@ -164,7 +164,7 @@ pub struct CachedPlan<'t, 'cfg> {
 
 
 impl<'t, 'cfg> CachedPlan<'t, 'cfg> {
-	#[must_use]
+	#[must_use = "Cached plan must be used"]
 	fn new(path: PathBuf, plan: AssetsPlan<'t, 'cfg>) -> CargoResult<Self> {
 		let mut serializable = plan.serializable_flatten().collect::<Vec<_>>();
 		serializable.sort_by_key(|(_, (p, _))| p.to_string_lossy().to_string());
@@ -198,7 +198,7 @@ impl<'t, 'cfg> CachedPlan<'t, 'cfg> {
 	             config: &Config)
 	             -> CargoResult<BuildReport<'t, 'cfg>> {
 		let cache = self.serialized;
-		let report = apply_build_plan(self.plan, &dest, options)?;
+		let report = apply_build_plan(self.plan, dest, options)?;
 		// and finally save cache of just successfully applied plan:
 		// only if there is no errors
 		if !report.has_errors() {
@@ -240,8 +240,7 @@ impl<'t, 'cfg> CachedPlan<'t, 'cfg> {
 		use playdate::assets::plan::*;
 		use playdate::assets::resolver::*;
 
-		let title =
-			|&(ref left, ref right): &(Expr, Expr)| format!("rule: {} = {}", left.original(), right.original());
+		let title = |(left, right): &(Expr, Expr)| format!("rule: {} = {}", left.original(), right.original());
 		let row_columns = |target: &Path, source: &Path| {
 			(format!("  {}", target.as_relative_to(&root).display()),
 			 source.as_relative_to(&root).display().to_string())

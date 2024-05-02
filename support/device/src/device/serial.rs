@@ -34,6 +34,9 @@ impl SerialNumber {
 			s
 		}
 	}
+
+
+	pub fn as_str(&self) -> &str { &self.0 }
 }
 
 impl FromStr for SerialNumber {
@@ -67,8 +70,16 @@ impl PartialEq for SerialNumber {
 impl<T: AsRef<str>> PartialEq<T> for SerialNumber {
 	fn eq(&self, other: &T) -> bool {
 		let other = other.as_ref().to_uppercase();
-		self.0.contains(&other) || other.contains(&self.0)
+		other.len() >= 3 && (self.0.contains(&other) || other.contains(&self.0))
 	}
+}
+
+// Commutative pares fore above
+impl PartialEq<SerialNumber> for &str {
+	fn eq(&self, sn: &SerialNumber) -> bool { sn.eq(self) }
+}
+impl PartialEq<SerialNumber> for String {
+	fn eq(&self, sn: &SerialNumber) -> bool { sn.eq(self) }
 }
 
 impl std::fmt::Debug for SerialNumber {
@@ -110,5 +121,72 @@ pub mod error {
 
 	impl From<&str> for SerialNumberFormatError {
 		fn from(value: &str) -> Self { Self::new(value.to_owned()) }
+	}
+}
+
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	const SN: &str = "PDU0-X000042";
+	const SN_UNDERSCORE: &str = "PDU0_X000042";
+	const SN_FORMS: &[&str] = &[SN, SN_UNDERSCORE];
+
+	const PATHS: &[&str] = &["/dev/cu.usbmodem", "other/path/", "/", ""];
+
+	#[test]
+	fn from_str() {
+		let sn = SerialNumber::from_str(SN).unwrap();
+		let sn_ = SerialNumber::from_str(SN_UNDERSCORE).unwrap();
+		assert_eq!(sn, sn_);
+		assert_eq!(sn.0, sn_.0);
+		assert_eq!(sn.as_str(), sn_.as_str());
+	}
+
+	#[test]
+	fn from_port_path() {
+		const SUFFIX: &[Option<&str>] = &[None, Some("0"), Some("1"), Some("2"), Some("42")];
+
+		for sn in SN_FORMS {
+			for suffix in SUFFIX {
+				let suffix = suffix.unwrap_or_default();
+				for path in PATHS {
+					let path = format!("{path}{sn}{suffix}");
+					println!("parsing {path}");
+					let parsed = SerialNumber::from_str(&path).unwrap();
+					assert!(parsed == SN);
+					assert!(SN == parsed);
+				}
+			}
+		}
+	}
+
+	#[test]
+	fn from_port_path_nq() {
+		const SUFFIX: &[Option<&str>] = &[None, Some("0"), Some("1"), Some("2"), Some("42")];
+		let sn_forms: &[String] = &[SN.replace("42", "11"), SN_UNDERSCORE.replace("42", "11")];
+
+		for sn in sn_forms {
+			for suffix in SUFFIX {
+				let suffix = suffix.unwrap_or_default();
+				for path in PATHS {
+					let path = format!("{path}{sn}{suffix}");
+					println!("parsing {path}");
+					let parsed = SerialNumber::from_str(&path).unwrap();
+					assert!(parsed != SN);
+					assert!(SN != parsed);
+				}
+			}
+		}
+	}
+
+	#[test]
+	fn invalid() {
+		assert!(SerialNumber::from_str("").is_err());
+		assert!(SerialNumber::from_str("PDU").is_err());
+		assert!(SerialNumber::from_str("001").is_err());
+		assert!(SerialNumber::from_str("001-00000").is_err());
+		assert!(SerialNumber::from_str("PDU0--AAAAAAA").is_err());
 	}
 }

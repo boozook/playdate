@@ -64,17 +64,19 @@ pub fn build_all<'b>(config: &'_ Config,
 	let mut results = Vec::new();
 
 	for ((package, _), mut products) in targets {
-		if products.len() == 1 {
-			let assets = assets.get(package);
-			let product = products.pop().unwrap();
-			let result = package_single_target(config, product, assets)?;
-			results.push(result);
-		} else if products.len() > 1 {
-			let assets = assets.get(package);
-			let result = package_multi_target(config, package, products, assets)?;
-			results.push(result);
-		} else {
-			unreachable!("impossible len=0")
+		match products.len() {
+			0 => unreachable!("impossible len=0"),
+			1 => {
+				let assets = assets.get(package);
+				let product = products.pop().unwrap();
+				let result = package_single_target(config, product, assets)?;
+				results.push(result);
+			},
+			_ => {
+				let assets = assets.get(package);
+				let result = package_multi_target(config, package, products, assets)?;
+				results.push(result);
+			},
 		}
 	}
 
@@ -190,14 +192,14 @@ fn package_multi_target<'p>(config: &Config,
 			let message = format!("Packaging more then two binaries for targets ({targets}) into one package can cause that some of them overwrite some other, so produced package can be broken.");
 			config.log().warn(message);
 
-			let message = format!("Package can contains three binaries: one dylib for unix-family, one dll for windows and one elf for hardware.");
+			let message = "Package can contains three binaries: one dylib for unix-family, one dll for windows and one elf for hardware.";
 			config.log().note(message);
 
-			let error = format!("Can't mix two unix-family's dylibs into one package");
+			let error = "Can't mix two unix-family's dylibs into one package";
 			if !config.compile_options.build_config.keep_going {
 				bail!(error);
 			} else {
-				config.log().error(&error);
+				config.log().error(error);
 			}
 		}
 	}
@@ -268,17 +270,17 @@ fn package_multi_target<'p>(config: &Config,
 }
 
 
-fn build_manifest<'l, Layout: playdate::layout::Layout>(config: &Config,
-                                                        layout: &'l Layout,
-                                                        package: &Package,
-                                                        assets: Option<&AssetsArtifact<'_>>)
-                                                        -> CargoResult<()> {
+fn build_manifest<Layout: playdate::layout::Layout>(config: &Config,
+                                                    layout: &Layout,
+                                                    package: &Package,
+                                                    assets: Option<&AssetsArtifact<'_>>)
+                                                    -> CargoResult<()> {
 	config.log().verbose(|mut log| {
 		            let msg = format!("building package manifest for {}", package.package_id());
 		            log.status("Manifest", msg);
 	            });
 
-	let manifest = if let Some(metadata) = assets.map(|a| a.metadata.as_ref()).flatten() {
+	let manifest = if let Some(metadata) = assets.and_then(|a| a.metadata.as_ref()) {
 		               Manifest::try_from_source(ManifestSource { package,
 		                                                          metadata: metadata.into() })
 	               } else {

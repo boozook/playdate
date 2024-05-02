@@ -31,8 +31,10 @@ pub fn build_plan(cfg: &Config) -> CargoResult<format::BuildPlan> {
 
 	// parse only last line of output:
 	let line = stdout.lines()
-	                 .filter(|s| !s.trim().is_empty() && s.starts_with("{"))
-	                 .next()
+	                 .find(|s| {
+		                 let s = s.trim();
+		                 !s.is_empty() && s.starts_with('{')
+	                 })
 	                 .unwrap_or("{}");
 
 	let value: format::BuildPlan = serde_json::de::from_str(line)?;

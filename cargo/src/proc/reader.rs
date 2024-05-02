@@ -35,7 +35,7 @@ impl CargoJsonReader {
 
 	pub fn read(&mut self) -> Result<impl Iterator<Item = CargoMessage>> {
 		let is_json = |s: &String| {
-			if s.starts_with("{") {
+			if s.starts_with('{') {
 				true
 			} else {
 				println!("{s}");
@@ -188,22 +188,22 @@ pub mod format {
 		let value = &line[1..(line.len() - 1)];
 
 		// try actual format first:
-		let res = serde_json::from_str::<PackageId>(&line).map_err(|err| Error::custom(err));
+		let res = serde_json::from_str::<PackageId>(&line).map_err(Error::custom);
 
 		// otherwise try old formats:
 		res.or_else(move |err| {
 			   if let Some((uri, name_ver)) = value.split_once('#') {
-				   let sid = SourceId::from_url(uri).map_err(|err| Error::custom(err))?;
+				   let sid = SourceId::from_url(uri).map_err(Error::custom)?;
 
 				   if let Some((name, ver)) = name_ver.split_once('@') {
-					   let ver = ver.parse().map_err(|err| Error::custom(err))?;
+					   let ver = ver.parse().map_err(Error::custom)?;
 					   let id = PackageId::new(name.into(), ver, sid);
 					   return Ok(id);
 				   } else {
-					   let sid_temp = SourceId::from_url(value).map_err(|err| Error::custom(err))?;
+					   let sid_temp = SourceId::from_url(value).map_err(Error::custom)?;
 					   let url = sid_temp.url();
 					   if let Some(ver) = url.fragment() {
-						   let ver = ver.parse().map_err(|err| Error::custom(err))?;
+						   let ver = ver.parse().map_err(Error::custom)?;
 						   let name = Path::new(url.path()).file_name()
 						                                   .ok_or_else(|| Error::custom("Package name missed"))?
 						                                   .to_string_lossy();

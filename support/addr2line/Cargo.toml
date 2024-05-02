@@ -1,0 +1,65 @@
+[package]
+name = "playdate-symbolize"
+version = "0.1.0"
+readme = "README.md"
+description = "Tools for symbolise addresses from bin (pdex.elf) and Playdate's trace or crashlog."
+keywords = ["playdate", "bin", "elf", "addr2line", "utility"]
+categories = ["development-tools", "command-line-utilities"]
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+build = "src/build.rs"
+
+
+[[bin]]
+name = "pd-addr2line"
+path = "src/addr2line.rs"
+required-features = ["clap", "env_logger", "const-str"]
+
+[[bin]]
+name = "pd-symbolize-trace"
+path = "src/addr2line-trace.rs"
+required-features = ["clap", "env_logger", "const-str"]
+
+[[bin]]
+name = "pd-symbolize-crashlog"
+path = "src/addr2line-crashlog.rs"
+required-features = ["clap", "env_logger", "const-str"]
+
+
+[dependencies]
+anyhow = "1.0"
+log.workspace = true
+env_logger = { workspace = true, optional = true }
+symbolic = { version = "12.8", features = ["demangle"] }
+
+regex.workspace = true
+const-str = { version = "0.5", default-features = false, optional = true }
+
+tokio = { workspace = true, features = ["full", "rt-multi-thread"] }
+async-stream = "0.3"
+tokio-stream = "0.1"
+futures-util = "0.3"
+
+[dependencies.clap]
+features = ["std", "env", "derive", "help", "usage", "color"]
+workspace = true
+optional = true
+
+[dependencies.sqlx]
+version = "0.7"
+# TODO: support runtime-async-std
+features = ["runtime-tokio", "sqlite", "macros"]
+default-features = false
+
+
+[dependencies.utils]
+features = ["log"]
+default-features = false
+workspace = true
+
+
+[features]
+default = ["clap", "env_logger", "const-str"]

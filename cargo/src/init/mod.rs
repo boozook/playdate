@@ -22,8 +22,7 @@ pub fn new_or_init<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<()> {
 		                                .iter()
 		                                .find(|arg| arg.as_os_str() == OsStr::new("--bin"))
 	                          })
-	                          .map(|arg| arg.to_string_lossy().strip_prefix("--").map(ToString::to_string))
-	                          .flatten();
+	                          .and_then(|arg| arg.to_string_lossy().strip_prefix("--").map(ToString::to_string));
 	let mut cargo = proc::cargo_proxy_cmd(config, &config.cmd)?;
 	if let Some(cty) = cty_requested {
 		let cty = match cty.as_str() {
@@ -53,7 +52,7 @@ pub fn new_or_init<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<()> {
 	// open manifest
 	let manifest_path = path.join("Cargo.toml");
 	let manifest_src = std::fs::read_to_string(&manifest_path)?;
-	let mut manifest = manifest_src.parse::<toml_edit::Document>()?;
+	let mut manifest = manifest_src.parse::<toml_edit::DocumentMut>()?;
 
 
 	// add metadata:
@@ -70,10 +69,10 @@ pub fn new_or_init<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<()> {
 
 
 	// sources:
-	lib(config, &path, &mut manifest, hl)?;
+	lib(config, path, &mut manifest, hl)?;
 
 	if is_bin {
-		bin(config, &path, &mut manifest, hl)?;
+		bin(config, path, &mut manifest, hl)?;
 	}
 
 
@@ -110,13 +109,11 @@ pub fn new_or_init<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<()> {
 
 /// Take uor metadata table, render it like a normal,
 /// then add as trailing raw string to the end of file.
-fn reformat_metadata(_config: &Config, manifest: &mut toml_edit::Document) -> CargoResult<()> {
-	manifest["package"]["metadata"][METADATA_FIELD].as_inline_table_mut()
-	                                               .map(|t| {
-		                                               t.set_dotted(true);
-		                                               t.fmt();
-	                                               });
-
+fn reformat_metadata(_config: &Config, manifest: &mut toml_edit::DocumentMut) -> CargoResult<()> {
+	if let Some(t) = manifest["package"]["metadata"][METADATA_FIELD].as_inline_table_mut() {
+		t.set_dotted(true);
+		t.fmt();
+	}
 
 	let metadata = &manifest["package"]["metadata"][METADATA_FIELD];
 
@@ -133,7 +130,7 @@ fn reformat_metadata(_config: &Config, manifest: &mut toml_edit::Document) -> Ca
 		let mut keys = Vec::new();
 		for (key, value) in table.iter() {
 			keys.push(key.to_owned());
-			raw_metadata_lines.push(format!("{key} = {}", value.to_string()).into());
+			raw_metadata_lines.push(format!("{key} = {}", value).into());
 		}
 	}
 
@@ -143,9 +140,7 @@ fn reformat_metadata(_config: &Config, manifest: &mut toml_edit::Document) -> Ca
 	// remove original entire metadata table if it empty:
 	if manifest["package"]["metadata"].as_table_like()
 	                                  .into_iter()
-	                                  .filter(|t| t.is_empty())
-	                                  .next()
-	                                  .is_some()
+	                                  .any(|t| t.is_empty())
 	{
 		manifest["package"].as_table_like_mut()
 		                   .map(|table| table.remove("metadata"));
@@ -158,14 +153,13 @@ fn reformat_metadata(_config: &Config, manifest: &mut toml_edit::Document) -> Ca
 }
 
 
-fn add_min_metadata(_config: &Config<'_>, manifest: &mut toml_edit::Document) -> CargoResult<()> {
+fn add_min_metadata(_config: &Config<'_>, manifest: &mut toml_edit::DocumentMut) -> CargoResult<()> {
 	use toml_edit::value;
 
 	let name = manifest["package"]["name"].as_str()
 	                                      .unwrap_or("hello-world")
 	                                      .to_owned();
-	let bundle_id = name.replace("_", ".")
-	                    .replace("-", ".")
+	let bundle_id = name.replace(['_', '-'], ".")
 	                    .replace("..", ".")
 	                    .replace("..", ".");
 	let has_description = manifest["package"].as_table()
@@ -186,13 +180,13 @@ fn add_min_metadata(_config: &Config<'_>, manifest: &mut toml_edit::Document) ->
 	Ok(())
 }
 
-fn add_full_metadata(_config: &Config<'_>, manifest: &mut toml_edit::Document) -> CargoResult<()> {
-	use toml_edit::Document;
+fn add_full_metadata(_config: &Config<'_>, manifest: &mut toml_edit::DocumentMut) -> CargoResult<()> {
+	use toml_edit::DocumentMut;
 
 	let name = manifest["package"]["name"].as_str()
 	                                      .unwrap_or("hello-world")
 	                                      .to_owned();
-	let bundle_id = name.replace("_", ".").replace("-", ".");
+	let bundle_id = name.replace(['_', '-'], ".");
 	let version = manifest["package"]["version"].as_str().unwrap_or("0.0");
 
 	let author_default = "You, Inc";
@@ -231,7 +225,7 @@ fn add_full_metadata(_config: &Config<'_>, manifest: &mut toml_edit::Document) -
 	                   bundle_id = bundle_id,
 	                   description = description
 	);
-	toml.parse::<Document>().expect("invalid doc");
+	toml.parse::<DocumentMut>().expect("invalid doc");
 
 	let raw_metadata = format!("\n\n{}\n", toml.trim());
 	manifest.set_trailing(raw_metadata);
@@ -244,7 +238,7 @@ fn cargo_add<'s>(config: &Config<'_>,
                  pwd: &Path,
                  manifest: &Path,
                  name: &str,
-                 git: bool,
+                 _git: bool,
                  rename: Option<&str>,
                  features: Option<impl IntoIterator<Item = &'s str>>)
                  -> CargoResult<()> {
@@ -278,14 +272,14 @@ fn cargo_add<'s>(config: &Config<'_>,
 
 
 fn add_dependencies<'cfg>(config: &'cfg Config<'_>,
-                          manifest: &mut toml_edit::Document)
+                          manifest: &mut toml_edit::DocumentMut)
                           -> CargoResult<(Vec<Cow<'cfg, str>>, bool)> {
 	use toml_edit::value;
 	use crate::cli::deps::Dependency as Dep;
 	use crate::cli::deps::DependencyName as Name;
 	use crate::cli::deps::DependencySource as Src;
 
-	fn add_dep(dep: &Dep<'_>, manifest: &mut toml_edit::Document) -> CargoResult<()> {
+	fn add_dep(dep: &Dep<'_>, manifest: &mut toml_edit::DocumentMut) -> CargoResult<()> {
 		match dep.source {
 			Src::CratesIo => manifest["dependencies"][dep.name.to_string()] = value("*"),
 			Src::Git => {
@@ -343,7 +337,7 @@ fn cargo_config<P: AsRef<Path>>(config: &Config, path: P) -> CargoResult<()> {
 	// default
 	if !config.create_full_config {
 		// target[].rustflags:
-		let rustflags: Vec<toml::Value> = Rustflags::rustflags_bin_playdate().into_iter()
+		let rustflags: Vec<toml::Value> = Rustflags::rustflags_bin_playdate().iter()
 		                                                                     .map(|s| toml::Value::String(s.to_string()))
 		                                                                     .collect();
 
@@ -355,12 +349,9 @@ fn cargo_config<P: AsRef<Path>>(config: &Config, path: P) -> CargoResult<()> {
 	} else {
 		let rustflags = Rustflags::try_default(config)?;
 		for (kind, flags) in rustflags.targets()
-		                              .map(|k| rustflags.get(k).map(|flags| (k, flags)))
-		                              .flatten()
+		                              .filter_map(|k| rustflags.get(k).map(|flags| (k, flags)))
 		{
-			let rustflags: Vec<toml::Value> = flags.into_iter()
-			                                       .map(|s| toml::Value::String(s.to_string()))
-			                                       .collect();
+			let rustflags: Vec<toml::Value> = flags.iter().map(|s| toml::Value::String(s.to_string())).collect();
 			let mut target_table = toml::Table::new();
 			target_table.insert("rustflags".into(), rustflags.into());
 
@@ -407,8 +398,8 @@ fn cargo_config<P: AsRef<Path>>(config: &Config, path: P) -> CargoResult<()> {
 }
 
 
-fn lib(config: &Config, root: &Path, manifest: &mut toml_edit::Document, hl: bool) -> CargoResult<()> {
-	use toml_edit::Document;
+fn lib(config: &Config, root: &Path, manifest: &mut toml_edit::DocumentMut, hl: bool) -> CargoResult<()> {
+	use toml_edit::DocumentMut;
 
 	let toml = r#"
 [lib]
@@ -419,7 +410,7 @@ crate-type = [
 	"rlib",      # to link with bin
 ]
 "#;
-	manifest["lib"] = toml.parse::<Document>().expect("invalid doc")["lib"].clone();
+	manifest["lib"] = toml.parse::<DocumentMut>().expect("invalid doc")["lib"].clone();
 
 	let path = root.join("src").join("lib.rs");
 	let src = if config.create_deps_sys_only || !hl {
@@ -431,12 +422,12 @@ crate-type = [
 	Ok(())
 }
 
-fn bin(config: &Config, root: &Path, manifest: &mut toml_edit::Document, hl: bool) -> CargoResult<()> {
+fn bin(config: &Config, root: &Path, manifest: &mut toml_edit::DocumentMut, hl: bool) -> CargoResult<()> {
 	let path = root.join("src").join("main.rs");
 	let name = manifest["package"]["name"].as_str()
 	                                      .unwrap_or("hello-world")
 	                                      .to_owned()
-	                                      .replace("-", "_");
+	                                      .replace('-', "_");
 	let src = if config.create_deps_sys_only || !hl {
 		format!(include_str!("bin-ll.rs"), crate_name = name)
 	} else {
@@ -470,7 +461,7 @@ fn ide<P: AsRef<Path>>(config: &Config, path: P) -> CargoResult<()> {
 
 #[cfg(test)]
 mod tests {
-	use toml_edit::Document;
+	use toml_edit::DocumentMut;
 
 
 	#[test]
@@ -483,6 +474,6 @@ mod tests {
 		                   bundle_id = "bundle-id",
 		                   description = "description"
 		);
-		toml.parse::<Document>().expect("invalid doc");
+		toml.parse::<DocumentMut>().expect("invalid doc");
 	}
 }

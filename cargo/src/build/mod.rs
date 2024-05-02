@@ -52,7 +52,7 @@ pub fn build<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<Vec<BuildProduct<'
 	let plan = config.build_plan()?;
 
 	// call cargo:
-	let mut cargo = cargo_proxy_cmd(&config, &Cmd::Build)?;
+	let mut cargo = cargo_proxy_cmd(config, &Cmd::Build)?;
 
 	// add build-std:
 	// https://github.com/rust-lang/cargo/issues/8733
@@ -110,11 +110,10 @@ pub fn build<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<Vec<BuildProduct<'
 					                                let name = ft.uplift_filename(target);
 					                                p.file_name() == Some(OsStr::new(&name))
 				                                })
-				                                .map(|fty| fty.crate_type)
-				                                .flatten()
+				                                .and_then(|fty| fty.crate_type)
 				                                .unwrap_or_else(|| {
 					                                // We're probably never goes to this fallback, but it should be there anyway:
-					                                guess_crate_type(config, &p, art.target.kind(), i.kind)
+					                                guess_crate_type(config, p, art.target.kind(), i.kind)
 				                                });
 				                 log::debug!(
 				                             "crate type: {ct} - {:?}",
@@ -142,7 +141,8 @@ pub fn build<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<Vec<BuildProduct<'
 				},
 				CrateType::Staticlib if artifact.ck.is_playdate() => build_library(config, layout, artifact),
 				_ => {
-					let name = if package.name() == art.target.name {
+					let package_crate_name = package.name().replace('-', "_");
+					let name = if package_crate_name == *art.target.name {
 						Cow::Borrowed(art.target.name.as_str())
 					} else {
 						format!("{}, crate {}", package.name(), art.target.name).into()
@@ -167,10 +167,8 @@ pub fn build<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<Vec<BuildProduct<'
 
 			if !config.compile_options.build_config.keep_going {
 				products.push(product?);
-			} else {
-				if let Ok(product) = product.log_err_cargo(config) {
-					products.push(product);
-				}
+			} else if let Ok(product) = product.log_err_cargo(config) {
+				products.push(product);
 			}
 
 			config.log()
@@ -259,16 +257,15 @@ fn read_cargo_output<'cc>(
 	// after optimization there is no these perturbations.
 	// Also we don't need to fail entire process if one target fails and so status will not ok.
 	let artifacts =
-		map_artifacts(possible_targets, artifacts).map(|v| Some(v))
+		map_artifacts(possible_targets, artifacts).map(Some)
 		                                          .chain([reader].into_iter()
 		                                                         .flat_map(|mut r| {
 			                                                         r.status()
 			                                                          .log_err_cargo(config)
 			                                                          .ok()
-			                                                          .map(|status| {
+			                                                          .and_then(|status| {
 				                                                          status.exit_ok().log_err_cargo(config).ok()
 			                                                          })
-			                                                          .flatten()
 		                                                         })
 		                                                         .map(|_| None))
 		                                          .flatten()
@@ -294,8 +291,13 @@ fn map_artifacts<'cargo, 'cc>(
 		         targets.iter()
 		                .find(|(p, ..)| p.package_id() == art.package_id)
 		                .and_then(|(package, targets, ..)| {
-			                targets.into_iter()
-			                       .find(|t| t.name() == art.target.name.as_str() && t.kind() == &art.target.kind())
+			                targets.iter()
+			                       .find(|t| {
+				                       let crate_name = t.crate_name();
+				                       (crate_name == *art.target.name ||
+				                        crate_name == art.target.name.replace('-', "_")) &&
+				                       t.kind() == &art.target.kind()
+			                       })
 			                       .map(|target| (*package, *target, art))
 		                })
 	         })
@@ -389,9 +391,10 @@ fn build_binary<'cfg, Layout, S>(config: &'cfg Config,
 	        artifact.path.display()
 	);
 
+	let package_crate_name = artifact.package.name().replace('-', "_");
 	let mut pdl = ForTargetLayout::new(
 	                                   layout.as_ref(),
-	                                   artifact.package.name().as_str(),
+	                                   package_crate_name,
 	                                   Some(artifact.name.as_ref()),
 	).lock(config.workspace.config())?;
 	pdl.as_mut().prepare()?;
@@ -405,7 +408,7 @@ fn build_binary<'cfg, Layout, S>(config: &'cfg Config,
 			use playdate::layout::Layout as _;
 			pdl_ref.binary()
 		};
-		let linked = soft_link_checked(&artifact.path, &product, true, pdl_ref.dest())?;
+		let linked = soft_link_checked(artifact.path, &product, true, pdl_ref.dest())?;
 		log::debug!(
 		            "{} linked (overwritten: {linked}) {}",
 		            artifact.ct,
@@ -417,7 +420,7 @@ fn build_binary<'cfg, Layout, S>(config: &'cfg Config,
 		                        dst_ct: CrateType::Bin,
 		                        profile: artifact.profile,
 		                        layout: pdl_ref.to_owned(),
-		                        path: product.to_path_buf().into(),
+		                        path: product.to_path_buf(),
 		                        package: artifact.package,
 		                        name: artifact.name.as_ref().to_owned(),
 		                        example: artifact.example }
@@ -457,9 +460,10 @@ fn build_library<'cfg, Layout, S>(config: &'cfg Config,
 	        artifact.path.display()
 	);
 
+	let package_crate_name = artifact.package.name().replace('-', "_");
 	let mut pdl = ForTargetLayout::new(
 	                                   layout.as_ref(),
-	                                   artifact.package.name().as_str(),
+	                                   package_crate_name,
 	                                   Some(artifact.name.as_ref()),
 	).lock(config.workspace.config())?;
 	pdl.as_mut().prepare()?;
@@ -522,7 +526,7 @@ fn build_library<'cfg, Layout, S>(config: &'cfg Config,
 		                        dst_ct: CrateType::Bin,
 		                        profile: artifact.profile,
 		                        layout: pdl_ref.to_owned(),
-		                        path: product.to_path_buf().into(),
+		                        path: product.to_path_buf(),
 		                        package: artifact.package,
 		                        name: artifact.name.as_ref().to_owned(),
 		                        example: artifact.example }
@@ -534,7 +538,7 @@ fn build_library<'cfg, Layout, S>(config: &'cfg Config,
 			pdl.library()
 			   .with_extension(artifact.path.extension().unwrap_or_default())
 		};
-		let linked = soft_link_checked(&artifact.path, &product, true, pdl.dest())?;
+		let linked = soft_link_checked(artifact.path, &product, true, pdl.dest())?;
 		log::debug!(
 		            "{} linked (overwritten: {linked}) {}",
 		            artifact.ct,
@@ -579,7 +583,7 @@ fn guess_crate_type(config: &Config, path: &Path, tk: cargo::core::TargetKind, c
 			CrateType::Staticlib
 		} else {
 			let dylib_suffix = dylib_suffix_for_target(config, ck);
-			if Some(ext) == dylib_suffix.as_deref().map(|s| OsStr::new(s)) &&
+			if Some(ext) == dylib_suffix.as_deref().map(OsStr::new) &&
 			   (crate_types.contains(&CrateType::Dylib) || crate_types.contains(&CrateType::Cdylib))
 			{
 				// For us it doesn't matter if it's dylib or cdylib
@@ -604,8 +608,7 @@ pub fn dylib_suffix_for_target<'c>(config: &'c Config, kind: CompileKind) -> Opt
 		      .target_spec(kind)
 		      .log_err_cargo(config)
 		      .ok()
-		      .map(|spec| spec.dll_suffix)
-		      .flatten()
+		      .and_then(|spec| spec.dll_suffix)
 	};
 	let for_host = || for_target(&CompileKind::Host);
 
@@ -626,7 +629,7 @@ pub fn dylib_suffix_for_target<'c>(config: &'c Config, kind: CompileKind) -> Opt
 fn has_only_nopd_targets(config: &Config) -> CargoResult<bool> {
 	let pd = CompileKind::playdate();
 	let kinds = &config.compile_options.build_config.requested_kinds[..];
-	let contains_nopd = kinds.iter().find(|kind| *kind != &pd).is_some();
+	let contains_nopd = kinds.iter().any(|kind| *kind != pd);
 	let contains_pd = kinds.contains(&pd);
 	if !contains_pd && contains_nopd {
 		return Ok(true);
@@ -649,7 +652,7 @@ fn has_only_nopd_targets(config: &Config) -> CargoResult<bool> {
 		kinds.extend(package.manifest().forced_kind());
 	}
 
-	let contains_nopd = kinds.iter().find(|kind| *kind != &pd).is_some();
+	let contains_nopd = kinds.iter().any(|kind| kind != &pd);
 	let contains_pd = kinds.contains(&pd);
 
 	Ok(!contains_pd && contains_nopd)
