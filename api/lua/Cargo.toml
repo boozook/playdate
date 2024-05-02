@@ -22,9 +22,28 @@ bindgen-static = ["sys/bindgen-static"]
 bindings-derive-debug = ["sys/bindings-derive-debug"]
 
 
-[dependencies.sys]
-workspace = true
-default-features = false
+[dependencies]
+sys = { workspace = true, default-features = false }
+
+[dev-dependencies]
+system = { workspace = true, default-features = false, features = [ "try-trait-v2" ] }
+
+
+[[example]]
+name = "add-function-get-arg-string"
+crate-type = ["dylib", "staticlib"]
+path = "examples/add-function-get-arg-string.rs"
+required-features = ["sys/entry-point", "sys/lang-items"]
+
+
+[package.metadata.playdate]
+bundle-id = "rs.playdate.lua"
+
+[package.metadata.playdate.dev-assets]
+# The Lua runtime expects us to provide a main.pdz file at the root.
+#
+# Compiled with `pdc --skip-unknown --strip sources/main.lua Example.pdx`
+"main.pdz" = "examples/Example.pdx/main.pdz"
 
 
 [package.metadata.docs.rs]

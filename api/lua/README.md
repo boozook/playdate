@@ -5,15 +5,9 @@ High-level lua API built on-top of [playdate-sys][].
 
 ## Usage
 
-```rust
-use playdate_lua::Lua;
+See [examples][].
 
-let lua = Lua::new();
-
-// TODO
-```
-
-
+[examples]: ./examples
 [playdate-sys]: https://crates.io/crates/playdate-sys
 
 

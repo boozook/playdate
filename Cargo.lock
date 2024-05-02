@@ -4196,6 +4196,7 @@ name = "playdate-lua"
 version = "0.1.0"
 dependencies = [
  "playdate-sys",
+ "playdate-system",
 ]
 
 [[package]]
