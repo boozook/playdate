@@ -121,14 +121,23 @@ pub fn apply_build_plan<'l, 'r, P: AsRef<Path>>(plan: BuildPlan<'l, 'r>,
 		AssetsBuildMethod::Link => &link_method,
 	};
 
-	let mut results = HashMap::with_capacity(plan.as_inner().len());
-	for entry in plan.into_inner().drain(..) {
+	let (mut plan, crate_root) = plan.into_parts();
+	// let mut results = HashMap::with_capacity(plan.as_inner().len());
+	let mut results = HashMap::with_capacity(plan.len());
+	// for entry in plan.into_inner().drain(..) {
+	for entry in plan.drain(..) {
 		let current: Vec<_> = match &entry {
-			Mapping::AsIs(inc, ..) => vec![method(&inc.source(), &inc.target(), false)],
-			Mapping::Into(inc, ..) => vec![method(&inc.source(), &inc.target(), true)],
+			Mapping::AsIs(inc, ..) => {
+				let source = abs_or_rel_crate_any(inc.source(), crate_root);
+				vec![method(&source, &inc.target(), false)]
+			},
+			Mapping::Into(inc, ..) => {
+				let source = abs_or_rel_crate_any(inc.source(), crate_root);
+				vec![method(&source, &inc.target(), true)]
+			},
 			Mapping::ManyInto { sources, target, .. } => {
 				sources.iter()
-				       .map(|inc| (inc.source(), target.join(inc.target())))
+				       .map(|inc| (abs_or_rel_crate_any(inc.source(), crate_root), target.join(inc.target())))
 				       .map(|(ref source, ref target)| method(source, target, false))
 				       .collect()
 			},

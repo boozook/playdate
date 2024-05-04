@@ -89,7 +89,12 @@ pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
 		let key = PathBuf::from(k.as_str());
 		let value = v.as_str();
 		let into_dir = k.as_str().ends_with(MAIN_SEPARATOR_STR);
-		let source_exists = Path::new(value).try_exists()?;
+		let source_exists = {
+			let p = Path::new(value);
+			p.is_absolute()
+			 .then(|| p.try_exists())
+			 .unwrap_or_else(|| crate_root.join(p).try_exists())?
+		};
 
 		let mapping = match (source_exists, into_dir) {
 			(true, true) => Mapping::Into(Match::new(value, key), (k, v)),
@@ -189,6 +194,25 @@ pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
 }
 
 
+/// Make path relative to `crate_root` if it isn't absolute, checking existence.
+/// Returns `None` if path doesn't exist.
+pub fn existing_abs_rel_to_crate_root<'t, P1, P2>(p: P1, root: P2) -> std::io::Result<Option<Cow<'t, Path>>>
+	where P1: 't + AsRef<Path> + Into<Cow<'t, Path>>,
+	      P2: AsRef<Path> {
+	let p = if p.as_ref().is_absolute() && p.as_ref().try_exists()? {
+		Some(p.into())
+	} else {
+		let abs = root.as_ref().join(p);
+		if abs.try_exists()? {
+			Some(Cow::Owned(abs))
+		} else {
+			None
+		}
+	};
+	Ok(p)
+}
+
+
 fn glob_matches_any<'a, I: IntoIterator<Item = &'a Glob<'a>>>(path: &Path, exprs: I) -> bool {
 	exprs.into_iter().any(|glob| glob.is_match(path))
 }
@@ -282,10 +306,12 @@ impl BuildPlan<'_, '_> {
 		                      })
 	}
 
-	pub fn serializable_flatten(
+	pub fn iter_flatten(
 		&self)
-		-> impl Iterator<Item = (PathBuf, (PathBuf, Option<std::time::SystemTime>))> + '_ {
-		let pair = |inc: &Match| (inc.target().to_path_buf(), inc.source().to_path_buf());
+		-> impl Iterator<Item = (MappingKind, PathBuf, (PathBuf, Option<std::time::SystemTime>))> + '_ {
+		let pair = |inc: &Match| {
+			(inc.target().to_path_buf(), abs_or_rel_crate_any(inc.source(), self.crate_root).to_path_buf())
+		};
 
 		self.as_inner()
 		    .iter()
