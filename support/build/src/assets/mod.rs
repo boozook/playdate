@@ -12,6 +12,7 @@ use crate::metadata::format::AssetsOptions;
 
 pub mod plan;
 pub mod resolver;
+mod tests;
 
 use self::plan::*;
 
