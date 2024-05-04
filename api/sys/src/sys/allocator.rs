@@ -25,7 +25,7 @@ pub static GLOBAL: PlaydateAllocator = PlaydateAllocator;
 /// Global handler for an Out Of Memory (OOM) condition
 #[alloc_error_handler]
 #[cfg(feature = "allocator")]
-fn alloc_error(_layout: Layout) -> ! { panic!("Out of Memory") }
+fn alloc_error(layout: Layout) -> ! { panic!("Out of Memory, requested {}.", layout.size()) }
 
 
 pub struct PlaydateAllocator;
@@ -42,13 +42,17 @@ unsafe impl GlobalAlloc for PlaydateAllocator {
 }
 
 
-fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void {
-	unsafe {
-		if let Some(api) = crate::sys::API.as_ref() {
-			if let Some(f) = (*api.system).realloc {
-				return f(ptr, size);
-			}
-		}
-	}
-	panic!("realloc")
+#[track_caller]
+unsafe fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void {
+	// Cached pointer to the OS's realloc function.
+	static mut REALLOC: Option<unsafe extern "C" fn(ptr: *mut c_void, size: usize) -> *mut c_void> = None;
+
+	let f = REALLOC.get_or_insert_with(|| {
+		               if let Some(realloc) = crate::sys::API.as_ref().and_then(|api| (*api.system).realloc) {
+			               realloc
+		               } else {
+			               panic!("Missed API.realloc")
+		               }
+	               });
+	f(ptr, size)
 }
