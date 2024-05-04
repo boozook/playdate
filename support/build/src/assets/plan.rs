@@ -1,7 +1,7 @@
 use std::hash::Hash;
 use std::borrow::Cow;
 use std::str::FromStr;
-use std::path::{Path, PathBuf, MAIN_SEPARATOR_STR};
+use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 
 use wax::{Glob, Pattern};
 
@@ -17,7 +17,7 @@ use super::resolver::*;
 pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
                                      assets: &PlayDateMetadataAssets<V>,
                                      options: &AssetsOptions,
-                                     crate_root: Option<&Path>)
+                                     crate_root: Option<&'c Path>)
                                      -> Result<BuildPlan<'l, 'r>, super::Error>
 	where V: Value
 {
@@ -32,14 +32,22 @@ pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
 	let mut include_unresolved = Vec::new();
 	let mut exclude_exprs = Vec::new();
 
+	const PATH_SEPARATOR: [char; 2] = [MAIN_SEPARATOR, '/'];
+
 	let enver = EnvResolver::new();
 	let crate_root = crate_root.unwrap_or_else(|| env.cargo_manifest_dir());
 	let link_behavior = options.link_behavior();
 
 	let to_relative = |s: &String| -> String {
-		let p = Path::new(&s);
+		let p = Path::new(s);
 		if p.is_absolute() || p.has_root() {
-			p.components().skip(1).collect::<PathBuf>().display().to_string()
+			let trailing_sep = p.components().count() > 1 && s.ends_with(PATH_SEPARATOR);
+			let mut s = p.components().skip(1).collect::<PathBuf>().display().to_string();
+			// preserve trailing separator
+			if trailing_sep && !s.ends_with(PATH_SEPARATOR) {
+				s.push(MAIN_SEPARATOR);
+			}
+			unixish_path_pattern(&s).into_owned()
 		} else {
 			s.to_owned()
 		}
@@ -87,15 +95,17 @@ pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
 	let mut mappings = Vec::new();
 	for (k, v) in map_unresolved.into_iter() {
 		let key = PathBuf::from(k.as_str());
-		let value = v.as_str();
-		let into_dir = k.as_str().ends_with(MAIN_SEPARATOR_STR);
-		let source_exists = Path::new(value).try_exists()?;
+		let value = Cow::Borrowed(v.as_str());
+		let into_dir = k.as_str().ends_with(PATH_SEPARATOR);
+		let source_exists = abs_or_rel_crate_existing(Path::new(value.as_ref()), crate_root)?.is_some();
 
 		let mapping = match (source_exists, into_dir) {
-			(true, true) => Mapping::Into(Match::new(value, key), (k, v)),
-			(true, false) => Mapping::AsIs(Match::new(value, key), (k, v)),
+			(true, true) => Mapping::Into(Match::new(value.as_ref(), key), (k, v)),
+			(true, false) => Mapping::AsIs(Match::new(value.as_ref(), key), (k, v)),
 			(false, _) => {
 				let mut resolved = resolve_includes(value, crate_root, &exclude_exprs, link_behavior)?;
+
+				debug!("Possible ManyInto, resolved: {}", resolved.len());
 
 				// filter resolved includes:
 				let _excluded: Vec<_> = resolved.extract_if(|inc| {
@@ -185,7 +195,37 @@ pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
 
 	// TODO: find source duplicates and warn!
 
-	Ok(BuildPlan(mappings))
+	Ok(BuildPlan { plan: mappings,
+	               crate_root })
+}
+
+
+/// Make path relative to `crate_root` if it isn't absolute, checking existence.
+/// Returns `None` if path doesn't exist.
+pub fn abs_or_rel_crate_existing<'t, P1, P2>(p: P1, root: P2) -> std::io::Result<Option<Cow<'t, Path>>>
+	where P1: 't + AsRef<Path> + Into<Cow<'t, Path>>,
+	      P2: AsRef<Path> {
+	let p = if p.as_ref().is_absolute() && p.as_ref().try_exists()? {
+		Some(p.into())
+	} else {
+		let abs = root.as_ref().join(p);
+		if abs.try_exists()? {
+			Some(Cow::Owned(abs))
+		} else {
+			None
+		}
+	};
+	Ok(p)
+}
+
+/// Same as [`abs_or_rel_crate_existing`], but returns given `p` as fallback.
+#[inline]
+pub fn abs_or_rel_crate_any<'t, P1, P2>(p: P1, root: P2) -> Cow<'t, Path>
+	where P1: 't + AsRef<Path> + Into<Cow<'t, Path>> + Clone,
+	      P2: AsRef<Path> {
+	abs_or_rel_crate_existing(p.clone(), root).ok()
+	                                          .flatten()
+	                                          .unwrap_or(p.into())
 }
 
 
@@ -223,15 +263,26 @@ fn possibly_matching<P: Into<PathBuf>>(path: &Path, expr: P) -> bool {
 
 
 #[derive(Debug, PartialEq, Eq, Hash, serde::Serialize)]
-pub struct BuildPlan<'left, 'right>(Vec<Mapping<'left, 'right>>);
+pub struct BuildPlan<'left, 'right> {
+	plan: Vec<Mapping<'left, 'right>>,
+	crate_root: &'left Path,
+}
 
 impl<'left, 'right> BuildPlan<'left, 'right> {
-	pub fn into_inner(self) -> Vec<Mapping<'left, 'right>> { self.0 }
-	pub fn as_inner(&self) -> &[Mapping<'left, 'right>] { &self.0[..] }
+	pub fn into_inner(self) -> Vec<Mapping<'left, 'right>> { self.plan }
+	pub fn as_inner(&self) -> &[Mapping<'left, 'right>] { &self.plan[..] }
+	pub fn into_parts(self) -> (Vec<Mapping<'left, 'right>>, &'left Path) { (self.plan, self.crate_root) }
+
+	pub fn crate_root(&self) -> &Path { self.crate_root }
+	pub fn set_crate_root(&mut self, path: &'left Path) -> &Path {
+		let old = self.crate_root;
+		self.crate_root = path;
+		old
+	}
 }
 
 impl<'left, 'right> AsRef<[Mapping<'left, 'right>]> for BuildPlan<'left, 'right> {
-	fn as_ref(&self) -> &[Mapping<'left, 'right>] { &self.0[..] }
+	fn as_ref(&self) -> &[Mapping<'left, 'right>] { &self.plan[..] }
 }
 
 impl BuildPlan<'_, '_> {
@@ -282,15 +333,18 @@ impl BuildPlan<'_, '_> {
 		                      })
 	}
 
-	pub fn serializable_flatten(
+	pub fn iter_flatten(
 		&self)
-		-> impl Iterator<Item = (PathBuf, (PathBuf, Option<std::time::SystemTime>))> + '_ {
-		let pair = |inc: &Match| (inc.target().to_path_buf(), inc.source().to_path_buf());
+		-> impl Iterator<Item = (MappingKind, PathBuf, (PathBuf, Option<std::time::SystemTime>))> + '_ {
+		let pair = |inc: &Match| {
+			(inc.target().to_path_buf(), abs_or_rel_crate_any(inc.source(), self.crate_root).to_path_buf())
+		};
 
 		self.as_inner()
 		    .iter()
 		    .flat_map(move |mapping| {
 			    let mut rows = Vec::new();
+			    let kind = mapping.kind();
 			    match mapping {
 				    Mapping::AsIs(inc, _) | Mapping::Into(inc, _) => rows.push(pair(inc)),
 			       Mapping::ManyInto { sources, target, .. } => {
@@ -298,11 +352,11 @@ impl BuildPlan<'_, '_> {
 				                          .map(|inc| pair(&Match::new(inc.source(), target.join(inc.target())))));
 			       },
 			    };
-			    rows.into_iter()
+			    rows.into_iter().map(move |(l, r)| (kind, l, r))
 		    })
-		    .map(|(t, p)| {
+		    .map(|(k, t, p)| {
 			    let time = p.metadata().ok().and_then(|m| m.modified().ok());
-			    (t, (p, time))
+			    (k, t, (p, time))
 		    })
 	}
 }
@@ -364,6 +418,35 @@ impl Mapping<'_, '_> {
 		match self {
 			Mapping::AsIs(source, ..) | Mapping::Into(source, ..) => vec![source],
 			Mapping::ManyInto { sources, .. } => sources.iter().collect(),
+		}
+	}
+
+	pub fn kind(&self) -> MappingKind {
+		match self {
+			Mapping::AsIs(..) => MappingKind::AsIs,
+			Mapping::Into(..) => MappingKind::Into,
+			Mapping::ManyInto { .. } => MappingKind::ManyInto,
+		}
+	}
+}
+
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize)]
+pub enum MappingKind {
+	/// Copy source __to__ target.
+	AsIs,
+	/// Copy source __into__ target as-is, preserving related path.
+	Into,
+	/// Copy sources __into__ target as-is, preserving matched path.
+	ManyInto,
+}
+
+impl std::fmt::Display for MappingKind {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::AsIs => "as-is".fmt(f),
+			Self::Into => "into".fmt(f),
+			Self::ManyInto => "many-into".fmt(f),
 		}
 	}
 }

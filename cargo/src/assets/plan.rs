@@ -166,8 +166,8 @@ pub struct CachedPlan<'t, 'cfg> {
 impl<'t, 'cfg> CachedPlan<'t, 'cfg> {
 	#[must_use = "Cached plan must be used"]
 	fn new(path: PathBuf, plan: AssetsPlan<'t, 'cfg>) -> CargoResult<Self> {
-		let mut serializable = plan.serializable_flatten().collect::<Vec<_>>();
-		serializable.sort_by_key(|(_, (p, _))| p.to_string_lossy().to_string());
+		let mut serializable = plan.iter_flatten().collect::<Vec<_>>();
+		serializable.sort_by_key(|(_, _, (p, _))| p.to_string_lossy().to_string());
 		let json = serde_json::to_string(&serializable)?;
 
 		let difference = if path.try_exists()? {

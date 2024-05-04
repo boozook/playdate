@@ -214,11 +214,21 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 						AssetKind::Package => "",
 						AssetKind::Dev => "dev-",
 					};
+
+					let dep_root = dependency.manifest_path().parent().unwrap();
+
 					config.log()
 					      .status("Build", format!("{kind_prefix}assets for {}", dep_pkg_id));
 					config.log().verbose(|mut log| {
-						            let s = format!("destination: {}", dest.as_relative_to_root(config).display());
-						            log.status("", s)
+						            let dest = format!("destination: {}", dest.as_relative_to_root(config).display());
+						            log.status("", dest);
+						            let src = format!("root {}", dep_root.as_relative_to_root(config).display());
+						            log.status("", src);
+						            if dep_root != &plan.path {
+							            let path = plan.plan.crate_root();
+							            let src = format!("root (plan) {}", path.as_relative_to_root(config).display());
+							            log.status("", src);
+						            }
 					            });
 
 
