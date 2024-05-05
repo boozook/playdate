@@ -174,7 +174,7 @@ mod plan {
 
 			#[test]
 			#[cfg_attr(windows, should_panic)]
-			fn resolve_external() {
+			fn resolve_exact_external_abs() {
 				let (temp, sub, _files, env) = prepared_tmp("as_is-resolve_external");
 
 				let opts = AssetsOptions::default();
@@ -224,7 +224,7 @@ mod plan {
 
 			#[test]
 			#[cfg_attr(windows, should_panic)]
-			fn resolve_external_many() {
+			fn resolve_glob_external_many() {
 				let (_, _, files, env) = prepared_tmp("as_is-resolve_external_many");
 
 				let opts = AssetsOptions::default();
@@ -357,7 +357,7 @@ mod plan {
 
 
 			#[test]
-			fn local_exact() {
+			fn local_exact_target() {
 				let env = Env::default().unwrap();
 				let opts = AssetsOptions::default();
 
@@ -365,7 +365,7 @@ mod plan {
 				let root = Some(root.as_path());
 
 				// left hand of rule:
-				let targets = ["trg/", "trg//", "/trg/", "//trg/"]; // XXX: " too
+				let targets = ["trg/", "trg//", "/trg/", "//trg/"];
 				let targets_rel = ["trg/", "trg//"]; // non-abs targets
 				// right hand of rule:
 				let tests: HashSet<_> = vec!["Cargo.toml", "src/lib.rs"].into_iter().collect();
@@ -402,7 +402,7 @@ mod plan {
 
 			#[test]
 			#[cfg_attr(windows, should_panic)]
-			fn resolve_local_target() {
+			fn glob_local_target() {
 				let env = Env::default().unwrap();
 				let opts = AssetsOptions::default();
 

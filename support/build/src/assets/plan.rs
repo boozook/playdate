@@ -200,15 +200,16 @@ pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
 }
 
 
+// TODO: tests for `abs_or_rel_crate_existing`
 /// Make path relative to `crate_root` if it isn't absolute, checking existence.
 /// Returns `None` if path doesn't exist.
-pub fn abs_or_rel_crate_existing<'t, P1, P2>(p: P1, root: P2) -> std::io::Result<Option<Cow<'t, Path>>>
+pub fn abs_or_rel_crate_existing<'t, P1, P2>(path: P1, root: P2) -> std::io::Result<Option<Cow<'t, Path>>>
 	where P1: 't + AsRef<Path> + Into<Cow<'t, Path>>,
 	      P2: AsRef<Path> {
-	let p = if p.as_ref().is_absolute() && p.as_ref().try_exists()? {
-		Some(p.into())
+	let p = if path.as_ref().is_absolute() && path.as_ref().try_exists()? {
+		Some(path.into())
 	} else {
-		let abs = root.as_ref().join(p);
+		let abs = root.as_ref().join(path);
 		if abs.try_exists()? {
 			Some(Cow::Owned(abs))
 		} else {
@@ -218,14 +219,14 @@ pub fn abs_or_rel_crate_existing<'t, P1, P2>(p: P1, root: P2) -> std::io::Result
 	Ok(p)
 }
 
-/// Same as [`abs_or_rel_crate_existing`], but returns given `p` as fallback.
+/// Same as [`abs_or_rel_crate_existing`], but returns given `path` as fallback.
 #[inline]
-pub fn abs_or_rel_crate_any<'t, P1, P2>(p: P1, root: P2) -> Cow<'t, Path>
+pub fn abs_or_rel_crate_any<'t, P1, P2>(path: P1, root: P2) -> Cow<'t, Path>
 	where P1: 't + AsRef<Path> + Into<Cow<'t, Path>> + Clone,
 	      P2: AsRef<Path> {
-	abs_or_rel_crate_existing(p.clone(), root).ok()
-	                                          .flatten()
-	                                          .unwrap_or(p.into())
+	abs_or_rel_crate_existing(path.clone(), root).ok()
+	                                             .flatten()
+	                                             .unwrap_or(path.into())
 }
 
 
@@ -245,6 +246,7 @@ fn possibly_matching_any<P: Into<PathBuf>, I: IntoIterator<Item = P>>(path: &Pat
 }
 
 
+// TODO: tests for `possibly_matching`
 /// Check that filter (possibly) pattern `expr` matches the `path`.
 fn possibly_matching<P: Into<PathBuf>>(path: &Path, expr: P) -> bool {
 	// TODO: remove {crate_root} part if it is from filter (or both?).
@@ -262,9 +264,12 @@ fn possibly_matching<P: Into<PathBuf>>(path: &Path, expr: P) -> bool {
 }
 
 
+/// Assets Build Plan for a crate.
 #[derive(Debug, PartialEq, Eq, Hash, serde::Serialize)]
 pub struct BuildPlan<'left, 'right> {
+	/// Instructions - what file where to put
 	plan: Vec<Mapping<'left, 'right>>,
+	/// Root directory of associated crate
 	crate_root: &'left Path,
 }
 
@@ -386,6 +391,7 @@ pub enum Mapping<'left, 'right>
 }
 
 impl Mapping<'_, '_> {
+	// TODO: tests for `Mapping::eq_ignore_expr`
 	pub fn eq_ignore_expr(&self, other: &Self) -> bool {
 		match (self, other) {
 			(Mapping::AsIs(a, _), Mapping::AsIs(b, _)) | (Mapping::Into(a, _), Mapping::Into(b, _)) => a.eq(b),

@@ -18,12 +18,12 @@ pub fn resolve_includes<S: AsRef<str>, Excl: AsRef<str>>(expr: S,
                                                          links: LinkBehavior)
                                                          -> Result<Vec<Match>, Error> {
 	let expr = unixish_path_pattern(expr.as_ref());
-	let crate_root = crate_root.to_string_lossy();
 
+	// let crate_root = crate_root.to_string_lossy();
 	// #[cfg(windows)]
 	// let crate_root = unixish_path_pattern(crate_root.as_ref());
+	// let crate_root = Path::new(crate_root.as_ref());
 
-	let crate_root = Path::new(crate_root.as_ref());
 	let glob = Glob::new(expr.as_ref()).map_err(|err| {
 		           // According wax's issue https://github.com/olson-sean-k/wax/issues/34
 		           // we doesn't support Windows absolute paths and hope to partially relative paths.
@@ -233,7 +233,7 @@ impl Match {
 		}
 	}
 
-	// TODO: test it
+	// TODO: tests for `Match::set_target`
 	fn set_target<P: Into<PathBuf>>(&mut self, path: P) {
 		trace!("old target: {}", self.target().display());
 		match self {
@@ -339,6 +339,7 @@ impl Expr<'_> {
 }
 
 impl<'e> Expr<'e> {
+	// TODO: tests for `Expr::set`
 	fn set<'s, S: Into<Cow<'s, str>>>(&mut self, actual: S)
 		where 's: 'e {
 		let original = match self {
