@@ -123,9 +123,7 @@ pub fn apply_build_plan<'l, 'r, P: AsRef<Path>>(plan: BuildPlan<'l, 'r>,
 	};
 
 	let (mut plan, crate_root) = plan.into_parts();
-	// let mut results = HashMap::with_capacity(plan.as_inner().len());
 	let mut results = HashMap::with_capacity(plan.len());
-	// for entry in plan.into_inner().drain(..) {
 	for entry in plan.drain(..) {
 		let current: Vec<_> = match &entry {
 			Mapping::AsIs(inc, ..) => {
