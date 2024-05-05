@@ -101,10 +101,8 @@ pub fn apply_build_plan<'l, 'r, P: AsRef<Path>>(plan: BuildPlan<'l, 'r>,
 			             ensure_dir_exists(&into, target_root)?;
 			             let filename =
 				             source.file_name().ok_or_else(|| {
-					                                IoError::new(
-					                                             IoErrorKind::InvalidFilename,
-					                                             format!("Filename not found for {}", into.display()),
-					)
+					                                let msg = format!("Filename not found for {}", into.display());
+					                                IoError::new(IoErrorKind::InvalidFilename, msg)
 				                                })?;
 			             let into = into.join(filename);
 			             soft_link_checked(source, into, overwrite, target_root)
