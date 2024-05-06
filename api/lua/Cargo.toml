@@ -7,7 +7,7 @@ keywords = ["playdate", "sdk", "api", "gamedev"]
 categories = ["game-development", "api-bindings", "no-std"]
 edition.workspace = true
 license.workspace = true
-authors = ["Paul Young <84700+paulyoung@users.noreply.github.com>", "Alex Koz <a@koz.email>"]
+authors = ["Paul Young", "Alex Koz <a@koz.email>"]
 homepage.workspace = true
 repository.workspace = true
 
@@ -26,7 +26,7 @@ bindings-derive-debug = ["sys/bindings-derive-debug"]
 sys = { workspace = true, default-features = false }
 
 [dev-dependencies]
-system = { workspace = true, default-features = false, features = [ "try-trait-v2" ] }
+system = { workspace = true, default-features = false }
 
 
 [[example]]
