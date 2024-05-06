@@ -7,7 +7,7 @@ keywords = ["playdate", "sdk", "api", "gamedev"]
 categories = ["game-development", "api-bindings", "no-std"]
 edition.workspace = true
 license.workspace = true
-authors.workspace = true
+authors = ["Paul Young <84700+paulyoung@users.noreply.github.com>", "Alex Koz <a@koz.email>"]
 homepage.workspace = true
 repository.workspace = true
 
