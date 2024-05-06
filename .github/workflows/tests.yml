@@ -193,7 +193,7 @@ jobs:
       - name: Test
         run: |
           cargo test -p=playdate-build-utils --all-features
-          cargo test -p=playdate-build --all-features
+          cargo test -p=playdate-build --all-features -- --nocapture
           cargo test -p=playdate-device
           cargo test -p=playdate-tool --all-features
 
@@ -246,40 +246,14 @@ jobs:
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
 
-      - name: Check
-        run: cargo check --tests -p=cargo-playdate --all-features
-
-      # Simulator doesn't works in headless mode
-      # - name: Install Sim Deps
-      #   if: ${{ runner.os == 'Linux' }}
-      #   run: |
-      #     sudo apt update
-      #     sudo apt -y install libwebkit2gtk-4.0-dev
-
       - name: Test
         run: cargo test -p=cargo-playdate -- --nocapture
-
-      - name: Test (init::)
-        env:
-          RUSTFLAGS: --cfg init_tests
-        run: |
-          cargo test -p=cargo-playdate init:: -- --nocapture ${{ runner.os == 'Windows' && '--test-threads=1' || '' }}
 
       - name: Clean tmp
         run: rm -rf ./target/tmp
 
-      # This test is flickering on GH CI 🤷🏻‍♂️
-      - name: Test Execution
-        if: runner.os == 'macOS' && contains(github.event.head_commit.message, 'execution')
-        env:
-          RUSTFLAGS: --cfg exec_tests
-        run: |
-          cargo test -p=cargo-playdate run -- --nocapture --test-threads=1
-          sudo killall "Playdate Simulator" || true
-          rm -rf ./target/tmp
-
-  use-tool:
-    name: Examples
+  tool-init:
+    name: 'Tool: Init'
     defaults:
       run:
         shell: bash
@@ -290,7 +264,132 @@ jobs:
         os:
           - macos-14
           - ubuntu-latest
-          # - windows-latest
+          - windows-latest
+        sdk:
+          # - beta
+          - latest
+          - 2.4.0
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            target/
+            ~/.cargo
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
+
+      - name: Config
+        run: |
+          mkdir -p .cargo
+          cp -rf .github/config.toml .cargo/config.toml
+
+      - name: Install Deps
+        uses: ./.github/actions/tools-deps
+
+      - name: Install Playdate SDK ${{ matrix.sdk }}
+        id: sdk
+        uses: pd-rs/get-playdate-sdk@main
+        with:
+          version: ${{ matrix.sdk }}
+          custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
+
+      - name: SDK ${{ steps.sdk.outputs.version }} installed
+        run: which pdc && pdc --version
+
+      - name: Test
+        env:
+          RUSTFLAGS: --cfg init_tests
+        run: |
+          cargo test -p=cargo-playdate init:: -- --nocapture ${{ runner.os == 'Windows' && '--test-threads=1' || '' }}
+
+      - name: Clean tmp
+        run: rm -rf ./target/tmp
+
+  tool-execution:
+    # This tests are flickering on GH CI 🤷🏻‍♂️
+    if: contains(github.event.head_commit.message, 'test execution')
+    name: 'Tool: Run'
+    defaults:
+      run:
+        shell: bash
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-14
+        sdk:
+          # - beta
+          - latest
+          - 2.4.0
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            target/
+            ~/.cargo
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
+
+      - name: Config
+        run: |
+          mkdir -p .cargo
+          cp -rf .github/config.toml .cargo/config.toml
+
+      - name: Install Deps
+        uses: ./.github/actions/tools-deps
+
+      - name: Install Playdate SDK ${{ matrix.sdk }}
+        id: sdk
+        uses: pd-rs/get-playdate-sdk@main
+        with:
+          version: ${{ matrix.sdk }}
+          custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
+
+      - name: SDK ${{ steps.sdk.outputs.version }} installed
+        run: which pdc && pdc --version
+
+      # Simulator doesn't works in headless mode
+      # - name: Install Sim Deps
+      #   if: ${{ runner.os == 'Linux' }}
+      #   run: |
+      #     sudo apt update
+      #     sudo apt -y install libwebkit2gtk-4.0-dev
+
+      - name: Clean tmp
+        run: rm -rf ./target/tmp
+
+      - name: Test Execution
+        env:
+          RUSTFLAGS: --cfg exec_tests
+        run: |
+          cargo test -p=cargo-playdate run:: -- --nocapture --test-threads=1
+          sudo killall "Playdate Simulator" || true
+          rm -rf ./target/tmp
+
+  tool-package:
+    name: 'Tool: Package'
+    defaults:
+      run:
+        shell: bash
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-14
+          - ubuntu-latest
+          - windows-latest
         sdk:
           # - beta
           - latest

@@ -29,7 +29,7 @@ scripts:
 
 workflows:
   test:
-    name: Tests / Execution
+    name: 'Tests / Tool: Run'
     max_build_duration: 20
     instance_type: mac_mini_m1
     environment:
@@ -67,7 +67,7 @@ workflows:
       - name: Execution
         script: |
           source "$HOME/.cargo/env"
-          RUSTFLAGS="--cfg exec_tests" cargo test -p=cargo-playdate run -- --nocapture
+          RUSTFLAGS="--cfg exec_tests" cargo test -p=cargo-playdate run:: -- --nocapture
           sudo killall "Playdate Simulator"
 
       - name: Reset manifests

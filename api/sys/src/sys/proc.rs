@@ -1,11 +1,15 @@
 //! Process API. Abort and abort with error message.
 
 /// Executes the undefined instruction (UDF) and causes a CPU-level exception.
-/// See [`core::intrinsics::abort()`]
+/// See [`core::intrinsics::abort()`].
+#[track_caller]
+#[inline(always)]
 pub fn abort() -> ! { core::intrinsics::abort() }
 
 
 /// Stops the program execution with custom system-level error.
+///
+/// In case of missed [`crate::sys::API`] (doesn't set) uses [`abort`].
 #[track_caller]
 pub fn error<S: AsRef<str>>(text: S) -> ! {
 	if let Some(f) = unsafe { (*(*crate::sys::API).system).error } {
@@ -14,9 +18,13 @@ pub fn error<S: AsRef<str>>(text: S) -> ! {
 		} else {
 			unsafe { f(text.as_ref().as_ptr() as *mut core::ffi::c_char) }
 		}
+		loop {
+			// This is unreachable or the device,
+			// `API.system.error` interrupts the execution.
+			// But simulator doesn't stops on `error`, so just spin-loop here.
+		}
+	} else {
+		// In case of `crate::sys::API` is missed (doesn't set) just abort the process.
+		abort()
 	}
-	// Next line is mostly unreachable,
-	// but in some cases such as some versions of simulator doesn't stops on `error`,
-	// especially in case of `crate::sys::API` isn't filled.
-	abort()
 }

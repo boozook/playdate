@@ -1,7 +1,7 @@
 use std::hash::Hash;
 use std::borrow::Cow;
 use std::str;
-use std::path::{Path, PathBuf};
+use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 
 use regex::Regex;
 use wax::{Glob, LinkBehavior, WalkError, WalkEntry};
@@ -17,7 +17,28 @@ pub fn resolve_includes<S: AsRef<str>, Excl: AsRef<str>>(expr: S,
                                                          exclude: &[Excl],
                                                          links: LinkBehavior)
                                                          -> Result<Vec<Match>, Error> {
-	let glob = Glob::new(expr.as_ref())?;
+	let expr = unixish_path_pattern(expr.as_ref());
+
+	// let crate_root = crate_root.to_string_lossy();
+	// #[cfg(windows)]
+	// let crate_root = unixish_path_pattern(crate_root.as_ref());
+	// let crate_root = Path::new(crate_root.as_ref());
+
+	let glob = Glob::new(expr.as_ref()).map_err(|err| {
+		           // According wax's issue https://github.com/olson-sean-k/wax/issues/34
+		           // we doesn't support Windows absolute paths and hope to partially relative paths.
+		           if cfg!(windows) {
+			           let expr = PathBuf::from(expr.as_ref());
+			           if expr.is_absolute() || expr.has_root() {
+				           let issue = "Wax issue https://github.com/olson-sean-k/wax/issues/34";
+				           Error::Error(format!("{err}, Windows absolute paths are not supported, {issue}"))
+			           } else {
+				           Error::from(err)
+			           }
+		           } else {
+			           Error::from(err)
+		           }
+	           })?;
 	let exclude = exclude.iter().map(AsRef::as_ref).chain(["**/.*/**"]);
 	let walker = glob.walk_with_behavior(crate_root, links)
 	                 .not(exclude)?
@@ -29,13 +50,21 @@ pub fn resolve_includes<S: AsRef<str>, Excl: AsRef<str>>(expr: S,
 		                  // modify target path:
 		                  let new = if target.is_absolute() && target.starts_with(crate_root) {
 			                  // make it relative to crate_root:
-			                  let len = crate_root.components().count();
-			                  Some(target.components().skip(len).collect())
-		                  // TODO: need test it:
-		                  // let a = PathBuf::from(&target.display().to_string()[(crate_root.display().to_string().len() +
-		                  //                                                      MAIN_SEPARATOR_STR.to_string().len())..]);
-		                  // // relative part let b = target.components().skip(len).collect::<PathBuf>();
-		                  // assert_eq!(a, b);
+			                  if !cfg!(windows) {
+				                  let len = crate_root.components().count();
+				                  Some(target.components().skip(len).collect())
+			                  } else {
+				                  let target = target.display().to_string();
+				                  target.strip_prefix(&crate_root.display().to_string())
+				                        .map(|s| {
+					                        let mut s = Cow::from(s);
+					                        while let Some(stripped) = s.strip_prefix([MAIN_SEPARATOR, '/', '\\']) {
+						                        s = stripped.to_owned().into()
+					                        }
+					                        s.into_owned()
+				                        })
+				                        .map(PathBuf::from)
+			                  }
 		                  } else if target.is_absolute() {
 			                  Some(PathBuf::from(target.file_name().expect("target filename")))
 		                  } else {
@@ -54,6 +83,26 @@ pub fn resolve_includes<S: AsRef<str>, Excl: AsRef<str>>(expr: S,
 	}
 
 	Ok(resolved)
+}
+
+
+/// On Windows makes given absolute path to look like POSIX or UNC:
+/// `C:/foo/bar/**` or `//./C:/foo/bar/**`.
+///
+/// In details:
+/// - replace all `\` with `/`
+/// - if pattern starts with `<driveletter>:`, escape it as `<driveletter>\`:
+///
+/// On unix does nothing.
+pub fn unixish_path_pattern(path: &str) -> Cow<'_, str> {
+	if cfg!(windows) {
+		path.replace('\\', "/")
+		    .replace(':', "\\:")
+		    .replace("//", "/")
+		    .into()
+	} else {
+		path.into()
+	}
 }
 
 
@@ -162,24 +211,29 @@ impl Eq for Match {}
 impl Match {
 	pub fn source(&self) -> Cow<Path> {
 		match self {
-			Match::Match(source) => {
-				let c: Cow<Path> = source.path().into();
-				c
-			},
-			Match::Pair { source, .. } => source.into(),
+			Match::Match(source) => Cow::Borrowed(source.path()),
+			Match::Pair { source, .. } => Cow::Borrowed(source.as_path()),
 		}
 	}
 	pub fn target(&self) -> Cow<Path> {
 		match self {
-			Match::Match(source) => {
-				let c: Cow<Path> = Path::new(source.matched().complete()).into();
-				c
-			},
-			Match::Pair { target, .. } => target.into(),
+			Match::Match(source) => Cow::Borrowed(Path::new(source.matched().complete())),
+			Match::Pair { target, .. } => Cow::Borrowed(target.as_path()),
 		}
 	}
 
-	// TODO: test it
+	pub fn into_parts(self) -> (PathBuf, PathBuf) {
+		match self {
+			Match::Match(source) => {
+				let target = source.matched().complete().into();
+				let source = source.into_path();
+				(source, target)
+			},
+			Match::Pair { source, target } => (source, target),
+		}
+	}
+
+	// TODO: tests for `Match::set_target`
 	fn set_target<P: Into<PathBuf>>(&mut self, path: P) {
 		trace!("old target: {}", self.target().display());
 		match self {
@@ -285,6 +339,7 @@ impl Expr<'_> {
 }
 
 impl<'e> Expr<'e> {
+	// TODO: tests for `Expr::set`
 	fn set<'s, S: Into<Cow<'s, str>>>(&mut self, actual: S)
 		where 's: 'e {
 		let original = match self {
@@ -319,5 +374,168 @@ impl<'e> serde::Serialize for Expr<'e> {
 				s.end()
 			},
 		}
+	}
+}
+
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+
+	const LINKS: LinkBehavior = LinkBehavior::ReadTarget;
+
+	fn crate_root() -> PathBuf { PathBuf::from(env!("CARGO_MANIFEST_DIR")) }
+
+
+	#[test]
+	fn resolve_includes_one_exact() {
+		for file in ["Cargo.toml", "src/lib.rs"] {
+			let resolved = resolve_includes::<_, &str>(file, &crate_root(), &[], LINKS).unwrap();
+			assert_eq!(1, resolved.len());
+
+			let matched = resolved.first().unwrap();
+
+			assert_eq!(Path::new(file), matched.target());
+			assert_eq!(
+			           Path::new(file).canonicalize().unwrap(),
+			           matched.source().canonicalize().unwrap()
+			);
+		}
+	}
+
+	#[test]
+	fn resolve_includes_one_glob() {
+		for (file, expected) in [("Cargo.tom*", "Cargo.toml"), ("**/lib.rs", "src/lib.rs")] {
+			let resolved = resolve_includes::<_, &str>(file, &crate_root(), &[], LINKS).unwrap();
+			assert_eq!(1, resolved.len());
+
+			let matched = resolved.first().unwrap();
+
+			assert_eq!(Path::new(expected), matched.target());
+			assert_eq!(
+			           Path::new(expected).canonicalize().unwrap(),
+			           matched.source().canonicalize().unwrap()
+			);
+		}
+	}
+
+	#[test]
+	fn resolve_includes_many_glob() {
+		for (file, expected) in [
+		                         ("Cargo.*", &["Cargo.toml"][..]),
+		                         ("**/*.rs", &["src/lib.rs", "src/assets/mod.rs"][..]),
+		] {
+			let resolved = resolve_includes::<_, &str>(file, &crate_root(), &[], LINKS).unwrap();
+			assert!(!resolved.is_empty());
+
+
+			let mut expected_passed = 0;
+
+			for expected in expected {
+				expected_passed += 1;
+				let expected = PathBuf::from(expected);
+				let matched = resolved.iter()
+				                      .find(|matched| matched.target() == expected)
+				                      .unwrap();
+
+				assert_eq!(expected.as_path(), matched.target());
+				assert_eq!(
+				           expected.canonicalize().unwrap(),
+				           matched.source().canonicalize().unwrap()
+				);
+			}
+
+			assert_eq!(expected.len(), expected_passed);
+		}
+	}
+
+	#[test]
+	fn resolve_includes_many_glob_exclude() {
+		let exclude = ["**/lib.*"];
+		for (file, expected) in [("Cargo.*", &["Cargo.toml"]), ("**/*.rs", &["src/assets/mod.rs"])] {
+			let resolved = resolve_includes::<_, &str>(file, &crate_root(), &exclude, LINKS).unwrap();
+			assert!(!resolved.is_empty());
+
+
+			let mut expected_passed = 0;
+
+			for expected in expected {
+				let matched = resolved.iter()
+				                      .find(|matched| matched.target() == Path::new(expected))
+				                      .unwrap();
+
+				assert_eq!(Path::new(expected), matched.target());
+				assert_eq!(
+				           Path::new(expected).canonicalize().unwrap(),
+				           matched.source().canonicalize().unwrap()
+				);
+				expected_passed += 1;
+			}
+
+			assert_eq!(expected.len(), expected_passed);
+		}
+	}
+
+	#[test]
+	#[cfg_attr(windows, should_panic)]
+	fn resolve_includes_glob_abs_to_local() {
+		let (file, expected) = (env!("CARGO_MANIFEST_DIR").to_owned() + "/Cargo.*", &["Cargo.toml"]);
+
+		let resolved = resolve_includes::<_, &str>(file, &crate_root(), &[], LINKS).unwrap();
+		assert_eq!(expected.len(), resolved.len());
+
+		let mut expected_passed = 0;
+
+		for expected in expected {
+			expected_passed += 1;
+			let matched = resolved.iter()
+			                      .find(|matched| matched.target() == Path::new(expected))
+			                      .unwrap();
+
+			assert_eq!(Path::new(expected), matched.target());
+			assert_eq!(
+			           Path::new(expected).canonicalize().unwrap(),
+			           matched.source().canonicalize().unwrap()
+			);
+		}
+
+		assert_eq!(expected.len(), expected_passed);
+	}
+
+
+	#[test]
+	fn resolver_expr() {
+		let resolver = EnvResolver::new();
+
+		let env = {
+			let mut env = Env::default().unwrap();
+			env.vars.insert("FOO".into(), "foo".into());
+			env.vars.insert("BAR".into(), "bar".into());
+			env
+		};
+
+		let exprs = [
+		             ("${FOO}/file.txt", "foo/file.txt"),
+		             ("${BAR}/file.txt", "bar/file.txt"),
+		];
+
+		for (src, expected) in exprs {
+			let mut expr = Expr::from(src);
+			resolver.expr(&mut expr, &env);
+
+			assert_eq!(expected, expr.actual());
+			assert_eq!(expected, expr.as_str());
+			assert_eq!(src, expr.original());
+		}
+	}
+
+	#[test]
+	#[should_panic]
+	fn resolver_missed() {
+		let resolver = EnvResolver::new();
+		let env = Env::default().unwrap();
+		let expr = Expr::from("${MISSED}/file.txt");
+		resolver.expr(expr, &env);
 	}
 }
