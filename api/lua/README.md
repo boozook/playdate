@@ -1,6 +1,6 @@
 # Lua API for PlayDate
 
-High-level lua API built on-top of [playdate-sys][].
+High-level Lua API built on-top of [playdate-sys][].
 
 
 ## Usage
