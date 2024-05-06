@@ -1,6 +1,6 @@
 # Examples
 
-These examples additionally uses other crates with parts of Playdate API to minimize the amount of code.
+These examples additionally use other crates with parts of Playdate API to minimize the amount of code.
 
 
 # How to run
