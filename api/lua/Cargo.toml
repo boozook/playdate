@@ -43,20 +43,7 @@ bundle-id = "rs.playdate.lua"
 # The Lua runtime expects us to provide a main.pdz file at the root.
 #
 # Compiled with `pdc --skip-unknown --strip sources/main.lua Example.pdx`
-
-# This results in target/playdate/assets/playdate-lua-244d63d426e998ae/dev/build/main.pdz/examples/Example.pdx/main.pdz (not what we want)
-# "main.pdz" = "examples/Example.pdx/main.pdz"
-
-# This results in target/playdate/assets/playdate-lua-244d63d426e998ae/dev/build/examples/Example.pdx/main.pdz (not what we want)
-"/" = "examples/Example.pdx/main.pdz"
-
-# This requires moving main.pdz to api/lua/main.pdz
-# This results in target/playdate/assets/playdate-lua-244d63d426e998ae/dev/build/main.pdz/main.pdz (not what we want)
-# "main.pdz" = "main.pdz"
-
-# This requires moving main.pdz to api/lua/main.pdz
-# This results in target/playdate/assets/playdate-lua-244d63d426e998ae/dev/build/main.pdz (what we want)
-# "/" = "main.pdz"
+"main.pdz" = "examples/Example.pdx/main.pdz"
 
 
 [package.metadata.docs.rs]
