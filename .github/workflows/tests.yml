@@ -448,6 +448,7 @@ jobs:
           cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-sound
           cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-sprite
           cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-system
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-lua
           cargo playdate package --features=lang-items,entry-point --examples --device --simulator -p=playdate
 
       # TODO: build crankstart with examples for compatibility test

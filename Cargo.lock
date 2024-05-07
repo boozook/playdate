@@ -4050,12 +4050,13 @@ checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 
 [[package]]
 name = "playdate"
-version = "0.1.17"
+version = "0.2.0"
 dependencies = [
  "playdate-controls",
  "playdate-display",
  "playdate-fs",
  "playdate-graphics",
+ "playdate-lua",
  "playdate-menu",
  "playdate-scoreboards",
  "playdate-sound",
@@ -4186,6 +4187,14 @@ dependencies = [
  "playdate-color",
  "playdate-display",
  "playdate-fs",
+ "playdate-sys",
+ "playdate-system",
+]
+
+[[package]]
+name = "playdate-lua"
+version = "0.1.0"
+dependencies = [
  "playdate-sys",
  "playdate-system",
 ]
