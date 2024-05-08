@@ -8,39 +8,52 @@ but also it can build executable binaries for hardware and this method produces 
 
 \* For executable binaries use `--no-gcc` argument._
 
+### Platform specific pre-req install instructions
 
+MacOS:
 
-## Prerequisites
+1. Install the [PlaydateSDK](https://play.date/dev/) (by default installs into `~/Developer/PlaydateSDK`)
+1. Set PLAYDATE_SDK_PATH env var: `export PLAYDATE_SDK_PATH="$HOME/Developer/PlaydateSDK"`
+1. Install cmake: `brew install cmake`
+1. Install rust nightly: `rustup toolchain install nightly`
+1. Arm toolchain is included with PlaydateSDK.
 
-To build `cargo-playdate` you're need:
-1. Rust __nightly__ toolchain
+Ubuntu Linux:
+1. Install the [PlaydateSDK](https://play.date/dev/) - remember where you extracted it.
+1. Set PLAYDATE_SDK_PATH env var: `export PLAYDATE_SDK_PATH="/path/to/PlaydateSDK-2.x.x/"`
+1. Install cmake: `sudo apt-get install cmake`
+1. Install rust nightly: `rustup toolchain install nightly`
+1. Install arm toolchain: `sudo apt-get install gcc-arm-none-eabi`
+1. Install libudev: `sudo apt-get install libudev-dev`
 
-To build programs using `cargo-playdate` you need:
-1. Rust __nightly__ toolchain
-1. [Playdate SDK][sdk]
-   - Ensure that env var `PLAYDATE_SDK_PATH` points to the SDK root
-1. Follow the [official documentation][doc-prerequisites]
-   - Ensure that `arm-none-eabi-gcc` or `gcc-arm-none-eabi` in your `PATH`
+Windows:
+1. Install the [PlaydateSDK](https://play.date/dev/) (by default installs into `~/Documents/PlaydateSDK`)
+1. Set PLAYDATE_SDK_PATH
+    1. windows+r, run: `sysdm.cpl`
+    2. Advanced Tab -> Environment Variables -> New
+    3. Variable name: `PLAYDATE_SDK_PATH`
+    4. Variable value: `C:\Users\username\Documents\PlaydateSDK`
+1. Install CMake: [cmake downloads](https://cmake.org/download/)
+1. Install rust nightly: `rustup toolchain install nightly`
+1. Install arm toolchain: [arm gnu toolchain downloads](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads). Filename will be like 'arm-gnu-toolchain-13.2.rel1-mingw-w64-i686-arm-none-eabi.exe'.
+1. Add arm toolchain and cmake to PATH environment:
+    1. windows+r, run: `sysdm.cpl`
+    2. Advanced Tab -> Environment Variables.
+    3. Find `Path` and click `Edit`
+    4. Click `New` and add `C:\Program Files\CMake\bin`
+    4. Click `New` and add `C:\Program Files (x86)\Arm GNU Toolchain arm-none-eabi\13.2 Rel1\bin`
+
 
  <!-- TODO: Make gcc optional -->
 
-To run on sim or dev with `cargo-playdate`:
-1. Linux only:
-  - `libudev`, follow [instructions for udev crate][udev-crate-deps].
-1. Windows only:
-  - `powershell` (used as fallback)
-
-[sdk]: https://play.date/dev/#cardSDK
-[doc-prerequisites]: https://sdk.play.date/Inside%20Playdate%20with%20C.html#_prerequisites
-[rusb]: https://crates.io/crates/rusb
-
+See also: [Inside Playdate with C: Prerequisites](https://sdk.play.date/Inside%20Playdate%20with%20C.html#_prerequisites)
 
 ## Installation
 
 ```bash
-cargo install cargo-playdate
+cargo +nightly install cargo-playdate
 # or
-cargo install --git="https://github.com/boozook/playdate.git" --bin=cargo-playdate
+cargo +nightly install --git="https://github.com/boozook/playdate.git" --bin=cargo-playdate
 ```
 
 
@@ -49,9 +62,10 @@ cargo install --git="https://github.com/boozook/playdate.git" --bin=cargo-playda
 Generate new project using `new` or `init` command.
 
 ```bash
-mkdir hello-world && cd $_
-cargo playdate init --lib --full-metadata --deps="playdate"
-cargo playdate run
+mkdir -p ~/code/pd-hello/
+cd ~/code/pd-hello/
+cargo +nightly playdate init --lib --full-metadata --deps="playdate"
+cargo +nightly playdate run
 ```
 
 > Note, there are more options for this command, e.g. `--deps="sys:git, controls:git"`.
