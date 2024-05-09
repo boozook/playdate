@@ -346,7 +346,7 @@ async fn send(query: Query,
 #[cfg_attr(feature = "tracing", tracing::instrument())]
 async fn read(query: Query) -> Result<(), error::Error> {
 	let by_dev = |mut device: device::Device| -> Result<_, Error> {
-		device.info().serial_number().map(|s| trace!("reading {s}"));
+		trace!("reading {}", device.info().serial_number().unwrap_or("<unknown>"));
 		let fut = async move { usb::io::redirect_to_stdout(&mut device).await };
 		Ok(fut)
 	};

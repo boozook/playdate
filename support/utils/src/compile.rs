@@ -1,6 +1,4 @@
-/*!
-	Utils for compilation binaries.
-*/
+//! Utils for compilation binaries.
 
 
 /// Do not forget

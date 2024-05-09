@@ -47,7 +47,7 @@ pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
 			if trailing_sep && !s.ends_with(PATH_SEPARATOR) {
 				s.push(MAIN_SEPARATOR);
 			}
-			unixish_path_pattern(&s).into_owned()
+			sanitize_path_pattern(&s).into_owned()
 		} else {
 			s.to_owned()
 		}
@@ -97,7 +97,7 @@ pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
 		let key = PathBuf::from(k.as_str());
 		let value = Cow::Borrowed(v.as_str());
 		let into_dir = k.as_str().ends_with(PATH_SEPARATOR);
-		let source_exists = abs_or_rel_crate_existing(Path::new(value.as_ref()), crate_root)?.is_some();
+		let source_exists = abs_if_existing(Path::new(value.as_ref()), crate_root)?.is_some();
 
 		let mapping = match (source_exists, into_dir) {
 			(true, true) => Mapping::Into(Match::new(value.as_ref(), key), (k, v)),
@@ -200,10 +200,11 @@ pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
 }
 
 
-// TODO: tests for `abs_or_rel_crate_existing`
 /// Make path relative to `crate_root` if it isn't absolute, checking existence.
 /// Returns `None` if path doesn't exist.
-pub fn abs_or_rel_crate_existing<'t, P1, P2>(path: P1, root: P2) -> std::io::Result<Option<Cow<'t, Path>>>
+///
+/// Input `path` must be absolute or relative to the `root`.
+pub fn abs_if_existing<'t, P1, P2>(path: P1, root: P2) -> std::io::Result<Option<Cow<'t, Path>>>
 	where P1: 't + AsRef<Path> + Into<Cow<'t, Path>>,
 	      P2: AsRef<Path> {
 	let p = if path.as_ref().is_absolute() && path.as_ref().try_exists()? {
@@ -221,12 +222,12 @@ pub fn abs_or_rel_crate_existing<'t, P1, P2>(path: P1, root: P2) -> std::io::Res
 
 /// Same as [`abs_or_rel_crate_existing`], but returns given `path` as fallback.
 #[inline]
-pub fn abs_or_rel_crate_any<'t, P1, P2>(path: P1, root: P2) -> Cow<'t, Path>
+pub fn abs_if_existing_any<'t, P1, P2>(path: P1, root: P2) -> Cow<'t, Path>
 	where P1: 't + AsRef<Path> + Into<Cow<'t, Path>> + Clone,
 	      P2: AsRef<Path> {
-	abs_or_rel_crate_existing(path.clone(), root).ok()
-	                                             .flatten()
-	                                             .unwrap_or(path.into())
+	abs_if_existing(path.clone(), root).ok()
+	                                   .flatten()
+	                                   .unwrap_or(path.into())
 }
 
 
@@ -342,7 +343,7 @@ impl BuildPlan<'_, '_> {
 		&self)
 		-> impl Iterator<Item = (MappingKind, PathBuf, (PathBuf, Option<std::time::SystemTime>))> + '_ {
 		let pair = |inc: &Match| {
-			(inc.target().to_path_buf(), abs_or_rel_crate_any(inc.source(), self.crate_root).to_path_buf())
+			(inc.target().to_path_buf(), abs_if_existing_any(inc.source(), self.crate_root).to_path_buf())
 		};
 
 		self.as_inner()

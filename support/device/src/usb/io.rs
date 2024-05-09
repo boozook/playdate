@@ -133,7 +133,7 @@ pub async fn redirect_interface_to_stdout(interface: &mut crate::interface::Inte
 			let mut stdout = std::io::stdout();
 			let to_stdout = move |data: &[u8]| stdout.write_all(data).inspect_err(|err| error!("{err}")).ok();
 			let stream = read_while_map(&interface.inner, 256, 2, to_stdout)?;
-			if let Some(_) = stream.last().await {
+			if stream.last().await.is_some() {
 				trace!("Read stream complete.");
 			}
 		},
