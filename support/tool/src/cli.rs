@@ -122,13 +122,13 @@ pub enum DeviceKind {
 	Storage,
 }
 
-impl ToString for DeviceKind {
-	fn to_string(&self) -> String {
+impl std::fmt::Display for DeviceKind {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			DeviceKind::Any => "any",
 			DeviceKind::Data => "data",
 			DeviceKind::Storage => "storage",
-		}.to_owned()
+		}.fmt(f)
 	}
 }
 

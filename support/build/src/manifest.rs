@@ -35,8 +35,8 @@ pub mod format {
 	}
 
 
-	impl ToString for Manifest {
-		fn to_string(&self) -> String {
+	impl Manifest {
+		pub fn to_manifest_string(&self) -> String {
 			let mut result = String::new();
 
 			fn to_row<K: AsRef<str>, V: AsRef<str>>(key: K, value: V) -> String {

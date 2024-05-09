@@ -288,7 +288,7 @@ fn build_manifest<Layout: playdate::layout::Layout>(config: &Config,
 		               Manifest::try_from_source(ManifestSource { package,
 		                                                          metadata: metadata.as_ref() })
 	               }.map_err(|err| anyhow!(err))?;
-	std::fs::write(layout.manifest(), manifest.to_string())?;
+	std::fs::write(layout.manifest(), manifest.to_manifest_string())?;
 	Ok(())
 }
 

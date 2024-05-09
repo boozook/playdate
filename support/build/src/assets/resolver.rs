@@ -17,7 +17,7 @@ pub fn resolve_includes<S: AsRef<str>, Excl: AsRef<str>>(expr: S,
                                                          exclude: &[Excl],
                                                          links: LinkBehavior)
                                                          -> Result<Vec<Match>, Error> {
-	let expr = unixish_path_pattern(expr.as_ref());
+	let expr = sanitize_path_pattern(expr.as_ref());
 
 	// let crate_root = crate_root.to_string_lossy();
 	// #[cfg(windows)]
@@ -86,6 +86,9 @@ pub fn resolve_includes<S: AsRef<str>, Excl: AsRef<str>>(expr: S,
 }
 
 
+// TODO: Tests for `sanitize_path_pattern`
+/// Adapt path to wax walker, so kind of "patternize" or "unixish".
+///
 /// On Windows makes given absolute path to look like POSIX or UNC:
 /// `C:/foo/bar/**` or `//./C:/foo/bar/**`.
 ///
@@ -94,7 +97,8 @@ pub fn resolve_includes<S: AsRef<str>, Excl: AsRef<str>>(expr: S,
 /// - if pattern starts with `<driveletter>:`, escape it as `<driveletter>\`:
 ///
 /// On unix does nothing.
-pub fn unixish_path_pattern(path: &str) -> Cow<'_, str> {
+pub fn sanitize_path_pattern(path: &str) -> Cow<'_, str> {
+	// TODO: Before patternize use normalize/canonicalize, crates: dunce, normpath, or path-slash
 	if cfg!(windows) {
 		path.replace('\\', "/")
 		    .replace(':', "\\:")
@@ -167,7 +171,7 @@ impl EnvResolver {
 	pub fn expr<'a, 'e, 'c: 'e, Ex: AsMut<Expr<'e>>>(&self, mut expr: Ex, env: &'c Env) -> Ex {
 		let editable = expr.as_mut();
 		let replaced = self.str(editable.actual(), env);
-		if &replaced != editable.actual() {
+		if replaced != editable.actual() {
 			editable.set(replaced);
 		}
 		expr
@@ -509,7 +513,7 @@ mod tests {
 		let resolver = EnvResolver::new();
 
 		let env = {
-			let mut env = Env::default().unwrap();
+			let mut env = Env::try_default().unwrap();
 			env.vars.insert("FOO".into(), "foo".into());
 			env.vars.insert("BAR".into(), "bar".into());
 			env
@@ -534,7 +538,7 @@ mod tests {
 	#[should_panic]
 	fn resolver_missed() {
 		let resolver = EnvResolver::new();
-		let env = Env::default().unwrap();
+		let env = Env::try_default().unwrap();
 		let expr = Expr::from("${MISSED}/file.txt");
 		resolver.expr(expr, &env);
 	}

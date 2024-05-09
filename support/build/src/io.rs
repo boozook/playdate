@@ -31,6 +31,8 @@ pub fn ensure_dir_exists<P: AsRef<Path>>(path: P, boundary: impl AsRef<Path>) ->
 }
 
 
+// TODO: Win-only: add `junction_point` as fallback method
+// https://github.com/rust-lang/rust/issues/121709
 /// Creates symlink.
 pub fn soft_link_checked<Po: AsRef<Path>, Pl: AsRef<Path>>(origin: Po,
                                                            link: Pl,

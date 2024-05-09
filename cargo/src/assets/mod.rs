@@ -166,7 +166,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 
 						config.log().error(message);
 					} else {
-						targets.insert(target.to_owned(), (package.package_id(), target_kind));
+						targets.insert(target, (package.package_id(), target_kind));
 					}
 				}
 			};
@@ -224,7 +224,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 						            log.status("", dest);
 						            let src = format!("root {}", dep_root.as_relative_to_root(config).display());
 						            log.status("", src);
-						            if dep_root != &plan.path {
+						            if dep_root != plan.path {
 							            let path = plan.plan.crate_root();
 							            let src = format!("root (plan) {}", path.as_relative_to_root(config).display());
 							            log.status("", src);

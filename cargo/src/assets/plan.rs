@@ -43,7 +43,7 @@ impl<'a, 'cfg> LazyEnvBuilder<'a, 'cfg> {
 			                        ("CARGO_MANIFEST_DIR", root.to_string()),
 			];
 
-			        let mut env = Env::from_iter(vars.into_iter()).map_err(|err| anyhow::anyhow!("{err}"))?;
+			        let mut env = Env::try_from_iter(vars.into_iter()).map_err(|err| anyhow::anyhow!("{err}"))?;
 
 			        // add global environment:
 			        for (k, v) in std::env::vars() {

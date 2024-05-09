@@ -789,9 +789,12 @@ mod tests {
 	#[test]
 	fn init_standalone() -> CargoResult<()> {
 		let mut cwd = std::env::current_dir()?;
-		if !cwd.ends_with("tests/crates/simple/no-cfg") {
-			// this check needed because tests can run in one process
-			cwd.push(PathBuf::from("tests/crates/simple/no-cfg"))
+		{
+			let crate_path = PathBuf::from("tests/crates/simple/no-cfg");
+			if !cwd.ends_with(&crate_path) {
+				// this check needed because tests can run in one process
+				cwd.push(crate_path)
+			}
 		}
 		println!("PWD: {}", cwd.display());
 		std::env::set_current_dir(cwd)?;
@@ -829,7 +832,8 @@ mod tests {
 
 	#[test]
 	fn init_args_before_cmd() -> CargoResult<()> {
-		let cwd = std::env::current_dir()?.join(Path::new("tests/crates/simple/no-cfg"));
+		let mut cwd = std::env::current_dir()?;
+		cwd.extend(["tests", "crates", "simple", "no-cfg"].iter());
 		println!("PWD: {}", cwd.display());
 		std::env::set_current_dir(cwd)?;
 

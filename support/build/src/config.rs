@@ -24,12 +24,15 @@ impl Env {
 	pub fn cargo_manifest_dir(&self) -> &Path { Path::new(&self.vars["CARGO_MANIFEST_DIR"]) }
 
 	/// Creates a new environment with values by real env by default.
-	pub fn default() -> Result<Self, env::VarError> {
+	pub fn try_default() -> Result<Self, env::VarError> {
 		Ok(Self { vars: env::vars().collect(),
 		          cargo_manifest_filename: CARGO_MANIFEST_FILENAME.to_string() })
 	}
 
-	pub fn from_iter<K: ToString, V: ToString>(iter: impl Iterator<Item = (K, V)>) -> Result<Self, &'static str> {
+	// TODO: Proper error for `Env::try_from_iter`
+	pub fn try_from_iter<K, V>(iter: impl Iterator<Item = (K, V)>) -> Result<Self, &'static str>
+		where K: ToString,
+		      V: ToString {
 		let mut env = BTreeMap::new();
 		env.extend(iter.map(|(k, v)| (k.to_string(), v.to_string())));
 
