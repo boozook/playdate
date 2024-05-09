@@ -48,14 +48,20 @@ Windows:
 
 See also: [Inside Playdate with C: Prerequisites](https://sdk.play.date/Inside%20Playdate%20with%20C.html#_prerequisites)
 
-## Installation
+## Cargo-Playdate Installation
 
 ```bash
 cargo +nightly install cargo-playdate
-# or
-cargo +nightly install --git="https://github.com/boozook/playdate.git" --bin=cargo-playdate
+cargo +nightly playdate --version
 ```
 
+Or install to use bleeding edge bits from a local git clone:
+```bash
+mkdir ~/code
+cd ~/code
+git clone https://github.com/boozook/playdate.git
+cargo +nightly install --path="$HOME/code/playdate/cargo" cargo-playdate
+```
 
 ## Hello World
 
