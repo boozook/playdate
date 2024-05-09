@@ -6,7 +6,7 @@ It can build programs written in Rust, manage assets, build package for Playdate
 Usually it builds static or dynamic libraries for sim and hardware,
 but also it can build executable binaries for hardware and this method produces highly optimized output with dramatically minimized size (thanks to DCE & LTO)\*.
 
-\* For executable binaries use `--no-gcc` argument._
+\* _For executable binaries use `--no-gcc` argument._
 
 ### Platform specific pre-req install instructions
 
