@@ -197,7 +197,7 @@ impl Derive {
 	}
 
 	pub fn to_cli_args(&self) -> Vec<String> {
-		let words = self.to_string();
+		let words = self.to_feature_list();
 		if words.is_empty() {
 			vec!["--derive=".to_string()]
 		} else {
@@ -236,9 +236,9 @@ impl FromStr for Derive {
 	}
 }
 
-impl ToString for Derive {
+impl Derive {
 	#[rustfmt::skip]
-	fn to_string(&self) -> String {
+	fn to_feature_list(&self) -> String {
 		let mut out = Vec::new();
 		if self.default { out.push("default") }
 		if self.eq {out.push("eq")}
@@ -251,6 +251,11 @@ impl ToString for Derive {
 		if self.constparamty {out.push("constparamty")}
 		out.join(",")
 	}
+}
+
+impl std::fmt::Display for Derive {
+	#[inline]
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { self.to_feature_list().fmt(f) }
 }
 
 impl Default for Derive {
@@ -277,7 +282,7 @@ impl Features {
 	pub const fn empty() -> Self { Self { documentation: false } }
 
 	pub fn to_cli_args(&self) -> Vec<String> {
-		let words = self.to_string();
+		let words = self.to_feature_list();
 		if words.is_empty() {
 			vec!["--features=".to_string()]
 		} else {
@@ -308,13 +313,18 @@ impl FromStr for Features {
 	}
 }
 
-impl ToString for Features {
+impl Features {
 	#[rustfmt::skip]
-	fn to_string(&self) -> String {
+	fn to_feature_list(&self) -> String {
 		let mut out = Vec::new();
 		if self.documentation { out.push("documentation") }
 		out.join(",")
 	}
+}
+
+impl std::fmt::Display for Features {
+	#[inline]
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { self.to_feature_list().fmt(f) }
 }
 
 impl Default for Features {

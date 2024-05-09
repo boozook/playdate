@@ -297,8 +297,12 @@ mod winapi {
 
 		let drive_name = std::str::from_utf8(&name_buf)?.trim();
 
-		let temp_drive_name = (!drive_name.is_empty()).then_some(drive_name)
-		                                              .unwrap_or("unnamed");
+		let temp_drive_name = if drive_name.is_empty() {
+			"<unknown>"
+		} else {
+			drive_name
+		};
+
 		trace!("found drive: {letter} '{temp_drive_name}' ({serial})");
 
 		Ok(drive_name.to_string())
@@ -376,7 +380,7 @@ mod winapi {
 	}
 
 
-	struct FileHandle(pub HANDLE, Pin<CString>);
+	pub struct FileHandle(pub HANDLE, #[allow(dead_code)] Pin<CString>);
 
 	impl Drop for FileHandle {
 		fn drop(&mut self) {

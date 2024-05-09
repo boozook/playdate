@@ -87,8 +87,8 @@ impl Interface {
 
 
 #[cfg_attr(feature = "tracing", tracing::instrument)]
-pub fn open<'a, S: Into<std::borrow::Cow<'a, str>>>(port_name: S) -> Result<Port, serialport::Error>
-	where S: std::fmt::Debug {
+pub fn open<'a, S>(port_name: S) -> Result<Port, serialport::Error>
+	where S: Into<std::borrow::Cow<'a, str>> + std::fmt::Debug {
 	trace!("opening port {port_name:?}");
 	let builder = port_builder(port_name);
 

@@ -6,15 +6,14 @@ use std::path::Path;
 use crate::device::Device;
 use crate::error::Error;
 
+#[cfg(any(all(target_os = "macos", target_os = "linux"),
+          all(target_os = "linux", target_os = "windows"),
+          all(target_os = "windows", target_os = "macos")))]
+compile_error!("cfg.target_os conflict");
 
-#[cfg(target_os = "macos")]
-#[path = "mac.rs"]
-pub mod volume;
-#[cfg(target_os = "windows")]
-#[path = "win.rs"]
-pub mod volume;
-#[cfg(target_os = "linux")]
-#[path = "linux.rs"]
+#[cfg_attr(target_os = "macos", path = "mac.rs")]
+#[cfg_attr(target_os = "linux", path = "linux.rs")]
+#[cfg_attr(target_os = "windows", path = "win.rs")]
 pub mod volume;
 
 mod methods;

@@ -143,11 +143,10 @@ impl Device {
 		trace!("opening device");
 
 		// Special case: if we already have an interface, mostly possible serial:
-		if self.interface.is_some() {
-			match self.interface_mut()? {
-				crate::interface::Interface::Serial(i) => i.open()?,
-				_ => {},
-			};
+		if let Some(interface) = self.interface.as_mut() {
+			if let crate::interface::Interface::Serial(serial) = interface {
+				serial.open()?
+			}
 			return Ok(());
 		}
 
@@ -233,19 +232,21 @@ impl Device {
 	}
 
 	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
-	pub fn close(&mut self) {
-		self.info.serial_number().map(|s| debug!("closing {s}"));
-		self.interface.take();
-		self.inner.take();
-	}
+	pub fn close(&mut self) { self.close_inner(); }
 
 	#[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
-	pub fn close_with_reset(&mut self) {
-		self.info.serial_number().map(|s| debug!("closing* {s}"));
-		self.interface.take();
-		if let Some(dev) = self.inner.take() {
-			dev.reset().map_err(|err| error!("{err}")).ok();
+	pub fn close_with_reset(&mut self) -> Result<(), Error> {
+		if let Some(dev) = self.close_inner() {
+			dev.reset()?;
 		}
+		Ok(())
+	}
+
+	#[inline]
+	fn close_inner(&mut self) -> Option<nusb::Device> {
+		self.info.serial_number().inspect(|sn| debug!("closing {sn}"));
+		self.interface.take();
+		self.inner.take()
 	}
 }
 

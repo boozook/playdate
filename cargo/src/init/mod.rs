@@ -316,7 +316,7 @@ fn add_dependencies<'cfg>(config: &'cfg Config<'_>,
 
 		let others = config.create_deps.iter().filter_map(|d| {
 			                                      if let Name::Other(dep) = &d.name {
-				                                      Some(dep.to_owned())
+				                                      Some(dep.clone())
 			                                      } else {
 				                                      None
 			                                      }

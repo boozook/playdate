@@ -1,24 +1,99 @@
 #![cfg(test)]
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 
 use crate::config::Env;
 use crate::assets::resolver::Expr;
 use crate::metadata::format::PlayDateMetadataAssets;
 use super::*;
 
-use resolver::unixish_path_pattern;
+use resolver::sanitize_path_pattern;
 use resolver::Match;
 use toml::Value;
+
+
+fn crate_root() -> PathBuf { PathBuf::from(env!("CARGO_MANIFEST_DIR")) }
+
+
+mod abs_if_existing {
+	use std::borrow::Cow;
+
+	use super::*;
+	use super::abs_if_existing;
+
+
+	#[test]
+	fn local() {
+		let roots = [
+		             Cow::from(Path::new(env!("CARGO_MANIFEST_DIR"))),
+		             crate_root().into(),
+		];
+		let paths = ["Cargo.toml", "src/lib.rs"];
+
+		for root in roots {
+			for test in paths {
+				let path = Path::new(test);
+
+				let crated = abs_if_existing(path, &root).unwrap();
+				assert!(crated.is_some(), "{crated:?} should be exist (src: {path:?})");
+
+				let crated = crated.unwrap();
+				let expected = root.join(path);
+				assert_eq!(expected, crated);
+			}
+		}
+	}
+
+	#[test]
+	fn external_rel() {
+		let roots = [
+		             Cow::from(Path::new(env!("CARGO_MANIFEST_DIR"))),
+		             crate_root().into(),
+		];
+		let paths = ["../utils/Cargo.toml", "./../utils/src/lib.rs"];
+
+		for root in roots {
+			for test in paths {
+				let path = Path::new(test);
+
+				let crated = abs_if_existing(path, &root).unwrap();
+				assert!(crated.is_some(), "{crated:?} should be exist (src: {path:?})");
+
+				let crated = crated.unwrap();
+				let expected = root.join(path);
+				assert_eq!(expected, crated);
+			}
+		}
+	}
+
+	#[test]
+	fn external_abs() {
+		let roots = [
+		             Cow::from(Path::new(env!("CARGO_MANIFEST_DIR"))),
+		             crate_root().into(),
+		];
+		let paths = ["utils", "utils/Cargo.toml"];
+
+		for root in roots {
+			for test in paths {
+				let path = root.parent().unwrap().join(test);
+
+				let crated = abs_if_existing(&path, &root).unwrap();
+				assert!(crated.is_some(), "{crated:?} should be exist (src: {path:?})");
+
+				let crated = crated.unwrap();
+				let expected = path.as_path();
+				assert_eq!(expected, crated);
+			}
+		}
+	}
+}
 
 
 mod plan {
 	use super::*;
 	use std::env::temp_dir;
-
-
-	fn crate_root() -> PathBuf { PathBuf::from(env!("CARGO_MANIFEST_DIR")) }
 
 
 	fn prepared_tmp(test_name: &str) -> (PathBuf, PathBuf, [&'static str; 4], Env) {
@@ -43,7 +118,7 @@ mod plan {
 		}
 
 		let env = {
-			let mut env = Env::default().unwrap();
+			let mut env = Env::try_default().unwrap();
 			env.vars.insert("TMP".into(), temp.to_string_lossy().into_owned());
 			env.vars.insert("SUB".into(), sub.to_string_lossy().into_owned());
 			env
@@ -63,7 +138,7 @@ mod plan {
 
 			#[test]
 			fn local_exact() {
-				let env = Env::default().unwrap();
+				let env = Env::try_default().unwrap();
 				let opts = AssetsOptions::default();
 
 				let root = crate_root();
@@ -89,7 +164,7 @@ mod plan {
 			#[test]
 			fn resolve_local_abs() {
 				let env = {
-					let mut env = Env::default().unwrap();
+					let mut env = Env::try_default().unwrap();
 					env.vars.insert(
 					                "SRC_ABS".into(),
 					                concat!(env!("CARGO_MANIFEST_DIR"), "/src").into(),
@@ -138,7 +213,7 @@ mod plan {
 			#[test]
 			fn resolve_local() {
 				let env = {
-					let mut env = Env::default().unwrap();
+					let mut env = Env::try_default().unwrap();
 					env.vars.insert("SRC".into(), "src".into());
 					env
 				};
@@ -279,7 +354,7 @@ mod plan {
 
 			#[test]
 			fn local_exact() {
-				let env = Env::default().unwrap();
+				let env = Env::try_default().unwrap();
 				let opts = AssetsOptions::default();
 
 				let root = crate_root();
@@ -300,7 +375,7 @@ mod plan {
 						assert!(tests.contains(left.as_str()));
 						assert_eq!(
 						           left.as_str(),
-						           unixish_path_pattern(matched.target().to_string_lossy().as_ref())
+						           sanitize_path_pattern(matched.target().to_string_lossy().as_ref())
 						);
 					} else {
 						panic!("pair is not matching: {pair:#?}");
@@ -311,7 +386,7 @@ mod plan {
 
 			#[test]
 			fn local_exact_target() {
-				let env = Env::default().unwrap();
+				let env = Env::try_default().unwrap();
 				let opts = AssetsOptions::default();
 
 				let root = crate_root();
@@ -358,7 +433,7 @@ mod plan {
 
 			#[test]
 			fn local_exact_target() {
-				let env = Env::default().unwrap();
+				let env = Env::try_default().unwrap();
 				let opts = AssetsOptions::default();
 
 				let root = crate_root();
@@ -403,7 +478,7 @@ mod plan {
 			#[test]
 			#[cfg_attr(windows, should_panic)]
 			fn glob_local_target() {
-				let env = Env::default().unwrap();
+				let env = Env::try_default().unwrap();
 				let opts = AssetsOptions::default();
 
 				let root = crate_root();
