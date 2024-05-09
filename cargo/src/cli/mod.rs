@@ -829,7 +829,8 @@ mod tests {
 
 	#[test]
 	fn init_args_before_cmd() -> CargoResult<()> {
-		let cwd = std::env::current_dir()?.join(Path::new("tests/crates/simple/no-cfg"));
+		let mut cwd = std::env::current_dir()?;
+		cwd.extend(["tests", "crates", "simple", "no-cfg"].iter());
 		println!("PWD: {}", cwd.display());
 		std::env::set_current_dir(cwd)?;
 
