@@ -178,19 +178,26 @@ fn parse_spusb<F>(
 {
 	let data: SystemProfilerResponse = serde_json::from_slice(data)?;
 
+	/// Recursive function that flattens the items.
+	fn flatten_items(item: AnyDeviceInfo) -> Vec<DeviceInfo> {
+		match item {
+			AnyDeviceInfo::Known(info) => vec![info],
+			AnyDeviceInfo::Hub(info) => {
+				trace!("Going into items of the hub");
+				info.items.into_iter().flatten().flat_map(flatten_items).collect()
+			},
+			AnyDeviceInfo::Other { name, .. } => {
+				trace!("Skip {name}");
+				vec![]
+			},
+		}
+	}
+
 	let result = data.data
 	                 .into_iter()
 	                 .filter_map(|c| c.items)
 	                 .flatten()
-	                 .filter_map(|item| {
-		                 match item {
-			                 AnyDeviceInfo::Known(info) => Some(info),
-		                    AnyDeviceInfo::Other { name, .. } => {
-			                    trace!("Skip {name}");
-			                    None
-		                    },
-		                 }
-	                 })
+	                 .flat_map(flatten_items)
 	                 .filter(|item| item.vendor_id == VENDOR_ID_ENC)
 	                 .filter(filter)
 	                 .filter_map(|item| {
@@ -285,6 +292,7 @@ struct ControllerInfo {
 #[serde(untagged)]
 enum AnyDeviceInfo {
 	Known(DeviceInfo),
+	Hub(ControllerInfo),
 	Other {
 		#[serde(rename = "_name")]
 		name: String,
@@ -459,6 +467,95 @@ mod tests {
 		};
 
 		assert_eq!(dev.name, "with-sn");
+		assert_eq!(dev.serial, "PDU1-Y000042");
+
+		let vol = dev.volume.now_or_never().unwrap().unwrap();
+		assert_eq!("/Volumes/PLAYDATE", vol.to_string_lossy());
+	}
+
+	/// Special case with usb-hub:
+	/// https://github.com/boozook/playdate/issues/326#issuecomment-2105427181
+	#[test]
+	fn parse_spusb_mount_hub() {
+		let data = r#"
+		{
+			"SPUSBDataType": [
+			  {
+				 "_items": [
+					{
+					  "_items": [
+						 {
+							"_name": "Playdate",
+							"bcd_device": "2.00",
+							"bus_power": "500",
+							"bus_power_used": "100",
+							"device_speed": "full_speed",
+							"extra_current_used": "0",
+							"location_id": "0x05310000 / 24",
+							"manufacturer": "Panic Inc",
+							"Media": [
+							  {
+								 "_name": "Playdate",
+								 "bsd_name": "disk24",
+								 "Logical Unit": 0,
+								 "partition_map_type": "master_boot_record_partition_map_type",
+								 "removable_media": "yes",
+								 "size": "3.66 GB",
+								 "size_in_bytes": 3662675968,
+								 "smart_status": "Verified",
+								 "USB Interface": 0,
+								 "volumes": [
+									{
+									  "_name": "PLAYDATE",
+									  "bsd_name": "disk24s1",
+									  "file_system": "MS-DOS FAT32",
+									  "free_space": "2.13 GB",
+									  "free_space_in_bytes": 2133676032,
+									  "iocontent": "Windows_FAT_32",
+									  "mount_point": "/Volumes/PLAYDATE",
+									  "size": "3.66 GB",
+									  "size_in_bytes": 3662675456,
+									  "volume_uuid": "83B4406D-",
+									  "writable": "yes"
+									}
+								 ]
+							  }
+							],
+							"product_id": "0x5741",
+							"serial_num": "PDU1-Y000042",
+							"vendor_id": "0x1331"
+						 }
+					  ],
+					  "_name": "4-Port USB 2.0 Hub",
+					  "bcd_device": "1.36",
+					  "bus_power": "500",
+					  "bus_power_used": "0",
+					  "device_speed": "high_speed",
+					  "extra_current_used": "0",
+					  "location_id": "0x05300000 / 3",
+					  "manufacturer": "Generic",
+					  "product_id": "0x5411",
+					  "vendor_id": "0x0bda  (Realtek Semiconductor Corp.)"
+					}
+				 ],
+				 "_name": "USB31Bus",
+				 "host_controller": "AppleASMediaUSBXHCI",
+				 "pci_device": "0x1242 ",
+				 "pci_revision": "0x0000 ",
+				 "pci_vendor": "0x1b21 "
+			  }
+			]
+		 }
+		"#;
+
+		let dev = {
+			let mut devs: Vec<_> = parse_spusb(|_| true, data.as_bytes()).unwrap().collect();
+			assert!(!devs.is_empty());
+			assert_eq!(1, devs.len());
+			devs.pop().unwrap()
+		};
+
+		assert_eq!(dev.name, "Playdate");
 		assert_eq!(dev.serial, "PDU1-Y000042");
 
 		let vol = dev.volume.now_or_never().unwrap().unwrap();
