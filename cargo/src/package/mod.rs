@@ -14,7 +14,7 @@ use cargo::core::profiles::DebugInfo;
 use cargo::core::profiles::Profiles;
 use cargo_util_schemas::manifest::TomlDebugInfo;
 use clap_lex::OsStrExt;
-use playdate::io::soft_link_checked;
+use playdate::fs::soft_link_checked;
 use playdate::layout::Layout;
 use playdate::layout::Name;
 use playdate::manifest::ManifestDataSource;
