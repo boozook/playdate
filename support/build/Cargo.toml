@@ -1,6 +1,6 @@
 [package]
 name = "playdate-build"
-version = "0.2.9"
+version = "0.2.10"
 readme = "README.md"
 description = "Utils that help to build package for Playdate"
 keywords = ["playdate", "package", "encoding", "manifest", "assets"]
@@ -23,6 +23,8 @@ fs_extra.workspace = true
 regex.workspace = true
 wax = "0.6"
 symlink = "0.1"
+
+dunce = "*"
 
 [dependencies.crate-metadata]
 version = "0.1"

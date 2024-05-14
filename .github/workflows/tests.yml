@@ -451,6 +451,24 @@ jobs:
           cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-lua
           cargo playdate package --features=lang-items,entry-point --examples --device --simulator -p=playdate
 
+      - name: Examples (pwrsh)
+        shell: powershell
+        run: |
+          FEATURES=sys/lang-items,sys/entry-point
+          cargo playdate package --features=lang-items --examples --device --simulator -p=playdate-sys
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-color
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-controls
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-display
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-fs
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-graphics
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-menu
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-scoreboards
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-sound
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-sprite
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-system
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-lua
+          cargo playdate package --features=lang-items,entry-point --examples --device --simulator -p=playdate
+
       # TODO: build crankstart with examples for compatibility test
 
   format:

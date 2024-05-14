@@ -38,15 +38,18 @@ pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
 	let crate_root = crate_root.unwrap_or_else(|| env.cargo_manifest_dir());
 	let link_behavior = options.link_behavior();
 
+	// TODO: test me
 	let to_relative = |s: &String| -> String {
 		let p = Path::new(s);
 		if p.is_absolute() || p.has_root() {
+			// TODO: normpath::normalize_virtually
 			let trailing_sep = p.components().count() > 1 && s.ends_with(PATH_SEPARATOR);
 			let mut s = p.components().skip(1).collect::<PathBuf>().display().to_string();
 			// preserve trailing separator
 			if trailing_sep && !s.ends_with(PATH_SEPARATOR) {
 				s.push(MAIN_SEPARATOR);
 			}
+			// TODO: path-slash::to_slash instead
 			sanitize_path_pattern(&s).into_owned()
 		} else {
 			s.to_owned()

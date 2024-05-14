@@ -7,7 +7,7 @@ extern crate log;
 pub use utils::*;
 
 
-pub mod io;
+pub mod fs;
 pub mod value;
 pub mod layout;
 pub mod config;
