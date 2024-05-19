@@ -14,7 +14,7 @@ use cargo::core::profiles::DebugInfo;
 use cargo::core::profiles::Profiles;
 use cargo_util_schemas::manifest::TomlDebugInfo;
 use clap_lex::OsStrExt;
-use playdate::io::soft_link_checked;
+use playdate::fs::soft_link_checked;
 use playdate::layout::Layout;
 use playdate::layout::Name;
 use playdate::manifest::ManifestDataSource;
@@ -112,7 +112,9 @@ fn package_single_target<'p>(config: &Config,
 	}
 
 	// manifest:
-	build_manifest(config, &product.layout, product.package, assets)?;
+	let ext_id = product.example.then(|| format!("dev.{}", product.name).into());
+	let ext_name = product.example.then_some(product.name.as_str().into());
+	build_manifest(config, &product.layout, product.package, assets, ext_id, ext_name)?;
 
 	// finally call pdc and pack:
 	let mut artifact = execute_pdc(config, &product.layout)?;
@@ -217,7 +219,7 @@ fn package_multi_target<'p>(config: &Config,
 	}
 	crate::layout::Layout::prepare(&mut layout.as_mut())?;
 
-	let mut has_dev = Default::default();
+	let mut dev = Default::default();
 	for product in &products {
 		log::debug!("Preparing binaries for packaging {}", product.presentable_name());
 		assert_eq!(package, product.package, "package must be same");
@@ -225,7 +227,7 @@ fn package_multi_target<'p>(config: &Config,
 		soft_link_checked(&product.path, &dst, true, layout.as_inner().target())?;
 
 		if product.example {
-			has_dev = true;
+			dev = Some(product);
 		}
 	}
 
@@ -237,7 +239,7 @@ fn package_multi_target<'p>(config: &Config,
 		prepare_assets(
 		               config,
 		               assets,
-		               has_dev,
+		               dev.is_some(),
 		               layout.build(),
 		               true,
 		               layout.as_inner().target(),
@@ -245,7 +247,9 @@ fn package_multi_target<'p>(config: &Config,
 	}
 
 	// manifest:
-	build_manifest(config, &layout, package, assets)?;
+	let ext_id = dev.and_then(|p| p.example.then(|| format!("dev.{}", p.name).into()));
+	let ext_name = dev.and_then(|p| p.example.then_some(p.name.as_str().into()));
+	build_manifest(config, &layout, package, assets, ext_id, ext_name)?;
 
 	// finally call pdc and pack:
 	let mut artifact = execute_pdc(config, &layout)?;
@@ -273,21 +277,41 @@ fn package_multi_target<'p>(config: &Config,
 fn build_manifest<Layout: playdate::layout::Layout>(config: &Config,
                                                     layout: &Layout,
                                                     package: &Package,
-                                                    assets: Option<&AssetsArtifact<'_>>)
+                                                    assets: Option<&AssetsArtifact<'_>>,
+                                                    id_suffix: Option<Cow<'_, str>>,
+                                                    name_override: Option<Cow<'_, str>>)
                                                     -> CargoResult<()> {
 	config.log().verbose(|mut log| {
 		            let msg = format!("building package manifest for {}", package.package_id());
 		            log.status("Manifest", msg);
 	            });
 
-	let manifest = if let Some(metadata) = assets.and_then(|a| a.metadata.as_ref()) {
-		               Manifest::try_from_source(ManifestSource { package,
-		                                                          metadata: metadata.into() })
-	               } else {
-		               let metadata = playdate_metadata(package);
-		               Manifest::try_from_source(ManifestSource { package,
-		                                                          metadata: metadata.as_ref() })
-	               }.map_err(|err| anyhow!(err))?;
+	let mut manifest = if let Some(metadata) = assets.and_then(|a| a.metadata.as_ref()) {
+		                   let source = ManifestSource { package,
+		                                                 metadata: metadata.into() };
+		                   Manifest::try_from_source(source)
+	                   } else {
+		                   let metadata = playdate_metadata(package);
+		                   let source = ManifestSource { package,
+		                                                 metadata: metadata.as_ref() };
+		                   Manifest::try_from_source(source)
+	                   }.map_err(|err| anyhow!(err))?;
+
+	// Override fields. This is a hacky not-so-braking hot-fix for issue #354.
+	// This is a temporary solution only until full metadata inheritance is implemented.
+	if id_suffix.is_some() || name_override.is_some() {
+		if let Some(id) = id_suffix {
+			log::trace!("Overriding bundle_id from {}", manifest.bundle_id);
+			manifest.bundle_id.push_str(".example.");
+			manifest.bundle_id.push_str(&id);
+			log::trace!("                       to {}", manifest.bundle_id);
+		}
+		if let Some(name) = name_override {
+			log::trace!("Overriding program name {} -> {name}", manifest.name);
+			manifest.name = name.into_owned();
+		}
+	}
+
 	std::fs::write(layout.manifest(), manifest.to_manifest_string())?;
 	Ok(())
 }

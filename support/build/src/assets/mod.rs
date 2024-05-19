@@ -5,15 +5,13 @@ use std::io::{Error as IoError, ErrorKind as IoErrorKind};
 use wax::{LinkBehavior, WalkError};
 use fs_extra::error::Error as FsExtraError;
 
-use crate::io::soft_link_checked;
+use crate::fs::soft_link_checked;
 use crate::metadata::format::AssetsBuildMethod;
 use crate::metadata::format::AssetsOptions;
 
 
 pub mod plan;
 pub mod resolver;
-mod tests;
-
 use self::plan::*;
 
 
@@ -21,8 +19,8 @@ pub fn apply_build_plan<'l, 'r, P: AsRef<Path>>(plan: BuildPlan<'l, 'r>,
                                                 target_root: P,
                                                 assets_options: &AssetsOptions)
                                                 -> Result<BuildReport<'l, 'r>, FsExtraError> {
-	use crate::io::parent_of;
-	use crate::io::ensure_dir_exists;
+	use crate::fs::parent_of;
+	use crate::fs::ensure_dir_exists;
 
 	let target_root = target_root.as_ref();
 	let build_method = assets_options.method;

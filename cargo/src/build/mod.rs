@@ -18,7 +18,7 @@ use cargo::core::compiler::CrateType;
 use cargo::util::command_prelude::CompileMode;
 use playdate::compile::dylib_suffix_for_host_opt;
 use playdate::compile::static_lib_suffix;
-use playdate::io::soft_link_checked;
+use playdate::fs::soft_link_checked;
 use playdate::toolchain::gcc::ArmToolchain;
 use playdate::toolchain::sdk::Sdk;
 use anstyle::AnsiColor as Color;
