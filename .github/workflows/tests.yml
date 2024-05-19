@@ -193,6 +193,7 @@ jobs:
       - name: Test
         run: |
           cargo test -p=playdate-build-utils --all-features
+          cargo test -p=playdate-build --no-default-features -- --nocapture
           cargo test -p=playdate-build --all-features -- --nocapture
           cargo test -p=playdate-device
           cargo test -p=playdate-tool --all-features

@@ -5,7 +5,7 @@ use std::process::Command;
 use anyhow::bail;
 use cargo::CargoResult;
 use cargo::core::Package;
-use playdate::io::soft_link_checked;
+use playdate::fs::soft_link_checked;
 use playdate::layout::Layout;
 
 use crate::config::Config;

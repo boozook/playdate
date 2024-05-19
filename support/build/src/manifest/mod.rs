@@ -1,76 +1,11 @@
 use std::borrow::Cow;
-use std::path::PathBuf;
 
 pub use crate::compile::PDX_PKG_MANIFEST_FILENAME;
 use crate::metadata::format::PlayDateMetadata;
 use self::format::Manifest;
 
 
-pub struct SavedPlaydateManifest {
-	pub manifest: Manifest,
-	pub path: PathBuf,
-}
-
-
-pub mod format {
-	use serde::Deserialize;
-	use serde::Serialize;
-
-
-	#[derive(Serialize, Deserialize, Debug)]
-	#[serde(rename_all = "camelCase")]
-	pub struct Manifest {
-		// pdxversion=20000
-		pub name: String,
-		pub author: String,
-		pub description: String,
-		#[serde(rename = "bundleID")]
-		pub bundle_id: String,
-		pub version: String,
-		pub build_number: Option<usize>,
-		pub image_path: Option<String>,
-		pub launch_sound_path: Option<String>,
-		pub content_warning: Option<String>,
-		pub content_warning2: Option<String>,
-	}
-
-
-	impl Manifest {
-		pub fn to_manifest_string(&self) -> String {
-			let mut result = String::new();
-
-			fn to_row<K: AsRef<str>, V: AsRef<str>>(key: K, value: V) -> String {
-				if !value.as_ref().trim().is_empty() {
-					format!("{}={}\n", key.as_ref(), value.as_ref())
-				} else {
-					String::new()
-				}
-			}
-
-			result.push_str(&to_row("name", &self.name));
-			result.push_str(&to_row("author", &self.author));
-			result.push_str(&to_row("description", &self.description));
-			result.push_str(&to_row("bundleID", &self.bundle_id));
-			result.push_str(&to_row("version", &self.version));
-			if let Some(value) = self.build_number {
-				result.push_str(&to_row("buildNumber", value.to_string()));
-			}
-			if let Some(ref value) = self.image_path {
-				result.push_str(&to_row("imagePath", value));
-			}
-			if let Some(ref value) = self.launch_sound_path {
-				result.push_str(&to_row("launchSoundPath", value));
-			}
-			if let Some(ref value) = self.content_warning {
-				result.push_str(&to_row("contentWarning", value));
-				if let Some(ref value) = self.content_warning2 {
-					result.push_str(&to_row("contentWarning2", value));
-				}
-			}
-			result
-		}
-	}
-}
+pub mod format;
 
 
 pub trait ManifestDataSource {
@@ -84,7 +19,7 @@ pub trait ManifestDataSource {
 }
 
 
-impl<'t, T> TryFrom<SourceRef<'t, T>> for Manifest where T: ManifestDataSource {
+impl<'t, T> TryFrom<SourceRef<'t, T>> for Manifest<T::Value> where T: ManifestDataSource {
 	type Error = &'static str;
 
 	fn try_from(source: SourceRef<'t, T>) -> Result<Self, &'static str> {
@@ -106,14 +41,15 @@ impl<'t, T> TryFrom<SourceRef<'t, T>> for Manifest where T: ManifestDataSource {
 		                          image_path: metadata.image_path.to_owned(),
 		                          launch_sound_path: metadata.launch_sound_path.to_owned(),
 		                          content_warning: metadata.content_warning.to_owned(),
-		                          content_warning2: metadata.content_warning2.to_owned() };
+		                          content_warning2: metadata.content_warning2.to_owned(),
+		                          extra: metadata.extra.to_owned() };
 		Ok(manifest)
 	}
 }
 
-impl Manifest {
+impl<V> Manifest<V> {
 	pub fn try_from_source<T>(source: T) -> Result<Self, &'static str>
-		where T: ManifestDataSource {
+		where T: ManifestDataSource<Value = V> {
 		SourceRef(&source).try_into()
 	}
 }
@@ -142,7 +78,7 @@ impl<'t, T> ManifestDataSource for SourceRef<'t, T> where T: ManifestDataSource 
 
 #[cfg(test)]
 mod tests {
-	#[cfg(any(feature = "toml", feature = "serde_json"))]
+	use std::collections::HashMap;
 	use std::ops::Deref;
 	use crate::metadata::format::PlayDateMetadata;
 	use super::*;
@@ -151,6 +87,8 @@ mod tests {
 	use serde_json::Value;
 	#[cfg(all(feature = "toml", not(feature = "serde_json")))]
 	use toml::Value;
+	#[cfg(all(not(feature = "toml"), not(feature = "serde_json")))]
+	use crate::value::default::Value;
 
 
 	struct ManifestSource<Name, Ver, Descr> {
@@ -176,7 +114,7 @@ mod tests {
 	}
 
 
-	fn minimal_metadata() -> PlayDateMetadata<Value> {
+	fn metadata_minimal() -> PlayDateMetadata<Value> {
 		PlayDateMetadata { bundle_id: "bundle.id".to_owned(),
 		                   name: Default::default(),
 		                   version: Default::default(),
@@ -190,9 +128,10 @@ mod tests {
 		                   assets: Default::default(),
 		                   dev_assets: Default::default(),
 		                   options: Default::default(),
-		                   support: Default::default() }
+		                   support: Default::default(),
+		                   extra: Default::default() }
 	}
-	fn maximal_metadata() -> PlayDateMetadata<Value> {
+	fn metadata_maximal() -> PlayDateMetadata<Value> {
 		PlayDateMetadata { bundle_id: "bundle.id".to_owned(),
 		                   name: Some("name".to_owned()),
 		                   version: Some("0.42.0".to_owned()),
@@ -206,17 +145,24 @@ mod tests {
 		                   assets: Default::default(),
 		                   dev_assets: Default::default(),
 		                   options: Default::default(),
-		                   support: Default::default() }
+		                   support: Default::default(),
+		                   extra: Default::default() }
+	}
+	fn metadata_extra() -> PlayDateMetadata<Value> {
+		let mut data = metadata_minimal();
+		data.extra = HashMap::new();
+		data.extra.insert("key".to_owned(), "value".to_string().into());
+		data
 	}
 
 
 	#[test]
-	fn manifest_data_source_minimal() {
+	fn from_data_source_minimal() {
 		let source = ManifestSource { name: "name",
 		                              authors: vec!["author".to_owned()],
 		                              version: "0.42.0",
 		                              description: Some("description"),
-		                              metadata: Some(minimal_metadata()) };
+		                              metadata: Some(metadata_minimal()) };
 		let manifest = Manifest::try_from_source(source).expect("manifest");
 
 		assert_eq!(&manifest.name, "name");
@@ -233,12 +179,12 @@ mod tests {
 	}
 
 	#[test]
-	fn manifest_data_source_maximal() {
+	fn from_data_source_maximal() {
 		let source = ManifestSource { name: "crate-name",
 		                              authors: vec!["crate-author".to_owned()],
 		                              version: "0.0.0",
 		                              description: Some("crate-description"),
-		                              metadata: Some(maximal_metadata()) };
+		                              metadata: Some(metadata_maximal()) };
 		let manifest = Manifest::try_from_source(source).expect("manifest");
 
 		assert_eq!(&manifest.name, "name");
@@ -252,5 +198,18 @@ mod tests {
 		assert_eq!(manifest.content_warning.as_deref(), Some("content_warning"));
 		assert_eq!(manifest.content_warning2.as_deref(), Some("content_warning2"));
 		assert_eq!(manifest.build_number, Some(42));
+	}
+
+	#[test]
+	fn from_data_source_extra() {
+		let source = ManifestSource { name: "-",
+		                              version: "0.0.0",
+		                              description: Some("-"),
+		                              authors: vec!["-".to_owned()],
+		                              metadata: Some(metadata_extra()) };
+		let manifest = Manifest::try_from_source(source).expect("manifest");
+
+		assert_eq!(Some(&Value::from("value".to_string())), manifest.extra.get("key"));
+		assert_eq!(1, manifest.extra.len());
 	}
 }

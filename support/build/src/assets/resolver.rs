@@ -6,7 +6,6 @@ use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use regex::Regex;
 use wax::{Glob, LinkBehavior, WalkError, WalkEntry};
 
-use crate::cargo;
 use crate::config::Env;
 use super::log_err;
 use super::Error;
@@ -129,7 +128,6 @@ impl EnvResolver {
 			if let Some(captures) = re.captures(replaced.as_str()) {
 				let full = &captures[0];
 				let name = &captures[2];
-				cargo!(env "{name}");
 
 				let var = env.vars
 				             .get(name)
@@ -154,7 +152,6 @@ impl EnvResolver {
 			if let Some(captures) = re.captures(replaced.as_str()) {
 				let full = &captures[0];
 				let name = &captures[2];
-				cargo!(env "{name}");
 
 				let var = std::env::var(name).map_err(log_err)
 				                             .map(Cow::from)
@@ -192,6 +189,7 @@ pub enum Match {
 	},
 }
 
+#[cfg(feature = "serde")]
 impl serde::Serialize for Match {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 		where S: serde::Serializer {
@@ -359,6 +357,7 @@ impl<'e> Expr<'e> {
 }
 
 
+#[cfg(feature = "serde")]
 impl<'e> serde::Serialize for Expr<'e> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 		where S: serde::Serializer {

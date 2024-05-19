@@ -1,6 +1,6 @@
 [package]
 name = "playdate-build"
-version = "0.2.9"
+version = "0.3.0"
 readme = "README.md"
 description = "Utils that help to build package for Playdate"
 keywords = ["playdate", "package", "encoding", "manifest", "assets"]
@@ -14,8 +14,7 @@ repository.workspace = true
 
 [dependencies]
 log.workspace = true
-# TODO: make serde optional!
-serde = { workspace = true, features = ["derive"] }
+serde = { workspace = true, features = ["derive"], optional = true }
 serde_json = { workspace = true, optional = true }
 toml = { workspace = true, optional = true }
 dirs.workspace = true
@@ -35,8 +34,10 @@ features = ["log"]
 
 
 [features]
-default = ["toml", "serde_json"]
-cargo = ["utils/cargo-message", "serde_json"]
+default = []
+toml = ["serde", "dep:toml"]
+serde_json = ["serde", "dep:serde_json"]
+crate-metadata = ["serde_json", "dep:crate-metadata"]
 assets-report = []
 
 

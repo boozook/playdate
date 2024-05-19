@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::env;
 use std::path::Path;
@@ -47,31 +46,4 @@ impl Env {
 
 
 	pub fn manifest_path(&self) -> PathBuf { self.cargo_manifest_dir().join(&self.cargo_manifest_filename) }
-}
-
-
-pub trait Package {
-	type Value: crate::value::Value;
-
-	fn name(&self) -> &str;
-	fn authors(&self) -> &[String];
-	fn version(&self) -> Cow<str>;
-	fn description(&self) -> Option<&str>;
-	fn manifest_path(&self) -> &Path; // XXX: not used
-	fn metadata(&self) -> Option<&crate::metadata::format::Metadata<Self::Value>>;
-	fn target_directory(&self) -> &Path; // XXX: not used
-}
-
-#[cfg(feature = "crate-metadata")]
-impl<T: crate::value::Value> Package for crate::metadata::PackageInfo<T> {
-	type Value = T;
-	fn name(&self) -> &str { &self.package.name }
-	fn authors(&self) -> &[String] { self.package.authors.as_slice() }
-	fn version(&self) -> Cow<str> { Cow::Borrowed(self.package.version.as_str()) }
-	fn description(&self) -> Option<&str> { self.package.description.as_deref() }
-	fn manifest_path(&self) -> &Path { Path::new(&self.package.manifest_path) }
-	fn metadata(&self) -> Option<&crate::metadata::format::Metadata<Self::Value>> {
-		self.package.metadata.as_ref()
-	}
-	fn target_directory(&self) -> &Path { &self.target_directory }
 }
