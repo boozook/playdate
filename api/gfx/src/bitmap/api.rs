@@ -6,6 +6,7 @@ use sys::ffi::LCDColor;
 use sys::ffi::LCDBitmap;
 use sys::ffi::LCDBitmapFlip;
 use sys::ffi::LCDRect;
+use sys::ffi::LCDSolidColor;
 
 
 /// Default graphics bitmap api end-point, ZST.
@@ -166,5 +167,13 @@ pub trait Api {
 		                        x: core::ffi::c_int,
 		                        y: core::ffi::c_int) {
 		*sys::api!(graphics.setColorToPattern)
+	}
+
+
+	/// Equivalent to [`sys::ffi::playdate_graphics::getBitmapPixel`]
+	#[doc(alias = "sys::ffi::playdate_graphics::getBitmapPixel")]
+	#[inline(always)]
+	fn get_pixel(&self) -> unsafe extern "C" fn(bitmap: *mut LCDBitmap, x: c_int, y: c_int) -> LCDSolidColor {
+		*sys::api!(graphics.getBitmapPixel)
 	}
 }

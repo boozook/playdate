@@ -9,6 +9,7 @@ use alloc::boxed::Box;
 
 use sys::error::OkOrNullFnErr;
 use sys::ffi::LCDPattern;
+use sys::ffi::LCDSolidColor;
 use sys::traits::AsRaw;
 use sys::ffi::CString;
 use sys::ffi::LCDColor;
@@ -511,6 +512,20 @@ impl<Api: api::Api, const FOD: bool> Bitmap<Api, FOD> {
 	pub fn set_color_to_pattern(&self, color: &mut LCDColor, x: c_int, y: c_int) {
 		let f = self.1.set_color_to_pattern();
 		unsafe { f(color as _, self.0, x, y) }
+	}
+
+	/// Gets the color of the pixel at `(x,y)` in this bitmap.
+	/// If the coordinate is outside the bounds of the bitmap,
+	/// or if the bitmap has a mask and the pixel is marked transparent,
+	/// the function returns [`Clear`][LCDSolidColor::kColorClear];
+	/// otherwise the return value is [`White`][LCDSolidColor::kColorWhite] or [`Black`][LCDSolidColor::kColorBlack].
+	///
+	/// Calls [`sys::ffi::playdate_graphics::getBitmapPixel`].
+	#[doc(alias = "sys::ffi::playdate_graphics::getBitmapPixel")]
+	#[inline(always)]
+	pub fn pixel_at(&self, x: c_int, y: c_int) -> LCDSolidColor {
+		let f = self.1.get_pixel();
+		unsafe { f(self.0, x, y) }
 	}
 }
 

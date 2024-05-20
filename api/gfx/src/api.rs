@@ -482,6 +482,13 @@ impl Api for Cache {
 		self.0.fillEllipse.expect("fillEllipse")
 	}
 
+	/// Equivalent to [`sys::ffi::playdate_graphics::setPixel`]
+	#[doc(alias = "sys::ffi::playdate_graphics::setPixel")]
+	#[inline(always)]
+	fn set_pixel(&self) -> unsafe extern "C" fn(x: c_int, y: c_int, c: LCDColor) {
+		self.0.setPixel.expect("setPixel")
+	}
+
 	/// Equivalent to [`sys::ffi::playdate_graphics::getFrame`]
 	#[doc(alias = "sys::ffi::playdate_graphics::getFrame")]
 	#[inline(always)]
@@ -678,6 +685,11 @@ pub trait Api: crate::bitmap::api::Api + crate::bitmap::table::api::Api + crate:
 		                        color: LCDColor) {
 		*sys::api!(graphics.fillEllipse)
 	}
+
+	/// Equivalent to [`sys::ffi::playdate_graphics::setPixel`]
+	#[doc(alias = "sys::ffi::playdate_graphics::setPixel")]
+	#[inline(always)]
+	fn set_pixel(&self) -> unsafe extern "C" fn(x: c_int, y: c_int, c: LCDColor) { *sys::api!(graphics.setPixel) }
 
 	/// Equivalent to [`sys::ffi::playdate_graphics::getFrame`]
 	#[doc(alias = "sys::ffi::playdate_graphics::getFrame")]
