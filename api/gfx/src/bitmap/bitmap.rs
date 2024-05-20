@@ -666,7 +666,7 @@ pub fn set_stencil(image: &impl AnyBitmap) { Graphics::Default().set_stencil(ima
 /// Equivalent to [`sys::ffi::playdate_graphics::setDrawMode`].
 #[doc(alias = "sys::ffi::playdate_graphics::setDrawMode")]
 #[inline(always)]
-pub fn set_draw_mode(mode: BitmapDrawMode) { Graphics::Default().set_draw_mode(mode) }
+pub fn set_draw_mode(mode: BitmapDrawMode) -> BitmapDrawMode { Graphics::Default().set_draw_mode(mode) }
 
 /// Push a new drawing context for drawing into the given bitmap.
 ///
@@ -785,13 +785,15 @@ impl<Api: crate::api::Api> Graphics<Api> {
 
 	/// Sets the mode used for drawing bitmaps.
 	///
+	/// Returns the previous draw mode.
+	///
 	/// Note that text drawing uses bitmaps, so this affects how fonts are displayed as well.
 	///
 	/// Equivalent to [`sys::ffi::playdate_graphics::setDrawMode`].
 	#[doc(alias = "sys::ffi::playdate_graphics::setDrawMode")]
-	pub fn set_draw_mode(&self, mode: BitmapDrawMode) {
+	pub fn set_draw_mode(&self, mode: BitmapDrawMode) -> BitmapDrawMode {
 		let f = self.0.set_draw_mode();
-		unsafe { f(mode) };
+		unsafe { f(mode) }
 	}
 
 	/// Push a new drawing context for drawing into the given bitmap.
