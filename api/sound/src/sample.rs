@@ -140,7 +140,7 @@ impl<Api: api::Api> Sample<Api> {
 	                              sample_rate: u32)
 	                              -> Result<SampleWithData<'t, Api>, Error> {
 		let f = api.new_sample_from_data();
-		let ptr = unsafe { f(data.as_mut_ptr(), format, sample_rate, data.len() as _) };
+		let ptr = unsafe { f(data.as_mut_ptr(), format, sample_rate, data.len() as _, 0) };
 
 		if ptr.is_null() {
 			Err(Error::Alloc)
@@ -276,7 +276,8 @@ pub mod api {
 			-> unsafe extern "C" fn(data: *mut u8,
 			                        format: SoundFormat,
 			                        sampleRate: u32,
-			                        byteCount: c_int) -> *mut AudioSample {
+			                        byteCount: c_int,
+			                        shouldFreeData: c_int) -> *mut AudioSample {
 			self.0.newSampleFromData.expect("newSampleFromData")
 		}
 
@@ -329,7 +330,8 @@ pub mod api {
 			-> unsafe extern "C" fn(data: *mut u8,
 			                        format: SoundFormat,
 			                        sampleRate: u32,
-			                        byteCount: c_int) -> *mut AudioSample {
+			                        byteCount: c_int,
+			                        shouldFreeData: c_int) -> *mut AudioSample {
 			*sys::api!(sound.sample.newSampleFromData)
 		}
 

@@ -22,7 +22,7 @@ gfx = { version = "0.3", path = "api/gfx", package = "playdate-graphics", defaul
 lua = { version = "0.1", path = "api/lua", package = "playdate-lua", default-features = false }
 menu = { version = "0.2", path = "api/menu", package = "playdate-menu", default-features = false }
 scoreboards = { version = "0.1", path = "api/scoreboards", package = "playdate-scoreboards", default-features = false }
-sound = { version = "0.3", path = "api/sound", package = "playdate-sound", default-features = false }
+sound = { version = "0.4", path = "api/sound", package = "playdate-sound", default-features = false }
 sprite = { version = "0.2", path = "api/sprite", package = "playdate-sprite", default-features = false }
 system = { version = "0.3", path = "api/system", package = "playdate-system", default-features = false }
 sys = { version = "0.3", path = "api/sys", package = "playdate-sys", default-features = false }
