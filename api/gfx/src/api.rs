@@ -377,7 +377,7 @@ impl Api for Cache {
 	/// Equivalent to [`sys::ffi::playdate_graphics::setDrawMode`]
 	#[doc(alias = "sys::ffi::playdate_graphics::setDrawMode")]
 	#[inline(always)]
-	fn set_draw_mode(&self) -> unsafe extern "C" fn(mode: LCDBitmapDrawMode) {
+	fn set_draw_mode(&self) -> unsafe extern "C" fn(mode: LCDBitmapDrawMode) -> LCDBitmapDrawMode {
 		self.0.setDrawMode.expect("setDrawMode")
 	}
 
@@ -578,7 +578,9 @@ pub trait Api: crate::bitmap::api::Api + crate::bitmap::table::api::Api + crate:
 	/// Equivalent to [`sys::ffi::playdate_graphics::setDrawMode`]
 	#[doc(alias = "sys::ffi::playdate_graphics::setDrawMode")]
 	#[inline(always)]
-	fn set_draw_mode(&self) -> unsafe extern "C" fn(mode: LCDBitmapDrawMode) { *sys::api!(graphics.setDrawMode) }
+	fn set_draw_mode(&self) -> unsafe extern "C" fn(mode: LCDBitmapDrawMode) -> LCDBitmapDrawMode {
+		*sys::api!(graphics.setDrawMode)
+	}
 
 	/// Equivalent to [`sys::ffi::playdate_graphics::setDrawOffset`]
 	#[doc(alias = "sys::ffi::playdate_graphics::setDrawOffset")]
