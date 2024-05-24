@@ -158,8 +158,8 @@ jobs:
           - ubuntu-latest
           - windows-latest
         sdk:
-          # - latest
-          - beta
+          - latest
+          # - beta
 
     steps:
       - uses: actions/checkout@v4
