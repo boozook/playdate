@@ -352,6 +352,26 @@ impl<Api: api::Api> Graphics<Api> {
 }
 
 impl<Api: api::Api> Graphics<Api> {
+	/// Sets the pixel at `(x,y)` in the current drawing context (by default the screen) to the given `color`.
+	/// Be aware that setting a pixel at a time is not very efficient:
+	/// In our testing, more than around 20,000 calls in a tight loop will drop the frame rate below 30 fps.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::setPixel`]
+	#[doc(alias = "sys::ffi::playdate_graphics::setPixel")]
+	#[inline(always)]
+	pub fn set_pixel(&self, x: c_int, y: c_int, color: color::Color) { self.set_pixel_raw(x, y, color.into()) }
+
+	/// Same as [`set_pixel`][Graphics::set_pixel], but without conversion [`Color`][color::Color] -> [`LCDColor`].
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::setPixel`]
+	#[doc(alias = "sys::ffi::playdate_graphics::setPixel")]
+	#[inline(always)]
+	pub fn set_pixel_raw(&self, x: c_int, y: c_int, color: LCDColor) {
+		let f = self.0.set_pixel();
+		unsafe { f(x, y, color) }
+	}
+
+
 	/// Returns the current display frame buffer.
 	/// Rows are 32-bit aligned, so the row stride is 52 bytes, with the extra 2 bytes per row ignored.
 	/// Bytes are MSB-ordered; i.e., the pixel in column 0 is the 0x80 bit of the first byte of the row.

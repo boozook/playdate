@@ -150,6 +150,23 @@ impl<Api: api::Api, const FOD: bool> BitmapTable<Api, FOD> {
 			Some(Bitmap(ptr, api))
 		}
 	}
+
+	/// Returns the bitmap table’s image count in the `count` if not `None`
+	/// and number of cells across in the `width` (ditto) if not `None` .
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::getTableBitmap`].
+	#[doc(alias = "sys::ffi::playdate_graphics::getTableBitmap")]
+	pub fn info<'table, BitApi: BitmapApi>(&'table self, count: Option<&mut c_int>, width: Option<&mut c_int>) {
+		let f = self.1.get_bitmap_table_info();
+		unsafe {
+			use core::ptr::null_mut;
+			f(
+			  self.0,
+			  count.map_or(null_mut() as _, |v| v as *mut _),
+			  width.map_or(null_mut() as _, |v| v as *mut _),
+			)
+		}
+	}
 }
 
 
@@ -212,6 +229,14 @@ pub mod api {
 		fn get_table_bitmap(&self)
 		                    -> unsafe extern "C" fn(table: *mut LCDBitmapTable, idx: c_int) -> *mut LCDBitmap {
 			*sys::api!(graphics.getTableBitmap)
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_graphics::getBitmapTableInfo`]
+		#[doc(alias = "sys::ffi::playdate_graphics::getBitmapTableInfo")]
+		fn get_bitmap_table_info(
+			&self)
+			-> unsafe extern "C" fn(table: *mut LCDBitmapTable, count: *mut c_int, width: *mut c_int) {
+			*sys::api!(graphics.getBitmapTableInfo)
 		}
 	}
 }

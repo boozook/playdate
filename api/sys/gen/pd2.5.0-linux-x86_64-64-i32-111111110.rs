@@ -81,7 +81,6 @@ pub const SEEK_CUR: u32 = 1;
 pub const SEEK_END: u32 = 2;
 pub const AUDIO_FRAMES_PER_CYCLE: u32 = 512;
 pub const NOTE_C4: u32 = 60;
-pub type va_list = *mut core::ffi::c_char;
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
@@ -126,7 +125,7 @@ fn bindgen_test_layout_LCDRect() {
 	           concat!("Offset of field: ", stringify!(LCDRect), "::", stringify!(bottom))
 	);
 }
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum LCDBitmapDrawMode {
@@ -139,7 +138,7 @@ pub enum LCDBitmapDrawMode {
 	kDrawModeNXOR = 6,
 	kDrawModeInverted = 7,
 }
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum LCDBitmapFlip {
@@ -148,7 +147,7 @@ pub enum LCDBitmapFlip {
 	kBitmapFlippedY = 2,
 	kBitmapFlippedXY = 3,
 }
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum LCDSolidColor {
@@ -157,7 +156,7 @@ pub enum LCDSolidColor {
 	kColorClear = 2,
 	kColorXOR = 3,
 }
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum LCDLineCapStyle {
@@ -165,7 +164,7 @@ pub enum LCDLineCapStyle {
 	kLineCapStyleSquare = 1,
 	kLineCapStyleRound = 2,
 }
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum PDStringEncoding {
@@ -175,7 +174,7 @@ pub enum PDStringEncoding {
 }
 pub type LCDPattern = [u8; 16usize];
 pub type LCDColor = usize;
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum LCDPolygonFillRule {
@@ -361,8 +360,8 @@ pub struct playdate_graphics {
 	pub setBackgroundColor: ::core::option::Option<unsafe extern "C" fn(color: LCDSolidColor)>,
 	#[doc = "`void playdate->graphics->setStencil(LCDBitmap* stencil);`\n\nSets the stencil used for drawing. For a tiled stencil, use *setStencilImage()* instead. To clear the stencil, set it to *NULL*."]
 	pub setStencil: ::core::option::Option<unsafe extern "C" fn(stencil: *mut LCDBitmap)>,
-	#[doc = "`void playdate->graphics->setDrawMode(LCDBitmapDrawMode mode);`\n\nSets the mode used for drawing bitmaps. Note that text drawing uses bitmaps, so this affects how fonts are displayed as well.\n\nLCDBitmapDrawMode\n\n```cpp\ntypedef enum\n{\n\tkDrawModeCopy,\n\tkDrawModeWhiteTransparent,\n\tkDrawModeBlackTransparent,\n\tkDrawModeFillWhite,\n\tkDrawModeFillBlack,\n\tkDrawModeXOR,\n\tkDrawModeNXOR,\n\tkDrawModeInverted\n} LCDBitmapDrawMode;\n```\n\nEquivalent to [`playdate.graphics.setImageDrawMode()`](./Inside%20Playdate.html#f-graphics.setImageDrawMode) in the Lua API."]
-	pub setDrawMode: ::core::option::Option<unsafe extern "C" fn(mode: LCDBitmapDrawMode)>,
+	#[doc = "`LCDBitmapDrawMode playdate->graphics->setDrawMode(LCDBitmapDrawMode mode);`\n\nSets the mode used for drawing bitmaps. Note that text drawing uses bitmaps, so this affects how fonts are displayed as well. Returns the previous draw mode, in case you need to restore it after drawing.\n\nLCDBitmapDrawMode\n\n```cpp\ntypedef enum\n{\n\tkDrawModeCopy,\n\tkDrawModeWhiteTransparent,\n\tkDrawModeBlackTransparent,\n\tkDrawModeFillWhite,\n\tkDrawModeFillBlack,\n\tkDrawModeXOR,\n\tkDrawModeNXOR,\n\tkDrawModeInverted\n} LCDBitmapDrawMode;\n```\n\nEquivalent to [`playdate.graphics.setImageDrawMode()`](./Inside%20Playdate.html#f-graphics.setImageDrawMode) in the Lua API."]
+	pub setDrawMode: ::core::option::Option<unsafe extern "C" fn(mode: LCDBitmapDrawMode) -> LCDBitmapDrawMode>,
 	#[doc = "`void playdate->graphics->setDrawOffset(int dx, int dy);`\n\nOffsets the origin point for all drawing calls to *x*, *y* (can be negative).\n\nThis is useful, for example, for centering a \"camera\" on a sprite that is moving around a world larger than the screen.\n\nEquivalent to [`playdate.graphics.setDrawOffset()`](./Inside%20Playdate.html#f-graphics.setDrawOffset) in the Lua API."]
 	pub setDrawOffset: ::core::option::Option<unsafe extern "C" fn(dx: core::ffi::c_int, dy: core::ffi::c_int)>,
 	#[doc = "`void playdate->graphics->setClipRect(int x, int y, int width, int height);`\n\nSets the current clip rect, using world coordinates—\u{200b}that is, the given rectangle will be translated by the current drawing offset. The clip rect is cleared at the beginning of each update.\n\nEquivalent to [`playdate.graphics.setClipRect()`](./Inside%20Playdate.html#f-graphics.setClipRect) in the Lua API."]
@@ -540,7 +539,7 @@ pub struct playdate_graphics {
 		::core::option::Option<unsafe extern "C" fn(start: core::ffi::c_int, end: core::ffi::c_int)>,
 	#[doc = "`void playdate->graphics->display(void);`\n\nManually flushes the current frame buffer out to the display. This function is automatically called after each pass through the run loop, so there shouldn’t be any need to call it yourself."]
 	pub display: ::core::option::Option<unsafe extern "C" fn()>,
-	#[doc = "`void playdate->graphics->setColorToPattern(LCDColor* color,LCDBitmap* bitmap, int x, int y);`\n\nSets *color* to an 8 x 8 pattern using the given *bitmap*. *x*, *y* indicates the top left corner of the 8 x 8 pattern."]
+	#[doc = "`void playdate->graphics->setColorToPattern(LCDColor* color, LCDBitmap* bitmap, int x, int y);`\n\nSets *color* to an 8 x 8 pattern using the given *bitmap*. *x*, *y* indicates the top left corner of the 8 x 8 pattern."]
 	pub setColorToPattern: ::core::option::Option<unsafe extern "C" fn(color: *mut LCDColor,
 	                                                                   bitmap: *mut LCDBitmap,
 	                                                                   x: core::ffi::c_int,
@@ -596,6 +595,18 @@ pub struct playdate_graphics {
 	                                                                  -> *mut LCDFont>,
 	#[doc = "`int playdate->graphics->getTextTracking(void);`\n\nGets the tracking used when drawing text.\n\nEquivalent to [`playdate.graphics.font:getTracking()`](./Inside%20Playdate.html#m-graphics.font.getTracking) in the Lua API."]
 	pub getTextTracking: ::core::option::Option<unsafe extern "C" fn() -> core::ffi::c_int>,
+	#[doc = "`void playdate->graphics->setPixel(int x, int y, LCDColor color);`\n\nSets the pixel at *(x,y)* in the current drawing context (by default the screen) to the given *color*. Be aware that setting a pixel at a time is not very efficient: In our testing, more than around 20,000 calls in a tight loop will drop the frame rate below 30 fps."]
+	pub setPixel:
+		::core::option::Option<unsafe extern "C" fn(x: core::ffi::c_int, y: core::ffi::c_int, c: LCDColor)>,
+	#[doc = "`LCDSolidColor playdate->graphics->getBitmapPixel(LCDBitmap* bitmap, int x, int y);`\n\nGets the color of the pixel at *(x,y)* in the given *bitmap*. If the coordinate is outside the bounds of the bitmap, or if the bitmap has a mask and the pixel is marked transparent, the function returns `kColorClear`; otherwise the return value is `kColorWhite` or `kColorBlack`."]
+	pub getBitmapPixel: ::core::option::Option<unsafe extern "C" fn(bitmap: *mut LCDBitmap,
+	                                                                x: core::ffi::c_int,
+	                                                                y: core::ffi::c_int)
+	                                                                -> LCDSolidColor>,
+	#[doc = "`void playdate->graphics->getBitmapTableInfo(LCDBitmapTable* table, int* count, int* cellswide);`\n\nReturns the bitmap table’s image count in the *count* pointer (if not NULL) and number of cells across in the *cellswide* pointer (ditto)."]
+	pub getBitmapTableInfo: ::core::option::Option<unsafe extern "C" fn(table: *mut LCDBitmapTable,
+	                                                                    count: *mut core::ffi::c_int,
+	                                                                    width: *mut core::ffi::c_int)>,
 }
 #[test]
 fn bindgen_test_layout_playdate_graphics() {
@@ -603,7 +614,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_graphics>(),
-	           480usize,
+	           504usize,
 	           concat!("Size of: ", stringify!(playdate_graphics))
 	);
 	assert_eq!(
@@ -1211,6 +1222,36 @@ fn bindgen_test_layout_playdate_graphics() {
 		stringify!(getTextTracking)
 	)
 	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).setPixel) as usize - ptr as usize },
+	           480usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(playdate_graphics),
+		"::",
+		stringify!(setPixel)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).getBitmapPixel) as usize - ptr as usize },
+	           488usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(playdate_graphics),
+		"::",
+		stringify!(getBitmapPixel)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).getBitmapTableInfo) as usize - ptr as usize },
+	           496usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(playdate_graphics),
+		"::",
+		stringify!(getBitmapTableInfo)
+	)
+	);
 }
 impl Default for playdate_graphics {
 	fn default() -> Self {
@@ -1221,6 +1262,7 @@ impl Default for playdate_graphics {
 		}
 	}
 }
+pub type va_list = __builtin_va_list;
 impl PDButtons {
 	pub const kButtonLeft: PDButtons = PDButtons(1);
 }
@@ -1260,8 +1302,8 @@ impl ::core::ops::BitAndAssign for PDButtons {
 #[repr(transparent)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
-pub struct PDButtons(pub i32);
-#[repr(i32)]
+pub struct PDButtons(pub u32);
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum PDLanguage {
@@ -1367,7 +1409,7 @@ fn bindgen_test_layout_PDDateTime() {
 pub struct PDMenuItem {
 	_unused: [u8; 0],
 }
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum PDPeripherals {
@@ -1388,7 +1430,7 @@ pub type PDButtonCallbackFunction =
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
-pub struct playdate_sys { # [doc = "`void* playdate->system->realloc(void* ptr, size_t size)`\n\nAllocates heap space if *ptr* is NULL, else reallocates the given pointer. If *size* is zero, frees the given pointer."] pub realloc : :: core :: option :: Option < unsafe extern "C" fn (ptr : * mut core :: ffi :: c_void , size : usize) -> * mut core :: ffi :: c_void > , # [doc = "`int playdate->system->formatString(char **outstring, const char *format, ...)`\n\nCreates a formatted string and returns it via the *outstring* argument. The arguments and return value match libc’s `asprintf()`: the format string is standard `printf()` style, the string returned in *outstring* should be freed by the caller when it’s no longer in use, and the return value is the length of the formatted string."] pub formatString : :: core :: option :: Option < unsafe extern "C" fn (ret : * mut * mut core :: ffi :: c_char , fmt : * const core :: ffi :: c_char , ...) -> core :: ffi :: c_int > , # [doc = "`void playdate->system->logToConsole(const char* format, ...)`\n\nCalls the log function.\n\nEquivalent to [`print()`](./Inside%20Playdate.html#f-print) in the Lua API."] pub logToConsole : :: core :: option :: Option < unsafe extern "C" fn (fmt : * const core :: ffi :: c_char , ...) > , # [doc = "`void playdate->system->error(const char* format, ...)`\n\nCalls the log function, outputting an error in red to the console, then pauses execution."] pub error : :: core :: option :: Option < unsafe extern "C" fn (fmt : * const core :: ffi :: c_char , ...) > , # [doc = "`PDLanguage playdate->system->getLanguage(void);`\n\nReturns the current language of the system."] pub getLanguage : :: core :: option :: Option < unsafe extern "C" fn () -> PDLanguage > , # [doc = "`unsigned int playdate->system->getCurrentTimeMilliseconds(void)`\n\nReturns the number of milliseconds since…\u{200b}some arbitrary point in time. This should present a consistent timebase while a game is running, but the counter will be disabled when the device is sleeping."] pub getCurrentTimeMilliseconds : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_uint > , # [doc = "`unsigned int playdate->system->getSecondsSinceEpoch(unsigned int *milliseconds)`\n\nReturns the number of seconds (and sets *milliseconds* if not NULL) elapsed since midnight (hour 0), January 1, 2000."] pub getSecondsSinceEpoch : :: core :: option :: Option < unsafe extern "C" fn (milliseconds : * mut core :: ffi :: c_uint) -> core :: ffi :: c_uint > , # [doc = "`void playdate->system->drawFPS(int x, int y)`\n\nCalculates the current frames per second and draws that value at *x, y*."] pub drawFPS : :: core :: option :: Option < unsafe extern "C" fn (x : core :: ffi :: c_int , y : core :: ffi :: c_int) > , # [doc = "`void playdate->system->setUpdateCallback(PDCallbackFunction* update, void* userdata)`\n\nPDCallbackFunction\n\n```cpp\nint PDCallbackFunction(void* userdata);\n```\n\nReplaces the default Lua run loop function with a custom update function. The update function should return a non-zero number to tell the system to update the display, or zero if update isn’t needed."] pub setUpdateCallback : :: core :: option :: Option < unsafe extern "C" fn (update : PDCallbackFunction , userdata : * mut core :: ffi :: c_void) > , # [doc = "`void playdate->system->getButtonState(PDButtons* current, PDButtons* pushed, PDButtons* released)`\n\nSets the value pointed to by *current* to a bitmask indicating which buttons are currently down. *pushed* and *released* reflect which buttons were pushed or released over the previous update cycle—at the nominal frame rate of 50 ms, fast button presses can be missed if you just poll the instantaneous state."] pub getButtonState : :: core :: option :: Option < unsafe extern "C" fn (current : * mut PDButtons , pushed : * mut PDButtons , released : * mut PDButtons) > , # [doc = "`void playdate->system->setPeripheralsEnabled(PDPeripherals mask)`\n\nBy default, the accelerometer is disabled to save (a small amount of) power. To use a peripheral, it must first be enabled via this function. Accelerometer data is not available until the next update cycle after it’s enabled.\n\nPDPeripherals\n\n```cpp\nkNone\nkAccelerometer\n```"] pub setPeripheralsEnabled : :: core :: option :: Option < unsafe extern "C" fn (mask : PDPeripherals) > , # [doc = "`void playdate->system->getAccelerometer(float* outx, float* outy, float* outz)`\n\nReturns the last-read accelerometer data."] pub getAccelerometer : :: core :: option :: Option < unsafe extern "C" fn (outx : * mut core :: ffi :: c_float , outy : * mut core :: ffi :: c_float , outz : * mut core :: ffi :: c_float) > , # [doc = "`float playdate->system->getCrankChange(void)`\n\nReturns the angle change of the crank since the last time this function was called. Negative values are anti-clockwise."] pub getCrankChange : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`float playdate->system->getCrankAngle(void)`\n\nReturns the current position of the crank, in the range 0-360. Zero is pointing up, and the value increases as the crank moves clockwise, as viewed from the right side of the device."] pub getCrankAngle : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`int playdate->system->isCrankDocked(void)`\n\nReturns 1 or 0 indicating whether or not the crank is folded into the unit."] pub isCrankDocked : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`int playdate->system->setCrankSoundsDisabled(int disable)`\n\nThe function returns the previous value for this setting."] pub setCrankSoundsDisabled : :: core :: option :: Option < unsafe extern "C" fn (flag : core :: ffi :: c_int) -> core :: ffi :: c_int > , # [doc = "`int playdate->system->getFlipped()`\n\nReturns 1 if the global \"flipped\" system setting is set, otherwise 0."] pub getFlipped : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`void playdate->system->setAutoLockDisabled(int disable)`\n\nDisables or enables the 3 minute auto lock feature. When called, the timer is reset to 3 minutes."] pub setAutoLockDisabled : :: core :: option :: Option < unsafe extern "C" fn (disable : core :: ffi :: c_int) > , # [doc = "`void playdate->system->setMenuImage(LCDBitmap* bitmap, int xOffset);`\n\nA game can optionally provide an image to be displayed alongside the system menu. *bitmap* must be a 400x240 LCDBitmap. All important content should be in the left half of the image in an area 200 pixels wide, as the menu will obscure the rest. The right side of the image will be visible briefly as the menu animates in and out.\n\nOptionally, a non-zero *xoffset*, can be provided. This must be a number between 0 and 200 and will cause the menu image to animate to a position offset left by xoffset pixels as the menu is animated in.\n\nThis function could be called in response to the kEventPause *event* in your implementation of [eventHandler()](#_eventHandler)."] pub setMenuImage : :: core :: option :: Option < unsafe extern "C" fn (bitmap : * mut LCDBitmap , xOffset : core :: ffi :: c_int) > , # [doc = "`PDMenuItem* playdate->system->addMenuItem(const char* title, PDMenuItemCallbackFunction* callback, void* userdata)`\n\n*title* will be the title displayed by the menu item.\n\nAdds a new menu item to the System Menu. When invoked by the user, this menu item will:\n\n1. Invoke your *callback* function.\n\n2. Hide the System Menu.\n\n3. Unpause your game and call [eventHandler()](#_eventHandler) with the kEventResume *event*.\n\nYour game can then present an options interface to the player, or take other action, in whatever manner you choose.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."] pub addMenuItem : :: core :: option :: Option < unsafe extern "C" fn (title : * const core :: ffi :: c_char , callback : PDMenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut PDMenuItem > , # [doc = "`PDMenuItem* playdate->system->addCheckmarkMenuItem(const char* title, int value, PDMenuItemCallbackFunction* callback, void* userdata)`\n\nAdds a new menu item that can be checked or unchecked by the player.\n\n*title* will be the title displayed by the menu item.\n\n*value* should be 0 for unchecked, 1 for checked.\n\nIf this menu item is interacted with while the system menu is open, *callback* will be called when the menu is closed.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."] pub addCheckmarkMenuItem : :: core :: option :: Option < unsafe extern "C" fn (title : * const core :: ffi :: c_char , value : core :: ffi :: c_int , callback : PDMenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut PDMenuItem > , # [doc = "`PDMenuItem* playdate->system->addOptionsMenuItem(const char* title, const char** options, int optionsCount, PDMenuItemCallbackFunction* callback, void* userdata)`\n\nAdds a new menu item that allows the player to cycle through a set of options.\n\n*title* will be the title displayed by the menu item.\n\n*options* should be an array of strings representing the states this menu item can cycle through. Due to limited horizontal space, the option strings and title should be kept short for this type of menu item.\n\n*optionsCount* should be the number of items contained in *options*.\n\nIf this menu item is interacted with while the system menu is open, *callback* will be called when the menu is closed.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."] pub addOptionsMenuItem : :: core :: option :: Option < unsafe extern "C" fn (title : * const core :: ffi :: c_char , optionTitles : * mut * const core :: ffi :: c_char , optionsCount : core :: ffi :: c_int , f : PDMenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut PDMenuItem > , # [doc = "`void playdate->system->removeAllMenuItems()`\n\nRemoves all custom menu items from the system menu."] pub removeAllMenuItems : :: core :: option :: Option < unsafe extern "C" fn () > , # [doc = "`void playdate->system->removeMenuItem(PDMenuItem *menuItem)`\n\nRemoves the menu item from the system menu."] pub removeMenuItem : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) > , # [doc = "`int playdate->system->getMenuItemValue(PDMenuItem *menuItem)`"] pub getMenuItemValue : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) -> core :: ffi :: c_int > , # [doc = "`void playdate->system->setMenuItemValue(PDMenuItem *menuItem, int value)`\n\nGets or sets the integer value of the menu item.\n\nFor checkmark menu items, 1 means checked, 0 unchecked. For option menu items, the value indicates the array index of the currently selected option."] pub setMenuItemValue : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem , value : core :: ffi :: c_int) > , # [doc = "`const char* playdate->system->getMenuItemTitle(PDMenuItem *menuItem)`"] pub getMenuItemTitle : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) -> * const core :: ffi :: c_char > , # [doc = "`void playdate->system->setMenuItemTitle(PDMenuItem *menuItem, const char* title)`\n\nGets or sets the display title of the menu item."] pub setMenuItemTitle : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem , title : * const core :: ffi :: c_char) > , # [doc = "`void* playdate->system->getMenuItemUserdata(PDMenuItem *menuItem)`"] pub getMenuItemUserdata : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) -> * mut core :: ffi :: c_void > , # [doc = "`void playdate->system->setMenuItemUserdata(PDMenuItem *menuItem, void* userdata)`\n\nGets or sets the userdata value associated with this menu item."] pub setMenuItemUserdata : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem , ud : * mut core :: ffi :: c_void) > , # [doc = "`int playdate->system->getReduceFlashing()`\n\nReturns 1 if the global \"reduce flashing\" system setting is set, otherwise 0."] pub getReduceFlashing : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`float playdate->system->getElapsedTime()`\n\nReturns the number of seconds since `playdate.resetElapsedTime()` was called. The value is a floating-point number with microsecond accuracy."] pub getElapsedTime : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`void playdate->system->resetElapsedTime(void)`\n\nResets the high-resolution timer."] pub resetElapsedTime : :: core :: option :: Option < unsafe extern "C" fn () > , # [doc = "`float playdate->system->getBatteryPercentage()`\n\nReturns a value from 0-100 denoting the current level of battery charge. 0 = empty; 100 = full."] pub getBatteryPercentage : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`float playdate->system->getBatteryVoltage()`\n\nReturns the battery’s current voltage level."] pub getBatteryVoltage : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`int32_t playdate->system->getTimezoneOffset()`\n\nReturns the system timezone offset from GMT, in seconds."] pub getTimezoneOffset : :: core :: option :: Option < unsafe extern "C" fn () -> i32 > , # [doc = "`int playdate->system->shouldDisplay24HourTime()`\n\nReturns 1 if the user has set the 24-Hour Time preference in the Settings program."] pub shouldDisplay24HourTime : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`void playdate->system->convertEpochToDateTime(uint32_t epoch, struct PDDateTime* datetime)`\n\nConverts the given epoch time to a PDDateTime."] pub convertEpochToDateTime : :: core :: option :: Option < unsafe extern "C" fn (epoch : u32 , datetime : * mut PDDateTime) > , # [doc = "`uint32_t playdate->system->convertDateTimeToEpoch(struct PDDateTime* datetime)`\n\nConverts the given PDDateTime to an epoch time."] pub convertDateTimeToEpoch : :: core :: option :: Option < unsafe extern "C" fn (datetime : * mut PDDateTime) -> u32 > , # [doc = "`float playdate->system->clearICache()`\n\nFlush the CPU instruction cache, on the very unlikely chance you’re modifying instruction code on the fly. (If you don’t know what I’m talking about, you don’t need this. :smile:)"] pub clearICache : :: core :: option :: Option < unsafe extern "C" fn () > , pub setButtonCallback : :: core :: option :: Option < unsafe extern "C" fn (cb : PDButtonCallbackFunction , buttonud : * mut core :: ffi :: c_void , queuesize : core :: ffi :: c_int) > , # [doc = "`void playdate->system->setSerialMessageCallback(void (*callback)(const char* data));`\n\nProvides a callback to receive messages sent to the device over the serial port using the `msg` command. If no device is connected, you can send these messages to a game in the simulator by entering `!msg <message>` in the Lua console."] pub setSerialMessageCallback : :: core :: option :: Option < unsafe extern "C" fn (callback : :: core :: option :: Option < unsafe extern "C" fn (data : * const core :: ffi :: c_char) >) > , # [doc = "`int playdate->system->vaFormatString(char **ret, const char *format, va_list args)`\n\nAllocates and formats a string using a variadic `va_list` argument, in the style of `vasprintf()`. The string returned via *ret* should be freed by the caller when it is no longer in use. The return value from the function is the length of the formatted string."] pub vaFormatString : :: core :: option :: Option < unsafe extern "C" fn (outstr : * mut * mut core :: ffi :: c_char , fmt : * const core :: ffi :: c_char , args : va_list) -> core :: ffi :: c_int > , # [doc = "`int playdate->system->parseString(const char *str, const char *format, ...)`\n\nLike libc `sscanf()`, parses a string according to a format string and places the values into pointers passed in after the format. The return value is the number of items matched."] pub parseString : :: core :: option :: Option < unsafe extern "C" fn (str_ : * const core :: ffi :: c_char , format : * const core :: ffi :: c_char , ...) -> core :: ffi :: c_int > , }
+pub struct playdate_sys { # [doc = "`void* playdate->system->realloc(void* ptr, size_t size)`\n\nAllocates heap space if *ptr* is NULL, else reallocates the given pointer. If *size* is zero, frees the given pointer."] pub realloc : :: core :: option :: Option < unsafe extern "C" fn (ptr : * mut core :: ffi :: c_void , size : usize) -> * mut core :: ffi :: c_void > , # [doc = "`int playdate->system->formatString(char **outstring, const char *format, ...)`\n\nCreates a formatted string and returns it via the *outstring* argument. The arguments and return value match libc’s `asprintf()`: the format string is standard `printf()` style, the string returned in *outstring* should be freed by the caller when it’s no longer in use, and the return value is the length of the formatted string."] pub formatString : :: core :: option :: Option < unsafe extern "C" fn (ret : * mut * mut core :: ffi :: c_char , fmt : * const core :: ffi :: c_char , ...) -> core :: ffi :: c_int > , # [doc = "`void playdate->system->logToConsole(const char* format, ...)`\n\nCalls the log function.\n\nEquivalent to [`print()`](./Inside%20Playdate.html#f-print) in the Lua API."] pub logToConsole : :: core :: option :: Option < unsafe extern "C" fn (fmt : * const core :: ffi :: c_char , ...) > , # [doc = "`void playdate->system->error(const char* format, ...)`\n\nCalls the log function, outputting an error in red to the console, then pauses execution."] pub error : :: core :: option :: Option < unsafe extern "C" fn (fmt : * const core :: ffi :: c_char , ...) > , # [doc = "`PDLanguage playdate->system->getLanguage(void);`\n\nReturns the current language of the system."] pub getLanguage : :: core :: option :: Option < unsafe extern "C" fn () -> PDLanguage > , # [doc = "`unsigned int playdate->system->getCurrentTimeMilliseconds(void)`\n\nReturns the number of milliseconds since…\u{200b}some arbitrary point in time. This should present a consistent timebase while a game is running, but the counter will be disabled when the device is sleeping."] pub getCurrentTimeMilliseconds : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_uint > , # [doc = "`unsigned int playdate->system->getSecondsSinceEpoch(unsigned int *milliseconds)`\n\nReturns the number of seconds (and sets *milliseconds* if not NULL) elapsed since midnight (hour 0), January 1, 2000."] pub getSecondsSinceEpoch : :: core :: option :: Option < unsafe extern "C" fn (milliseconds : * mut core :: ffi :: c_uint) -> core :: ffi :: c_uint > , # [doc = "`void playdate->system->drawFPS(int x, int y)`\n\nCalculates the current frames per second and draws that value at *x, y*."] pub drawFPS : :: core :: option :: Option < unsafe extern "C" fn (x : core :: ffi :: c_int , y : core :: ffi :: c_int) > , # [doc = "`void playdate->system->setUpdateCallback(PDCallbackFunction* update, void* userdata)`\n\nPDCallbackFunction\n\n```cpp\nint PDCallbackFunction(void* userdata);\n```\n\nReplaces the default Lua run loop function with a custom update function. The update function should return a non-zero number to tell the system to update the display, or zero if update isn’t needed."] pub setUpdateCallback : :: core :: option :: Option < unsafe extern "C" fn (update : PDCallbackFunction , userdata : * mut core :: ffi :: c_void) > , # [doc = "`void playdate->system->getButtonState(PDButtons* current, PDButtons* pushed, PDButtons* released)`\n\nSets the value pointed to by *current* to a bitmask indicating which buttons are currently down. *pushed* and *released* reflect which buttons were pushed or released over the previous update cycle—at the nominal frame rate of 50 ms, fast button presses can be missed if you just poll the instantaneous state.\n\nPDButton\n\n```cpp\nkButtonLeft\nkButtonRight\nkButtonUp\nkButtonDown\nkButtonB\nkButtonA\n```"] pub getButtonState : :: core :: option :: Option < unsafe extern "C" fn (current : * mut PDButtons , pushed : * mut PDButtons , released : * mut PDButtons) > , # [doc = "`void playdate->system->setPeripheralsEnabled(PDPeripherals mask)`\n\nBy default, the accelerometer is disabled to save (a small amount of) power. To use a peripheral, it must first be enabled via this function. Accelerometer data is not available until the next update cycle after it’s enabled.\n\nPDPeripherals\n\n```cpp\nkNone\nkAccelerometer\n```"] pub setPeripheralsEnabled : :: core :: option :: Option < unsafe extern "C" fn (mask : PDPeripherals) > , # [doc = "`void playdate->system->getAccelerometer(float* outx, float* outy, float* outz)`\n\nReturns the last-read accelerometer data."] pub getAccelerometer : :: core :: option :: Option < unsafe extern "C" fn (outx : * mut core :: ffi :: c_float , outy : * mut core :: ffi :: c_float , outz : * mut core :: ffi :: c_float) > , # [doc = "`float playdate->system->getCrankChange(void)`\n\nReturns the angle change of the crank since the last time this function was called. Negative values are anti-clockwise."] pub getCrankChange : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`float playdate->system->getCrankAngle(void)`\n\nReturns the current position of the crank, in the range 0-360. Zero is pointing up, and the value increases as the crank moves clockwise, as viewed from the right side of the device."] pub getCrankAngle : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`int playdate->system->isCrankDocked(void)`\n\nReturns 1 or 0 indicating whether or not the crank is folded into the unit."] pub isCrankDocked : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`int playdate->system->setCrankSoundsDisabled(int disable)`\n\nThe function returns the previous value for this setting."] pub setCrankSoundsDisabled : :: core :: option :: Option < unsafe extern "C" fn (flag : core :: ffi :: c_int) -> core :: ffi :: c_int > , # [doc = "`int playdate->system->getFlipped()`\n\nReturns 1 if the global \"flipped\" system setting is set, otherwise 0."] pub getFlipped : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`void playdate->system->setAutoLockDisabled(int disable)`\n\nDisables or enables the 3 minute auto lock feature. When called, the timer is reset to 3 minutes."] pub setAutoLockDisabled : :: core :: option :: Option < unsafe extern "C" fn (disable : core :: ffi :: c_int) > , # [doc = "`void playdate->system->setMenuImage(LCDBitmap* bitmap, int xOffset);`\n\nA game can optionally provide an image to be displayed alongside the system menu. *bitmap* must be a 400x240 LCDBitmap. All important content should be in the left half of the image in an area 200 pixels wide, as the menu will obscure the rest. The right side of the image will be visible briefly as the menu animates in and out.\n\nOptionally, a non-zero *xoffset*, can be provided. This must be a number between 0 and 200 and will cause the menu image to animate to a position offset left by xoffset pixels as the menu is animated in.\n\nThis function could be called in response to the kEventPause *event* in your implementation of [eventHandler()](#_eventHandler)."] pub setMenuImage : :: core :: option :: Option < unsafe extern "C" fn (bitmap : * mut LCDBitmap , xOffset : core :: ffi :: c_int) > , # [doc = "`PDMenuItem* playdate->system->addMenuItem(const char* title, PDMenuItemCallbackFunction* callback, void* userdata)`\n\n*title* will be the title displayed by the menu item.\n\nAdds a new menu item to the System Menu. When invoked by the user, this menu item will:\n\n1. Invoke your *callback* function.\n\n2. Hide the System Menu.\n\n3. Unpause your game and call [eventHandler()](#_eventHandler) with the kEventResume *event*.\n\nYour game can then present an options interface to the player, or take other action, in whatever manner you choose.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."] pub addMenuItem : :: core :: option :: Option < unsafe extern "C" fn (title : * const core :: ffi :: c_char , callback : PDMenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut PDMenuItem > , # [doc = "`PDMenuItem* playdate->system->addCheckmarkMenuItem(const char* title, int value, PDMenuItemCallbackFunction* callback, void* userdata)`\n\nAdds a new menu item that can be checked or unchecked by the player.\n\n*title* will be the title displayed by the menu item.\n\n*value* should be 0 for unchecked, 1 for checked.\n\nIf this menu item is interacted with while the system menu is open, *callback* will be called when the menu is closed.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."] pub addCheckmarkMenuItem : :: core :: option :: Option < unsafe extern "C" fn (title : * const core :: ffi :: c_char , value : core :: ffi :: c_int , callback : PDMenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut PDMenuItem > , # [doc = "`PDMenuItem* playdate->system->addOptionsMenuItem(const char* title, const char** options, int optionsCount, PDMenuItemCallbackFunction* callback, void* userdata)`\n\nAdds a new menu item that allows the player to cycle through a set of options.\n\n*title* will be the title displayed by the menu item.\n\n*options* should be an array of strings representing the states this menu item can cycle through. Due to limited horizontal space, the option strings and title should be kept short for this type of menu item.\n\n*optionsCount* should be the number of items contained in *options*.\n\nIf this menu item is interacted with while the system menu is open, *callback* will be called when the menu is closed.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."] pub addOptionsMenuItem : :: core :: option :: Option < unsafe extern "C" fn (title : * const core :: ffi :: c_char , optionTitles : * mut * const core :: ffi :: c_char , optionsCount : core :: ffi :: c_int , f : PDMenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut PDMenuItem > , # [doc = "`void playdate->system->removeAllMenuItems()`\n\nRemoves all custom menu items from the system menu."] pub removeAllMenuItems : :: core :: option :: Option < unsafe extern "C" fn () > , # [doc = "`void playdate->system->removeMenuItem(PDMenuItem *menuItem)`\n\nRemoves the menu item from the system menu."] pub removeMenuItem : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) > , # [doc = "`int playdate->system->getMenuItemValue(PDMenuItem *menuItem)`"] pub getMenuItemValue : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) -> core :: ffi :: c_int > , # [doc = "`void playdate->system->setMenuItemValue(PDMenuItem *menuItem, int value)`\n\nGets or sets the integer value of the menu item.\n\nFor checkmark menu items, 1 means checked, 0 unchecked. For option menu items, the value indicates the array index of the currently selected option."] pub setMenuItemValue : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem , value : core :: ffi :: c_int) > , # [doc = "`const char* playdate->system->getMenuItemTitle(PDMenuItem *menuItem)`"] pub getMenuItemTitle : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) -> * const core :: ffi :: c_char > , # [doc = "`void playdate->system->setMenuItemTitle(PDMenuItem *menuItem, const char* title)`\n\nGets or sets the display title of the menu item."] pub setMenuItemTitle : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem , title : * const core :: ffi :: c_char) > , # [doc = "`void* playdate->system->getMenuItemUserdata(PDMenuItem *menuItem)`"] pub getMenuItemUserdata : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) -> * mut core :: ffi :: c_void > , # [doc = "`void playdate->system->setMenuItemUserdata(PDMenuItem *menuItem, void* userdata)`\n\nGets or sets the userdata value associated with this menu item."] pub setMenuItemUserdata : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem , ud : * mut core :: ffi :: c_void) > , # [doc = "`int playdate->system->getReduceFlashing()`\n\nReturns 1 if the global \"reduce flashing\" system setting is set, otherwise 0."] pub getReduceFlashing : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`float playdate->system->getElapsedTime()`\n\nReturns the number of seconds since `playdate.resetElapsedTime()` was called. The value is a floating-point number with microsecond accuracy."] pub getElapsedTime : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`void playdate->system->resetElapsedTime(void)`\n\nResets the high-resolution timer."] pub resetElapsedTime : :: core :: option :: Option < unsafe extern "C" fn () > , # [doc = "`float playdate->system->getBatteryPercentage()`\n\nReturns a value from 0-100 denoting the current level of battery charge. 0 = empty; 100 = full."] pub getBatteryPercentage : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`float playdate->system->getBatteryVoltage()`\n\nReturns the battery’s current voltage level."] pub getBatteryVoltage : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`int32_t playdate->system->getTimezoneOffset()`\n\nReturns the system timezone offset from GMT, in seconds."] pub getTimezoneOffset : :: core :: option :: Option < unsafe extern "C" fn () -> i32 > , # [doc = "`int playdate->system->shouldDisplay24HourTime()`\n\nReturns 1 if the user has set the 24-Hour Time preference in the Settings program."] pub shouldDisplay24HourTime : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`void playdate->system->convertEpochToDateTime(uint32_t epoch, struct PDDateTime* datetime)`\n\nConverts the given epoch time to a PDDateTime."] pub convertEpochToDateTime : :: core :: option :: Option < unsafe extern "C" fn (epoch : u32 , datetime : * mut PDDateTime) > , # [doc = "`uint32_t playdate->system->convertDateTimeToEpoch(struct PDDateTime* datetime)`\n\nConverts the given PDDateTime to an epoch time."] pub convertDateTimeToEpoch : :: core :: option :: Option < unsafe extern "C" fn (datetime : * mut PDDateTime) -> u32 > , # [doc = "`float playdate->system->clearICache()`\n\nFlush the CPU instruction cache, on the very unlikely chance you’re modifying instruction code on the fly. (If you don’t know what I’m talking about, you don’t need this. :smile:)"] pub clearICache : :: core :: option :: Option < unsafe extern "C" fn () > , # [doc = "`void playdate->system->setButtonCallback(PDButtonCallbackFunction* cb, void* userdata, int queuesize)`\n\nAs an alternative to polling for button presses using `getButtonState()`, this function allows a callback function to be set. The function is called for each button up/down event (possibly multiple events on the same button) that occurred during the previous update cycle. At the default 30 FPS, a queue size of 5 should be adequate. At lower frame rates/longer frame times, the queue size should be extended until all button presses are caught. The function should return 0 on success or a non-zero value to signal an error.\n\nPDButtonCallbackFunction\n\n```cpp\ntypedef int PDButtonCallbackFunction(PDButtons button, int down, uint32_t when, void* userdata);\n```"] pub setButtonCallback : :: core :: option :: Option < unsafe extern "C" fn (cb : PDButtonCallbackFunction , buttonud : * mut core :: ffi :: c_void , queuesize : core :: ffi :: c_int) > , # [doc = "`void playdate->system->setSerialMessageCallback(void (*callback)(const char* data));`\n\nProvides a callback to receive messages sent to the device over the serial port using the `msg` command. If no device is connected, you can send these messages to a game in the simulator by entering `!msg <message>` in the Lua console."] pub setSerialMessageCallback : :: core :: option :: Option < unsafe extern "C" fn (callback : :: core :: option :: Option < unsafe extern "C" fn (data : * const core :: ffi :: c_char) >) > , # [doc = "`int playdate->system->vaFormatString(char **ret, const char *format, va_list args)`\n\nAllocates and formats a string using a variadic `va_list` argument, in the style of `vasprintf()`. The string returned via *ret* should be freed by the caller when it is no longer in use. The return value from the function is the length of the formatted string."] pub vaFormatString : :: core :: option :: Option < unsafe extern "C" fn (outstr : * mut * mut core :: ffi :: c_char , fmt : * const core :: ffi :: c_char , args : * mut va_list) -> core :: ffi :: c_int > , # [doc = "`int playdate->system->parseString(const char *str, const char *format, ...)`\n\nLike libc `sscanf()`, parses a string according to a format string and places the values into pointers passed in after the format. The return value is the number of items matched."] pub parseString : :: core :: option :: Option < unsafe extern "C" fn (str_ : * const core :: ffi :: c_char , format : * const core :: ffi :: c_char , ...) -> core :: ffi :: c_int > , }
 #[test]
 fn bindgen_test_layout_playdate_sys() {
 	const UNINIT: ::core::mem::MaybeUninit<playdate_sys> = ::core::mem::MaybeUninit::uninit();
@@ -1858,7 +1900,7 @@ pub struct LuaUDObject {
 pub struct LCDSprite {
 	_unused: [u8; 0],
 }
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum l_valtype {
@@ -1907,7 +1949,7 @@ impl Default for lua_reg {
 		}
 	}
 }
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum LuaType {
@@ -2458,7 +2500,7 @@ fn bindgen_test_layout_playdate_lua() {
 	)
 	);
 }
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum json_value_type {
@@ -3178,7 +3220,7 @@ impl ::core::ops::BitAndAssign for FileOptions {
 #[repr(transparent)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
-pub struct FileOptions(pub i32);
+pub struct FileOptions(pub u32);
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
@@ -3421,7 +3463,7 @@ fn bindgen_test_layout_playdate_file() {
 	)
 	);
 }
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum SpriteCollisionResponseType {
@@ -4626,7 +4668,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	)
 	);
 }
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum SoundFormat {
@@ -4989,18 +5031,19 @@ pub struct playdate_sound_sample {
 	                                                                -> core::ffi::c_int>,
 	#[doc = "`AudioSample* playdate->sound->sample->load(const char* path)`\n\nAllocates and returns a new AudioSample, with the sound data loaded in memory. If there is no file at *path*, the function returns null."]
 	pub load: ::core::option::Option<unsafe extern "C" fn(path: *const core::ffi::c_char) -> *mut AudioSample>,
-	#[doc = "`AudioSample* playdate->sound->sample->newSampleFromData(uint8_t* data, SoundFormat format, uint32_t sampleRate, int byteCount)`\n\nReturns a new AudioSample referencing the given audio data. The sample keeps a pointer to the data instead of copying it, so the data must remain valid while the sample is active. *format* is one of the following values:\n\nSoundFormat\n\n```cpp\ntypedef enum\n{\n\tkSound8bitMono = 0,\n\tkSound8bitStereo = 1,\n\tkSound16bitMono = 2,\n\tkSound16bitStereo = 3,\n\tkSoundADPCMMono = 4,\n\tkSoundADPCMStereo = 5\n} SoundFormat;\n```\n\n`pd_api_sound.h` also provides some helper macros and functions:\n\n```cpp\n#define SoundFormatIsStereo(f) ((f)&1)\n#define SoundFormatIs16bit(f) ((f)>=kSound16bitMono)\nstatic inline uint32_t SoundFormat_bytesPerFrame(SoundFormat fmt);\n```"]
+	#[doc = "`AudioSample* playdate->sound->sample->newSampleFromData(uint8_t* data, SoundFormat format, uint32_t sampleRate, int byteCount, int shouldFreeData)`\n\nReturns a new AudioSample referencing the given audio data. If *shouldFreeData* is set, *data* is freed when the sample object is [freed](#f-sound.sample.freeSample). The sample keeps a pointer to the data instead of copying it, so the data must remain valid while the sample is active. *format* is one of the following values:\n\nSoundFormat\n\n```cpp\ntypedef enum\n{\n\tkSound8bitMono = 0,\n\tkSound8bitStereo = 1,\n\tkSound16bitMono = 2,\n\tkSound16bitStereo = 3,\n\tkSoundADPCMMono = 4,\n\tkSoundADPCMStereo = 5\n} SoundFormat;\n```\n\n`pd_api_sound.h` also provides some helper macros and functions:\n\n```cpp\n#define SoundFormatIsStereo(f) ((f)&1)\n#define SoundFormatIs16bit(f) ((f)>=kSound16bitMono)\nstatic inline uint32_t SoundFormat_bytesPerFrame(SoundFormat fmt);\n```"]
 	pub newSampleFromData: ::core::option::Option<unsafe extern "C" fn(data: *mut u8,
 	                                                                   format: SoundFormat,
 	                                                                   sampleRate: u32,
-	                                                                   byteCount: core::ffi::c_int)
+	                                                                   byteCount: core::ffi::c_int,
+	                                                                   shouldFreeData: core::ffi::c_int)
 	                                                                   -> *mut AudioSample>,
 	pub getData: ::core::option::Option<unsafe extern "C" fn(sample: *mut AudioSample,
 	                                                         data: *mut *mut u8,
 	                                                         format: *mut SoundFormat,
 	                                                         sampleRate: *mut u32,
 	                                                         bytelength: *mut u32)>,
-	#[doc = "`void playdate->sound->sample->freeSample(AudioSample* sample)`\n\nFrees the given *sample*."]
+	#[doc = "`void playdate->sound->sample->freeSample(AudioSample* sample)`\n\nFrees the given *sample*. If the sample was created with [playdate→sound→sample→newSampleFromData()](#f-sound.sample.newSampleFromData) and the *shouldFreeData* flag was set, the sample’s source data is also freed."]
 	pub freeSample: ::core::option::Option<unsafe extern "C" fn(sample: *mut AudioSample)>,
 	#[doc = "`float playdate->sound->sample->getLength(AudioSample* sample)`\n\nReturns the length, in seconds, of *sample*."]
 	pub getLength: ::core::option::Option<unsafe extern "C" fn(sample: *mut AudioSample) -> core::ffi::c_float>,
@@ -5451,7 +5494,7 @@ fn bindgen_test_layout_playdate_sound_signal() {
 	)
 	);
 }
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum LFOType {
@@ -5813,7 +5856,7 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	)
 	);
 }
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum SoundWaveform {
@@ -6857,8 +6900,8 @@ pub struct playdate_sound_sequence {
 	                                                          loopstart: core::ffi::c_int,
 	                                                          loopend: core::ffi::c_int,
 	                                                          loops: core::ffi::c_int)>,
-	#[doc = "`int playdate->sound->sequence->getTempo(SoundSequence* sequence)`"]
-	pub getTempo: ::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence) -> core::ffi::c_int>,
+	pub getTempo_deprecated:
+		::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence) -> core::ffi::c_int>,
 	#[doc = "`void playdate->sound->sequence->setTempo(SoundSequence* sequence, float stepsPerSecond)`\n\nSets or gets the tempo of the sequence, in steps per second."]
 	pub setTempo:
 		::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence, stepsPerSecond: core::ffi::c_float)>,
@@ -6895,6 +6938,8 @@ pub struct playdate_sound_sequence {
 	                                                                step: core::ffi::c_int,
 	                                                                timeOffset: core::ffi::c_int,
 	                                                                playNotes: core::ffi::c_int)>,
+	#[doc = "`float playdate->sound->sequence->getTempo(SoundSequence* sequence)`"]
+	pub getTempo: ::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence) -> core::ffi::c_float>,
 }
 #[test]
 fn bindgen_test_layout_playdate_sound_sequence() {
@@ -6902,7 +6947,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_sequence>(),
-	           152usize,
+	           160usize,
 	           concat!("Size of: ", stringify!(playdate_sound_sequence))
 	);
 	assert_eq!(
@@ -6971,13 +7016,13 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	)
 	);
 	assert_eq!(
-	           unsafe { ::core::ptr::addr_of!((*ptr).getTempo) as usize - ptr as usize },
+	           unsafe { ::core::ptr::addr_of!((*ptr).getTempo_deprecated) as usize - ptr as usize },
 	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
 		"::",
-		stringify!(getTempo)
+		stringify!(getTempo_deprecated)
 	)
 	);
 	assert_eq!(
@@ -7100,6 +7145,16 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 		stringify!(setCurrentStep)
 	)
 	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).getTempo) as usize - ptr as usize },
+	           152usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(playdate_sound_sequence),
+		"::",
+		stringify!(getTempo)
+	)
+	);
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -7107,7 +7162,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 pub struct TwoPoleFilter {
 	_unused: [u8; 0],
 }
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum TwoPoleFilterType {
@@ -7597,7 +7652,7 @@ pub struct playdate_sound_effect_delayline {
 	                                                              -> *mut DelayLine>,
 	#[doc = "`void playdate->sound->effect->delayline->freeDelayLine(DelayLine* delay)`\n\nFrees the delay line."]
 	pub freeDelayLine: ::core::option::Option<unsafe extern "C" fn(filter: *mut DelayLine)>,
-	#[doc = "`void playdate->sound->effect->delayline->setLength(DelayLine* d, int frames)`\n\nChanges the length of the delay line, clearing its contents."]
+	#[doc = "`void playdate->sound->effect->delayline->setLength(DelayLine* d, int frames)`\n\nChanges the length of the delay line, clearing its contents. This function reallocates the audio buffer, so it is not safe to call while the delay line is in use."]
 	pub setLength: ::core::option::Option<unsafe extern "C" fn(d: *mut DelayLine, frames: core::ffi::c_int)>,
 	#[doc = "`void playdate->sound->effect->delayline->setFeedback(DelayLine* d, float fb)`\n\nSets the feedback level of the delay line."]
 	pub setFeedback: ::core::option::Option<unsafe extern "C" fn(d: *mut DelayLine, fb: core::ffi::c_float)>,
@@ -8313,7 +8368,7 @@ pub type RecordCallback = ::core::option::Option<unsafe extern "C" fn(context: *
                                                                       buffer: *mut i16,
                                                                       length: core::ffi::c_int)
                                                                       -> core::ffi::c_int>;
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum MicSource {
@@ -9197,7 +9252,7 @@ impl Default for PlaydateAPI {
 		}
 	}
 }
-#[repr(i32)]
+#[repr(u32)]
 #[must_use]
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum PDSystemEvent {
@@ -9211,4 +9266,78 @@ pub enum PDSystemEvent {
 	kEventKeyPressed = 7,
 	kEventKeyReleased = 8,
 	kEventLowPower = 9,
+}
+pub type __builtin_va_list = [__va_list_tag; 1usize];
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[must_use]
+pub struct __va_list_tag {
+	pub gp_offset: core::ffi::c_uint,
+	pub fp_offset: core::ffi::c_uint,
+	pub overflow_arg_area: *mut core::ffi::c_void,
+	pub reg_save_area: *mut core::ffi::c_void,
+}
+#[test]
+fn bindgen_test_layout___va_list_tag() {
+	const UNINIT: ::core::mem::MaybeUninit<__va_list_tag> = ::core::mem::MaybeUninit::uninit();
+	let ptr = UNINIT.as_ptr();
+	assert_eq!(
+	           ::core::mem::size_of::<__va_list_tag>(),
+	           24usize,
+	           concat!("Size of: ", stringify!(__va_list_tag))
+	);
+	assert_eq!(
+	           ::core::mem::align_of::<__va_list_tag>(),
+	           8usize,
+	           concat!("Alignment of ", stringify!(__va_list_tag))
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).gp_offset) as usize - ptr as usize },
+	           0usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(__va_list_tag),
+		"::",
+		stringify!(gp_offset)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).fp_offset) as usize - ptr as usize },
+	           4usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(__va_list_tag),
+		"::",
+		stringify!(fp_offset)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).overflow_arg_area) as usize - ptr as usize },
+	           8usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(__va_list_tag),
+		"::",
+		stringify!(overflow_arg_area)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).reg_save_area) as usize - ptr as usize },
+	           16usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(__va_list_tag),
+		"::",
+		stringify!(reg_save_area)
+	)
+	);
+}
+impl Default for __va_list_tag {
+	fn default() -> Self {
+		let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+		unsafe {
+			::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+			s.assume_init()
+		}
+	}
 }

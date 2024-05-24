@@ -112,6 +112,7 @@ pub const SEEK_CUR: u32 = 1;
 pub const SEEK_END: u32 = 2;
 pub const AUDIO_FRAMES_PER_CYCLE: u32 = 512;
 pub const NOTE_C4: u32 = 60;
+pub type va_list = *mut core::ffi::c_char;
 #[repr(C)]
 #[derive(Debug)]
 #[must_use]
@@ -156,7 +157,7 @@ fn bindgen_test_layout_LCDRect() {
 	           concat!("Offset of field: ", stringify!(LCDRect), "::", stringify!(bottom))
 	);
 }
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LCDBitmapDrawMode {
@@ -169,7 +170,7 @@ pub enum LCDBitmapDrawMode {
 	kDrawModeNXOR = 6,
 	kDrawModeInverted = 7,
 }
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LCDBitmapFlip {
@@ -178,7 +179,7 @@ pub enum LCDBitmapFlip {
 	kBitmapFlippedY = 2,
 	kBitmapFlippedXY = 3,
 }
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LCDSolidColor {
@@ -187,7 +188,7 @@ pub enum LCDSolidColor {
 	kColorClear = 2,
 	kColorXOR = 3,
 }
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LCDLineCapStyle {
@@ -195,7 +196,7 @@ pub enum LCDLineCapStyle {
 	kLineCapStyleSquare = 1,
 	kLineCapStyleRound = 2,
 }
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum PDStringEncoding {
@@ -205,7 +206,7 @@ pub enum PDStringEncoding {
 }
 pub type LCDPattern = [u8; 16usize];
 pub type LCDColor = usize;
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LCDPolygonFillRule {
@@ -291,12 +292,12 @@ fn bindgen_test_layout_playdate_video() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_video>(),
-	           32usize,
+	           64usize,
 	           concat!("Size of: ", stringify!(playdate_video))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_video>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_video))
 	);
 	assert_eq!(
@@ -311,7 +312,7 @@ fn bindgen_test_layout_playdate_video() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freePlayer) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_video),
@@ -321,7 +322,7 @@ fn bindgen_test_layout_playdate_video() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setContext) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_video),
@@ -331,7 +332,7 @@ fn bindgen_test_layout_playdate_video() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).useScreenContext) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_video),
@@ -341,7 +342,7 @@ fn bindgen_test_layout_playdate_video() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).renderFrame) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_video),
@@ -351,7 +352,7 @@ fn bindgen_test_layout_playdate_video() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getError) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_video),
@@ -361,7 +362,7 @@ fn bindgen_test_layout_playdate_video() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getInfo) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_video),
@@ -371,7 +372,7 @@ fn bindgen_test_layout_playdate_video() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getContext) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_video),
@@ -391,8 +392,8 @@ pub struct playdate_graphics {
 	pub setBackgroundColor: ::core::option::Option<unsafe extern "C" fn(color: LCDSolidColor)>,
 	#[doc = "`void playdate->graphics->setStencil(LCDBitmap* stencil);`\n\nSets the stencil used for drawing. For a tiled stencil, use *setStencilImage()* instead. To clear the stencil, set it to *NULL*."]
 	pub setStencil: ::core::option::Option<unsafe extern "C" fn(stencil: *mut LCDBitmap)>,
-	#[doc = "`void playdate->graphics->setDrawMode(LCDBitmapDrawMode mode);`\n\nSets the mode used for drawing bitmaps. Note that text drawing uses bitmaps, so this affects how fonts are displayed as well.\n\nLCDBitmapDrawMode\n\n```cpp\ntypedef enum\n{\n\tkDrawModeCopy,\n\tkDrawModeWhiteTransparent,\n\tkDrawModeBlackTransparent,\n\tkDrawModeFillWhite,\n\tkDrawModeFillBlack,\n\tkDrawModeXOR,\n\tkDrawModeNXOR,\n\tkDrawModeInverted\n} LCDBitmapDrawMode;\n```\n\nEquivalent to [`playdate.graphics.setImageDrawMode()`](./Inside%20Playdate.html#f-graphics.setImageDrawMode) in the Lua API."]
-	pub setDrawMode: ::core::option::Option<unsafe extern "C" fn(mode: LCDBitmapDrawMode)>,
+	#[doc = "`LCDBitmapDrawMode playdate->graphics->setDrawMode(LCDBitmapDrawMode mode);`\n\nSets the mode used for drawing bitmaps. Note that text drawing uses bitmaps, so this affects how fonts are displayed as well. Returns the previous draw mode, in case you need to restore it after drawing.\n\nLCDBitmapDrawMode\n\n```cpp\ntypedef enum\n{\n\tkDrawModeCopy,\n\tkDrawModeWhiteTransparent,\n\tkDrawModeBlackTransparent,\n\tkDrawModeFillWhite,\n\tkDrawModeFillBlack,\n\tkDrawModeXOR,\n\tkDrawModeNXOR,\n\tkDrawModeInverted\n} LCDBitmapDrawMode;\n```\n\nEquivalent to [`playdate.graphics.setImageDrawMode()`](./Inside%20Playdate.html#f-graphics.setImageDrawMode) in the Lua API."]
+	pub setDrawMode: ::core::option::Option<unsafe extern "C" fn(mode: LCDBitmapDrawMode) -> LCDBitmapDrawMode>,
 	#[doc = "`void playdate->graphics->setDrawOffset(int dx, int dy);`\n\nOffsets the origin point for all drawing calls to *x*, *y* (can be negative).\n\nThis is useful, for example, for centering a \"camera\" on a sprite that is moving around a world larger than the screen.\n\nEquivalent to [`playdate.graphics.setDrawOffset()`](./Inside%20Playdate.html#f-graphics.setDrawOffset) in the Lua API."]
 	pub setDrawOffset: ::core::option::Option<unsafe extern "C" fn(dx: core::ffi::c_int, dy: core::ffi::c_int)>,
 	#[doc = "`void playdate->graphics->setClipRect(int x, int y, int width, int height);`\n\nSets the current clip rect, using world coordinates—\u{200b}that is, the given rectangle will be translated by the current drawing offset. The clip rect is cleared at the beginning of each update.\n\nEquivalent to [`playdate.graphics.setClipRect()`](./Inside%20Playdate.html#f-graphics.setClipRect) in the Lua API."]
@@ -570,7 +571,7 @@ pub struct playdate_graphics {
 		::core::option::Option<unsafe extern "C" fn(start: core::ffi::c_int, end: core::ffi::c_int)>,
 	#[doc = "`void playdate->graphics->display(void);`\n\nManually flushes the current frame buffer out to the display. This function is automatically called after each pass through the run loop, so there shouldn’t be any need to call it yourself."]
 	pub display: ::core::option::Option<unsafe extern "C" fn()>,
-	#[doc = "`void playdate->graphics->setColorToPattern(LCDColor* color,LCDBitmap* bitmap, int x, int y);`\n\nSets *color* to an 8 x 8 pattern using the given *bitmap*. *x*, *y* indicates the top left corner of the 8 x 8 pattern."]
+	#[doc = "`void playdate->graphics->setColorToPattern(LCDColor* color, LCDBitmap* bitmap, int x, int y);`\n\nSets *color* to an 8 x 8 pattern using the given *bitmap*. *x*, *y* indicates the top left corner of the 8 x 8 pattern."]
 	pub setColorToPattern: ::core::option::Option<unsafe extern "C" fn(color: *mut LCDColor,
 	                                                                   bitmap: *mut LCDBitmap,
 	                                                                   x: core::ffi::c_int,
@@ -626,6 +627,18 @@ pub struct playdate_graphics {
 	                                                                  -> *mut LCDFont>,
 	#[doc = "`int playdate->graphics->getTextTracking(void);`\n\nGets the tracking used when drawing text.\n\nEquivalent to [`playdate.graphics.font:getTracking()`](./Inside%20Playdate.html#m-graphics.font.getTracking) in the Lua API."]
 	pub getTextTracking: ::core::option::Option<unsafe extern "C" fn() -> core::ffi::c_int>,
+	#[doc = "`void playdate->graphics->setPixel(int x, int y, LCDColor color);`\n\nSets the pixel at *(x,y)* in the current drawing context (by default the screen) to the given *color*. Be aware that setting a pixel at a time is not very efficient: In our testing, more than around 20,000 calls in a tight loop will drop the frame rate below 30 fps."]
+	pub setPixel:
+		::core::option::Option<unsafe extern "C" fn(x: core::ffi::c_int, y: core::ffi::c_int, c: LCDColor)>,
+	#[doc = "`LCDSolidColor playdate->graphics->getBitmapPixel(LCDBitmap* bitmap, int x, int y);`\n\nGets the color of the pixel at *(x,y)* in the given *bitmap*. If the coordinate is outside the bounds of the bitmap, or if the bitmap has a mask and the pixel is marked transparent, the function returns `kColorClear`; otherwise the return value is `kColorWhite` or `kColorBlack`."]
+	pub getBitmapPixel: ::core::option::Option<unsafe extern "C" fn(bitmap: *mut LCDBitmap,
+	                                                                x: core::ffi::c_int,
+	                                                                y: core::ffi::c_int)
+	                                                                -> LCDSolidColor>,
+	#[doc = "`void playdate->graphics->getBitmapTableInfo(LCDBitmapTable* table, int* count, int* cellswide);`\n\nReturns the bitmap table’s image count in the *count* pointer (if not NULL) and number of cells across in the *cellswide* pointer (ditto)."]
+	pub getBitmapTableInfo: ::core::option::Option<unsafe extern "C" fn(table: *mut LCDBitmapTable,
+	                                                                    count: *mut core::ffi::c_int,
+	                                                                    width: *mut core::ffi::c_int)>,
 }
 #[test]
 fn bindgen_test_layout_playdate_graphics() {
@@ -633,12 +646,12 @@ fn bindgen_test_layout_playdate_graphics() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_graphics>(),
-	           240usize,
+	           504usize,
 	           concat!("Size of: ", stringify!(playdate_graphics))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_graphics>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_graphics))
 	);
 	assert_eq!(
@@ -653,7 +666,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).clear) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -663,7 +676,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setBackgroundColor) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -673,7 +686,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setStencil) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -683,7 +696,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setDrawMode) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -693,7 +706,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setDrawOffset) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -703,7 +716,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setClipRect) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -713,7 +726,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).clearClipRect) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -723,7 +736,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setLineCapStyle) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -733,7 +746,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setFont) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -743,7 +756,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setTextTracking) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -753,7 +766,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).pushContext) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -763,7 +776,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).popContext) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -773,7 +786,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).drawBitmap) as usize - ptr as usize },
-	           52usize,
+	           104usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -783,7 +796,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).tileBitmap) as usize - ptr as usize },
-	           56usize,
+	           112usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -793,7 +806,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).drawLine) as usize - ptr as usize },
-	           60usize,
+	           120usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -803,7 +816,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).fillTriangle) as usize - ptr as usize },
-	           64usize,
+	           128usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -813,7 +826,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).drawRect) as usize - ptr as usize },
-	           68usize,
+	           136usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -823,7 +836,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).fillRect) as usize - ptr as usize },
-	           72usize,
+	           144usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -833,7 +846,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).drawEllipse) as usize - ptr as usize },
-	           76usize,
+	           152usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -843,7 +856,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).fillEllipse) as usize - ptr as usize },
-	           80usize,
+	           160usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -853,7 +866,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).drawScaledBitmap) as usize - ptr as usize },
-	           84usize,
+	           168usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -863,7 +876,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).drawText) as usize - ptr as usize },
-	           88usize,
+	           176usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -873,7 +886,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).newBitmap) as usize - ptr as usize },
-	           92usize,
+	           184usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -883,7 +896,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeBitmap) as usize - ptr as usize },
-	           96usize,
+	           192usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -893,7 +906,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).loadBitmap) as usize - ptr as usize },
-	           100usize,
+	           200usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -903,7 +916,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).copyBitmap) as usize - ptr as usize },
-	           104usize,
+	           208usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -913,7 +926,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).loadIntoBitmap) as usize - ptr as usize },
-	           108usize,
+	           216usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -923,7 +936,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getBitmapData) as usize - ptr as usize },
-	           112usize,
+	           224usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -933,7 +946,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).clearBitmap) as usize - ptr as usize },
-	           116usize,
+	           232usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -943,7 +956,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).rotatedBitmap) as usize - ptr as usize },
-	           120usize,
+	           240usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -953,7 +966,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).newBitmapTable) as usize - ptr as usize },
-	           124usize,
+	           248usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -963,7 +976,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeBitmapTable) as usize - ptr as usize },
-	           128usize,
+	           256usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -973,7 +986,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).loadBitmapTable) as usize - ptr as usize },
-	           132usize,
+	           264usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -983,7 +996,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).loadIntoBitmapTable) as usize - ptr as usize },
-	           136usize,
+	           272usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -993,7 +1006,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getTableBitmap) as usize - ptr as usize },
-	           140usize,
+	           280usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1003,7 +1016,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).loadFont) as usize - ptr as usize },
-	           144usize,
+	           288usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1013,7 +1026,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getFontPage) as usize - ptr as usize },
-	           148usize,
+	           296usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1023,7 +1036,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getPageGlyph) as usize - ptr as usize },
-	           152usize,
+	           304usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1033,7 +1046,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getGlyphKerning) as usize - ptr as usize },
-	           156usize,
+	           312usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1043,7 +1056,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getTextWidth) as usize - ptr as usize },
-	           160usize,
+	           320usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1053,7 +1066,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getFrame) as usize - ptr as usize },
-	           164usize,
+	           328usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1063,7 +1076,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getDisplayFrame) as usize - ptr as usize },
-	           168usize,
+	           336usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1073,7 +1086,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getDebugBitmap) as usize - ptr as usize },
-	           172usize,
+	           344usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1083,7 +1096,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).copyFrameBufferBitmap) as usize - ptr as usize },
-	           176usize,
+	           352usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1093,7 +1106,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).markUpdatedRows) as usize - ptr as usize },
-	           180usize,
+	           360usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1103,7 +1116,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).display) as usize - ptr as usize },
-	           184usize,
+	           368usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1113,7 +1126,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setColorToPattern) as usize - ptr as usize },
-	           188usize,
+	           376usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1123,7 +1136,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).checkMaskCollision) as usize - ptr as usize },
-	           192usize,
+	           384usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1133,7 +1146,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setScreenClipRect) as usize - ptr as usize },
-	           196usize,
+	           392usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1143,7 +1156,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).fillPolygon) as usize - ptr as usize },
-	           200usize,
+	           400usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1153,7 +1166,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getFontHeight) as usize - ptr as usize },
-	           204usize,
+	           408usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1163,7 +1176,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getDisplayBufferBitmap) as usize - ptr as usize },
-	           208usize,
+	           416usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1173,7 +1186,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).drawRotatedBitmap) as usize - ptr as usize },
-	           212usize,
+	           424usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1183,7 +1196,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setTextLeading) as usize - ptr as usize },
-	           216usize,
+	           432usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1193,7 +1206,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setBitmapMask) as usize - ptr as usize },
-	           220usize,
+	           440usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1203,7 +1216,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getBitmapMask) as usize - ptr as usize },
-	           224usize,
+	           448usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1213,7 +1226,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setStencilImage) as usize - ptr as usize },
-	           228usize,
+	           456usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1223,7 +1236,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).makeFontFromData) as usize - ptr as usize },
-	           232usize,
+	           464usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1233,7 +1246,7 @@ fn bindgen_test_layout_playdate_graphics() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getTextTracking) as usize - ptr as usize },
-	           236usize,
+	           472usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_graphics),
@@ -1241,8 +1254,37 @@ fn bindgen_test_layout_playdate_graphics() {
 		stringify!(getTextTracking)
 	)
 	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).setPixel) as usize - ptr as usize },
+	           480usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(playdate_graphics),
+		"::",
+		stringify!(setPixel)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).getBitmapPixel) as usize - ptr as usize },
+	           488usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(playdate_graphics),
+		"::",
+		stringify!(getBitmapPixel)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).getBitmapTableInfo) as usize - ptr as usize },
+	           496usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(playdate_graphics),
+		"::",
+		stringify!(getBitmapTableInfo)
+	)
+	);
 }
-pub type va_list = u32;
 impl PDButtons {
 	pub const kButtonLeft: PDButtons = PDButtons(1);
 }
@@ -1282,8 +1324,8 @@ impl ::core::ops::BitAndAssign for PDButtons {
 #[repr(transparent)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
-pub struct PDButtons(pub u8);
-#[repr(u8)]
+pub struct PDButtons(pub i32);
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum PDLanguage {
@@ -1389,7 +1431,7 @@ fn bindgen_test_layout_PDDateTime() {
 pub struct PDMenuItem {
 	_unused: [u8; 0],
 }
-#[repr(u16)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum PDPeripherals {
@@ -1410,19 +1452,19 @@ pub type PDButtonCallbackFunction =
 #[repr(C)]
 #[derive(Debug)]
 #[must_use]
-pub struct playdate_sys { # [doc = "`void* playdate->system->realloc(void* ptr, size_t size)`\n\nAllocates heap space if *ptr* is NULL, else reallocates the given pointer. If *size* is zero, frees the given pointer."] pub realloc : :: core :: option :: Option < unsafe extern "C" fn (ptr : * mut core :: ffi :: c_void , size : usize) -> * mut core :: ffi :: c_void > , # [doc = "`int playdate->system->formatString(char **outstring, const char *format, ...)`\n\nCreates a formatted string and returns it via the *outstring* argument. The arguments and return value match libc’s `asprintf()`: the format string is standard `printf()` style, the string returned in *outstring* should be freed by the caller when it’s no longer in use, and the return value is the length of the formatted string."] pub formatString : :: core :: option :: Option < unsafe extern "C" fn (ret : * mut * mut core :: ffi :: c_char , fmt : * const core :: ffi :: c_char , ...) -> core :: ffi :: c_int > , # [doc = "`void playdate->system->logToConsole(const char* format, ...)`\n\nCalls the log function.\n\nEquivalent to [`print()`](./Inside%20Playdate.html#f-print) in the Lua API."] pub logToConsole : :: core :: option :: Option < unsafe extern "C" fn (fmt : * const core :: ffi :: c_char , ...) > , # [doc = "`void playdate->system->error(const char* format, ...)`\n\nCalls the log function, outputting an error in red to the console, then pauses execution."] pub error : :: core :: option :: Option < unsafe extern "C" fn (fmt : * const core :: ffi :: c_char , ...) > , # [doc = "`PDLanguage playdate->system->getLanguage(void);`\n\nReturns the current language of the system."] pub getLanguage : :: core :: option :: Option < unsafe extern "C" fn () -> PDLanguage > , # [doc = "`unsigned int playdate->system->getCurrentTimeMilliseconds(void)`\n\nReturns the number of milliseconds since…\u{200b}some arbitrary point in time. This should present a consistent timebase while a game is running, but the counter will be disabled when the device is sleeping."] pub getCurrentTimeMilliseconds : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_uint > , # [doc = "`unsigned int playdate->system->getSecondsSinceEpoch(unsigned int *milliseconds)`\n\nReturns the number of seconds (and sets *milliseconds* if not NULL) elapsed since midnight (hour 0), January 1, 2000."] pub getSecondsSinceEpoch : :: core :: option :: Option < unsafe extern "C" fn (milliseconds : * mut core :: ffi :: c_uint) -> core :: ffi :: c_uint > , # [doc = "`void playdate->system->drawFPS(int x, int y)`\n\nCalculates the current frames per second and draws that value at *x, y*."] pub drawFPS : :: core :: option :: Option < unsafe extern "C" fn (x : core :: ffi :: c_int , y : core :: ffi :: c_int) > , # [doc = "`void playdate->system->setUpdateCallback(PDCallbackFunction* update, void* userdata)`\n\nPDCallbackFunction\n\n```cpp\nint PDCallbackFunction(void* userdata);\n```\n\nReplaces the default Lua run loop function with a custom update function. The update function should return a non-zero number to tell the system to update the display, or zero if update isn’t needed."] pub setUpdateCallback : :: core :: option :: Option < unsafe extern "C" fn (update : PDCallbackFunction , userdata : * mut core :: ffi :: c_void) > , # [doc = "`void playdate->system->getButtonState(PDButtons* current, PDButtons* pushed, PDButtons* released)`\n\nSets the value pointed to by *current* to a bitmask indicating which buttons are currently down. *pushed* and *released* reflect which buttons were pushed or released over the previous update cycle—at the nominal frame rate of 50 ms, fast button presses can be missed if you just poll the instantaneous state."] pub getButtonState : :: core :: option :: Option < unsafe extern "C" fn (current : * mut PDButtons , pushed : * mut PDButtons , released : * mut PDButtons) > , # [doc = "`void playdate->system->setPeripheralsEnabled(PDPeripherals mask)`\n\nBy default, the accelerometer is disabled to save (a small amount of) power. To use a peripheral, it must first be enabled via this function. Accelerometer data is not available until the next update cycle after it’s enabled.\n\nPDPeripherals\n\n```cpp\nkNone\nkAccelerometer\n```"] pub setPeripheralsEnabled : :: core :: option :: Option < unsafe extern "C" fn (mask : PDPeripherals) > , # [doc = "`void playdate->system->getAccelerometer(float* outx, float* outy, float* outz)`\n\nReturns the last-read accelerometer data."] pub getAccelerometer : :: core :: option :: Option < unsafe extern "C" fn (outx : * mut core :: ffi :: c_float , outy : * mut core :: ffi :: c_float , outz : * mut core :: ffi :: c_float) > , # [doc = "`float playdate->system->getCrankChange(void)`\n\nReturns the angle change of the crank since the last time this function was called. Negative values are anti-clockwise."] pub getCrankChange : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`float playdate->system->getCrankAngle(void)`\n\nReturns the current position of the crank, in the range 0-360. Zero is pointing up, and the value increases as the crank moves clockwise, as viewed from the right side of the device."] pub getCrankAngle : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`int playdate->system->isCrankDocked(void)`\n\nReturns 1 or 0 indicating whether or not the crank is folded into the unit."] pub isCrankDocked : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`int playdate->system->setCrankSoundsDisabled(int disable)`\n\nThe function returns the previous value for this setting."] pub setCrankSoundsDisabled : :: core :: option :: Option < unsafe extern "C" fn (flag : core :: ffi :: c_int) -> core :: ffi :: c_int > , # [doc = "`int playdate->system->getFlipped()`\n\nReturns 1 if the global \"flipped\" system setting is set, otherwise 0."] pub getFlipped : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`void playdate->system->setAutoLockDisabled(int disable)`\n\nDisables or enables the 3 minute auto lock feature. When called, the timer is reset to 3 minutes."] pub setAutoLockDisabled : :: core :: option :: Option < unsafe extern "C" fn (disable : core :: ffi :: c_int) > , # [doc = "`void playdate->system->setMenuImage(LCDBitmap* bitmap, int xOffset);`\n\nA game can optionally provide an image to be displayed alongside the system menu. *bitmap* must be a 400x240 LCDBitmap. All important content should be in the left half of the image in an area 200 pixels wide, as the menu will obscure the rest. The right side of the image will be visible briefly as the menu animates in and out.\n\nOptionally, a non-zero *xoffset*, can be provided. This must be a number between 0 and 200 and will cause the menu image to animate to a position offset left by xoffset pixels as the menu is animated in.\n\nThis function could be called in response to the kEventPause *event* in your implementation of [eventHandler()](#_eventHandler)."] pub setMenuImage : :: core :: option :: Option < unsafe extern "C" fn (bitmap : * mut LCDBitmap , xOffset : core :: ffi :: c_int) > , # [doc = "`PDMenuItem* playdate->system->addMenuItem(const char* title, PDMenuItemCallbackFunction* callback, void* userdata)`\n\n*title* will be the title displayed by the menu item.\n\nAdds a new menu item to the System Menu. When invoked by the user, this menu item will:\n\n1. Invoke your *callback* function.\n\n2. Hide the System Menu.\n\n3. Unpause your game and call [eventHandler()](#_eventHandler) with the kEventResume *event*.\n\nYour game can then present an options interface to the player, or take other action, in whatever manner you choose.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."] pub addMenuItem : :: core :: option :: Option < unsafe extern "C" fn (title : * const core :: ffi :: c_char , callback : PDMenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut PDMenuItem > , # [doc = "`PDMenuItem* playdate->system->addCheckmarkMenuItem(const char* title, int value, PDMenuItemCallbackFunction* callback, void* userdata)`\n\nAdds a new menu item that can be checked or unchecked by the player.\n\n*title* will be the title displayed by the menu item.\n\n*value* should be 0 for unchecked, 1 for checked.\n\nIf this menu item is interacted with while the system menu is open, *callback* will be called when the menu is closed.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."] pub addCheckmarkMenuItem : :: core :: option :: Option < unsafe extern "C" fn (title : * const core :: ffi :: c_char , value : core :: ffi :: c_int , callback : PDMenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut PDMenuItem > , # [doc = "`PDMenuItem* playdate->system->addOptionsMenuItem(const char* title, const char** options, int optionsCount, PDMenuItemCallbackFunction* callback, void* userdata)`\n\nAdds a new menu item that allows the player to cycle through a set of options.\n\n*title* will be the title displayed by the menu item.\n\n*options* should be an array of strings representing the states this menu item can cycle through. Due to limited horizontal space, the option strings and title should be kept short for this type of menu item.\n\n*optionsCount* should be the number of items contained in *options*.\n\nIf this menu item is interacted with while the system menu is open, *callback* will be called when the menu is closed.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."] pub addOptionsMenuItem : :: core :: option :: Option < unsafe extern "C" fn (title : * const core :: ffi :: c_char , optionTitles : * mut * const core :: ffi :: c_char , optionsCount : core :: ffi :: c_int , f : PDMenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut PDMenuItem > , # [doc = "`void playdate->system->removeAllMenuItems()`\n\nRemoves all custom menu items from the system menu."] pub removeAllMenuItems : :: core :: option :: Option < unsafe extern "C" fn () > , # [doc = "`void playdate->system->removeMenuItem(PDMenuItem *menuItem)`\n\nRemoves the menu item from the system menu."] pub removeMenuItem : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) > , # [doc = "`int playdate->system->getMenuItemValue(PDMenuItem *menuItem)`"] pub getMenuItemValue : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) -> core :: ffi :: c_int > , # [doc = "`void playdate->system->setMenuItemValue(PDMenuItem *menuItem, int value)`\n\nGets or sets the integer value of the menu item.\n\nFor checkmark menu items, 1 means checked, 0 unchecked. For option menu items, the value indicates the array index of the currently selected option."] pub setMenuItemValue : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem , value : core :: ffi :: c_int) > , # [doc = "`const char* playdate->system->getMenuItemTitle(PDMenuItem *menuItem)`"] pub getMenuItemTitle : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) -> * const core :: ffi :: c_char > , # [doc = "`void playdate->system->setMenuItemTitle(PDMenuItem *menuItem, const char* title)`\n\nGets or sets the display title of the menu item."] pub setMenuItemTitle : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem , title : * const core :: ffi :: c_char) > , # [doc = "`void* playdate->system->getMenuItemUserdata(PDMenuItem *menuItem)`"] pub getMenuItemUserdata : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) -> * mut core :: ffi :: c_void > , # [doc = "`void playdate->system->setMenuItemUserdata(PDMenuItem *menuItem, void* userdata)`\n\nGets or sets the userdata value associated with this menu item."] pub setMenuItemUserdata : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem , ud : * mut core :: ffi :: c_void) > , # [doc = "`int playdate->system->getReduceFlashing()`\n\nReturns 1 if the global \"reduce flashing\" system setting is set, otherwise 0."] pub getReduceFlashing : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`float playdate->system->getElapsedTime()`\n\nReturns the number of seconds since `playdate.resetElapsedTime()` was called. The value is a floating-point number with microsecond accuracy."] pub getElapsedTime : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`void playdate->system->resetElapsedTime(void)`\n\nResets the high-resolution timer."] pub resetElapsedTime : :: core :: option :: Option < unsafe extern "C" fn () > , # [doc = "`float playdate->system->getBatteryPercentage()`\n\nReturns a value from 0-100 denoting the current level of battery charge. 0 = empty; 100 = full."] pub getBatteryPercentage : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`float playdate->system->getBatteryVoltage()`\n\nReturns the battery’s current voltage level."] pub getBatteryVoltage : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`int32_t playdate->system->getTimezoneOffset()`\n\nReturns the system timezone offset from GMT, in seconds."] pub getTimezoneOffset : :: core :: option :: Option < unsafe extern "C" fn () -> i32 > , # [doc = "`int playdate->system->shouldDisplay24HourTime()`\n\nReturns 1 if the user has set the 24-Hour Time preference in the Settings program."] pub shouldDisplay24HourTime : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`void playdate->system->convertEpochToDateTime(uint32_t epoch, struct PDDateTime* datetime)`\n\nConverts the given epoch time to a PDDateTime."] pub convertEpochToDateTime : :: core :: option :: Option < unsafe extern "C" fn (epoch : u32 , datetime : * mut PDDateTime) > , # [doc = "`uint32_t playdate->system->convertDateTimeToEpoch(struct PDDateTime* datetime)`\n\nConverts the given PDDateTime to an epoch time."] pub convertDateTimeToEpoch : :: core :: option :: Option < unsafe extern "C" fn (datetime : * mut PDDateTime) -> u32 > , # [doc = "`float playdate->system->clearICache()`\n\nFlush the CPU instruction cache, on the very unlikely chance you’re modifying instruction code on the fly. (If you don’t know what I’m talking about, you don’t need this. :smile:)"] pub clearICache : :: core :: option :: Option < unsafe extern "C" fn () > , pub setButtonCallback : :: core :: option :: Option < unsafe extern "C" fn (cb : PDButtonCallbackFunction , buttonud : * mut core :: ffi :: c_void , queuesize : core :: ffi :: c_int) > , # [doc = "`void playdate->system->setSerialMessageCallback(void (*callback)(const char* data));`\n\nProvides a callback to receive messages sent to the device over the serial port using the `msg` command. If no device is connected, you can send these messages to a game in the simulator by entering `!msg <message>` in the Lua console."] pub setSerialMessageCallback : :: core :: option :: Option < unsafe extern "C" fn (callback : :: core :: option :: Option < unsafe extern "C" fn (data : * const core :: ffi :: c_char) >) > , # [doc = "`int playdate->system->vaFormatString(char **ret, const char *format, va_list args)`\n\nAllocates and formats a string using a variadic `va_list` argument, in the style of `vasprintf()`. The string returned via *ret* should be freed by the caller when it is no longer in use. The return value from the function is the length of the formatted string."] pub vaFormatString : :: core :: option :: Option < unsafe extern "C" fn (outstr : * mut * mut core :: ffi :: c_char , fmt : * const core :: ffi :: c_char , args : va_list) -> core :: ffi :: c_int > , # [doc = "`int playdate->system->parseString(const char *str, const char *format, ...)`\n\nLike libc `sscanf()`, parses a string according to a format string and places the values into pointers passed in after the format. The return value is the number of items matched."] pub parseString : :: core :: option :: Option < unsafe extern "C" fn (str_ : * const core :: ffi :: c_char , format : * const core :: ffi :: c_char , ...) -> core :: ffi :: c_int > , }
+pub struct playdate_sys { # [doc = "`void* playdate->system->realloc(void* ptr, size_t size)`\n\nAllocates heap space if *ptr* is NULL, else reallocates the given pointer. If *size* is zero, frees the given pointer."] pub realloc : :: core :: option :: Option < unsafe extern "C" fn (ptr : * mut core :: ffi :: c_void , size : usize) -> * mut core :: ffi :: c_void > , # [doc = "`int playdate->system->formatString(char **outstring, const char *format, ...)`\n\nCreates a formatted string and returns it via the *outstring* argument. The arguments and return value match libc’s `asprintf()`: the format string is standard `printf()` style, the string returned in *outstring* should be freed by the caller when it’s no longer in use, and the return value is the length of the formatted string."] pub formatString : :: core :: option :: Option < unsafe extern "C" fn (ret : * mut * mut core :: ffi :: c_char , fmt : * const core :: ffi :: c_char , ...) -> core :: ffi :: c_int > , # [doc = "`void playdate->system->logToConsole(const char* format, ...)`\n\nCalls the log function.\n\nEquivalent to [`print()`](./Inside%20Playdate.html#f-print) in the Lua API."] pub logToConsole : :: core :: option :: Option < unsafe extern "C" fn (fmt : * const core :: ffi :: c_char , ...) > , # [doc = "`void playdate->system->error(const char* format, ...)`\n\nCalls the log function, outputting an error in red to the console, then pauses execution."] pub error : :: core :: option :: Option < unsafe extern "C" fn (fmt : * const core :: ffi :: c_char , ...) > , # [doc = "`PDLanguage playdate->system->getLanguage(void);`\n\nReturns the current language of the system."] pub getLanguage : :: core :: option :: Option < unsafe extern "C" fn () -> PDLanguage > , # [doc = "`unsigned int playdate->system->getCurrentTimeMilliseconds(void)`\n\nReturns the number of milliseconds since…\u{200b}some arbitrary point in time. This should present a consistent timebase while a game is running, but the counter will be disabled when the device is sleeping."] pub getCurrentTimeMilliseconds : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_uint > , # [doc = "`unsigned int playdate->system->getSecondsSinceEpoch(unsigned int *milliseconds)`\n\nReturns the number of seconds (and sets *milliseconds* if not NULL) elapsed since midnight (hour 0), January 1, 2000."] pub getSecondsSinceEpoch : :: core :: option :: Option < unsafe extern "C" fn (milliseconds : * mut core :: ffi :: c_uint) -> core :: ffi :: c_uint > , # [doc = "`void playdate->system->drawFPS(int x, int y)`\n\nCalculates the current frames per second and draws that value at *x, y*."] pub drawFPS : :: core :: option :: Option < unsafe extern "C" fn (x : core :: ffi :: c_int , y : core :: ffi :: c_int) > , # [doc = "`void playdate->system->setUpdateCallback(PDCallbackFunction* update, void* userdata)`\n\nPDCallbackFunction\n\n```cpp\nint PDCallbackFunction(void* userdata);\n```\n\nReplaces the default Lua run loop function with a custom update function. The update function should return a non-zero number to tell the system to update the display, or zero if update isn’t needed."] pub setUpdateCallback : :: core :: option :: Option < unsafe extern "C" fn (update : PDCallbackFunction , userdata : * mut core :: ffi :: c_void) > , # [doc = "`void playdate->system->getButtonState(PDButtons* current, PDButtons* pushed, PDButtons* released)`\n\nSets the value pointed to by *current* to a bitmask indicating which buttons are currently down. *pushed* and *released* reflect which buttons were pushed or released over the previous update cycle—at the nominal frame rate of 50 ms, fast button presses can be missed if you just poll the instantaneous state.\n\nPDButton\n\n```cpp\nkButtonLeft\nkButtonRight\nkButtonUp\nkButtonDown\nkButtonB\nkButtonA\n```"] pub getButtonState : :: core :: option :: Option < unsafe extern "C" fn (current : * mut PDButtons , pushed : * mut PDButtons , released : * mut PDButtons) > , # [doc = "`void playdate->system->setPeripheralsEnabled(PDPeripherals mask)`\n\nBy default, the accelerometer is disabled to save (a small amount of) power. To use a peripheral, it must first be enabled via this function. Accelerometer data is not available until the next update cycle after it’s enabled.\n\nPDPeripherals\n\n```cpp\nkNone\nkAccelerometer\n```"] pub setPeripheralsEnabled : :: core :: option :: Option < unsafe extern "C" fn (mask : PDPeripherals) > , # [doc = "`void playdate->system->getAccelerometer(float* outx, float* outy, float* outz)`\n\nReturns the last-read accelerometer data."] pub getAccelerometer : :: core :: option :: Option < unsafe extern "C" fn (outx : * mut core :: ffi :: c_float , outy : * mut core :: ffi :: c_float , outz : * mut core :: ffi :: c_float) > , # [doc = "`float playdate->system->getCrankChange(void)`\n\nReturns the angle change of the crank since the last time this function was called. Negative values are anti-clockwise."] pub getCrankChange : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`float playdate->system->getCrankAngle(void)`\n\nReturns the current position of the crank, in the range 0-360. Zero is pointing up, and the value increases as the crank moves clockwise, as viewed from the right side of the device."] pub getCrankAngle : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`int playdate->system->isCrankDocked(void)`\n\nReturns 1 or 0 indicating whether or not the crank is folded into the unit."] pub isCrankDocked : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`int playdate->system->setCrankSoundsDisabled(int disable)`\n\nThe function returns the previous value for this setting."] pub setCrankSoundsDisabled : :: core :: option :: Option < unsafe extern "C" fn (flag : core :: ffi :: c_int) -> core :: ffi :: c_int > , # [doc = "`int playdate->system->getFlipped()`\n\nReturns 1 if the global \"flipped\" system setting is set, otherwise 0."] pub getFlipped : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`void playdate->system->setAutoLockDisabled(int disable)`\n\nDisables or enables the 3 minute auto lock feature. When called, the timer is reset to 3 minutes."] pub setAutoLockDisabled : :: core :: option :: Option < unsafe extern "C" fn (disable : core :: ffi :: c_int) > , # [doc = "`void playdate->system->setMenuImage(LCDBitmap* bitmap, int xOffset);`\n\nA game can optionally provide an image to be displayed alongside the system menu. *bitmap* must be a 400x240 LCDBitmap. All important content should be in the left half of the image in an area 200 pixels wide, as the menu will obscure the rest. The right side of the image will be visible briefly as the menu animates in and out.\n\nOptionally, a non-zero *xoffset*, can be provided. This must be a number between 0 and 200 and will cause the menu image to animate to a position offset left by xoffset pixels as the menu is animated in.\n\nThis function could be called in response to the kEventPause *event* in your implementation of [eventHandler()](#_eventHandler)."] pub setMenuImage : :: core :: option :: Option < unsafe extern "C" fn (bitmap : * mut LCDBitmap , xOffset : core :: ffi :: c_int) > , # [doc = "`PDMenuItem* playdate->system->addMenuItem(const char* title, PDMenuItemCallbackFunction* callback, void* userdata)`\n\n*title* will be the title displayed by the menu item.\n\nAdds a new menu item to the System Menu. When invoked by the user, this menu item will:\n\n1. Invoke your *callback* function.\n\n2. Hide the System Menu.\n\n3. Unpause your game and call [eventHandler()](#_eventHandler) with the kEventResume *event*.\n\nYour game can then present an options interface to the player, or take other action, in whatever manner you choose.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."] pub addMenuItem : :: core :: option :: Option < unsafe extern "C" fn (title : * const core :: ffi :: c_char , callback : PDMenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut PDMenuItem > , # [doc = "`PDMenuItem* playdate->system->addCheckmarkMenuItem(const char* title, int value, PDMenuItemCallbackFunction* callback, void* userdata)`\n\nAdds a new menu item that can be checked or unchecked by the player.\n\n*title* will be the title displayed by the menu item.\n\n*value* should be 0 for unchecked, 1 for checked.\n\nIf this menu item is interacted with while the system menu is open, *callback* will be called when the menu is closed.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."] pub addCheckmarkMenuItem : :: core :: option :: Option < unsafe extern "C" fn (title : * const core :: ffi :: c_char , value : core :: ffi :: c_int , callback : PDMenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut PDMenuItem > , # [doc = "`PDMenuItem* playdate->system->addOptionsMenuItem(const char* title, const char** options, int optionsCount, PDMenuItemCallbackFunction* callback, void* userdata)`\n\nAdds a new menu item that allows the player to cycle through a set of options.\n\n*title* will be the title displayed by the menu item.\n\n*options* should be an array of strings representing the states this menu item can cycle through. Due to limited horizontal space, the option strings and title should be kept short for this type of menu item.\n\n*optionsCount* should be the number of items contained in *options*.\n\nIf this menu item is interacted with while the system menu is open, *callback* will be called when the menu is closed.\n\nThe returned menu item is freed when removed from the menu; it does not need to be freed manually."] pub addOptionsMenuItem : :: core :: option :: Option < unsafe extern "C" fn (title : * const core :: ffi :: c_char , optionTitles : * mut * const core :: ffi :: c_char , optionsCount : core :: ffi :: c_int , f : PDMenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut PDMenuItem > , # [doc = "`void playdate->system->removeAllMenuItems()`\n\nRemoves all custom menu items from the system menu."] pub removeAllMenuItems : :: core :: option :: Option < unsafe extern "C" fn () > , # [doc = "`void playdate->system->removeMenuItem(PDMenuItem *menuItem)`\n\nRemoves the menu item from the system menu."] pub removeMenuItem : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) > , # [doc = "`int playdate->system->getMenuItemValue(PDMenuItem *menuItem)`"] pub getMenuItemValue : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) -> core :: ffi :: c_int > , # [doc = "`void playdate->system->setMenuItemValue(PDMenuItem *menuItem, int value)`\n\nGets or sets the integer value of the menu item.\n\nFor checkmark menu items, 1 means checked, 0 unchecked. For option menu items, the value indicates the array index of the currently selected option."] pub setMenuItemValue : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem , value : core :: ffi :: c_int) > , # [doc = "`const char* playdate->system->getMenuItemTitle(PDMenuItem *menuItem)`"] pub getMenuItemTitle : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) -> * const core :: ffi :: c_char > , # [doc = "`void playdate->system->setMenuItemTitle(PDMenuItem *menuItem, const char* title)`\n\nGets or sets the display title of the menu item."] pub setMenuItemTitle : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem , title : * const core :: ffi :: c_char) > , # [doc = "`void* playdate->system->getMenuItemUserdata(PDMenuItem *menuItem)`"] pub getMenuItemUserdata : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem) -> * mut core :: ffi :: c_void > , # [doc = "`void playdate->system->setMenuItemUserdata(PDMenuItem *menuItem, void* userdata)`\n\nGets or sets the userdata value associated with this menu item."] pub setMenuItemUserdata : :: core :: option :: Option < unsafe extern "C" fn (menuItem : * mut PDMenuItem , ud : * mut core :: ffi :: c_void) > , # [doc = "`int playdate->system->getReduceFlashing()`\n\nReturns 1 if the global \"reduce flashing\" system setting is set, otherwise 0."] pub getReduceFlashing : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`float playdate->system->getElapsedTime()`\n\nReturns the number of seconds since `playdate.resetElapsedTime()` was called. The value is a floating-point number with microsecond accuracy."] pub getElapsedTime : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`void playdate->system->resetElapsedTime(void)`\n\nResets the high-resolution timer."] pub resetElapsedTime : :: core :: option :: Option < unsafe extern "C" fn () > , # [doc = "`float playdate->system->getBatteryPercentage()`\n\nReturns a value from 0-100 denoting the current level of battery charge. 0 = empty; 100 = full."] pub getBatteryPercentage : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`float playdate->system->getBatteryVoltage()`\n\nReturns the battery’s current voltage level."] pub getBatteryVoltage : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_float > , # [doc = "`int32_t playdate->system->getTimezoneOffset()`\n\nReturns the system timezone offset from GMT, in seconds."] pub getTimezoneOffset : :: core :: option :: Option < unsafe extern "C" fn () -> i32 > , # [doc = "`int playdate->system->shouldDisplay24HourTime()`\n\nReturns 1 if the user has set the 24-Hour Time preference in the Settings program."] pub shouldDisplay24HourTime : :: core :: option :: Option < unsafe extern "C" fn () -> core :: ffi :: c_int > , # [doc = "`void playdate->system->convertEpochToDateTime(uint32_t epoch, struct PDDateTime* datetime)`\n\nConverts the given epoch time to a PDDateTime."] pub convertEpochToDateTime : :: core :: option :: Option < unsafe extern "C" fn (epoch : u32 , datetime : * mut PDDateTime) > , # [doc = "`uint32_t playdate->system->convertDateTimeToEpoch(struct PDDateTime* datetime)`\n\nConverts the given PDDateTime to an epoch time."] pub convertDateTimeToEpoch : :: core :: option :: Option < unsafe extern "C" fn (datetime : * mut PDDateTime) -> u32 > , # [doc = "`float playdate->system->clearICache()`\n\nFlush the CPU instruction cache, on the very unlikely chance you’re modifying instruction code on the fly. (If you don’t know what I’m talking about, you don’t need this. :smile:)"] pub clearICache : :: core :: option :: Option < unsafe extern "C" fn () > , # [doc = "`void playdate->system->setButtonCallback(PDButtonCallbackFunction* cb, void* userdata, int queuesize)`\n\nAs an alternative to polling for button presses using `getButtonState()`, this function allows a callback function to be set. The function is called for each button up/down event (possibly multiple events on the same button) that occurred during the previous update cycle. At the default 30 FPS, a queue size of 5 should be adequate. At lower frame rates/longer frame times, the queue size should be extended until all button presses are caught. The function should return 0 on success or a non-zero value to signal an error.\n\nPDButtonCallbackFunction\n\n```cpp\ntypedef int PDButtonCallbackFunction(PDButtons button, int down, uint32_t when, void* userdata);\n```"] pub setButtonCallback : :: core :: option :: Option < unsafe extern "C" fn (cb : PDButtonCallbackFunction , buttonud : * mut core :: ffi :: c_void , queuesize : core :: ffi :: c_int) > , # [doc = "`void playdate->system->setSerialMessageCallback(void (*callback)(const char* data));`\n\nProvides a callback to receive messages sent to the device over the serial port using the `msg` command. If no device is connected, you can send these messages to a game in the simulator by entering `!msg <message>` in the Lua console."] pub setSerialMessageCallback : :: core :: option :: Option < unsafe extern "C" fn (callback : :: core :: option :: Option < unsafe extern "C" fn (data : * const core :: ffi :: c_char) >) > , # [doc = "`int playdate->system->vaFormatString(char **ret, const char *format, va_list args)`\n\nAllocates and formats a string using a variadic `va_list` argument, in the style of `vasprintf()`. The string returned via *ret* should be freed by the caller when it is no longer in use. The return value from the function is the length of the formatted string."] pub vaFormatString : :: core :: option :: Option < unsafe extern "C" fn (outstr : * mut * mut core :: ffi :: c_char , fmt : * const core :: ffi :: c_char , args : va_list) -> core :: ffi :: c_int > , # [doc = "`int playdate->system->parseString(const char *str, const char *format, ...)`\n\nLike libc `sscanf()`, parses a string according to a format string and places the values into pointers passed in after the format. The return value is the number of items matched."] pub parseString : :: core :: option :: Option < unsafe extern "C" fn (str_ : * const core :: ffi :: c_char , format : * const core :: ffi :: c_char , ...) -> core :: ffi :: c_int > , }
 #[test]
 fn bindgen_test_layout_playdate_sys() {
 	const UNINIT: ::core::mem::MaybeUninit<playdate_sys> = ::core::mem::MaybeUninit::uninit();
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sys>(),
-	           176usize,
+	           352usize,
 	           concat!("Size of: ", stringify!(playdate_sys))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sys>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sys))
 	);
 	assert_eq!(
@@ -1437,7 +1479,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).formatString) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1447,7 +1489,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).logToConsole) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1457,7 +1499,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).error) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1467,7 +1509,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getLanguage) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1477,7 +1519,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getCurrentTimeMilliseconds) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1487,7 +1529,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getSecondsSinceEpoch) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1497,7 +1539,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).drawFPS) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1507,7 +1549,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setUpdateCallback) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1517,7 +1559,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getButtonState) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1527,7 +1569,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setPeripheralsEnabled) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1537,7 +1579,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getAccelerometer) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1547,7 +1589,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getCrankChange) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1557,7 +1599,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getCrankAngle) as usize - ptr as usize },
-	           52usize,
+	           104usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1567,7 +1609,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).isCrankDocked) as usize - ptr as usize },
-	           56usize,
+	           112usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1577,7 +1619,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setCrankSoundsDisabled) as usize - ptr as usize },
-	           60usize,
+	           120usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1587,7 +1629,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getFlipped) as usize - ptr as usize },
-	           64usize,
+	           128usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1597,7 +1639,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setAutoLockDisabled) as usize - ptr as usize },
-	           68usize,
+	           136usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1607,7 +1649,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setMenuImage) as usize - ptr as usize },
-	           72usize,
+	           144usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1617,7 +1659,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addMenuItem) as usize - ptr as usize },
-	           76usize,
+	           152usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1627,7 +1669,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addCheckmarkMenuItem) as usize - ptr as usize },
-	           80usize,
+	           160usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1637,7 +1679,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addOptionsMenuItem) as usize - ptr as usize },
-	           84usize,
+	           168usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1647,7 +1689,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).removeAllMenuItems) as usize - ptr as usize },
-	           88usize,
+	           176usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1657,7 +1699,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).removeMenuItem) as usize - ptr as usize },
-	           92usize,
+	           184usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1667,7 +1709,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getMenuItemValue) as usize - ptr as usize },
-	           96usize,
+	           192usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1677,7 +1719,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setMenuItemValue) as usize - ptr as usize },
-	           100usize,
+	           200usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1687,7 +1729,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getMenuItemTitle) as usize - ptr as usize },
-	           104usize,
+	           208usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1697,7 +1739,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setMenuItemTitle) as usize - ptr as usize },
-	           108usize,
+	           216usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1707,7 +1749,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getMenuItemUserdata) as usize - ptr as usize },
-	           112usize,
+	           224usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1717,7 +1759,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setMenuItemUserdata) as usize - ptr as usize },
-	           116usize,
+	           232usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1727,7 +1769,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getReduceFlashing) as usize - ptr as usize },
-	           120usize,
+	           240usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1737,7 +1779,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getElapsedTime) as usize - ptr as usize },
-	           124usize,
+	           248usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1747,7 +1789,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).resetElapsedTime) as usize - ptr as usize },
-	           128usize,
+	           256usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1757,7 +1799,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getBatteryPercentage) as usize - ptr as usize },
-	           132usize,
+	           264usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1767,7 +1809,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getBatteryVoltage) as usize - ptr as usize },
-	           136usize,
+	           272usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1777,7 +1819,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getTimezoneOffset) as usize - ptr as usize },
-	           140usize,
+	           280usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1787,7 +1829,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).shouldDisplay24HourTime) as usize - ptr as usize },
-	           144usize,
+	           288usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1797,7 +1839,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).convertEpochToDateTime) as usize - ptr as usize },
-	           148usize,
+	           296usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1807,7 +1849,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).convertDateTimeToEpoch) as usize - ptr as usize },
-	           152usize,
+	           304usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1817,7 +1859,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).clearICache) as usize - ptr as usize },
-	           156usize,
+	           312usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1827,7 +1869,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setButtonCallback) as usize - ptr as usize },
-	           160usize,
+	           320usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1837,7 +1879,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setSerialMessageCallback) as usize - ptr as usize },
-	           164usize,
+	           328usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1847,7 +1889,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).vaFormatString) as usize - ptr as usize },
-	           168usize,
+	           336usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1857,7 +1899,7 @@ fn bindgen_test_layout_playdate_sys() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).parseString) as usize - ptr as usize },
-	           172usize,
+	           344usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sys),
@@ -1880,7 +1922,7 @@ pub struct LuaUDObject {
 pub struct LCDSprite {
 	_unused: [u8; 0],
 }
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum l_valtype {
@@ -1901,12 +1943,12 @@ fn bindgen_test_layout_lua_reg() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<lua_reg>(),
-	           8usize,
+	           16usize,
 	           concat!("Size of: ", stringify!(lua_reg))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<lua_reg>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(lua_reg))
 	);
 	assert_eq!(
@@ -1916,11 +1958,11 @@ fn bindgen_test_layout_lua_reg() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).func) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!("Offset of field: ", stringify!(lua_reg), "::", stringify!(func))
 	);
 }
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LuaType {
@@ -1947,7 +1989,7 @@ pub struct lua_val__bindgen_ty_1 {
 	pub intval: __BindgenUnionField<core::ffi::c_uint>,
 	pub floatval: __BindgenUnionField<core::ffi::c_float>,
 	pub strval: __BindgenUnionField<*const core::ffi::c_char>,
-	pub bindgen_union_field: u32,
+	pub bindgen_union_field: u64,
 }
 #[test]
 fn bindgen_test_layout_lua_val__bindgen_ty_1() {
@@ -1955,12 +1997,12 @@ fn bindgen_test_layout_lua_val__bindgen_ty_1() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<lua_val__bindgen_ty_1>(),
-	           4usize,
+	           8usize,
 	           concat!("Size of: ", stringify!(lua_val__bindgen_ty_1))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<lua_val__bindgen_ty_1>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(lua_val__bindgen_ty_1))
 	);
 	assert_eq!(
@@ -2000,12 +2042,12 @@ fn bindgen_test_layout_lua_val() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<lua_val>(),
-	           12usize,
+	           24usize,
 	           concat!("Size of: ", stringify!(lua_val))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<lua_val>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(lua_val))
 	);
 	assert_eq!(
@@ -2015,12 +2057,12 @@ fn bindgen_test_layout_lua_val() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).type_) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!("Offset of field: ", stringify!(lua_val), "::", stringify!(type_))
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).v) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!("Offset of field: ", stringify!(lua_val), "::", stringify!(v))
 	);
 }
@@ -2123,12 +2165,12 @@ fn bindgen_test_layout_playdate_lua() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_lua>(),
-	           128usize,
+	           256usize,
 	           concat!("Size of: ", stringify!(playdate_lua))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_lua>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_lua))
 	);
 	assert_eq!(
@@ -2143,7 +2185,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).registerClass) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2153,7 +2195,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).pushFunction) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2163,7 +2205,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).indexMetatable) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2173,7 +2215,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).stop) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2183,7 +2225,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).start) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2193,7 +2235,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getArgCount) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2203,7 +2245,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getArgType) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2213,7 +2255,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).argIsNil) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2223,7 +2265,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getArgBool) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2233,7 +2275,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getArgInt) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2243,7 +2285,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getArgFloat) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2253,7 +2295,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getArgString) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2263,7 +2305,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getArgBytes) as usize - ptr as usize },
-	           52usize,
+	           104usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2273,7 +2315,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getArgObject) as usize - ptr as usize },
-	           56usize,
+	           112usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2283,7 +2325,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getBitmap) as usize - ptr as usize },
-	           60usize,
+	           120usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2293,7 +2335,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getSprite) as usize - ptr as usize },
-	           64usize,
+	           128usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2303,7 +2345,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).pushNil) as usize - ptr as usize },
-	           68usize,
+	           136usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2313,7 +2355,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).pushBool) as usize - ptr as usize },
-	           72usize,
+	           144usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2323,7 +2365,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).pushInt) as usize - ptr as usize },
-	           76usize,
+	           152usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2333,7 +2375,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).pushFloat) as usize - ptr as usize },
-	           80usize,
+	           160usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2343,7 +2385,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).pushString) as usize - ptr as usize },
-	           84usize,
+	           168usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2353,7 +2395,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).pushBytes) as usize - ptr as usize },
-	           88usize,
+	           176usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2363,7 +2405,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).pushBitmap) as usize - ptr as usize },
-	           92usize,
+	           184usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2373,7 +2415,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).pushSprite) as usize - ptr as usize },
-	           96usize,
+	           192usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2383,7 +2425,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).pushObject) as usize - ptr as usize },
-	           100usize,
+	           200usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2393,7 +2435,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).retainObject) as usize - ptr as usize },
-	           104usize,
+	           208usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2403,7 +2445,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).releaseObject) as usize - ptr as usize },
-	           108usize,
+	           216usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2413,7 +2455,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setUserValue) as usize - ptr as usize },
-	           112usize,
+	           224usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2423,7 +2465,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getUserValue) as usize - ptr as usize },
-	           116usize,
+	           232usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2433,7 +2475,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).callFunction_deprecated) as usize - ptr as usize },
-	           120usize,
+	           240usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2443,7 +2485,7 @@ fn bindgen_test_layout_playdate_lua() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).callFunction) as usize - ptr as usize },
-	           124usize,
+	           248usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_lua),
@@ -2452,7 +2494,7 @@ fn bindgen_test_layout_playdate_lua() {
 	)
 	);
 }
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum json_value_type {
@@ -2479,7 +2521,7 @@ pub struct json_value__bindgen_ty_1 {
 	pub stringval: __BindgenUnionField<*mut core::ffi::c_char>,
 	pub arrayval: __BindgenUnionField<*mut core::ffi::c_void>,
 	pub tableval: __BindgenUnionField<*mut core::ffi::c_void>,
-	pub bindgen_union_field: u32,
+	pub bindgen_union_field: u64,
 }
 #[test]
 fn bindgen_test_layout_json_value__bindgen_ty_1() {
@@ -2487,12 +2529,12 @@ fn bindgen_test_layout_json_value__bindgen_ty_1() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<json_value__bindgen_ty_1>(),
-	           4usize,
+	           8usize,
 	           concat!("Size of: ", stringify!(json_value__bindgen_ty_1))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<json_value__bindgen_ty_1>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(json_value__bindgen_ty_1))
 	);
 	assert_eq!(
@@ -2552,12 +2594,12 @@ fn bindgen_test_layout_json_value() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<json_value>(),
-	           8usize,
+	           16usize,
 	           concat!("Size of: ", stringify!(json_value))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<json_value>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(json_value))
 	);
 	assert_eq!(
@@ -2572,7 +2614,7 @@ fn bindgen_test_layout_json_value() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).data) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_value),
@@ -2617,12 +2659,12 @@ fn bindgen_test_layout_json_decoder() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<json_decoder>(),
-	           40usize,
+	           80usize,
 	           concat!("Size of: ", stringify!(json_decoder))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<json_decoder>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(json_decoder))
 	);
 	assert_eq!(
@@ -2637,7 +2679,7 @@ fn bindgen_test_layout_json_decoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).willDecodeSublist) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_decoder),
@@ -2647,7 +2689,7 @@ fn bindgen_test_layout_json_decoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).shouldDecodeTableValueForKey) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_decoder),
@@ -2657,7 +2699,7 @@ fn bindgen_test_layout_json_decoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).didDecodeTableValue) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_decoder),
@@ -2667,7 +2709,7 @@ fn bindgen_test_layout_json_decoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).shouldDecodeArrayValueAtIndex) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_decoder),
@@ -2677,7 +2719,7 @@ fn bindgen_test_layout_json_decoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).didDecodeArrayValue) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_decoder),
@@ -2687,7 +2729,7 @@ fn bindgen_test_layout_json_decoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).didDecodeSublist) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_decoder),
@@ -2697,7 +2739,7 @@ fn bindgen_test_layout_json_decoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).userdata) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_decoder),
@@ -2707,7 +2749,7 @@ fn bindgen_test_layout_json_decoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).returnString) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_decoder),
@@ -2717,7 +2759,7 @@ fn bindgen_test_layout_json_decoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).path) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_decoder),
@@ -2743,12 +2785,12 @@ fn bindgen_test_layout_json_reader() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<json_reader>(),
-	           8usize,
+	           16usize,
 	           concat!("Size of: ", stringify!(json_reader))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<json_reader>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(json_reader))
 	);
 	assert_eq!(
@@ -2763,7 +2805,7 @@ fn bindgen_test_layout_json_reader() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).userdata) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_reader),
@@ -2807,12 +2849,12 @@ fn bindgen_test_layout_json_encoder() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<json_encoder>(),
-	           60usize,
+	           120usize,
 	           concat!("Size of: ", stringify!(json_encoder))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<json_encoder>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(json_encoder))
 	);
 	assert_eq!(
@@ -2827,7 +2869,7 @@ fn bindgen_test_layout_json_encoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).userdata) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_encoder),
@@ -2837,7 +2879,7 @@ fn bindgen_test_layout_json_encoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).startArray) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_encoder),
@@ -2847,7 +2889,7 @@ fn bindgen_test_layout_json_encoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addArrayMember) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_encoder),
@@ -2857,7 +2899,7 @@ fn bindgen_test_layout_json_encoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).endArray) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_encoder),
@@ -2867,7 +2909,7 @@ fn bindgen_test_layout_json_encoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).startTable) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_encoder),
@@ -2877,7 +2919,7 @@ fn bindgen_test_layout_json_encoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addTableMember) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_encoder),
@@ -2887,7 +2929,7 @@ fn bindgen_test_layout_json_encoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).endTable) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_encoder),
@@ -2897,7 +2939,7 @@ fn bindgen_test_layout_json_encoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).writeNull) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_encoder),
@@ -2907,7 +2949,7 @@ fn bindgen_test_layout_json_encoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).writeFalse) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_encoder),
@@ -2917,7 +2959,7 @@ fn bindgen_test_layout_json_encoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).writeTrue) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_encoder),
@@ -2927,7 +2969,7 @@ fn bindgen_test_layout_json_encoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).writeInt) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_encoder),
@@ -2937,7 +2979,7 @@ fn bindgen_test_layout_json_encoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).writeDouble) as usize - ptr as usize },
-	           52usize,
+	           104usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_encoder),
@@ -2947,7 +2989,7 @@ fn bindgen_test_layout_json_encoder() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).writeString) as usize - ptr as usize },
-	           56usize,
+	           112usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(json_encoder),
@@ -3053,12 +3095,12 @@ fn bindgen_test_layout_playdate_json() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_json>(),
-	           12usize,
+	           24usize,
 	           concat!("Size of: ", stringify!(playdate_json))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_json>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_json))
 	);
 	assert_eq!(
@@ -3073,7 +3115,7 @@ fn bindgen_test_layout_playdate_json() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).decode) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_json),
@@ -3083,7 +3125,7 @@ fn bindgen_test_layout_playdate_json() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).decodeString) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_json),
@@ -3126,7 +3168,7 @@ impl ::core::ops::BitAndAssign for FileOptions {
 #[repr(transparent)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
-pub struct FileOptions(pub u8);
+pub struct FileOptions(pub i32);
 #[repr(C)]
 #[derive(Debug)]
 #[must_use]
@@ -3230,12 +3272,12 @@ fn bindgen_test_layout_playdate_file() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_file>(),
-	           52usize,
+	           104usize,
 	           concat!("Size of: ", stringify!(playdate_file))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_file>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_file))
 	);
 	assert_eq!(
@@ -3250,7 +3292,7 @@ fn bindgen_test_layout_playdate_file() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).listfiles) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_file),
@@ -3260,7 +3302,7 @@ fn bindgen_test_layout_playdate_file() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).stat) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_file),
@@ -3270,7 +3312,7 @@ fn bindgen_test_layout_playdate_file() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).mkdir) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_file),
@@ -3280,7 +3322,7 @@ fn bindgen_test_layout_playdate_file() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).unlink) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_file),
@@ -3290,7 +3332,7 @@ fn bindgen_test_layout_playdate_file() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).rename) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_file),
@@ -3300,7 +3342,7 @@ fn bindgen_test_layout_playdate_file() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).open) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_file),
@@ -3310,7 +3352,7 @@ fn bindgen_test_layout_playdate_file() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).close) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_file),
@@ -3320,7 +3362,7 @@ fn bindgen_test_layout_playdate_file() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).read) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_file),
@@ -3330,7 +3372,7 @@ fn bindgen_test_layout_playdate_file() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).write) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_file),
@@ -3340,7 +3382,7 @@ fn bindgen_test_layout_playdate_file() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).flush) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_file),
@@ -3350,7 +3392,7 @@ fn bindgen_test_layout_playdate_file() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).tell) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_file),
@@ -3360,7 +3402,7 @@ fn bindgen_test_layout_playdate_file() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).seek) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_file),
@@ -3369,7 +3411,7 @@ fn bindgen_test_layout_playdate_file() {
 	)
 	);
 }
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum SpriteCollisionResponseType {
@@ -3527,12 +3569,12 @@ fn bindgen_test_layout_SpriteCollisionInfo() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<SpriteCollisionInfo>(),
-	           72usize,
+	           88usize,
 	           concat!("Size of: ", stringify!(SpriteCollisionInfo))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<SpriteCollisionInfo>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(SpriteCollisionInfo))
 	);
 	assert_eq!(
@@ -3547,7 +3589,7 @@ fn bindgen_test_layout_SpriteCollisionInfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).other) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(SpriteCollisionInfo),
@@ -3557,7 +3599,7 @@ fn bindgen_test_layout_SpriteCollisionInfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).responseType) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(SpriteCollisionInfo),
@@ -3567,7 +3609,7 @@ fn bindgen_test_layout_SpriteCollisionInfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).overlaps) as usize - ptr as usize },
-	           9usize,
+	           20usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(SpriteCollisionInfo),
@@ -3577,7 +3619,7 @@ fn bindgen_test_layout_SpriteCollisionInfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).ti) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(SpriteCollisionInfo),
@@ -3587,7 +3629,7 @@ fn bindgen_test_layout_SpriteCollisionInfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).move_) as usize - ptr as usize },
-	           16usize,
+	           28usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(SpriteCollisionInfo),
@@ -3597,7 +3639,7 @@ fn bindgen_test_layout_SpriteCollisionInfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).normal) as usize - ptr as usize },
-	           24usize,
+	           36usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(SpriteCollisionInfo),
@@ -3607,7 +3649,7 @@ fn bindgen_test_layout_SpriteCollisionInfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).touch) as usize - ptr as usize },
-	           32usize,
+	           44usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(SpriteCollisionInfo),
@@ -3617,7 +3659,7 @@ fn bindgen_test_layout_SpriteCollisionInfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).spriteRect) as usize - ptr as usize },
-	           40usize,
+	           52usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(SpriteCollisionInfo),
@@ -3627,7 +3669,7 @@ fn bindgen_test_layout_SpriteCollisionInfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).otherRect) as usize - ptr as usize },
-	           56usize,
+	           68usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(SpriteCollisionInfo),
@@ -3652,12 +3694,12 @@ fn bindgen_test_layout_SpriteQueryInfo() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<SpriteQueryInfo>(),
-	           28usize,
+	           32usize,
 	           concat!("Size of: ", stringify!(SpriteQueryInfo))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<SpriteQueryInfo>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(SpriteQueryInfo))
 	);
 	assert_eq!(
@@ -3672,7 +3714,7 @@ fn bindgen_test_layout_SpriteQueryInfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).ti1) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(SpriteQueryInfo),
@@ -3682,7 +3724,7 @@ fn bindgen_test_layout_SpriteQueryInfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).ti2) as usize - ptr as usize },
-	           8usize,
+	           12usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(SpriteQueryInfo),
@@ -3692,7 +3734,7 @@ fn bindgen_test_layout_SpriteQueryInfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).entryPoint) as usize - ptr as usize },
-	           12usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(SpriteQueryInfo),
@@ -3702,7 +3744,7 @@ fn bindgen_test_layout_SpriteQueryInfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).exitPoint) as usize - ptr as usize },
-	           20usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(SpriteQueryInfo),
@@ -3917,12 +3959,12 @@ fn bindgen_test_layout_playdate_sprite() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sprite>(),
-	           252usize,
+	           504usize,
 	           concat!("Size of: ", stringify!(playdate_sprite))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sprite>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sprite))
 	);
 	assert_eq!(
@@ -3937,7 +3979,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addDirtyRect) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -3947,7 +3989,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).drawSprites) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -3957,7 +3999,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).updateAndDrawSprites) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -3967,7 +4009,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).newSprite) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -3977,7 +4019,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeSprite) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -3987,7 +4029,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).copy) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -3997,7 +4039,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addSprite) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4007,7 +4049,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).removeSprite) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4017,7 +4059,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).removeSprites) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4027,7 +4069,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).removeAllSprites) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4037,7 +4079,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getSpriteCount) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4047,7 +4089,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setBounds) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4057,7 +4099,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getBounds) as usize - ptr as usize },
-	           52usize,
+	           104usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4067,7 +4109,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).moveTo) as usize - ptr as usize },
-	           56usize,
+	           112usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4077,7 +4119,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).moveBy) as usize - ptr as usize },
-	           60usize,
+	           120usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4087,7 +4129,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setImage) as usize - ptr as usize },
-	           64usize,
+	           128usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4097,7 +4139,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getImage) as usize - ptr as usize },
-	           68usize,
+	           136usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4107,7 +4149,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setSize) as usize - ptr as usize },
-	           72usize,
+	           144usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4117,7 +4159,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setZIndex) as usize - ptr as usize },
-	           76usize,
+	           152usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4127,7 +4169,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getZIndex) as usize - ptr as usize },
-	           80usize,
+	           160usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4137,7 +4179,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setDrawMode) as usize - ptr as usize },
-	           84usize,
+	           168usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4147,7 +4189,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setImageFlip) as usize - ptr as usize },
-	           88usize,
+	           176usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4157,7 +4199,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getImageFlip) as usize - ptr as usize },
-	           92usize,
+	           184usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4167,7 +4209,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setStencil) as usize - ptr as usize },
-	           96usize,
+	           192usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4177,7 +4219,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setClipRect) as usize - ptr as usize },
-	           100usize,
+	           200usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4187,7 +4229,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).clearClipRect) as usize - ptr as usize },
-	           104usize,
+	           208usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4197,7 +4239,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setClipRectsInRange) as usize - ptr as usize },
-	           108usize,
+	           216usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4207,7 +4249,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).clearClipRectsInRange) as usize - ptr as usize },
-	           112usize,
+	           224usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4217,7 +4259,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setUpdatesEnabled) as usize - ptr as usize },
-	           116usize,
+	           232usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4227,7 +4269,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).updatesEnabled) as usize - ptr as usize },
-	           120usize,
+	           240usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4237,7 +4279,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setCollisionsEnabled) as usize - ptr as usize },
-	           124usize,
+	           248usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4247,7 +4289,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).collisionsEnabled) as usize - ptr as usize },
-	           128usize,
+	           256usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4257,7 +4299,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setVisible) as usize - ptr as usize },
-	           132usize,
+	           264usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4267,7 +4309,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).isVisible) as usize - ptr as usize },
-	           136usize,
+	           272usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4277,7 +4319,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setOpaque) as usize - ptr as usize },
-	           140usize,
+	           280usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4287,7 +4329,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).markDirty) as usize - ptr as usize },
-	           144usize,
+	           288usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4297,7 +4339,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setTag) as usize - ptr as usize },
-	           148usize,
+	           296usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4307,7 +4349,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getTag) as usize - ptr as usize },
-	           152usize,
+	           304usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4317,7 +4359,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setIgnoresDrawOffset) as usize - ptr as usize },
-	           156usize,
+	           312usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4327,7 +4369,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setUpdateFunction) as usize - ptr as usize },
-	           160usize,
+	           320usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4337,7 +4379,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setDrawFunction) as usize - ptr as usize },
-	           164usize,
+	           328usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4347,7 +4389,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getPosition) as usize - ptr as usize },
-	           168usize,
+	           336usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4357,7 +4399,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).resetCollisionWorld) as usize - ptr as usize },
-	           172usize,
+	           344usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4367,7 +4409,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setCollideRect) as usize - ptr as usize },
-	           176usize,
+	           352usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4377,7 +4419,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getCollideRect) as usize - ptr as usize },
-	           180usize,
+	           360usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4387,7 +4429,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).clearCollideRect) as usize - ptr as usize },
-	           184usize,
+	           368usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4397,7 +4439,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setCollisionResponseFunction) as usize - ptr as usize },
-	           188usize,
+	           376usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4407,7 +4449,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).checkCollisions) as usize - ptr as usize },
-	           192usize,
+	           384usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4417,7 +4459,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).moveWithCollisions) as usize - ptr as usize },
-	           196usize,
+	           392usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4427,7 +4469,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).querySpritesAtPoint) as usize - ptr as usize },
-	           200usize,
+	           400usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4437,7 +4479,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).querySpritesInRect) as usize - ptr as usize },
-	           204usize,
+	           408usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4447,7 +4489,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).querySpritesAlongLine) as usize - ptr as usize },
-	           208usize,
+	           416usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4457,7 +4499,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).querySpriteInfoAlongLine) as usize - ptr as usize },
-	           212usize,
+	           424usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4467,7 +4509,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).overlappingSprites) as usize - ptr as usize },
-	           216usize,
+	           432usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4477,7 +4519,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).allOverlappingSprites) as usize - ptr as usize },
-	           220usize,
+	           440usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4487,7 +4529,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setStencilPattern) as usize - ptr as usize },
-	           224usize,
+	           448usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4497,7 +4539,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).clearStencil) as usize - ptr as usize },
-	           228usize,
+	           456usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4507,7 +4549,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setUserdata) as usize - ptr as usize },
-	           232usize,
+	           464usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4517,7 +4559,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getUserdata) as usize - ptr as usize },
-	           236usize,
+	           472usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4527,7 +4569,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setStencilImage) as usize - ptr as usize },
-	           240usize,
+	           480usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4537,7 +4579,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setCenter) as usize - ptr as usize },
-	           244usize,
+	           488usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4547,7 +4589,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getCenter) as usize - ptr as usize },
-	           248usize,
+	           496usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sprite),
@@ -4556,7 +4598,7 @@ fn bindgen_test_layout_playdate_sprite() {
 	)
 	);
 }
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum SoundFormat {
@@ -4600,12 +4642,12 @@ fn bindgen_test_layout_playdate_sound_source() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_source>(),
-	           16usize,
+	           32usize,
 	           concat!("Size of: ", stringify!(playdate_sound_source))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_source>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_source))
 	);
 	assert_eq!(
@@ -4620,7 +4662,7 @@ fn bindgen_test_layout_playdate_sound_source() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getVolume) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_source),
@@ -4630,7 +4672,7 @@ fn bindgen_test_layout_playdate_sound_source() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).isPlaying) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_source),
@@ -4640,7 +4682,7 @@ fn bindgen_test_layout_playdate_sound_source() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setFinishCallback) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_source),
@@ -4665,12 +4707,12 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_fileplayer>(),
-	           88usize,
+	           176usize,
 	           concat!("Size of: ", stringify!(playdate_sound_fileplayer))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_fileplayer>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_fileplayer))
 	);
 	assert_eq!(
@@ -4685,7 +4727,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freePlayer) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4695,7 +4737,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).loadIntoPlayer) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4705,7 +4747,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setBufferLength) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4715,7 +4757,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).play) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4725,7 +4767,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).isPlaying) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4735,7 +4777,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).pause) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4745,7 +4787,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).stop) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4755,7 +4797,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setVolume) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4765,7 +4807,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getVolume) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4775,7 +4817,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getLength) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4785,7 +4827,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setOffset) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4795,7 +4837,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setRate) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4805,7 +4847,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setLoopRange) as usize - ptr as usize },
-	           52usize,
+	           104usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4815,7 +4857,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).didUnderrun) as usize - ptr as usize },
-	           56usize,
+	           112usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4825,7 +4867,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setFinishCallback) as usize - ptr as usize },
-	           60usize,
+	           120usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4835,7 +4877,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setLoopCallback) as usize - ptr as usize },
-	           64usize,
+	           128usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4845,7 +4887,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getOffset) as usize - ptr as usize },
-	           68usize,
+	           136usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4855,7 +4897,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getRate) as usize - ptr as usize },
-	           72usize,
+	           144usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4865,7 +4907,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setStopOnUnderrun) as usize - ptr as usize },
-	           76usize,
+	           152usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4875,7 +4917,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).fadeVolume) as usize - ptr as usize },
-	           80usize,
+	           160usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4885,7 +4927,7 @@ fn bindgen_test_layout_playdate_sound_fileplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setMP3StreamSource) as usize - ptr as usize },
-	           84usize,
+	           168usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_fileplayer),
@@ -4919,18 +4961,19 @@ pub struct playdate_sound_sample {
 	                                                                -> core::ffi::c_int>,
 	#[doc = "`AudioSample* playdate->sound->sample->load(const char* path)`\n\nAllocates and returns a new AudioSample, with the sound data loaded in memory. If there is no file at *path*, the function returns null."]
 	pub load: ::core::option::Option<unsafe extern "C" fn(path: *const core::ffi::c_char) -> *mut AudioSample>,
-	#[doc = "`AudioSample* playdate->sound->sample->newSampleFromData(uint8_t* data, SoundFormat format, uint32_t sampleRate, int byteCount)`\n\nReturns a new AudioSample referencing the given audio data. The sample keeps a pointer to the data instead of copying it, so the data must remain valid while the sample is active. *format* is one of the following values:\n\nSoundFormat\n\n```cpp\ntypedef enum\n{\n\tkSound8bitMono = 0,\n\tkSound8bitStereo = 1,\n\tkSound16bitMono = 2,\n\tkSound16bitStereo = 3,\n\tkSoundADPCMMono = 4,\n\tkSoundADPCMStereo = 5\n} SoundFormat;\n```\n\n`pd_api_sound.h` also provides some helper macros and functions:\n\n```cpp\n#define SoundFormatIsStereo(f) ((f)&1)\n#define SoundFormatIs16bit(f) ((f)>=kSound16bitMono)\nstatic inline uint32_t SoundFormat_bytesPerFrame(SoundFormat fmt);\n```"]
+	#[doc = "`AudioSample* playdate->sound->sample->newSampleFromData(uint8_t* data, SoundFormat format, uint32_t sampleRate, int byteCount, int shouldFreeData)`\n\nReturns a new AudioSample referencing the given audio data. If *shouldFreeData* is set, *data* is freed when the sample object is [freed](#f-sound.sample.freeSample). The sample keeps a pointer to the data instead of copying it, so the data must remain valid while the sample is active. *format* is one of the following values:\n\nSoundFormat\n\n```cpp\ntypedef enum\n{\n\tkSound8bitMono = 0,\n\tkSound8bitStereo = 1,\n\tkSound16bitMono = 2,\n\tkSound16bitStereo = 3,\n\tkSoundADPCMMono = 4,\n\tkSoundADPCMStereo = 5\n} SoundFormat;\n```\n\n`pd_api_sound.h` also provides some helper macros and functions:\n\n```cpp\n#define SoundFormatIsStereo(f) ((f)&1)\n#define SoundFormatIs16bit(f) ((f)>=kSound16bitMono)\nstatic inline uint32_t SoundFormat_bytesPerFrame(SoundFormat fmt);\n```"]
 	pub newSampleFromData: ::core::option::Option<unsafe extern "C" fn(data: *mut u8,
 	                                                                   format: SoundFormat,
 	                                                                   sampleRate: u32,
-	                                                                   byteCount: core::ffi::c_int)
+	                                                                   byteCount: core::ffi::c_int,
+	                                                                   shouldFreeData: core::ffi::c_int)
 	                                                                   -> *mut AudioSample>,
 	pub getData: ::core::option::Option<unsafe extern "C" fn(sample: *mut AudioSample,
 	                                                         data: *mut *mut u8,
 	                                                         format: *mut SoundFormat,
 	                                                         sampleRate: *mut u32,
 	                                                         bytelength: *mut u32)>,
-	#[doc = "`void playdate->sound->sample->freeSample(AudioSample* sample)`\n\nFrees the given *sample*."]
+	#[doc = "`void playdate->sound->sample->freeSample(AudioSample* sample)`\n\nFrees the given *sample*. If the sample was created with [playdate→sound→sample→newSampleFromData()](#f-sound.sample.newSampleFromData) and the *shouldFreeData* flag was set, the sample’s source data is also freed."]
 	pub freeSample: ::core::option::Option<unsafe extern "C" fn(sample: *mut AudioSample)>,
 	#[doc = "`float playdate->sound->sample->getLength(AudioSample* sample)`\n\nReturns the length, in seconds, of *sample*."]
 	pub getLength: ::core::option::Option<unsafe extern "C" fn(sample: *mut AudioSample) -> core::ffi::c_float>,
@@ -4943,12 +4986,12 @@ fn bindgen_test_layout_playdate_sound_sample() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_sample>(),
-	           32usize,
+	           64usize,
 	           concat!("Size of: ", stringify!(playdate_sound_sample))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_sample>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_sample))
 	);
 	assert_eq!(
@@ -4963,7 +5006,7 @@ fn bindgen_test_layout_playdate_sound_sample() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).loadIntoSample) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sample),
@@ -4973,7 +5016,7 @@ fn bindgen_test_layout_playdate_sound_sample() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).load) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sample),
@@ -4983,7 +5026,7 @@ fn bindgen_test_layout_playdate_sound_sample() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).newSampleFromData) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sample),
@@ -4993,7 +5036,7 @@ fn bindgen_test_layout_playdate_sound_sample() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getData) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sample),
@@ -5003,7 +5046,7 @@ fn bindgen_test_layout_playdate_sound_sample() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeSample) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sample),
@@ -5013,7 +5056,7 @@ fn bindgen_test_layout_playdate_sound_sample() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getLength) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sample),
@@ -5023,7 +5066,7 @@ fn bindgen_test_layout_playdate_sound_sample() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).decompress) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sample),
@@ -5091,12 +5134,12 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_sampleplayer>(),
-	           68usize,
+	           136usize,
 	           concat!("Size of: ", stringify!(playdate_sound_sampleplayer))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_sampleplayer>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_sampleplayer))
 	);
 	assert_eq!(
@@ -5111,7 +5154,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freePlayer) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5121,7 +5164,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setSample) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5131,7 +5174,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).play) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5141,7 +5184,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).isPlaying) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5151,7 +5194,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).stop) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5161,7 +5204,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setVolume) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5171,7 +5214,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getVolume) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5181,7 +5224,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getLength) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5191,7 +5234,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setOffset) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5201,7 +5244,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setRate) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5211,7 +5254,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setPlayRange) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5221,7 +5264,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setFinishCallback) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5231,7 +5274,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setLoopCallback) as usize - ptr as usize },
-	           52usize,
+	           104usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5241,7 +5284,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getOffset) as usize - ptr as usize },
-	           56usize,
+	           112usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5251,7 +5294,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getRate) as usize - ptr as usize },
-	           60usize,
+	           120usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5261,7 +5304,7 @@ fn bindgen_test_layout_playdate_sound_sampleplayer() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setPaused) as usize - ptr as usize },
-	           64usize,
+	           128usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sampleplayer),
@@ -5322,12 +5365,12 @@ fn bindgen_test_layout_playdate_sound_signal() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_signal>(),
-	           20usize,
+	           40usize,
 	           concat!("Size of: ", stringify!(playdate_sound_signal))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_signal>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_signal))
 	);
 	assert_eq!(
@@ -5342,7 +5385,7 @@ fn bindgen_test_layout_playdate_sound_signal() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeSignal) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_signal),
@@ -5352,7 +5395,7 @@ fn bindgen_test_layout_playdate_sound_signal() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getValue) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_signal),
@@ -5362,7 +5405,7 @@ fn bindgen_test_layout_playdate_sound_signal() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setValueScale) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_signal),
@@ -5372,7 +5415,7 @@ fn bindgen_test_layout_playdate_sound_signal() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setValueOffset) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_signal),
@@ -5381,7 +5424,7 @@ fn bindgen_test_layout_playdate_sound_signal() {
 	)
 	);
 }
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LFOType {
@@ -5410,12 +5453,12 @@ fn bindgen_test_layout_playdate_sound_lfo() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_lfo>(),
-	           56usize,
+	           112usize,
 	           concat!("Size of: ", stringify!(playdate_sound_lfo))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_lfo>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_lfo))
 	);
 	assert_eq!(
@@ -5430,7 +5473,7 @@ fn bindgen_test_layout_playdate_sound_lfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeLFO) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_lfo),
@@ -5440,7 +5483,7 @@ fn bindgen_test_layout_playdate_sound_lfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setType) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_lfo),
@@ -5450,7 +5493,7 @@ fn bindgen_test_layout_playdate_sound_lfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setRate) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_lfo),
@@ -5460,7 +5503,7 @@ fn bindgen_test_layout_playdate_sound_lfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setPhase) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_lfo),
@@ -5470,7 +5513,7 @@ fn bindgen_test_layout_playdate_sound_lfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setCenter) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_lfo),
@@ -5480,7 +5523,7 @@ fn bindgen_test_layout_playdate_sound_lfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setDepth) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_lfo),
@@ -5490,7 +5533,7 @@ fn bindgen_test_layout_playdate_sound_lfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setArpeggiation) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_lfo),
@@ -5500,7 +5543,7 @@ fn bindgen_test_layout_playdate_sound_lfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setFunction) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_lfo),
@@ -5510,7 +5553,7 @@ fn bindgen_test_layout_playdate_sound_lfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setDelay) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_lfo),
@@ -5520,7 +5563,7 @@ fn bindgen_test_layout_playdate_sound_lfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setRetrigger) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_lfo),
@@ -5530,7 +5573,7 @@ fn bindgen_test_layout_playdate_sound_lfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getValue) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_lfo),
@@ -5540,7 +5583,7 @@ fn bindgen_test_layout_playdate_sound_lfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setGlobal) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_lfo),
@@ -5550,7 +5593,7 @@ fn bindgen_test_layout_playdate_sound_lfo() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setStartPhase) as usize - ptr as usize },
-	           52usize,
+	           104usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_lfo),
@@ -5614,12 +5657,12 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_envelope>(),
-	           48usize,
+	           96usize,
 	           concat!("Size of: ", stringify!(playdate_sound_envelope))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_envelope>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_envelope))
 	);
 	assert_eq!(
@@ -5634,7 +5677,7 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeEnvelope) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_envelope),
@@ -5644,7 +5687,7 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setAttack) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_envelope),
@@ -5654,7 +5697,7 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setDecay) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_envelope),
@@ -5664,7 +5707,7 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setSustain) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_envelope),
@@ -5674,7 +5717,7 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setRelease) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_envelope),
@@ -5684,7 +5727,7 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setLegato) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_envelope),
@@ -5694,7 +5737,7 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setRetrigger) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_envelope),
@@ -5704,7 +5747,7 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getValue) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_envelope),
@@ -5714,7 +5757,7 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setCurvature) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_envelope),
@@ -5724,7 +5767,7 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setVelocitySensitivity) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_envelope),
@@ -5734,7 +5777,7 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setRateScaling) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_envelope),
@@ -5743,7 +5786,7 @@ fn bindgen_test_layout_playdate_sound_envelope() {
 	)
 	);
 }
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum SoundWaveform {
@@ -5899,12 +5942,12 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_synth>(),
-	           116usize,
+	           232usize,
 	           concat!("Size of: ", stringify!(playdate_sound_synth))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_synth>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_synth))
 	);
 	assert_eq!(
@@ -5919,7 +5962,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeSynth) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -5929,7 +5972,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setWaveform) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -5939,7 +5982,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setGenerator_deprecated) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -5949,7 +5992,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setSample) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -5959,7 +6002,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setAttackTime) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -5969,7 +6012,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setDecayTime) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -5979,7 +6022,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setSustainLevel) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -5989,7 +6032,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setReleaseTime) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -5999,7 +6042,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setTranspose) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6009,7 +6052,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setFrequencyModulator) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6019,7 +6062,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getFrequencyModulator) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6029,7 +6072,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setAmplitudeModulator) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6039,7 +6082,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getAmplitudeModulator) as usize - ptr as usize },
-	           52usize,
+	           104usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6049,7 +6092,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getParameterCount) as usize - ptr as usize },
-	           56usize,
+	           112usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6059,7 +6102,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setParameter) as usize - ptr as usize },
-	           60usize,
+	           120usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6069,7 +6112,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setParameterModulator) as usize - ptr as usize },
-	           64usize,
+	           128usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6079,7 +6122,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getParameterModulator) as usize - ptr as usize },
-	           68usize,
+	           136usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6089,7 +6132,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).playNote) as usize - ptr as usize },
-	           72usize,
+	           144usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6099,7 +6142,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).playMIDINote) as usize - ptr as usize },
-	           76usize,
+	           152usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6109,7 +6152,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).noteOff) as usize - ptr as usize },
-	           80usize,
+	           160usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6119,7 +6162,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).stop) as usize - ptr as usize },
-	           84usize,
+	           168usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6129,7 +6172,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setVolume) as usize - ptr as usize },
-	           88usize,
+	           176usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6139,7 +6182,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getVolume) as usize - ptr as usize },
-	           92usize,
+	           184usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6149,7 +6192,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).isPlaying) as usize - ptr as usize },
-	           96usize,
+	           192usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6159,7 +6202,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getEnvelope) as usize - ptr as usize },
-	           100usize,
+	           200usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6169,7 +6212,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setWavetable) as usize - ptr as usize },
-	           104usize,
+	           208usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6179,7 +6222,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setGenerator) as usize - ptr as usize },
-	           108usize,
+	           216usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6189,7 +6232,7 @@ fn bindgen_test_layout_playdate_sound_synth() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).copy) as usize - ptr as usize },
-	           112usize,
+	           224usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_synth),
@@ -6232,12 +6275,12 @@ fn bindgen_test_layout_playdate_control_signal() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_control_signal>(),
-	           24usize,
+	           48usize,
 	           concat!("Size of: ", stringify!(playdate_control_signal))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_control_signal>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_control_signal))
 	);
 	assert_eq!(
@@ -6252,7 +6295,7 @@ fn bindgen_test_layout_playdate_control_signal() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeSignal) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_control_signal),
@@ -6262,7 +6305,7 @@ fn bindgen_test_layout_playdate_control_signal() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).clearEvents) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_control_signal),
@@ -6272,7 +6315,7 @@ fn bindgen_test_layout_playdate_control_signal() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addEvent) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_control_signal),
@@ -6282,7 +6325,7 @@ fn bindgen_test_layout_playdate_control_signal() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).removeEvent) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_control_signal),
@@ -6292,7 +6335,7 @@ fn bindgen_test_layout_playdate_control_signal() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getMIDIControllerNumber) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_control_signal),
@@ -6368,12 +6411,12 @@ fn bindgen_test_layout_playdate_sound_instrument() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_instrument>(),
-	           52usize,
+	           104usize,
 	           concat!("Size of: ", stringify!(playdate_sound_instrument))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_instrument>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_instrument))
 	);
 	assert_eq!(
@@ -6388,7 +6431,7 @@ fn bindgen_test_layout_playdate_sound_instrument() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeInstrument) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_instrument),
@@ -6398,7 +6441,7 @@ fn bindgen_test_layout_playdate_sound_instrument() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addVoice) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_instrument),
@@ -6408,7 +6451,7 @@ fn bindgen_test_layout_playdate_sound_instrument() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).playNote) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_instrument),
@@ -6418,7 +6461,7 @@ fn bindgen_test_layout_playdate_sound_instrument() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).playMIDINote) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_instrument),
@@ -6428,7 +6471,7 @@ fn bindgen_test_layout_playdate_sound_instrument() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setPitchBend) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_instrument),
@@ -6438,7 +6481,7 @@ fn bindgen_test_layout_playdate_sound_instrument() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setPitchBendRange) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_instrument),
@@ -6448,7 +6491,7 @@ fn bindgen_test_layout_playdate_sound_instrument() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setTranspose) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_instrument),
@@ -6458,7 +6501,7 @@ fn bindgen_test_layout_playdate_sound_instrument() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).noteOff) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_instrument),
@@ -6468,7 +6511,7 @@ fn bindgen_test_layout_playdate_sound_instrument() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).allNotesOff) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_instrument),
@@ -6478,7 +6521,7 @@ fn bindgen_test_layout_playdate_sound_instrument() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setVolume) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_instrument),
@@ -6488,7 +6531,7 @@ fn bindgen_test_layout_playdate_sound_instrument() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getVolume) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_instrument),
@@ -6498,7 +6541,7 @@ fn bindgen_test_layout_playdate_sound_instrument() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).activeVoiceCount) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_instrument),
@@ -6579,12 +6622,12 @@ fn bindgen_test_layout_playdate_sound_track() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_track>(),
-	           68usize,
+	           136usize,
 	           concat!("Size of: ", stringify!(playdate_sound_track))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_track>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_track))
 	);
 	assert_eq!(
@@ -6599,7 +6642,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeTrack) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6609,7 +6652,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setInstrument) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6619,7 +6662,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getInstrument) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6629,7 +6672,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addNoteEvent) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6639,7 +6682,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).removeNoteEvent) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6649,7 +6692,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).clearNotes) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6659,7 +6702,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getControlSignalCount) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6669,7 +6712,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getControlSignal) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6679,7 +6722,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).clearControlEvents) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6689,7 +6732,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getPolyphony) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6699,7 +6742,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).activeVoiceCount) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6709,7 +6752,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setMuted) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6719,7 +6762,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getLength) as usize - ptr as usize },
-	           52usize,
+	           104usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6729,7 +6772,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getIndexForStep) as usize - ptr as usize },
-	           56usize,
+	           112usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6739,7 +6782,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getNoteAtIndex) as usize - ptr as usize },
-	           60usize,
+	           120usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6749,7 +6792,7 @@ fn bindgen_test_layout_playdate_sound_track() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getSignalForController) as usize - ptr as usize },
-	           64usize,
+	           128usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_track),
@@ -6787,8 +6830,8 @@ pub struct playdate_sound_sequence {
 	                                                          loopstart: core::ffi::c_int,
 	                                                          loopend: core::ffi::c_int,
 	                                                          loops: core::ffi::c_int)>,
-	#[doc = "`int playdate->sound->sequence->getTempo(SoundSequence* sequence)`"]
-	pub getTempo: ::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence) -> core::ffi::c_int>,
+	pub getTempo_deprecated:
+		::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence) -> core::ffi::c_int>,
 	#[doc = "`void playdate->sound->sequence->setTempo(SoundSequence* sequence, float stepsPerSecond)`\n\nSets or gets the tempo of the sequence, in steps per second."]
 	pub setTempo:
 		::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence, stepsPerSecond: core::ffi::c_float)>,
@@ -6825,6 +6868,8 @@ pub struct playdate_sound_sequence {
 	                                                                step: core::ffi::c_int,
 	                                                                timeOffset: core::ffi::c_int,
 	                                                                playNotes: core::ffi::c_int)>,
+	#[doc = "`float playdate->sound->sequence->getTempo(SoundSequence* sequence)`"]
+	pub getTempo: ::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence) -> core::ffi::c_float>,
 }
 #[test]
 fn bindgen_test_layout_playdate_sound_sequence() {
@@ -6832,12 +6877,12 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_sequence>(),
-	           76usize,
+	           160usize,
 	           concat!("Size of: ", stringify!(playdate_sound_sequence))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_sequence>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_sequence))
 	);
 	assert_eq!(
@@ -6852,7 +6897,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeSequence) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -6862,7 +6907,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).loadMIDIFile) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -6872,7 +6917,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getTime) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -6882,7 +6927,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setTime) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -6892,7 +6937,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setLoops) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -6901,18 +6946,18 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	)
 	);
 	assert_eq!(
-	           unsafe { ::core::ptr::addr_of!((*ptr).getTempo) as usize - ptr as usize },
-	           24usize,
+	           unsafe { ::core::ptr::addr_of!((*ptr).getTempo_deprecated) as usize - ptr as usize },
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
 		"::",
-		stringify!(getTempo)
+		stringify!(getTempo_deprecated)
 	)
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setTempo) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -6922,7 +6967,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getTrackCount) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -6932,7 +6977,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addTrack) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -6942,7 +6987,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getTrackAtIndex) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -6952,7 +6997,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setTrackAtIndex) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -6962,7 +7007,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).allNotesOff) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -6972,7 +7017,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).isPlaying) as usize - ptr as usize },
-	           52usize,
+	           104usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -6982,7 +7027,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getLength) as usize - ptr as usize },
-	           56usize,
+	           112usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -6992,7 +7037,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).play) as usize - ptr as usize },
-	           60usize,
+	           120usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -7002,7 +7047,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).stop) as usize - ptr as usize },
-	           64usize,
+	           128usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -7012,7 +7057,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getCurrentStep) as usize - ptr as usize },
-	           68usize,
+	           136usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
@@ -7022,12 +7067,22 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setCurrentStep) as usize - ptr as usize },
-	           72usize,
+	           144usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_sequence),
 		"::",
 		stringify!(setCurrentStep)
+	)
+	);
+	assert_eq!(
+	           unsafe { ::core::ptr::addr_of!((*ptr).getTempo) as usize - ptr as usize },
+	           152usize,
+	           concat!(
+		"Offset of field: ",
+		stringify!(playdate_sound_sequence),
+		"::",
+		stringify!(getTempo)
 	)
 	);
 }
@@ -7037,7 +7092,7 @@ fn bindgen_test_layout_playdate_sound_sequence() {
 pub struct TwoPoleFilter {
 	_unused: [u8; 0],
 }
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum TwoPoleFilterType {
@@ -7089,12 +7144,12 @@ fn bindgen_test_layout_playdate_sound_effect_twopolefilter() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_effect_twopolefilter>(),
-	           40usize,
+	           80usize,
 	           concat!("Size of: ", stringify!(playdate_sound_effect_twopolefilter))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_effect_twopolefilter>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_effect_twopolefilter))
 	);
 	assert_eq!(
@@ -7109,7 +7164,7 @@ fn bindgen_test_layout_playdate_sound_effect_twopolefilter() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeFilter) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_twopolefilter),
@@ -7119,7 +7174,7 @@ fn bindgen_test_layout_playdate_sound_effect_twopolefilter() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setType) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_twopolefilter),
@@ -7129,7 +7184,7 @@ fn bindgen_test_layout_playdate_sound_effect_twopolefilter() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setFrequency) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_twopolefilter),
@@ -7139,7 +7194,7 @@ fn bindgen_test_layout_playdate_sound_effect_twopolefilter() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setFrequencyModulator) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_twopolefilter),
@@ -7149,7 +7204,7 @@ fn bindgen_test_layout_playdate_sound_effect_twopolefilter() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getFrequencyModulator) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_twopolefilter),
@@ -7159,7 +7214,7 @@ fn bindgen_test_layout_playdate_sound_effect_twopolefilter() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setGain) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_twopolefilter),
@@ -7169,7 +7224,7 @@ fn bindgen_test_layout_playdate_sound_effect_twopolefilter() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setResonance) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_twopolefilter),
@@ -7179,7 +7234,7 @@ fn bindgen_test_layout_playdate_sound_effect_twopolefilter() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setResonanceModulator) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_twopolefilter),
@@ -7189,7 +7244,7 @@ fn bindgen_test_layout_playdate_sound_effect_twopolefilter() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getResonanceModulator) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_twopolefilter),
@@ -7229,12 +7284,12 @@ fn bindgen_test_layout_playdate_sound_effect_onepolefilter() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_effect_onepolefilter>(),
-	           20usize,
+	           40usize,
 	           concat!("Size of: ", stringify!(playdate_sound_effect_onepolefilter))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_effect_onepolefilter>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_effect_onepolefilter))
 	);
 	assert_eq!(
@@ -7249,7 +7304,7 @@ fn bindgen_test_layout_playdate_sound_effect_onepolefilter() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeFilter) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_onepolefilter),
@@ -7259,7 +7314,7 @@ fn bindgen_test_layout_playdate_sound_effect_onepolefilter() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setParameter) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_onepolefilter),
@@ -7269,7 +7324,7 @@ fn bindgen_test_layout_playdate_sound_effect_onepolefilter() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setParameterModulator) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_onepolefilter),
@@ -7279,7 +7334,7 @@ fn bindgen_test_layout_playdate_sound_effect_onepolefilter() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getParameterModulator) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_onepolefilter),
@@ -7327,12 +7382,12 @@ fn bindgen_test_layout_playdate_sound_effect_bitcrusher() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_effect_bitcrusher>(),
-	           32usize,
+	           64usize,
 	           concat!("Size of: ", stringify!(playdate_sound_effect_bitcrusher))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_effect_bitcrusher>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_effect_bitcrusher))
 	);
 	assert_eq!(
@@ -7347,7 +7402,7 @@ fn bindgen_test_layout_playdate_sound_effect_bitcrusher() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeBitCrusher) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_bitcrusher),
@@ -7357,7 +7412,7 @@ fn bindgen_test_layout_playdate_sound_effect_bitcrusher() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setAmount) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_bitcrusher),
@@ -7367,7 +7422,7 @@ fn bindgen_test_layout_playdate_sound_effect_bitcrusher() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setAmountModulator) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_bitcrusher),
@@ -7377,7 +7432,7 @@ fn bindgen_test_layout_playdate_sound_effect_bitcrusher() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getAmountModulator) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_bitcrusher),
@@ -7387,7 +7442,7 @@ fn bindgen_test_layout_playdate_sound_effect_bitcrusher() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setUndersampling) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_bitcrusher),
@@ -7397,7 +7452,7 @@ fn bindgen_test_layout_playdate_sound_effect_bitcrusher() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setUndersampleModulator) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_bitcrusher),
@@ -7407,7 +7462,7 @@ fn bindgen_test_layout_playdate_sound_effect_bitcrusher() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getUndersampleModulator) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_bitcrusher),
@@ -7446,12 +7501,12 @@ fn bindgen_test_layout_playdate_sound_effect_ringmodulator() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_effect_ringmodulator>(),
-	           20usize,
+	           40usize,
 	           concat!("Size of: ", stringify!(playdate_sound_effect_ringmodulator))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_effect_ringmodulator>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_effect_ringmodulator))
 	);
 	assert_eq!(
@@ -7466,7 +7521,7 @@ fn bindgen_test_layout_playdate_sound_effect_ringmodulator() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeRingmod) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_ringmodulator),
@@ -7476,7 +7531,7 @@ fn bindgen_test_layout_playdate_sound_effect_ringmodulator() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setFrequency) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_ringmodulator),
@@ -7486,7 +7541,7 @@ fn bindgen_test_layout_playdate_sound_effect_ringmodulator() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setFrequencyModulator) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_ringmodulator),
@@ -7496,7 +7551,7 @@ fn bindgen_test_layout_playdate_sound_effect_ringmodulator() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getFrequencyModulator) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_ringmodulator),
@@ -7527,7 +7582,7 @@ pub struct playdate_sound_effect_delayline {
 	                                                              -> *mut DelayLine>,
 	#[doc = "`void playdate->sound->effect->delayline->freeDelayLine(DelayLine* delay)`\n\nFrees the delay line."]
 	pub freeDelayLine: ::core::option::Option<unsafe extern "C" fn(filter: *mut DelayLine)>,
-	#[doc = "`void playdate->sound->effect->delayline->setLength(DelayLine* d, int frames)`\n\nChanges the length of the delay line, clearing its contents."]
+	#[doc = "`void playdate->sound->effect->delayline->setLength(DelayLine* d, int frames)`\n\nChanges the length of the delay line, clearing its contents. This function reallocates the audio buffer, so it is not safe to call while the delay line is in use."]
 	pub setLength: ::core::option::Option<unsafe extern "C" fn(d: *mut DelayLine, frames: core::ffi::c_int)>,
 	#[doc = "`void playdate->sound->effect->delayline->setFeedback(DelayLine* d, float fb)`\n\nSets the feedback level of the delay line."]
 	pub setFeedback: ::core::option::Option<unsafe extern "C" fn(d: *mut DelayLine, fb: core::ffi::c_float)>,
@@ -7555,12 +7610,12 @@ fn bindgen_test_layout_playdate_sound_effect_delayline() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_effect_delayline>(),
-	           40usize,
+	           80usize,
 	           concat!("Size of: ", stringify!(playdate_sound_effect_delayline))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_effect_delayline>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_effect_delayline))
 	);
 	assert_eq!(
@@ -7575,7 +7630,7 @@ fn bindgen_test_layout_playdate_sound_effect_delayline() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeDelayLine) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_delayline),
@@ -7585,7 +7640,7 @@ fn bindgen_test_layout_playdate_sound_effect_delayline() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setLength) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_delayline),
@@ -7595,7 +7650,7 @@ fn bindgen_test_layout_playdate_sound_effect_delayline() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setFeedback) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_delayline),
@@ -7605,7 +7660,7 @@ fn bindgen_test_layout_playdate_sound_effect_delayline() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addTap) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_delayline),
@@ -7615,7 +7670,7 @@ fn bindgen_test_layout_playdate_sound_effect_delayline() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeTap) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_delayline),
@@ -7625,7 +7680,7 @@ fn bindgen_test_layout_playdate_sound_effect_delayline() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setTapDelay) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_delayline),
@@ -7635,7 +7690,7 @@ fn bindgen_test_layout_playdate_sound_effect_delayline() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setTapDelayModulator) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_delayline),
@@ -7645,7 +7700,7 @@ fn bindgen_test_layout_playdate_sound_effect_delayline() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getTapDelayModulator) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_delayline),
@@ -7655,7 +7710,7 @@ fn bindgen_test_layout_playdate_sound_effect_delayline() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setTapChannelsFlipped) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_delayline),
@@ -7703,12 +7758,12 @@ fn bindgen_test_layout_playdate_sound_effect_overdrive() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_effect_overdrive>(),
-	           36usize,
+	           72usize,
 	           concat!("Size of: ", stringify!(playdate_sound_effect_overdrive))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_effect_overdrive>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_effect_overdrive))
 	);
 	assert_eq!(
@@ -7723,7 +7778,7 @@ fn bindgen_test_layout_playdate_sound_effect_overdrive() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeOverdrive) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_overdrive),
@@ -7733,7 +7788,7 @@ fn bindgen_test_layout_playdate_sound_effect_overdrive() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setGain) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_overdrive),
@@ -7743,7 +7798,7 @@ fn bindgen_test_layout_playdate_sound_effect_overdrive() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setLimit) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_overdrive),
@@ -7753,7 +7808,7 @@ fn bindgen_test_layout_playdate_sound_effect_overdrive() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setLimitModulator) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_overdrive),
@@ -7763,7 +7818,7 @@ fn bindgen_test_layout_playdate_sound_effect_overdrive() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getLimitModulator) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_overdrive),
@@ -7773,7 +7828,7 @@ fn bindgen_test_layout_playdate_sound_effect_overdrive() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setOffset) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_overdrive),
@@ -7783,7 +7838,7 @@ fn bindgen_test_layout_playdate_sound_effect_overdrive() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setOffsetModulator) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_overdrive),
@@ -7793,7 +7848,7 @@ fn bindgen_test_layout_playdate_sound_effect_overdrive() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getOffsetModulator) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect_overdrive),
@@ -7851,12 +7906,12 @@ fn bindgen_test_layout_playdate_sound_effect() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_effect>(),
-	           52usize,
+	           104usize,
 	           concat!("Size of: ", stringify!(playdate_sound_effect))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_effect>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_effect))
 	);
 	assert_eq!(
@@ -7871,7 +7926,7 @@ fn bindgen_test_layout_playdate_sound_effect() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeEffect) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect),
@@ -7881,7 +7936,7 @@ fn bindgen_test_layout_playdate_sound_effect() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setMix) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect),
@@ -7891,7 +7946,7 @@ fn bindgen_test_layout_playdate_sound_effect() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setMixModulator) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect),
@@ -7901,7 +7956,7 @@ fn bindgen_test_layout_playdate_sound_effect() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getMixModulator) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect),
@@ -7911,7 +7966,7 @@ fn bindgen_test_layout_playdate_sound_effect() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setUserdata) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect),
@@ -7921,7 +7976,7 @@ fn bindgen_test_layout_playdate_sound_effect() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getUserdata) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect),
@@ -7931,7 +7986,7 @@ fn bindgen_test_layout_playdate_sound_effect() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).twopolefilter) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect),
@@ -7941,7 +7996,7 @@ fn bindgen_test_layout_playdate_sound_effect() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).onepolefilter) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect),
@@ -7951,7 +8006,7 @@ fn bindgen_test_layout_playdate_sound_effect() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).bitcrusher) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect),
@@ -7961,7 +8016,7 @@ fn bindgen_test_layout_playdate_sound_effect() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).ringmodulator) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect),
@@ -7971,7 +8026,7 @@ fn bindgen_test_layout_playdate_sound_effect() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).delayline) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect),
@@ -7981,7 +8036,7 @@ fn bindgen_test_layout_playdate_sound_effect() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).overdrive) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_effect),
@@ -8061,12 +8116,12 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound_channel>(),
-	           64usize,
+	           128usize,
 	           concat!("Size of: ", stringify!(playdate_sound_channel))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound_channel>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound_channel))
 	);
 	assert_eq!(
@@ -8081,7 +8136,7 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeChannel) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_channel),
@@ -8091,7 +8146,7 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addSource) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_channel),
@@ -8101,7 +8156,7 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).removeSource) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_channel),
@@ -8111,7 +8166,7 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addCallbackSource) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_channel),
@@ -8121,7 +8176,7 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addEffect) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_channel),
@@ -8131,7 +8186,7 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).removeEffect) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_channel),
@@ -8141,7 +8196,7 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setVolume) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_channel),
@@ -8151,7 +8206,7 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getVolume) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_channel),
@@ -8161,7 +8216,7 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setVolumeModulator) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_channel),
@@ -8171,7 +8226,7 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getVolumeModulator) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_channel),
@@ -8181,7 +8236,7 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setPan) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_channel),
@@ -8191,7 +8246,7 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setPanModulator) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_channel),
@@ -8201,7 +8256,7 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getPanModulator) as usize - ptr as usize },
-	           52usize,
+	           104usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_channel),
@@ -8211,7 +8266,7 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getDryLevelSignal) as usize - ptr as usize },
-	           56usize,
+	           112usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_channel),
@@ -8221,7 +8276,7 @@ fn bindgen_test_layout_playdate_sound_channel() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getWetLevelSignal) as usize - ptr as usize },
-	           60usize,
+	           120usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound_channel),
@@ -8234,7 +8289,7 @@ pub type RecordCallback = ::core::option::Option<unsafe extern "C" fn(context: *
                                                                       buffer: *mut i16,
                                                                       length: core::ffi::c_int)
                                                                       -> core::ffi::c_int>;
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum MicSource {
@@ -8252,12 +8307,12 @@ fn bindgen_test_layout_playdate_sound() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_sound>(),
-	           96usize,
+	           192usize,
 	           concat!("Size of: ", stringify!(playdate_sound))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_sound>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_sound))
 	);
 	assert_eq!(
@@ -8272,7 +8327,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).fileplayer) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8282,7 +8337,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).sample) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8292,7 +8347,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).sampleplayer) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8302,7 +8357,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).synth) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8312,7 +8367,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).sequence) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8322,7 +8377,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).effect) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8332,7 +8387,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).lfo) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8342,7 +8397,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).envelope) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8352,7 +8407,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).source) as usize - ptr as usize },
-	           36usize,
+	           72usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8362,7 +8417,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).controlsignal) as usize - ptr as usize },
-	           40usize,
+	           80usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8372,7 +8427,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).track) as usize - ptr as usize },
-	           44usize,
+	           88usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8382,7 +8437,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).instrument) as usize - ptr as usize },
-	           48usize,
+	           96usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8392,7 +8447,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getCurrentTime) as usize - ptr as usize },
-	           52usize,
+	           104usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8402,7 +8457,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addSource) as usize - ptr as usize },
-	           56usize,
+	           112usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8412,7 +8467,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getDefaultChannel) as usize - ptr as usize },
-	           60usize,
+	           120usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8422,7 +8477,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).addChannel) as usize - ptr as usize },
-	           64usize,
+	           128usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8432,7 +8487,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).removeChannel) as usize - ptr as usize },
-	           68usize,
+	           136usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8442,7 +8497,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setMicCallback) as usize - ptr as usize },
-	           72usize,
+	           144usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8452,7 +8507,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getHeadphoneState) as usize - ptr as usize },
-	           76usize,
+	           152usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8462,7 +8517,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setOutputsActive) as usize - ptr as usize },
-	           80usize,
+	           160usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8472,7 +8527,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).removeSource) as usize - ptr as usize },
-	           84usize,
+	           168usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8482,7 +8537,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).signal) as usize - ptr as usize },
-	           88usize,
+	           176usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8492,7 +8547,7 @@ fn bindgen_test_layout_playdate_sound() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getError) as usize - ptr as usize },
-	           92usize,
+	           184usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_sound),
@@ -8528,12 +8583,12 @@ fn bindgen_test_layout_playdate_display() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_display>(),
-	           32usize,
+	           64usize,
 	           concat!("Size of: ", stringify!(playdate_display))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_display>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_display))
 	);
 	assert_eq!(
@@ -8548,7 +8603,7 @@ fn bindgen_test_layout_playdate_display() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getHeight) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_display),
@@ -8558,7 +8613,7 @@ fn bindgen_test_layout_playdate_display() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setRefreshRate) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_display),
@@ -8568,7 +8623,7 @@ fn bindgen_test_layout_playdate_display() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setInverted) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_display),
@@ -8578,7 +8633,7 @@ fn bindgen_test_layout_playdate_display() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setScale) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_display),
@@ -8588,7 +8643,7 @@ fn bindgen_test_layout_playdate_display() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setMosaic) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_display),
@@ -8598,7 +8653,7 @@ fn bindgen_test_layout_playdate_display() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setFlipped) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_display),
@@ -8608,7 +8663,7 @@ fn bindgen_test_layout_playdate_display() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).setOffset) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_display),
@@ -8631,12 +8686,12 @@ fn bindgen_test_layout_PDScore() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<PDScore>(),
-	           12usize,
+	           16usize,
 	           concat!("Size of: ", stringify!(PDScore))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<PDScore>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(PDScore))
 	);
 	assert_eq!(
@@ -8672,12 +8727,12 @@ fn bindgen_test_layout_PDScoresList() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<PDScoresList>(),
-	           24usize,
+	           32usize,
 	           concat!("Size of: ", stringify!(PDScoresList))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<PDScoresList>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(PDScoresList))
 	);
 	assert_eq!(
@@ -8692,7 +8747,7 @@ fn bindgen_test_layout_PDScoresList() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).count) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(PDScoresList),
@@ -8702,7 +8757,7 @@ fn bindgen_test_layout_PDScoresList() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).lastUpdated) as usize - ptr as usize },
-	           8usize,
+	           12usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(PDScoresList),
@@ -8712,7 +8767,7 @@ fn bindgen_test_layout_PDScoresList() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).playerIncluded) as usize - ptr as usize },
-	           12usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(PDScoresList),
@@ -8722,7 +8777,7 @@ fn bindgen_test_layout_PDScoresList() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).limit) as usize - ptr as usize },
-	           16usize,
+	           20usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(PDScoresList),
@@ -8732,7 +8787,7 @@ fn bindgen_test_layout_PDScoresList() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).scores) as usize - ptr as usize },
-	           20usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(PDScoresList),
@@ -8754,12 +8809,12 @@ fn bindgen_test_layout_PDBoard() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<PDBoard>(),
-	           8usize,
+	           16usize,
 	           concat!("Size of: ", stringify!(PDBoard))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<PDBoard>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(PDBoard))
 	);
 	assert_eq!(
@@ -8774,7 +8829,7 @@ fn bindgen_test_layout_PDBoard() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).name) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!("Offset of field: ", stringify!(PDBoard), "::", stringify!(name))
 	);
 }
@@ -8792,12 +8847,12 @@ fn bindgen_test_layout_PDBoardsList() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<PDBoardsList>(),
-	           12usize,
+	           16usize,
 	           concat!("Size of: ", stringify!(PDBoardsList))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<PDBoardsList>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(PDBoardsList))
 	);
 	assert_eq!(
@@ -8866,12 +8921,12 @@ fn bindgen_test_layout_playdate_scoreboards() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<playdate_scoreboards>(),
-	           28usize,
+	           56usize,
 	           concat!("Size of: ", stringify!(playdate_scoreboards))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<playdate_scoreboards>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(playdate_scoreboards))
 	);
 	assert_eq!(
@@ -8886,7 +8941,7 @@ fn bindgen_test_layout_playdate_scoreboards() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getPersonalBest) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_scoreboards),
@@ -8896,7 +8951,7 @@ fn bindgen_test_layout_playdate_scoreboards() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeScore) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_scoreboards),
@@ -8906,7 +8961,7 @@ fn bindgen_test_layout_playdate_scoreboards() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getScoreboards) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_scoreboards),
@@ -8916,7 +8971,7 @@ fn bindgen_test_layout_playdate_scoreboards() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeBoardsList) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_scoreboards),
@@ -8926,7 +8981,7 @@ fn bindgen_test_layout_playdate_scoreboards() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).getScores) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_scoreboards),
@@ -8936,7 +8991,7 @@ fn bindgen_test_layout_playdate_scoreboards() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).freeScoresList) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(playdate_scoreboards),
@@ -8965,12 +9020,12 @@ fn bindgen_test_layout_PlaydateAPI() {
 	let ptr = UNINIT.as_ptr();
 	assert_eq!(
 	           ::core::mem::size_of::<PlaydateAPI>(),
-	           36usize,
+	           72usize,
 	           concat!("Size of: ", stringify!(PlaydateAPI))
 	);
 	assert_eq!(
 	           ::core::mem::align_of::<PlaydateAPI>(),
-	           4usize,
+	           8usize,
 	           concat!("Alignment of ", stringify!(PlaydateAPI))
 	);
 	assert_eq!(
@@ -8985,7 +9040,7 @@ fn bindgen_test_layout_PlaydateAPI() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).file) as usize - ptr as usize },
-	           4usize,
+	           8usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(PlaydateAPI),
@@ -8995,7 +9050,7 @@ fn bindgen_test_layout_PlaydateAPI() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).graphics) as usize - ptr as usize },
-	           8usize,
+	           16usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(PlaydateAPI),
@@ -9005,7 +9060,7 @@ fn bindgen_test_layout_PlaydateAPI() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).sprite) as usize - ptr as usize },
-	           12usize,
+	           24usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(PlaydateAPI),
@@ -9015,7 +9070,7 @@ fn bindgen_test_layout_PlaydateAPI() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).display) as usize - ptr as usize },
-	           16usize,
+	           32usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(PlaydateAPI),
@@ -9025,7 +9080,7 @@ fn bindgen_test_layout_PlaydateAPI() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).sound) as usize - ptr as usize },
-	           20usize,
+	           40usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(PlaydateAPI),
@@ -9035,7 +9090,7 @@ fn bindgen_test_layout_PlaydateAPI() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).lua) as usize - ptr as usize },
-	           24usize,
+	           48usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(PlaydateAPI),
@@ -9045,7 +9100,7 @@ fn bindgen_test_layout_PlaydateAPI() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).json) as usize - ptr as usize },
-	           28usize,
+	           56usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(PlaydateAPI),
@@ -9055,7 +9110,7 @@ fn bindgen_test_layout_PlaydateAPI() {
 	);
 	assert_eq!(
 	           unsafe { ::core::ptr::addr_of!((*ptr).scoreboards) as usize - ptr as usize },
-	           32usize,
+	           64usize,
 	           concat!(
 		"Offset of field: ",
 		stringify!(PlaydateAPI),
@@ -9064,7 +9119,7 @@ fn bindgen_test_layout_PlaydateAPI() {
 	)
 	);
 }
-#[repr(u8)]
+#[repr(i32)]
 #[must_use]
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum PDSystemEvent {
