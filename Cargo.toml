@@ -25,7 +25,7 @@ scoreboards = { version = "0.1", path = "api/scoreboards", package = "playdate-s
 sound = { version = "0.4", path = "api/sound", package = "playdate-sound", default-features = false }
 sprite = { version = "0.2", path = "api/sprite", package = "playdate-sprite", default-features = false }
 system = { version = "0.3", path = "api/system", package = "playdate-system", default-features = false }
-sys = { version = "0.3", path = "api/sys", package = "playdate-sys", default-features = false }
+sys = { version = "0.4", path = "api/sys", package = "playdate-sys", default-features = false }
 
 tool = { version = "0.1", path = "support/tool", package = "playdate-tool" }
 build = { version = "0.3", path = "support/build", package = "playdate-build", default-features = false }

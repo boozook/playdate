@@ -54,9 +54,9 @@ jobs:
           - ubuntu-latest
           - windows-latest
         sdk:
-          # - latest
-          # - 2.5.0
-          - beta
+          - latest
+          - 2.5.0
+          # - beta
 
     steps:
       - run: arch
@@ -214,9 +214,9 @@ jobs:
           - ubuntu-latest
           - windows-latest
         sdk:
-          # - latest
-          # - 2.5.0
-          - beta
+          - latest
+          - 2.5.0
+          # - beta
 
     steps:
       - uses: actions/checkout@v4
@@ -269,9 +269,9 @@ jobs:
           - ubuntu-latest
           - windows-latest
         sdk:
-          # - latest
-          # - 2.5.0
-          - beta
+          - latest
+          - 2.5.0
+          # - beta
 
     steps:
       - uses: actions/checkout@v4
@@ -327,9 +327,9 @@ jobs:
         os:
           - macos-14
         sdk:
-          # - latest
-          # - 2.5.0
-          - beta
+          - latest
+          - 2.5.0
+          # - beta
 
     steps:
       - uses: actions/checkout@v4
@@ -394,9 +394,9 @@ jobs:
           - ubuntu-latest
           - windows-latest
         sdk:
-          # - latest
-          # - 2.5.0
-          - beta
+          - latest
+          - 2.5.0
+          # - beta
 
     steps:
       - uses: actions/checkout@v4
