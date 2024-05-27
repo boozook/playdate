@@ -12,22 +12,59 @@ Here is the metadata format explanation in examples
 
 ### Package Info
 
+The following fields are used to generate the package manifest:
+
 ```toml
 # Playdate Package Info
 # official doc: https://sdk.play.date/#pdxinfo
 [package.metadata.playdate]
-name = "{name}"               # optional, default is package.name
-author = "{author}"           # optional, default is package.authors
-version = "{version}"         # optional, default is package.version
-description = "{description}" # optional, default is package.description
-bundle-id = "com.yourcompany.{bundle_id}"
+bundle-id = "com.yourcompany.game"
+name = "My Game"               # default is package.name
+author = "Alex"                # default is package.authors
+version = "0.0"                # default is package.version
+description = "short about"    # default is package.description
 
-image-path = "img/system"      # optional
-launch-sound-path = "sfx/jump" # optional
+image-path = "img/system"
+launch-sound-path = "sfx/jump"
 
-content-warning = "This game contains mild realistic, violence and bloodshed." # optional
-content-warning2 = "Really scary game."                                        # optional
+content-warning = "This game contains mild realistic, violence and bloodshed."
+content-warning2 = "Really scary game."
+
+build-number = 42 # also can be string, e.g "42"
+
+# also extra fields are supported
+# acceptable types of values: string, number, boolean
+foo = "bar"
 ```
+
+_Note, only `bundle-id` is required, other fields are optional._
+
+
+#### Target-specific Package Info
+
+Main [Package Info](#package-info) can be overridden with special _table_ for a `bin` or `example`.
+All manifest fields are acceptable, but optional.
+
+Two formats are supported.
+First is like a cargo's targets:
+
+```toml
+[[package.metadata.playdate.example]]
+target = "existing-example-name" # pointing to cargo-target name
+# next is same as for main manifest fields, all are optional:
+bundle-id = "com.yourcompany.game.example"
+name = "My Example"
+```
+
+Second if just a table:
+
+```toml
+[package.metadata.playdate.example.existing-example-name]
+bundle-id = "com.yourcompany.game.example"
+content-warning = "Scary experimental stuff."
+```
+
+_Important: you should not mix these two formats in the same document._
 
 
 ### Assets
@@ -103,15 +140,11 @@ Also this way supports simple include and exclude instructions:
 
 #### Assets Options
 
-There is some options where to set asset options:
-- `[package.metadata.playdate.assets.options]`
-- `[package.metadata.playdate.options.assets]`
-
-Both are equal but should not be both in one crate.
+This is how assets will be collected for your package.
 
 ```toml
-[package.metadata.playdate.assets.options]
-dependencies = true    # allow to build assets for dependencies (default is `true`)
+[package.metadata.playdate.options.assets]
+dependencies = true    # allow to build assets for dependencies (default is `false`)
 overwrite = true       # overwrite existing assets in build dir (default is `true`)
 method = "link"        # "copy" or "link"   (default is `link`)  -  how assets should be collected, make symlinks or copy files
 follow-symlinks = true # follow symlinks    (default is `true`)

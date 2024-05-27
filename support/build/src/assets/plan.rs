@@ -6,21 +6,17 @@ use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use wax::{Glob, Pattern};
 
 use crate::config::Env;
-use crate::metadata::format::AssetsOptions;
-use crate::metadata::format::PlayDateMetadataAssets;
-use crate::value::Value;
+use crate::metadata::format::{AssetsOptions, AssetsRules, RuleValue};
 
 use super::resolver::*;
 
 
 /// Create build plan for assets.
-pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
-                                     assets: &PlayDateMetadataAssets<V>,
-                                     options: &AssetsOptions,
-                                     crate_root: Option<&'c Path>)
-                                     -> Result<BuildPlan<'l, 'r>, super::Error>
-	where V: Value
-{
+pub fn build_plan<'l, 'r, 'c: 'l /* V */>(env: &'c Env,
+                                          assets: &AssetsRules,
+                                          options: &AssetsOptions,
+                                          crate_root: Option<&'c Path>)
+                                          -> Result<BuildPlan<'l, 'r>, super::Error> {
 	// copy_unresolved    => get all files with glob
 	// include_unresolved => same
 	// exclude_unresolved =>
@@ -54,7 +50,7 @@ pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
 	};
 
 	match assets {
-		PlayDateMetadataAssets::List(vec) => {
+		AssetsRules::List(vec) => {
 			include_unresolved.extend(
 			                          vec.iter()
 			                             .map(to_relative)
@@ -62,18 +58,19 @@ pub fn build_plan<'l, 'r, 'c: 'l, V>(env: &'c Env,
 			                             .map(|e| enver.expr(e, env)),
 			)
 		},
-		PlayDateMetadataAssets::Map(map) => {
+		AssetsRules::Map(map) => {
 			for (k, v) in map {
 				let k = to_relative(k);
-				if let Some(v) = v.as_bool() {
-					match v {
-						true => include_unresolved.push(enver.expr(Expr::from(k), env)),
-						false => exclude_exprs.push(enver.expr(Expr::from(k), env)),
-					}
-				} else if let Some(from) = v.as_str() {
-					map_unresolved.push((enver.expr(Expr::from(k), env), enver.expr(Expr::from(from), env)))
-				} else {
-					return Err(format!("not supported type of value: {v} for key: {k}").into());
+				match v {
+					RuleValue::Boolean(v) => {
+						match v {
+							true => include_unresolved.push(enver.expr(Expr::from(k), env)),
+							false => exclude_exprs.push(enver.expr(Expr::from(k), env)),
+						}
+					},
+					RuleValue::String(from) => {
+						map_unresolved.push((enver.expr(Expr::from(k), env), enver.expr(Expr::from(from), env)))
+					},
 				}
 			}
 		},
@@ -467,9 +464,9 @@ mod tests {
 	use std::path::{PathBuf, Path};
 
 	use crate::config::Env;
-	use crate::value::default::Value;
 	use crate::assets::resolver::Expr;
-	use crate::metadata::format::PlayDateMetadataAssets;
+	use crate::metadata::format::RuleValue;
+	use crate::metadata::format::AssetsRules;
 	use super::*;
 
 
@@ -607,7 +604,7 @@ mod tests {
 					let tests: HashSet<_> = vec!["Cargo.toml", "src/lib.rs"].into_iter().collect();
 
 					let exprs = tests.iter().map(|s| s.to_string()).collect();
-					let assets = PlayDateMetadataAssets::List::<Value>(exprs);
+					let assets = AssetsRules::List(exprs);
 
 					let plan = build_plan(&env, &assets, &opts, root).unwrap();
 
@@ -654,7 +651,7 @@ mod tests {
 					};
 
 					let exprs = tests.keys().map(|s| s.to_string()).collect();
-					let assets = PlayDateMetadataAssets::List::<Value>(exprs);
+					let assets = AssetsRules::List(exprs);
 
 					let plan = build_plan(&env, &assets, &opts, root).unwrap();
 
@@ -686,7 +683,7 @@ mod tests {
 					let tests: HashMap<_, _> = { vec![("${SRC}/lib.rs", "src/lib.rs"),].into_iter().collect() };
 
 					let exprs = tests.keys().map(|s| s.to_string()).collect();
-					let assets = PlayDateMetadataAssets::List::<Value>(exprs);
+					let assets = AssetsRules::List(exprs);
 
 					let plan = build_plan(&env, &assets, &opts, root).unwrap();
 
@@ -732,7 +729,7 @@ mod tests {
 					};
 
 					let exprs = tests.keys().map(|s| s.to_string()).collect();
-					let assets = PlayDateMetadataAssets::List::<Value>(exprs);
+					let assets = AssetsRules::List(exprs);
 
 					let plan = build_plan(&env, &assets, &opts, root).unwrap();
 
@@ -771,7 +768,7 @@ mod tests {
 
 					let exprs = ["${TMP}/*.txt", "${SUB}/*.txt"];
 
-					let assets = PlayDateMetadataAssets::List::<Value>(exprs.iter().map(|s| s.to_string()).collect());
+					let assets = AssetsRules::List(exprs.iter().map(|s| s.to_string()).collect());
 
 					let plan = build_plan(&env, &assets, &opts, root).unwrap();
 
@@ -825,9 +822,10 @@ mod tests {
 					let tests: HashSet<_> = vec!["Cargo.toml", "src/lib.rs"].into_iter().collect();
 
 					let exprs = tests.iter()
-					                 .map(|s| (s.to_string(), Value::Boolean(true)))
+					                 .map(|s| (s.to_string(), RuleValue::Boolean(true)))
 					                 .collect();
-					let assets = PlayDateMetadataAssets::Map::<Value>(exprs);
+
+					let assets = AssetsRules::Map(exprs);
 
 					let plan = build_plan(&env, &assets, &opts, root).unwrap();
 
@@ -864,9 +862,10 @@ mod tests {
 						let stripped_trg = &trg.replace('/', "").trim().to_owned();
 
 						let exprs = tests.iter()
-						                 .map(|s| (trg.to_string(), Value::String(s.to_string())))
+						                 .map(|s| (trg.to_string(), RuleValue::String(s.to_string())))
 						                 .collect();
-						let assets = PlayDateMetadataAssets::Map::<Value>(exprs);
+
+						let assets = AssetsRules::Map(exprs);
 
 						let plan = build_plan(&env, &assets, &opts, root).unwrap();
 
@@ -909,9 +908,10 @@ mod tests {
 
 					for trg in targets {
 						let exprs = tests.iter()
-						                 .map(|s| (trg.to_string(), Value::String(s.to_string())))
+						                 .map(|s| (trg.to_string(), RuleValue::String(s.to_string())))
 						                 .collect();
-						let assets = PlayDateMetadataAssets::Map::<Value>(exprs);
+
+						let assets = AssetsRules::Map(exprs);
 
 						let plan = build_plan(&env, &assets, &opts, root).unwrap();
 
@@ -955,9 +955,10 @@ mod tests {
 
 					for trg in targets {
 						let exprs = tests.iter()
-						                 .map(|s| (trg.to_string(), Value::String(s.to_string())))
+						                 .map(|s| (trg.to_string(), RuleValue::String(s.to_string())))
 						                 .collect();
-						let assets = PlayDateMetadataAssets::Map::<Value>(exprs);
+
+						let assets = AssetsRules::Map(exprs);
 
 						let plan = build_plan(&env, &assets, &opts, root).unwrap();
 

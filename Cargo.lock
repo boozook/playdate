@@ -1102,16 +1102,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "crate-metadata"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6a4577b4d5dd1ba39e4c8b9ece7eb83fa4fb2e504c883504925a12f85b14126"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "crates-io"
 version = "0.40.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4112,9 +4102,8 @@ dependencies = [
 
 [[package]]
 name = "playdate-build"
-version = "0.3.0"
+version = "0.4.0-pre1"
 dependencies = [
- "crate-metadata",
  "dirs",
  "fs_extra",
  "log",

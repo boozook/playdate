@@ -1,6 +1,6 @@
 [package]
 name = "playdate-build"
-version = "0.3.0"
+version = "0.4.0-pre1"
 readme = "README.md"
 description = "Utils that help to build package for Playdate"
 keywords = ["playdate", "package", "encoding", "manifest", "assets"]
@@ -14,18 +14,19 @@ repository.workspace = true
 
 [dependencies]
 log.workspace = true
-serde = { workspace = true, features = ["derive"], optional = true }
-serde_json = { workspace = true, optional = true }
-toml = { workspace = true, optional = true }
 dirs.workspace = true
 fs_extra.workspace = true
 regex.workspace = true
 wax = "0.6"
 symlink = "0.1"
 
-[dependencies.crate-metadata]
-version = "0.1"
+toml = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+
+[dependencies.serde]
+workspace = true
 optional = true
+features = ["derive"]
 
 [dependencies.utils]
 workspace = true
@@ -36,8 +37,8 @@ features = ["log"]
 [features]
 default = []
 toml = ["serde", "dep:toml"]
+json = ["serde_json"]
 serde_json = ["serde", "dep:serde_json"]
-crate-metadata = ["serde_json", "dep:crate-metadata"]
 assets-report = []
 
 
