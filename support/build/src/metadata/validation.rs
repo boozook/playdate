@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use super::source::CrateInfoSource;
 use super::source::ManifestSourceOptExt;
 
@@ -26,11 +28,55 @@ pub enum Warning {
 	},
 }
 
+impl Display for Warning {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::StrangeValue { field, value, reason } => {
+				write!(f, "Strange value {value:?} for field '{field}'")?;
+				if let Some(reason) = reason {
+					write!(f, ", {reason}")
+				} else {
+					Ok(())
+				}
+			},
+			Self::UnknownField { field, reason } => {
+				write!(f, "Unknown field '{field}'")?;
+				if let Some(reason) = reason {
+					write!(f, ", {reason}")
+				} else {
+					Ok(())
+				}
+			},
+			Self::MissingField { field, reason } => {
+				write!(f, "Missing field '{field}'")?;
+				if let Some(reason) = reason {
+					write!(f, ", {reason}")
+				} else {
+					Ok(())
+				}
+			},
+		}
+	}
+}
+
+
 impl Problem {
 	pub fn is_err(&self) -> bool {
 		match self {
 			Problem::Warning(_) => false,
 			_ => true,
+		}
+	}
+
+	pub fn is_warn(&self) -> bool { !self.is_err() }
+}
+
+impl Display for Problem {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::UnknownTarget { name } => write!(f, "Unknown cargo-target: {name}"),
+			Self::MissingField { field } => write!(f, "Missing field: {field}"),
+			Self::Warning(warning) => warning.fmt(f),
 		}
 	}
 }
@@ -64,7 +110,7 @@ impl<T: ManifestSourceOptExt> Validate for T {
 		              (
 			"build-number",
 			self.build_number().is_some(),
-			Some("Required for sideloaded games."),
+			Some("required for sideloaded games."),
 		),
 		              ("description", self.description().is_some(), None),
 		].into_iter()
@@ -100,7 +146,7 @@ fn validate_version(value: &str) -> Option<Problem> {
 		if semver::Version::parse(value).is_err() {
 			Some(Problem::Warning(Warning::StrangeValue { field: "version".into(),
 			                                              value: value.into(),
-			                                              reason: Some("Can be confusing.") }))
+			                                              reason: Some("can be confusing.") }))
 		} else {
 			None
 		}

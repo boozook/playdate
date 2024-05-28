@@ -7,19 +7,17 @@ use playdate::assets::BuildReport;
 use playdate::assets::apply_build_plan;
 use playdate::config::Env;
 use playdate::metadata::format::AssetsOptions;
+use playdate::metadata::source::MetadataSource as _;
 use crate::config::Config;
 use crate::utils::path::AsRelativeTo;
 use playdate::consts::SDK_ENV_VAR;
 use cargo::util::CargoResult;
-use playdate::metadata::format::PlayDateMetadata;
+pub use playdate::metadata::format::Metadata;
 use playdate::assets::plan::BuildPlan as AssetsPlan;
 use playdate::assets::plan::build_plan as assets_build_plan;
 use try_lazy_init::Lazy;
 
 use crate::layout::{PlaydateAssets, LayoutLock};
-
-
-pub type TomlMetadata = PlayDateMetadata<toml::Value>;
 
 
 pub struct LazyEnvBuilder<'a, 'cfg> {
@@ -68,15 +66,15 @@ pub type LockedLayout<'t> = LayoutLock<&'t mut PlaydateAssets<PathBuf>>;
 /// Returns `None` if there is no `assets` metadata.
 pub fn plan_for<'cfg, 'env, 'l>(config: &'cfg Config,
                                 package: &'cfg Package,
-                                metadata: &TomlMetadata,
+                                metadata: &Metadata,
                                 env: &'cfg LazyEnvBuilder<'env, 'cfg>,
                                 layout: &'l LockedLayout<'l>,
                                 with_dev: bool)
                                 -> CargoResult<PackageAssetsPlan<'env, 'cfg>> {
 	let opts = metadata.assets_options();
 
-	let has_dev_assets = with_dev && metadata.dev_assets.iter().any(|t| !t.is_empty());
-	let is_empty = metadata.assets.is_empty() && !has_dev_assets;
+	let has_dev_assets = with_dev && !metadata.dev_assets().is_empty();
+	let is_empty = !metadata.assets().is_empty() && !has_dev_assets;
 
 	if is_empty {
 		return Ok(PackageAssetsPlan { main: None,
@@ -88,8 +86,8 @@ pub fn plan_for<'cfg, 'env, 'l>(config: &'cfg Config,
 	                  .parent()
 	                  .ok_or(anyhow!("No parent of manifest-path"))?;
 
-	let main = if !metadata.assets.is_empty() {
-		let plan = assets_build_plan(env, &metadata.assets, opts.as_ref(), Some(root))?;
+	let main = if !metadata.assets().is_empty() {
+		let plan = assets_build_plan(env, metadata.assets(), opts.as_ref(), Some(root))?;
 
 		// main-assets plan:
 		let path = layout.as_inner().assets_plan_for(config, package);
@@ -105,8 +103,8 @@ pub fn plan_for<'cfg, 'env, 'l>(config: &'cfg Config,
 
 
 	// dev-assets plan:
-	let dev = if has_dev_assets && metadata.dev_assets.is_some() {
-		let assets = metadata.dev_assets.as_ref().unwrap();
+	let dev = if has_dev_assets && !metadata.dev_assets().is_empty() {
+		let assets = metadata.dev_assets();
 		let dev_plan = assets_build_plan(env, assets, opts.as_ref(), Some(root))?;
 
 		let path = layout.as_inner().assets_plan_for_dev(config, package);

@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::ffi::OsStr;
 use std::ffi::OsString;
 use std::path::*;
 use std::env;
@@ -7,16 +8,28 @@ use std::process::Command;
 use build::consts::SDK_ENV_VAR;
 use cargo::CargoResult;
 use cargo::Config as CargoConfig;
+use serde::de::DeserializeOwned;
 
 use crate::cli::cmd::Cmd;
 use crate::config::Config;
+use crate::logger::LogErr;
 
 
 pub fn cargo_proxy_cmd(cfg: &Config, cmd: &Cmd) -> CargoResult<std::process::Command> {
+	cargo_proxy_with(cfg, cmd.as_str(), true)
+}
+
+
+pub fn cargo_proxy_with<S: AsRef<OsStr>>(cfg: &Config,
+                                         cmd: S,
+                                         cfg_args: bool)
+                                         -> CargoResult<std::process::Command> {
 	let rustflags = cfg.rustflags()?.rustflags_to_args_from(cfg);
 	let mut proc = cargo(Some(cfg.workspace.config()))?;
-	proc.arg(cmd.as_ref());
-	proc.args(&cfg.args);
+	proc.arg(cmd);
+	if cfg_args {
+		proc.args(&cfg.args);
+	}
 	proc.args(&rustflags);
 
 	if let Some(path) = cfg.sdk_path.as_deref() {
@@ -28,12 +41,7 @@ pub fn cargo_proxy_cmd(cfg: &Config, cmd: &Cmd) -> CargoResult<std::process::Com
 
 
 pub fn cargo(config: Option<&CargoConfig>) -> CargoResult<std::process::Command> {
-	let cargo: Cow<Path> =
-		config.map_or_else(
-		                   || Some(PathBuf::from(env::var_os("CARGO").unwrap_or("cargo".into())).into()),
-		                   |cfg| cfg.cargo_exe().ok().map(Cow::from),
-		)
-		      .expect("Unable to get cargo bin from config");
+	let cargo = cargo_bin_path(config);
 	let mut proc = std::process::Command::new(cargo.as_ref());
 
 	if let Some(cfg) = &config {
@@ -55,12 +63,28 @@ pub fn cargo(config: Option<&CargoConfig>) -> CargoResult<std::process::Command>
 			"never"
 		};
 		proc.env("CARGO_TERM_COLOR", color);
-		proc.arg(format!("--color={color}"));
 	}
 
 	// disable progress bar:
 	proc.env("CARGO_TERM_PROGRESS_WHEN", "never");
 	Ok(proc)
+}
+
+
+pub fn cargo_bin_path(config: Option<&CargoConfig>) -> Cow<Path> {
+	if let Some(cfg) = config {
+		let path = cfg.cargo_exe().log_err().ok().map(Cow::from);
+		if path.is_some() && path == std::env::current_exe().log_err().ok().map(Into::into) {
+			// Seems to we're in standalone mode.
+			cargo_bin_path(None)
+		} else if let Some(path) = path {
+			path
+		} else {
+			cargo_bin_path(None)
+		}
+	} else {
+		PathBuf::from(env::var_os("CARGO").unwrap_or("cargo".into())).into()
+	}
 }
 
 
@@ -70,4 +94,28 @@ pub fn args_line_for_proc(proc: &Command) -> String {
 	    .join(&OsString::from(" "))
 	    .to_string_lossy()
 	    .to_string()
+}
+
+
+pub fn read_cargo_json<T: DeserializeOwned>(cfg: &Config, mut cmd: Command) -> CargoResult<T> {
+	cfg.log()
+	   .verbose(|mut log| log.status("Cargo", args_line_for_proc(&cmd)));
+
+	let output = cmd.output()?;
+	if !output.status.success() {
+		cfg.workspace.config().shell().err().write_all(&output.stderr)?;
+		output.status.exit_ok()?;
+	}
+
+	let stdout = std::str::from_utf8(&output.stdout)?;
+
+	// parse only last line of output:
+	let line = stdout.lines()
+	                 .find(|s| {
+		                 let s = s.trim();
+		                 !s.is_empty() && s.starts_with('{')
+	                 })
+	                 .unwrap_or("{}");
+
+	Ok(serde_json::de::from_str::<T>(line)?)
 }

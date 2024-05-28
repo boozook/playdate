@@ -38,8 +38,8 @@ use crate::utils::cargo::CompileKindExt;
 use crate::utils::path::AsRelativeTo;
 use crate::utils::workspace::PossibleTargets;
 
+use crate::utils::cargo::build_plan as plan;
 
-pub mod plan;
 pub mod rustflags;
 
 

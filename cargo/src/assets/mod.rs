@@ -5,7 +5,9 @@ use std::path::{PathBuf, Path};
 use anstyle::AnsiColor as Color;
 use anyhow::bail;
 use cargo::CargoResult;
-use cargo::core::{Package, Verbosity};
+use cargo::core::{Package, PackageId, Verbosity};
+use playdate::manifest::ManifestSourceOpt as _;
+use playdate::metadata::source::MetadataSource as _;
 use playdate::metadata::METADATA_FIELD;
 use playdate::layout::Layout;
 
@@ -15,7 +17,7 @@ use crate::layout::{PlaydateAssets, LayoutLockable, Layout as _, CrossTargetLayo
 use crate::logger::LogErr;
 use crate::utils::LazyBuildContext;
 use crate::utils::path::AsRelativeTo;
-use self::plan::TomlMetadata;
+use self::plan::Metadata;
 
 
 mod plan;
@@ -23,15 +25,15 @@ mod pdc;
 
 
 #[derive(Debug)]
-pub struct AssetsArtifact<'cfg> {
-	pub package: &'cfg Package,
+pub struct AssetsArtifact {
+	pub package_id: PackageId,
 	pub layout: PlaydateAssets<PathBuf>,
 	/// Cached metadata
-	pub metadata: Option<TomlMetadata>,
+	pub metadata: Option<Metadata>,
 }
 
 /// One artifact per package.
-pub type AssetsArtifacts<'cfg> = HashMap<&'cfg Package, AssetsArtifact<'cfg>>;
+pub type AssetsArtifacts<'cfg> = HashMap<&'cfg Package, AssetsArtifact>;
 
 
 pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
@@ -348,7 +350,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 			let metadata = options.remove(package);
 			artifacts.insert(
 			                 package,
-			                 AssetsArtifact { package,
+			                 AssetsArtifact { package_id: package.package_id(),
 			                                  layout,
 			                                  metadata, },
 			);
@@ -369,7 +371,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 fn deps_tree_metadata<'cfg: 'r, 't: 'r, 'r>(package: &'cfg Package,
                                             bcx: &'t LazyBuildContext<'t, 'cfg>,
                                             config: &Config<'_>)
-                                            -> CargoResult<HashMap<&'r Package, TomlMetadata>> {
+                                            -> CargoResult<HashMap<&'r Package, Metadata>> {
 	let mut packages = HashMap::new();
 	if let Some(metadata) = playdate_metadata(package) {
 		// if explicitly allowed collect deps => scan deps-tree
@@ -470,11 +472,10 @@ fn deps_tree_metadata<'cfg: 'r, 't: 'r, 'r>(package: &'cfg Package,
 }
 
 
-pub fn playdate_metadata(package: &Package) -> Option<TomlMetadata> {
+pub fn playdate_metadata(package: &Package) -> Option<Metadata> {
 	package.manifest()
 	       .custom_metadata()
 	       .and_then(|m| m.as_table().map(|t| t.get(METADATA_FIELD)))
 	       .flatten()
-	       .and_then(|v| v.to_owned().try_into::<TomlMetadata>().log_err().ok())
-	       .and_then(|mut m| m.merge_opts().map(|_| m).log_err().ok())
+	       .and_then(|v| v.to_owned().try_into::<Metadata>().log_err().ok())
 }

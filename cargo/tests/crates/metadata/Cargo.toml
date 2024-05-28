@@ -16,7 +16,7 @@ description = "test"
 [package.metadata.playdate.assets]
 "main/" = "Cargo.toml"
 
-[package.metadata.playdate.assets.options]
+[package.metadata.playdate.options.assets]
 dependencies = true
 overwrite = true
 
