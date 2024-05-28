@@ -71,14 +71,12 @@ pub trait CrateInfoSource {
 					log::debug!("target not found: {}", target);
 					None
 				}
-			} else {
-				if let Some(man) = root.bin(target) {
-					Some(base.override_with_extra(man).into_owned())
-				} else {
-					log::debug!("target not found: {}", target);
-					None
-				}
-			}
+			} else if let Some(man) = root.bin(target) {
+   					Some(base.override_with_extra(man).into_owned())
+   				} else {
+   					log::debug!("target not found: {}", target);
+   					None
+   				}
 		} else {
 			Some(base.into_owned())
 		}
@@ -98,14 +96,14 @@ pub trait MetadataSource {
 
 	fn manifest(&self) -> impl ManifestSourceOptExt;
 
-	fn bins<'t>(&'t self) -> &'t [Self::TargetManifest];
-	fn examples<'t>(&'t self) -> &'t [Self::TargetManifest];
+	fn bins(&self) -> &[Self::TargetManifest];
+	fn examples(&self) -> &[Self::TargetManifest];
 
 	fn bin<'t>(&'t self, target: &'_ str) -> Option<&'t Self::TargetManifest> {
-		self.bins().into_iter().find(|b| b.target() == target)
+		self.bins().iter().find(|b| b.target() == target)
 	}
 	fn example<'t>(&'t self, target: &'_ str) -> Option<&'t Self::TargetManifest> {
-		self.examples().into_iter().find(|b| b.target() == target)
+		self.examples().iter().find(|b| b.target() == target)
 	}
 
 	fn bin_targets(&self) -> impl IntoIterator<Item = &str>;
@@ -115,10 +113,10 @@ pub trait MetadataSource {
 	}
 
 	fn bins_iter(&self) -> Option<impl Iterator<Item = &Self::TargetManifest>> {
-		(!self.bins().is_empty()).then_some(self.bins().into_iter())
+		(!self.bins().is_empty()).then_some(self.bins().iter())
 	}
 	fn examples_iter(&self) -> Option<impl Iterator<Item = &Self::TargetManifest>> {
-		(!self.examples().is_empty()).then_some(self.examples().into_iter())
+		(!self.examples().is_empty()).then_some(self.examples().iter())
 	}
 
 	fn all_targets_iter(&self) -> impl Iterator<Item = &Self::TargetManifest> {
@@ -150,14 +148,12 @@ pub trait MetadataSource {
 			} else {
 				None
 			}
-		} else {
-			if let Some(target) = self.bin(target) {
-				let trg = base.override_with_extra_ref(target);
-				Some(trg.into_owned())
-			} else {
-				None
-			}
-		}
+		} else if let Some(target) = self.bin(target) {
+  				let trg = base.override_with_extra_ref(target);
+  				Some(trg.into_owned())
+  			} else {
+  				None
+  			}
 	}
 
 	fn manifest_for_target_any(&self, target: &str) -> Option<impl ManifestSourceOptExt> {
@@ -176,8 +172,8 @@ impl<T: MetadataSource> MetadataSource for &T {
 
 	fn manifest(&self) -> impl ManifestSourceOptExt { (*self).manifest() }
 
-	fn bins<'t>(&'t self) -> &'t [Self::TargetManifest] { <T as MetadataSource>::bins(*self) }
-	fn examples<'t>(&'t self) -> &'t [Self::TargetManifest] { <T as MetadataSource>::examples(*self) }
+	fn bins(&self) -> &[Self::TargetManifest] { <T as MetadataSource>::bins(*self) }
+	fn examples(&self) -> &[Self::TargetManifest] { <T as MetadataSource>::examples(*self) }
 
 	fn bin_targets(&self) -> impl IntoIterator<Item = &str> { (*self).bin_targets() }
 	fn example_targets(&self) -> impl IntoIterator<Item = &str> { (*self).example_targets() }
@@ -294,14 +290,14 @@ pub trait ManifestSourceOptExt: ManifestSourceOpt {
 impl<T: ManifestSource> ManifestSourceOpt for T {
 	const MAY_BE_INCOMPLETE: bool = false;
 	fn name(&self) -> Option<&str> { Some(ManifestSource::name(self)) }
-	fn version(&self) -> Option<&str> { Some(ManifestSource::version(self).as_ref()) }
-	fn author(&self) -> Option<&str> { Some(ManifestSource::author(self).as_ref()) }
-	fn bundle_id(&self) -> Option<&str> { Some(ManifestSource::bundle_id(self).as_ref()) }
-	fn description(&self) -> Option<&str> { Some(ManifestSource::description(self).as_ref()) }
-	fn image_path(&self) -> Option<&str> { Some(ManifestSource::image_path(self).as_ref()) }
-	fn launch_sound_path(&self) -> Option<&str> { Some(ManifestSource::launch_sound_path(self).as_ref()) }
-	fn content_warning(&self) -> Option<&str> { Some(ManifestSource::content_warning(self).as_ref()) }
-	fn content_warning2(&self) -> Option<&str> { Some(ManifestSource::content_warning2(self).as_ref()) }
+	fn version(&self) -> Option<&str> { Some(ManifestSource::version(self)) }
+	fn author(&self) -> Option<&str> { Some(ManifestSource::author(self)) }
+	fn bundle_id(&self) -> Option<&str> { Some(ManifestSource::bundle_id(self)) }
+	fn description(&self) -> Option<&str> { Some(ManifestSource::description(self)) }
+	fn image_path(&self) -> Option<&str> { Some(ManifestSource::image_path(self)) }
+	fn launch_sound_path(&self) -> Option<&str> { Some(ManifestSource::launch_sound_path(self)) }
+	fn content_warning(&self) -> Option<&str> { Some(ManifestSource::content_warning(self)) }
+	fn content_warning2(&self) -> Option<&str> { Some(ManifestSource::content_warning2(self)) }
 	fn build_number(&self) -> Option<usize> { ManifestSource::build_number(self) }
 }
 

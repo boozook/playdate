@@ -53,8 +53,8 @@ impl MetadataSource for Metadata {
 
 	fn manifest(&self) -> impl ManifestSourceOptExt { &self.inner.manifest }
 
-	fn bins<'t>(&'t self) -> &'t [Self::TargetManifest] { self.inner.bins.as_slice() }
-	fn examples<'t>(&'t self) -> &'t [Self::TargetManifest] { self.inner.examples.as_slice() }
+	fn bins(&self) -> &[Self::TargetManifest] { self.inner.bins.as_slice() }
+	fn examples(&self) -> &[Self::TargetManifest] { self.inner.examples.as_slice() }
 
 	fn bin_targets(&self) -> impl IntoIterator<Item = &str> { self.inner.bins.iter().map(|o| o.target.as_str()) }
 	fn example_targets(&self) -> impl IntoIterator<Item = &str> {
@@ -202,7 +202,7 @@ impl<'t, S> Cob<'t> for Manifest<S> where S: Cob<'t> {
 		           launch_sound_path: self.launch_sound_path.as_ref().map(Cob::as_borrow),
 		           content_warning: self.content_warning.as_ref().map(Cob::as_borrow),
 		           content_warning2: self.content_warning2.as_ref().map(Cob::as_borrow),
-		           build_number: self.build_number.clone() }
+		           build_number: self.build_number }
 	}
 }
 
@@ -241,7 +241,7 @@ impl IntoOwned<Manifest<<str as ToOwned>::Owned>> for Manifest<Cow<'_, str>> {
 		           launch_sound_path: self.launch_sound_path.map(|s| s.into_owned()),
 		           content_warning: self.content_warning.map(|s| s.into_owned()),
 		           content_warning2: self.content_warning2.map(|s| s.into_owned()),
-		           build_number: self.build_number.clone() }
+		           build_number: self.build_number }
 	}
 }
 
@@ -256,7 +256,7 @@ impl<S> Manifest<S> where S: ToOwned {
 		           launch_sound_path: self.launch_sound_path.map(|s| s.to_owned()),
 		           content_warning: self.content_warning.map(|s| s.to_owned()),
 		           content_warning2: self.content_warning2.map(|s| s.to_owned()),
-		           build_number: self.build_number.clone() }
+		           build_number: self.build_number }
 	}
 }
 
@@ -373,7 +373,7 @@ impl std::fmt::Display for ExtraValue {
 }
 
 impl From<bool> for ExtraValue {
-	fn from(value: bool) -> Self { Self::Boolean(value.into()) }
+	fn from(value: bool) -> Self { Self::Boolean(value) }
 }
 impl From<i64> for ExtraValue {
 	fn from(value: i64) -> Self { Self::Int(value) }
@@ -417,7 +417,7 @@ impl<S> ManifestSourceOpt for Manifest<S> where S: Deref<Target = str> {
 	fn launch_sound_path(&self) -> Option<&str> { self.launch_sound_path.as_deref() }
 	fn content_warning(&self) -> Option<&str> { self.content_warning.as_deref() }
 	fn content_warning2(&self) -> Option<&str> { self.content_warning2.as_deref() }
-	fn build_number(&self) -> Option<usize> { self.build_number.clone() }
+	fn build_number(&self) -> Option<usize> { self.build_number }
 }
 
 impl<T: ManifestSourceOpt> ManifestSourceOpt for Ext<T> {
@@ -483,7 +483,7 @@ impl<'s, T: ManifestSourceOpt, S: From<&'s str>> From<&'s T> for Manifest<S> {
 		       launch_sound_path: source.launch_sound_path().map(Into::into),
 		       content_warning: source.content_warning().map(Into::into),
 		       content_warning2: source.content_warning2().map(Into::into),
-		       build_number: source.build_number().clone() }
+		       build_number: source.build_number() }
 	}
 }
 
@@ -870,7 +870,7 @@ mod tests {
 	#[test]
 	fn options_assets_deps() {
 		// default is false
-		assert_eq!(false, AssetsOptions::default_dependencies());
+		assert!(!AssetsOptions::default_dependencies());
 		let src = r#" [assets] "#;
 		let m = toml::from_str::<Options>(src).unwrap();
 		assert_matches!(
