@@ -122,9 +122,13 @@ impl EnvResolver {
 	pub fn str<'c, S: AsRef<str>>(&self, s: S, env: &'c Env) -> Cow<'c, str> {
 		let re = &self.0;
 
-		// XXX: possible recursion for case "${VAR}" where $VAR="${VAR}"
+		// Possible recursion for case "${VAR}" where $VAR="${VAR}"
+		let mut anti_recursion_counter: u8 = 42;
+
 		let mut replaced = String::from(s.as_ref());
-		while re.is_match(replaced.as_str()) {
+		while re.is_match(replaced.as_str()) && anti_recursion_counter > 0 {
+			anti_recursion_counter -= 1;
+
 			if let Some(captures) = re.captures(replaced.as_str()) {
 				let full = &captures[0];
 				let name = &captures[2];
@@ -133,12 +137,11 @@ impl EnvResolver {
 				             .get(name)
 				             .map(Cow::from)
 				             .or_else(|| std::env::var(name).map_err(log_err).ok().map(Cow::from))
-				             .unwrap_or_else(|| {
-					             // XXX: should we panic here?
-					             panic!("Env var \"{name}\" not found")
-				             });
+				             .unwrap_or_else(|| name.into());
 
 				replaced = replaced.replace(full, &var);
+			} else {
+				break;
 			}
 		}
 		replaced.into()
@@ -534,11 +537,23 @@ mod tests {
 	}
 
 	#[test]
-	#[should_panic]
 	fn resolver_missed() {
 		let resolver = EnvResolver::new();
 		let env = Env::try_default().unwrap();
-		let expr = Expr::from("${MISSED}/file.txt");
+		let mut expr = Expr::from("${MISSED}/file.txt");
+		resolver.expr(&mut expr, &env);
+
+		assert_eq!("MISSED/file.txt", expr.actual());
+		assert_eq!("MISSED/file.txt", expr.as_str());
+		assert_eq!("${MISSED}/file.txt", expr.original());
+	}
+
+	#[test]
+	fn resolver_recursion() {
+		let resolver = EnvResolver::new();
+		let mut env = Env::try_default().unwrap();
+		env.vars.insert("VAR".into(), "${VAR}".into());
+		let expr = Expr::from("${VAR}/file.txt");
 		resolver.expr(expr, &env);
 	}
 }
