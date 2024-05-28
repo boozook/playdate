@@ -158,10 +158,7 @@ impl EnvResolver {
 
 				let var = std::env::var(name).map_err(log_err)
 				                             .map(Cow::from)
-				                             .unwrap_or_else(|_| {
-					                             // XXX: should we panic here?
-					                             panic!("Env var \"{name}\" not found")
-				                             });
+				                             .unwrap_or_else(|_| name.into());
 				replaced = replaced.replace(full, &var);
 			}
 		}
