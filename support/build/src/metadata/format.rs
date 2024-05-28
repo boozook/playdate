@@ -27,93 +27,6 @@ fn eq_metadata_field() {
 }
 
 
-#[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Deserialize))]
-#[cfg_attr(feature = "serde", serde(bound(deserialize = "Main: Deserialize<'de>")))]
-pub struct Ext<Main> {
-	#[cfg_attr(feature = "serde", serde(flatten))]
-	pub(super) main: Main,
-	#[cfg_attr(feature = "serde", serde(flatten))]
-	pub(super) extra: ExtraFields<ExtraValue>,
-}
-
-impl<T> Ext<T> {
-	pub fn inner(&self) -> &T { &self.main }
-	pub fn extra(&self) -> &ExtraFields<ExtraValue> { &self.extra }
-}
-
-impl<S> Ext<Manifest<S>> where S: ToOwned {
-	pub fn clone_owned(self) -> Ext<Manifest<<S as ToOwned>::Owned>> {
-		Ext { main: self.main.clone_owned(),
-		      extra: self.extra.to_owned() }
-	}
-}
-
-
-pub type ExtraFields<V> = HashMap<String, V>;
-
-
-#[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Deserialize))]
-#[cfg_attr(feature = "serde", serde(untagged))]
-pub enum ExtraValue {
-	Boolean(bool),
-	String(String),
-	Int(i64),
-}
-
-impl ExtraValue {
-	pub fn is_empty(&self) -> bool {
-		match self {
-			Self::String(s) => s.trim().is_empty(),
-			_ => false,
-		}
-	}
-}
-
-impl std::fmt::Display for ExtraValue {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self {
-			Self::Boolean(v) => v.fmt(f),
-			Self::String(v) => v.fmt(f),
-			Self::Int(v) => v.fmt(f),
-		}
-	}
-}
-
-impl From<bool> for ExtraValue {
-	fn from(value: bool) -> Self { Self::Boolean(value.into()) }
-}
-impl From<i64> for ExtraValue {
-	fn from(value: i64) -> Self { Self::Int(value) }
-}
-impl From<isize> for ExtraValue {
-	fn from(value: isize) -> Self { Self::Int(value as _) }
-}
-impl From<u64> for ExtraValue {
-	fn from(value: u64) -> Self { Self::Int(value as _) }
-}
-impl From<usize> for ExtraValue {
-	fn from(value: usize) -> Self { Self::Int(value as _) }
-}
-impl From<String> for ExtraValue {
-	fn from(value: String) -> Self { Self::String(value) }
-}
-impl From<&str> for ExtraValue {
-	fn from(value: &str) -> Self { Self::String(value.to_string()) }
-}
-impl<'t> From<Cow<'t, str>> for ExtraValue {
-	fn from(value: Cow<'t, str>) -> Self { Self::String(value.into_owned()) }
-}
-
-impl AsRef<ExtraValue> for ExtraValue {
-	fn as_ref(&self) -> &ExtraValue { self }
-}
-impl AsMut<ExtraValue> for ExtraValue {
-	fn as_mut(&mut self) -> &mut ExtraValue { self }
-}
-
-
 /// Package Playdate Metadata, contains:
 /// - Package Manifest fields
 /// - Assets tables - `assets` & `dev-assets`
@@ -128,7 +41,6 @@ impl<'de> Deserialize<'de> for Metadata {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 		where D: Deserializer<'de> {
 		let meta = MetadataInner::deserialize(deserializer)?;
-		// TODO: validate fields, just critical retirements - bundle_id
 		Ok(Self { inner: meta })
 	}
 }
@@ -227,6 +139,130 @@ fn deserialize_targets_overrides<'de, D, S>(deserializer: D) -> Result<Vec<Overr
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Deserialize))]
+#[cfg_attr(feature = "serde", serde(bound(deserialize = "Main: Deserialize<'de>")))]
+pub struct Ext<Main> {
+	#[cfg_attr(feature = "serde", serde(flatten))]
+	pub(super) main: Main,
+	#[cfg_attr(feature = "serde", serde(flatten))]
+	pub(super) extra: ExtraFields<ExtraValue>,
+}
+
+impl<T> Ext<T> {
+	pub fn new(main: T, extra: ExtraFields<ExtraValue>) -> Self { Self { main, extra } }
+}
+
+impl<T> Ext<T> {
+	pub fn inner(&self) -> &T { &self.main }
+	pub fn extra(&self) -> &ExtraFields<ExtraValue> { &self.extra }
+}
+
+impl<S> Ext<Manifest<S>> where S: ToOwned {
+	pub fn clone_owned(self) -> Ext<Manifest<<S as ToOwned>::Owned>> {
+		Ext { main: self.main.clone_owned(),
+		      extra: self.extra.to_owned() }
+	}
+}
+
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "serde", serde(bound(deserialize = "S: Deserialize<'de>")))]
+pub struct Manifest<S> {
+	pub name: Option<S>,
+	pub version: Option<S>,
+	pub author: Option<S>,
+	#[cfg_attr(feature = "serde", serde(alias = "bundle-id"))]
+	pub bundle_id: Option<S>,
+	pub description: Option<S>,
+	#[cfg_attr(feature = "serde", serde(alias = "image-path"))]
+	pub image_path: Option<S>,
+	#[cfg_attr(feature = "serde", serde(alias = "launch-sound-path"))]
+	pub launch_sound_path: Option<S>,
+	#[cfg_attr(feature = "serde", serde(alias = "content-warning"))]
+	pub content_warning: Option<S>,
+	#[cfg_attr(feature = "serde", serde(alias = "content-warning2"))]
+	pub content_warning2: Option<S>,
+	#[cfg_attr(feature = "serde", serde(default, alias = "build-number"))]
+	#[cfg_attr(feature = "serde", serde(deserialize_with = "deserialize_num_compat"))]
+	pub build_number: Option<usize>,
+}
+
+
+impl<'t, S> Cob<'t> for Manifest<S> where S: Cob<'t> {
+	type Output = Manifest<<S as Cob<'t>>::Output>;
+
+	fn as_borrow(&'t self) -> Self::Output {
+		Manifest { name: self.name.as_ref().map(Cob::as_borrow),
+		           version: self.version.as_ref().map(Cob::as_borrow),
+		           author: self.author.as_ref().map(Cob::as_borrow),
+		           bundle_id: self.bundle_id.as_ref().map(Cob::as_borrow),
+		           description: self.description.as_ref().map(Cob::as_borrow),
+		           image_path: self.image_path.as_ref().map(Cob::as_borrow),
+		           launch_sound_path: self.launch_sound_path.as_ref().map(Cob::as_borrow),
+		           content_warning: self.content_warning.as_ref().map(Cob::as_borrow),
+		           content_warning2: self.content_warning2.as_ref().map(Cob::as_borrow),
+		           build_number: self.build_number.clone() }
+	}
+}
+
+impl<'t, T> Cob<'t> for Ext<T> where T: Cob<'t> {
+	type Output = Ext<<T as Cob<'t>>::Output>;
+
+	fn as_borrow(&'t self) -> Self::Output {
+		let main = self.main.as_borrow();
+		Ext { main,
+		      extra: self.extra
+		                 .iter()
+		                 .map(|(k, v)| (k.to_owned(), v.to_owned()))
+		                 .collect() }
+	}
+}
+
+impl<'t, T> Cob<'t> for Override<T> where T: Cob<'t> {
+	type Output = Override<<T as Cob<'t>>::Output>;
+
+	fn as_borrow(&'t self) -> Self::Output {
+		let Override { target, manifest } = self;
+		Override { target: target.as_borrow(),
+		           manifest: manifest.as_borrow() }
+	}
+}
+
+
+impl IntoOwned<Manifest<<str as ToOwned>::Owned>> for Manifest<Cow<'_, str>> {
+	fn into_owned(self) -> Manifest<<str as ToOwned>::Owned> {
+		Manifest { name: self.name.map(|s| s.into_owned()),
+		           version: self.version.map(|s| s.into_owned()),
+		           author: self.author.map(|s| s.into_owned()),
+		           bundle_id: self.bundle_id.map(|s| s.into_owned()),
+		           description: self.description.map(|s| s.into_owned()),
+		           image_path: self.image_path.map(|s| s.into_owned()),
+		           launch_sound_path: self.launch_sound_path.map(|s| s.into_owned()),
+		           content_warning: self.content_warning.map(|s| s.into_owned()),
+		           content_warning2: self.content_warning2.map(|s| s.into_owned()),
+		           build_number: self.build_number.clone() }
+	}
+}
+
+impl<S> Manifest<S> where S: ToOwned {
+	pub fn clone_owned(self) -> Manifest<<S as ToOwned>::Owned> {
+		Manifest { name: self.name.map(|s| s.to_owned()),
+		           version: self.version.map(|s| s.to_owned()),
+		           author: self.author.map(|s| s.to_owned()),
+		           bundle_id: self.bundle_id.map(|s| s.to_owned()),
+		           description: self.description.map(|s| s.to_owned()),
+		           image_path: self.image_path.map(|s| s.to_owned()),
+		           launch_sound_path: self.launch_sound_path.map(|s| s.to_owned()),
+		           content_warning: self.content_warning.map(|s| s.to_owned()),
+		           content_warning2: self.content_warning2.map(|s| s.to_owned()),
+		           build_number: self.build_number.clone() }
+	}
+}
+
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Deserialize))]
 #[cfg_attr(feature = "serde", serde(bound(deserialize = "S: Deserialize<'de> +Default")))]
 pub struct Override<S> {
 	/// Associated cargo-target name
@@ -247,7 +283,6 @@ impl<S: AsRef<str>> Override<S> {
 		(target, manifest)
 	}
 }
-
 
 impl<S: AsRef<str>> TargetId for Override<S> {
 	fn target(&self) -> &str { self.target.as_ref() }
@@ -306,91 +341,67 @@ impl Default for RuleValue {
 }
 
 
+pub type ExtraFields<V> = HashMap<String, V>;
+
+
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Deserialize))]
-#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
-#[cfg_attr(feature = "serde", serde(bound(deserialize = "S: Deserialize<'de>")))]
-pub struct Manifest<S> {
-	pub name: Option<S>,
-	pub version: Option<S>,
-	pub author: Option<S>,
-	#[cfg_attr(feature = "serde", serde(alias = "bundle-id"))]
-	pub bundle_id: Option<S>,
-	pub description: Option<S>,
-	#[cfg_attr(feature = "serde", serde(alias = "image-path"))]
-	pub image_path: Option<S>,
-	#[cfg_attr(feature = "serde", serde(alias = "launch-sound-path"))]
-	pub launch_sound_path: Option<S>,
-	#[cfg_attr(feature = "serde", serde(alias = "content-warning"))]
-	pub content_warning: Option<S>,
-	#[cfg_attr(feature = "serde", serde(alias = "content-warning2"))]
-	pub content_warning2: Option<S>,
-	#[cfg_attr(feature = "serde", serde(default, alias = "build-number"))]
-	#[cfg_attr(feature = "serde", serde(deserialize_with = "deserialize_num_compat"))]
-	pub build_number: Option<usize>,
+#[cfg_attr(feature = "serde", serde(untagged))]
+pub enum ExtraValue {
+	Boolean(bool),
+	String(String),
+	Int(i64),
 }
 
-impl<'t, S: 't> Manifest<S> where &'t S: Into<Cow<'t, str>> {
-	fn as_borrowed(&'t self) -> Manifest<Cow<'t, str>> {
-		Manifest { name: self.name.as_ref().map(Into::into),
-		           version: self.version.as_ref().map(Into::into),
-		           author: self.author.as_ref().map(Into::into),
-		           bundle_id: self.bundle_id.as_ref().map(Into::into),
-		           description: self.description.as_ref().map(Into::into),
-		           image_path: self.image_path.as_ref().map(Into::into),
-		           launch_sound_path: self.launch_sound_path.as_ref().map(Into::into),
-		           content_warning: self.content_warning.as_ref().map(Into::into),
-		           content_warning2: self.content_warning2.as_ref().map(Into::into),
-		           build_number: self.build_number.clone() }
+impl ExtraValue {
+	pub fn is_empty(&self) -> bool {
+		match self {
+			Self::String(s) => s.trim().is_empty(),
+			_ => false,
+		}
 	}
 }
 
-impl IntoOwned<Manifest<<str as ToOwned>::Owned>> for Manifest<Cow<'_, str>> {
-	fn into_owned(self) -> Manifest<<str as ToOwned>::Owned> {
-		Manifest { name: self.name.map(|s| s.into_owned()),
-		           version: self.version.map(|s| s.into_owned()),
-		           author: self.author.map(|s| s.into_owned()),
-		           bundle_id: self.bundle_id.map(|s| s.into_owned()),
-		           description: self.description.map(|s| s.into_owned()),
-		           image_path: self.image_path.map(|s| s.into_owned()),
-		           launch_sound_path: self.launch_sound_path.map(|s| s.into_owned()),
-		           content_warning: self.content_warning.map(|s| s.into_owned()),
-		           content_warning2: self.content_warning2.map(|s| s.into_owned()),
-		           build_number: self.build_number.clone() }
+impl std::fmt::Display for ExtraValue {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::Boolean(v) => v.fmt(f),
+			Self::String(v) => v.trim().fmt(f),
+			Self::Int(v) => v.fmt(f),
+		}
 	}
 }
 
-impl<S> Manifest<S> where S: ToOwned {
-	pub fn clone_owned(self) -> Manifest<<S as ToOwned>::Owned> {
-		Manifest { name: self.name.map(|s| s.to_owned()),
-		           version: self.version.map(|s| s.to_owned()),
-		           author: self.author.map(|s| s.to_owned()),
-		           bundle_id: self.bundle_id.map(|s| s.to_owned()),
-		           description: self.description.map(|s| s.to_owned()),
-		           image_path: self.image_path.map(|s| s.to_owned()),
-		           launch_sound_path: self.launch_sound_path.map(|s| s.to_owned()),
-		           content_warning: self.content_warning.map(|s| s.to_owned()),
-		           content_warning2: self.content_warning2.map(|s| s.to_owned()),
-		           build_number: self.build_number.clone() }
-	}
+impl From<bool> for ExtraValue {
+	fn from(value: bool) -> Self { Self::Boolean(value.into()) }
+}
+impl From<i64> for ExtraValue {
+	fn from(value: i64) -> Self { Self::Int(value) }
+}
+impl From<isize> for ExtraValue {
+	fn from(value: isize) -> Self { Self::Int(value as _) }
+}
+impl From<u64> for ExtraValue {
+	fn from(value: u64) -> Self { Self::Int(value as _) }
+}
+impl From<usize> for ExtraValue {
+	fn from(value: usize) -> Self { Self::Int(value as _) }
+}
+impl From<String> for ExtraValue {
+	fn from(value: String) -> Self { Self::String(value) }
+}
+impl From<&str> for ExtraValue {
+	fn from(value: &str) -> Self { Self::String(value.to_string()) }
+}
+impl<'t> From<Cow<'t, str>> for ExtraValue {
+	fn from(value: Cow<'t, str>) -> Self { Self::String(value.into_owned()) }
 }
 
-
-#[cfg(feature = "serde")]
-fn deserialize_num_compat<'de, D>(deserializer: D) -> Result<Option<usize>, D::Error>
-	where D: Deserializer<'de> {
-	#[derive(Debug, Clone, PartialEq, Deserialize)]
-	#[serde(untagged)]
-	pub enum Value {
-		Num(usize),
-		Str(String),
-	}
-	let result = match Option::<Value>::deserialize(deserializer)? {
-		Some(Value::Num(value)) => Some(value),
-		Some(Value::Str(s)) => Some(s.parse().map_err(serde::de::Error::custom)?),
-		None => None,
-	};
-	Ok(result)
+impl AsRef<ExtraValue> for ExtraValue {
+	fn as_ref(&self) -> &ExtraValue { self }
+}
+impl AsMut<ExtraValue> for ExtraValue {
+	fn as_mut(&mut self) -> &mut ExtraValue { self }
 }
 
 
@@ -607,6 +618,24 @@ impl Default for AssetsBuildMethod {
 pub struct Support {
 	// #[serde(alias = "crank-manifest")]
 	// pub crank_manifest: Option<PathBuf>
+}
+
+
+#[cfg(feature = "serde")]
+fn deserialize_num_compat<'de, D>(deserializer: D) -> Result<Option<usize>, D::Error>
+	where D: Deserializer<'de> {
+	#[derive(Debug, Clone, PartialEq, Deserialize)]
+	#[serde(untagged)]
+	pub enum Value {
+		Num(usize),
+		Str(String),
+	}
+	let result = match Option::<Value>::deserialize(deserializer)? {
+		Some(Value::Num(value)) => Some(value),
+		Some(Value::Str(s)) => Some(s.parse().map_err(serde::de::Error::custom)?),
+		None => None,
+	};
+	Ok(result)
 }
 
 

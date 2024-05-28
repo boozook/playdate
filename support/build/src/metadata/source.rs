@@ -3,8 +3,92 @@ use std::borrow::Cow;
 use super::format::{AssetsOptions, AssetsRules, Ext, ExtraFields, ExtraValue, Manifest, Options, Support};
 
 
-pub trait TargetId {
-	fn target(&self) -> &str;
+pub trait CrateInfoSource {
+	fn name(&self) -> Cow<str>;
+	fn authors(&self) -> &[&str];
+	fn version(&self) -> Cow<str>;
+	fn description(&self) -> Option<Cow<str>>;
+	fn metadata(&self) -> Option<impl MetadataSource>;
+
+	// targets -> [name? or name+kind?]
+
+
+	fn manifest_for_crate(&self) -> impl ManifestSourceOptExt {
+		use super::format::Manifest;
+		{
+			let author = {
+				let author = self.authors().join(", ");
+				if author.trim().is_empty() {
+					None
+				} else {
+					Some(author.into())
+				}
+			};
+			let version = Some(self.version());
+			let package = Manifest { name: Some(self.name()),
+			                         description: self.description(),
+			                         author,
+			                         version,
+			                         bundle_id: None,
+			                         image_path: None,
+			                         launch_sound_path: None,
+			                         content_warning: None,
+			                         content_warning2: None,
+			                         build_number: None };
+
+			if let Some(meta) = self.metadata() {
+				let manifest = meta.manifest();
+				let base = Ext { main: package,
+				                 extra: Default::default() };
+				// TODO: Reduce coping, return associated type instead with all strings in the Cow<'self>.
+				// Also get merged manifest with refs, using `override_with_extra_ref`
+				let result = base.override_with_extra(&manifest);
+				Ext { main: Manifest::from(&result),
+				      extra: result.iter_extra()
+				                   .map(|m| {
+					                   m.into_iter()
+					                    .map(|(k, v)| (k.as_ref().to_owned(), v.as_ref().clone()))
+					                    .collect()
+				                   })
+				                   .unwrap_or_default() }
+			} else {
+				Ext { main: package.into_owned(),
+				      extra: Default::default() }
+			}
+		}
+	}
+
+
+	/// Returns `None` if manifest for `target` not found, no fallback.
+	fn manifest_for(&self, target: &str, dev: bool) -> Option<Ext<Manifest<String>>> {
+		let base = self.manifest_for_crate();
+
+		if let Some(root) = self.metadata() {
+			if dev {
+				if let Some(man) = root.example(target) {
+					Some(base.override_with_extra(man).into_owned())
+				} else {
+					log::debug!("target not found: {}", target);
+					None
+				}
+			} else {
+				if let Some(man) = root.bin(target) {
+					Some(base.override_with_extra(man).into_owned())
+				} else {
+					log::debug!("target not found: {}", target);
+					None
+				}
+			}
+		} else {
+			Some(base.into_owned())
+		}
+	}
+
+	/// Returns manifest for specified `target`. If not found, returns manifest for crate.
+	fn manifest_for_opt(&self, target: Option<&str>, dev: bool) -> Ext<Manifest<String>> {
+		target.and_then(|target| self.manifest_for(target, dev))
+		      .unwrap_or_else(|| self.manifest_for_crate().into_owned())
+	}
 }
 
 
@@ -55,23 +139,21 @@ pub trait MetadataSource {
 	/// Make a manifest for a specific target, merged with base manifest for package.
 	/// Returns `None` if the target is not found.
 	fn manifest_for_target(&self, target: &str, dev: bool) -> Option<impl ManifestSourceOptExt> {
-		use super::format::Manifest;
-
 		// manifest() returns T without lifetime, so can't be associated with `&self`,
 		// that should be fixed
 		let base = self.manifest();
 
 		if dev {
 			if let Some(target) = self.example(target) {
-				let trg = base.override_with_extra(target);
-				Some(Ext::<Manifest<String>>::from(&trg))
+				let trg = base.override_with_extra_ref(target);
+				Some(trg.into_owned())
 			} else {
 				None
 			}
 		} else {
 			if let Some(target) = self.bin(target) {
-				let trg = base.override_with_extra(target);
-				Some(Ext::<Manifest<String>>::from(&trg))
+				let trg = base.override_with_extra_ref(target);
+				Some(trg.into_owned())
 			} else {
 				None
 			}
@@ -125,6 +207,7 @@ pub trait ManifestSource {
 pub trait ManifestSourceOpt {
 	/// Possibly incomplete, that means that some of values could be `None`.
 	const MAY_BE_INCOMPLETE: bool;
+
 	fn name(&self) -> Option<&str>;
 	fn version(&self) -> Option<&str>;
 	fn author(&self) -> Option<&str>;
@@ -136,25 +219,24 @@ pub trait ManifestSourceOpt {
 	fn content_warning2(&self) -> Option<&str>;
 	fn build_number(&self) -> Option<usize>;
 
-	fn override_with<'a, Over>(&'a self, overrider: &'a Over) -> impl ManifestSourceOpt + 'a
+	fn override_with<'a, Over>(&'a self, over: &'a Over) -> impl ManifestSourceOpt + 'a
 		where Over: ManifestSourceOpt {
 		use super::format::Manifest;
 
-		let trg = overrider;
-		Manifest::<Cow<str>> { name: trg.name().or(self.name()).map(Into::into),
-		                       version: trg.version().or(self.version()).map(Into::into),
-		                       author: trg.author().or(self.author()).map(Into::into),
-		                       bundle_id: trg.bundle_id().or(self.bundle_id()).map(Into::into),
-		                       description: trg.description().or(self.description()).map(Into::into),
-		                       image_path: trg.image_path().or(self.image_path()).map(Into::into),
-		                       launch_sound_path: trg.launch_sound_path()
-		                                             .or(self.launch_sound_path())
+		Manifest::<Cow<str>> { name: over.name().or(self.name()).map(Into::into),
+		                       version: over.version().or(self.version()).map(Into::into),
+		                       author: over.author().or(self.author()).map(Into::into),
+		                       bundle_id: over.bundle_id().or(self.bundle_id()).map(Into::into),
+		                       description: over.description().or(self.description()).map(Into::into),
+		                       image_path: over.image_path().or(self.image_path()).map(Into::into),
+		                       launch_sound_path: over.launch_sound_path()
+		                                              .or(self.launch_sound_path())
+		                                              .map(Into::into),
+		                       content_warning: over.content_warning().or(self.content_warning()).map(Into::into),
+		                       content_warning2: over.content_warning2()
+		                                             .or(self.content_warning2())
 		                                             .map(Into::into),
-		                       content_warning: trg.content_warning().or(self.content_warning()).map(Into::into),
-		                       content_warning2: trg.content_warning2()
-		                                            .or(self.content_warning2())
-		                                            .map(Into::into),
-		                       build_number: trg.build_number().or(self.build_number()) }
+		                       build_number: over.build_number().or(self.build_number()) }
 	}
 }
 
@@ -165,46 +247,45 @@ pub trait ManifestSourceOptExt: ManifestSourceOpt {
 	fn has_extra(&self) -> bool { Self::MAY_HAVE_EXTRA && self.iter_extra().is_some() }
 	fn iter_extra(&self) -> Option<impl IntoIterator<Item = (impl AsRef<str>, impl AsRef<ExtraValue>)>>;
 
-	fn override_with_extra_ref<'t, Over: ManifestSourceOptExt>(&'t self,
-	                                                           overrider: &'t Over)
-	                                                           -> impl ManifestSourceOptExt + 't {
-		let manifest = self.override_with(overrider);
-		if overrider.has_extra() || self.has_extra() {
-			let extra = match (self.iter_extra(), overrider.iter_extra()) {
-				            (None, None) => None,
-			               (None, Some(extra)) => {
-				               let result = extra.into_iter()
-				                                 .map(|(k, v)| (k.as_ref().to_owned(), v.as_ref().clone()));
-				               Some(result.collect())
-			               },
-			               (Some(extra), None) => {
-				               let result = extra.into_iter()
-				                                 .map(|(k, v)| (k.as_ref().to_owned(), v.as_ref().clone()));
-				               Some(result.collect())
-			               },
-			               (Some(base), Some(extra)) => {
-				               let mut result: ExtraFields<ExtraValue> =
-					               base.into_iter()
-					                   .map(|(k, v)| (k.as_ref().to_owned(), v.as_ref().clone()))
-					                   .collect();
-				               result.extend(
-				                             extra.into_iter()
-				                                  .map(|(k, v)| (k.as_ref().to_owned(), v.as_ref().clone())),
-				);
-				               Some(result)
-			               },
-			            }.unwrap_or_else(|| ExtraFields::with_capacity(0));
-
-			Ext { main: manifest,
-			      extra }
+	fn override_with_extra_ref<'t, Over>(&'t self, over: &'t Over) -> impl ManifestSourceOptExt + 't
+		where Over: ManifestSourceOptExt {
+		let manifest = self.override_with(over);
+		let extra = if over.has_extra() || self.has_extra() {
+			match (self.iter_extra(), over.iter_extra()) {
+				(None, None) => None,
+				(None, Some(extra)) => {
+					let result = extra.into_iter()
+					                  .map(|(k, v)| (k.as_ref().to_owned(), v.as_ref().clone()));
+					Some(result.collect())
+				},
+				(Some(extra), None) => {
+					let result = extra.into_iter()
+					                  .map(|(k, v)| (k.as_ref().to_owned(), v.as_ref().clone()));
+					Some(result.collect())
+				},
+				(Some(base), Some(extra)) => {
+					let mut result: ExtraFields<ExtraValue> = base.into_iter()
+					                                              .map(|(k, v)| (k.as_ref().to_owned(), v.as_ref().clone()))
+					                                              .collect();
+					result.extend(
+					              extra.into_iter()
+					                   .map(|(k, v)| (k.as_ref().to_owned(), v.as_ref().clone())),
+					);
+					Some(result)
+				},
+			}.unwrap_or_else(|| ExtraFields::with_capacity(0))
 		} else {
-			Ext { main: manifest,
-			      extra: ExtraFields::with_capacity(0) }
-		}
+			ExtraFields::with_capacity(0)
+		};
+
+		Ext { main: manifest,
+		      extra }
 	}
 
 
-	fn override_with_extra<Over: ManifestSourceOptExt>(&self, overrider: &Over) -> impl ManifestSourceOptExt {
+	fn override_with_extra<Over: ManifestSourceOptExt>(&self,
+	                                                   overrider: &Over)
+	                                                   -> impl ManifestSourceOptExt + Cob<'static> {
 		self.override_with_extra_ref(overrider).into_manifest()
 	}
 }
@@ -248,102 +329,38 @@ impl<'t, T: ManifestSourceOptExt> ManifestSourceOptExt for &'t T where &'t T: Ma
 }
 
 
+pub trait TargetId {
+	fn target(&self) -> &str;
+}
+
+
 pub trait IntoManifest: Sized + ManifestSourceOptExt {
 	fn into_manifest(self) -> Ext<Manifest<String>> { self.into_owned() }
 }
 impl<T: ManifestSourceOptExt> IntoManifest for T {}
 
 
-pub trait CrateInfoSource {
-	fn name(&self) -> Cow<str>;
-	fn authors(&self) -> &[&str];
-	fn version(&self) -> Cow<str>;
-	fn description(&self) -> Option<Cow<str>>;
-	fn metadata(&self) -> Option<impl MetadataSource>;
-
-	// targets -> [name? or name+kind?]
-
-
-	fn manifest_for_crate(&self) -> impl ManifestSourceOptExt {
-		use super::format::Manifest;
-		{
-			let author = {
-				let author = self.authors().join(", ");
-				if author.trim().is_empty() {
-					None
-				} else {
-					Some(author.into())
-				}
-			};
-			let version = Some(self.version());
-			let package = Manifest { name: Some(self.name()),
-			                         description: self.description(),
-			                         author,
-			                         version,
-			                         bundle_id: None,
-			                         image_path: None,
-			                         launch_sound_path: None,
-			                         content_warning: None,
-			                         content_warning2: None,
-			                         build_number: None };
-
-			if let Some(meta) = self.metadata() {
-				let manifest = meta.manifest();
-				let base = Ext { main: package,
-				                 extra: Default::default() };
-				let result = base.override_with_extra(&manifest);
-				Ext { main: Manifest::from(&result),
-				      extra: result.iter_extra()
-				                   .map(|m| {
-					                   m.into_iter()
-					                    .map(|(k, v)| (k.as_ref().to_owned(), v.as_ref().clone()))
-					                    .collect()
-				                   })
-				                   .unwrap_or_default() }
-			} else {
-				Ext { main: package.into_owned(),
-				      extra: Default::default() }
-			}
-		}
-	}
-
-
-	/// Returns `None` if manifest for `target` not found, no fallback.
-	// fn manifest_for(&self, target: &str, dev: bool) -> Option<impl ManifestSourceOptExt> {
-	fn manifest_for(&self, target: &str, dev: bool) -> Option<Ext<Manifest<String>>> {
-		let base = self.manifest_for_crate();
-
-		if let Some(root) = self.metadata() {
-			if dev {
-				if let Some(man) = root.example(target) {
-					Some(base.override_with_extra(man).into_owned())
-				} else {
-					log::debug!("target not found: {}", target);
-					None
-				}
-			} else {
-				if let Some(man) = root.bin(target) {
-					Some(base.override_with_extra(man).into_owned())
-				} else {
-					log::debug!("target not found: {}", target);
-					None
-				}
-			}
-		} else {
-			Some(base.into_owned())
-		}
-	}
-
-	/// Returns manifest for specified `target`. If not found, returns manifest for crate.
-	fn manifest_for_opt(&self, target: Option<&str>, dev: bool) -> Ext<Manifest<String>> {
-		target.and_then(|target| self.manifest_for(target, dev))
-		      .unwrap_or_else(|| self.manifest_for_crate().into_owned())
-	}
+pub(super) trait IntoOwned<T> {
+	fn into_owned(self) -> T;
 }
 
 
-pub(super) trait IntoOwned<T> {
-	fn into_owned(self) -> T;
+/// Cob as CopyBorrow - partially copy, partially borrow.
+/// Used to produce instance of type with internally borrowed things from `self`.
+pub trait Cob<'t>
+	where Self::Output: 't {
+	type Output;
+	fn as_borrow(&'t self) -> Self::Output;
+}
+
+impl<'t> Cob<'t> for str where Self: 't {
+	type Output = Cow<'t, str>;
+	fn as_borrow(&'t self) -> Self::Output { self.into() }
+}
+
+impl<'t, S: AsRef<str>> Cob<'t> for S {
+	type Output = Cow<'t, str>;
+	fn as_borrow(&'t self) -> Self::Output { self.as_ref().into() }
 }
 
 

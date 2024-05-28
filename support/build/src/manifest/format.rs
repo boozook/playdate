@@ -18,19 +18,19 @@ pub trait ManifestFmt {
 		let is_not_empty = |s: &&str| !s.trim().is_empty();
 
 		{
-			let mut write_fmt = |k, v| to.write_fmt(format_args!("{}={}\n", k, v));
+			let mut write_fmt = |k: &str, v: &str| to.write_fmt(format_args!("{}={}\n", k.trim(), v.trim()));
 
 			if let Some(s) = data.name().filter(is_not_empty) {
 				write_fmt("name", s)?;
+			}
+			if let Some(s) = data.version().filter(is_not_empty) {
+				write_fmt("version", s)?
 			}
 			if let Some(s) = data.author().filter(is_not_empty) {
 				write_fmt("author", s)?
 			}
 			if let Some(s) = data.bundle_id().filter(is_not_empty) {
 				write_fmt("bundleID", s)?
-			}
-			if let Some(s) = data.version().filter(is_not_empty) {
-				write_fmt("version", s)?
 			}
 			if let Some(s) = data.description().filter(is_not_empty) {
 				write_fmt("description", s)?
@@ -57,7 +57,7 @@ pub trait ManifestFmt {
 			for (key, value) in extra.into_iter() {
 				let (key, value) = (key.as_ref(), value.as_ref());
 				if is_not_empty(&key) && !value.is_empty() {
-					to.write_fmt(format_args!("{}={}\n", key, value))?
+					to.write_fmt(format_args!("{}={}\n", key.trim(), value))?
 				}
 			}
 		}
@@ -76,3 +76,67 @@ pub trait ManifestFmt {
 
 
 impl<T: ManifestSourceOptExt> ManifestFmt for T {}
+
+
+#[cfg(test)]
+mod tests {
+	use crate::metadata::format::Ext;
+	use crate::metadata::format::ExtraFields;
+	use super::ManifestFmt;
+	use super::Manifest;
+
+
+	#[test]
+	fn fmt_empty() {
+		let m = Manifest::<&str>::default();
+		assert!(m.to_manifest_string().unwrap().is_empty());
+	}
+
+	#[test]
+	fn fmt_full() {
+		let m = Manifest::<&str> { name: "name".into(),
+		                           version: "version".into(),
+		                           author: "author".into(),
+		                           bundle_id: "bundle_id".into(),
+		                           description: "description".into(),
+		                           image_path: "image_path".into(),
+		                           launch_sound_path: "launch_sound_path".into(),
+		                           content_warning: "content_warning".into(),
+		                           content_warning2: "content_warning2".into(),
+		                           build_number: 42.into() };
+		let s = m.to_manifest_string().unwrap();
+		assert_eq!(
+		           "name=name\nversion=version\nauthor=author\nbundleID=bundle_id\ndescription=description\nimagePath=image_path\nlaunchSoundPath=launch_sound_path\ncontentWarning=content_warning\ncontentWarning2=content_warning2\nbuildNumber=42\n",
+		           s
+		);
+	}
+
+	#[test]
+	fn fmt_ext() {
+		let main = Manifest::<&str> { bundle_id: "bundle_id".into(),
+		                              ..Default::default() };
+		let mut extra = ExtraFields::new();
+		extra.insert("foo".to_owned(), "bar".to_owned().into());
+
+		let m = Ext::new(main, extra);
+		let s = m.to_manifest_string().unwrap();
+		assert_eq!("bundleID=bundle_id\nfoo=bar\n", s);
+	}
+
+	#[test]
+	fn fmt_trim() {
+		let main = Manifest::<&str> { name: "  name".into(),
+		                              bundle_id: "bundle_id   ".into(),
+		                              description: "   description   ".into(),
+		                              ..Default::default() };
+		let mut extra = ExtraFields::new();
+		extra.insert("   foo    ".to_owned(), "  bar  ".to_owned().into());
+
+		let m = Ext::new(main, extra);
+		let s = m.to_manifest_string().unwrap();
+		assert_eq!(
+		           "name=name\nbundleID=bundle_id\ndescription=description\nfoo=bar\n",
+		           s
+		);
+	}
+}

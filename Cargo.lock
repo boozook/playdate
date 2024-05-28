@@ -4109,6 +4109,7 @@ dependencies = [
  "log",
  "playdate-build-utils",
  "regex",
+ "semver",
  "serde",
  "serde_json",
  "symlink",
