@@ -1,6 +1,6 @@
 [package]
 name = "playdate-controls"
-version = "0.3.4"
+version = "0.3.5"
 readme = "README.md"
 description = "High-level controls API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
