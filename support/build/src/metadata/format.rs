@@ -334,16 +334,16 @@ impl AssetsRules {
 
 /// Actually anti-compat, just validation and proper error message.
 mod compat {
+	#![cfg(feature = "serde")]
 	use super::{AssetsOptions, Deserialize, Deserializer, HashMap, RuleValue};
 
-	#[derive(Debug, Clone, PartialEq)]
-	#[cfg_attr(feature = "serde", derive(Deserialize))]
-	#[cfg_attr(feature = "serde", serde(untagged, deny_unknown_fields))]
+	#[derive(Debug, Clone, PartialEq, Deserialize)]
+	#[serde(untagged, deny_unknown_fields)]
 	enum AssetsRules {
 		Normal(super::AssetsRules),
 		LegacyMap {
 			options: AssetsOptions,
-			#[cfg_attr(feature = "serde", serde(flatten))]
+			#[serde(flatten)]
 			rules: HashMap<String, RuleValue>,
 		},
 	}
