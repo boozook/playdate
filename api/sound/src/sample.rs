@@ -188,7 +188,7 @@ impl<Api: api::Api> Sample<Api> {
 
 /// Sample over borrowed audio data.
 #[cfg_attr(feature = "bindings-derive-debug", derive(Debug))]
-pub struct SampleWithData<'t, Api: api::Api>(Sample<Api>, &'t mut [u8]);
+pub struct SampleWithData<'t, Api: api::Api>(Sample<Api>, #[allow(dead_code)] &'t mut [u8]);
 
 impl<Api: api::Api> Deref for SampleWithData<'_, Api> {
 	type Target = Sample<Api>;
