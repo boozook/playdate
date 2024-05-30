@@ -338,7 +338,7 @@ mod compat {
 	use super::{AssetsOptions, Deserialize, Deserializer, HashMap, RuleValue};
 
 	#[derive(Debug, Clone, PartialEq, Deserialize)]
-	#[serde(untagged, deny_unknown_fields)]
+	#[serde(untagged)]
 	enum AssetsRules {
 		Normal(super::AssetsRules),
 		LegacyMap {
@@ -353,11 +353,20 @@ mod compat {
 		/// then report it in error.
 		pub fn deserialize_ext<'de, D>(deserializer: D) -> Result<super::AssetsRules, D::Error>
 			where D: Deserializer<'de> {
-			match AssetsRules::deserialize(deserializer)? {
-				AssetsRules::Normal(rules) => Ok(rules),
-				AssetsRules::LegacyMap { .. } => {
-					let err = "unsupported field `assets.options` (that was before), use `options.assets` instead";
-					let err = serde::de::Error::custom(err);
+			match AssetsRules::deserialize(deserializer) {
+				Ok(result) => {
+					match result {
+						AssetsRules::Normal(rules) => Ok(rules),
+						AssetsRules::LegacyMap { .. } => {
+							const ERR: &str =
+								"unsupported field `assets.options` (that was before), use `options.assets` instead";
+							Err(serde::de::Error::custom(ERR))
+						},
+					}
+				},
+				Err(err) => {
+					const PRE: &str = "invalid `assets`, expected a list of paths or map of rules";
+					let err = serde::de::Error::custom(format_args!("{}: {}", PRE, err));
 					Err(err)
 				},
 			}
