@@ -2,6 +2,7 @@ use std::fmt::Display;
 
 use super::source::CrateInfoSource;
 use super::source::ManifestSourceOptExt;
+use super::source::MetadataSource;
 
 
 #[derive(Debug, Clone)]
@@ -13,6 +14,7 @@ pub enum Problem {
 
 #[derive(Debug, Clone)]
 pub enum Warning {
+	MissingMetadata,
 	StrangeValue {
 		field: String,
 		value: String,
@@ -31,6 +33,7 @@ pub enum Warning {
 impl Display for Warning {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
+			Self::MissingMetadata => write!(f, "Metadata not found"),
 			Self::StrangeValue { field, value, reason } => {
 				write!(f, "Strange value {value:?} for field '{field}'")?;
 				if let Some(reason) = reason {
@@ -74,8 +77,8 @@ impl Problem {
 impl Display for Problem {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			Self::UnknownTarget { name } => write!(f, "Unknown cargo-target: {name}"),
-			Self::MissingField { field } => write!(f, "Missing field: {field}"),
+			Self::UnknownTarget { name } => write!(f, "Unknown cargo-target {name:?}"),
+			Self::MissingField { field } => write!(f, "Missing field: {field:?}"),
 			Self::Warning(warning) => warning.fmt(f),
 		}
 	}
@@ -158,29 +161,57 @@ fn validate_version(value: &str) -> Option<Problem> {
 
 /// Lint the crate-level source.
 pub trait ValidateCrate: CrateInfoSource {
-	fn validate(&self) -> impl IntoIterator<Item = Problem> {
+	fn validate<'t>(&'t self) -> impl IntoIterator<Item = Problem> + 't {
 		// - main manifest missing fields
 		// - main manifest fields in bad format
 		// - for each final target manifest:
 		//   -> same as for the main manifest
 
 
-		if let Some(_meta) = self.metadata() {
-			// Check that all targets are exists
-			// - search the target in the crate for each in meta.all_targets()
-		} else {
-			// - warn: no metadata found
-		}
+		// Check that all targets are exists
+		// - search the target in the crate for each in meta.all_targets
+		let missed =
+			self.metadata().into_iter().flat_map(|meta| {
+				                           let bins = meta.bin_targets()
+				                                          .into_iter()
+				                                          .filter(|name| !self.bins().contains(name))
+				                                          .map(|name| Problem::UnknownTarget { name: name.to_owned() });
 
-		// just temporary this, because not implemented yet:
-		self.manifest_for_crate()
-		    .validate()
-		    .into_iter()
-		    .collect::<Vec<_>>()
+				                           let examples = meta.example_targets()
+				                                              .into_iter()
+				                                              .filter(|name| !self.examples().contains(name))
+				                                              .map(|name| Problem::UnknownTarget { name: name.to_owned() });
+
+				                           bins.chain(examples).collect::<Vec<_>>()
+			                           });
+
+		let crate_name_eq =
+			self.metadata().into_iter().flat_map(|meta| {
+				                           let mut targets = meta.all_targets().into_iter();
+				                           if let Some(name) = targets.find(|name| name == &self.name()) {
+					                           let msg = "target name is the same as the crate name";
+					                           Some(Problem::Warning(Warning::StrangeValue { field:
+						                                                                         "target".into(),
+					                                                                         value: name.into(),
+					                                                                         reason: Some(msg) }))
+				                           } else {
+					                           None
+				                           }
+			                           });
+
+		let no_meta = self.metadata()
+		                  .is_none()
+		                  .then(|| Problem::Warning(Warning::MissingMetadata));
+
+
+		missed.into_iter().chain(crate_name_eq).chain(no_meta)
 	}
 
 
-	fn validate_for(&self, _target: &str) -> impl IntoIterator<Item = Problem> { [] }
+	fn validate_for(&self, target: &str) -> impl IntoIterator<Item = Problem> {
+		println!("TODO: validate_for(target={target:?}) not implemented yet!");
+		[]
+	}
 }
 
 impl<T> ValidateCrate for T where T: CrateInfoSource {}

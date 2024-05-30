@@ -1,16 +1,28 @@
 use std::borrow::Cow;
+use std::path::Path;
 
 use super::format::{AssetsOptions, AssetsRules, Ext, ExtraFields, ExtraValue, Manifest, Options, Support};
 
 
 pub trait CrateInfoSource {
+	/// Crate name.
 	fn name(&self) -> Cow<str>;
+	/// Crate authors.
 	fn authors(&self) -> &[&str];
+	/// Crate version (semver).
 	fn version(&self) -> Cow<str>;
+	/// Crate description.
 	fn description(&self) -> Option<Cow<str>>;
+	/// Crate metadata - `playdate` table.
 	fn metadata(&self) -> Option<impl MetadataSource>;
 
-	// targets -> [name? or name+kind?]
+	/// Names of `bin` cargo-targets.
+	fn bins(&self) -> &[&str];
+	/// Names of `example` cargo-targets.
+	fn examples(&self) -> &[&str];
+
+	/// Crate manifest path (Cargo.toml).
+	fn manifest_path(&self) -> Cow<Path>;
 
 
 	fn manifest_for_crate(&self) -> impl ManifestSourceOptExt {
@@ -72,11 +84,11 @@ pub trait CrateInfoSource {
 					None
 				}
 			} else if let Some(man) = root.bin(target) {
-   					Some(base.override_with_extra(man).into_owned())
-   				} else {
-   					log::debug!("target not found: {}", target);
-   					None
-   				}
+				Some(base.override_with_extra(man).into_owned())
+			} else {
+				log::debug!("target not found: {}", target);
+				None
+			}
 		} else {
 			Some(base.into_owned())
 		}
@@ -94,14 +106,23 @@ pub trait MetadataSource {
 	type Manifest: ManifestSourceOptExt;
 	type TargetManifest: ManifestSourceOptExt + TargetId;
 
+	/// Main manifest, default and base for all cargo-targets.
 	fn manifest(&self) -> impl ManifestSourceOptExt;
 
+	/// All manifests for "bin" cargo-targets.
+	/// Overrides main manifest field-by-field.
 	fn bins(&self) -> &[Self::TargetManifest];
+	/// All manifests for "example" cargo-targets.
+	/// Overrides main manifest field-by-field.
 	fn examples(&self) -> &[Self::TargetManifest];
 
+	/// Manifest for specified "bin" cargo-target.
+	/// Overrides main manifest field-by-field.
 	fn bin<'t>(&'t self, target: &'_ str) -> Option<&'t Self::TargetManifest> {
 		self.bins().iter().find(|b| b.target() == target)
 	}
+	/// Manifest for specified "example" cargo-target.
+	/// Overrides main manifest field-by-field.
 	fn example<'t>(&'t self, target: &'_ str) -> Option<&'t Self::TargetManifest> {
 		self.examples().iter().find(|b| b.target() == target)
 	}
@@ -149,11 +170,11 @@ pub trait MetadataSource {
 				None
 			}
 		} else if let Some(target) = self.bin(target) {
-  				let trg = base.override_with_extra_ref(target);
-  				Some(trg.into_owned())
-  			} else {
-  				None
-  			}
+			let trg = base.override_with_extra_ref(target);
+			Some(trg.into_owned())
+		} else {
+			None
+		}
 	}
 
 	fn manifest_for_target_any(&self, target: &str) -> Option<impl ManifestSourceOptExt> {
@@ -476,7 +497,11 @@ mod tests {
 		fn authors(&self) -> &[&str] { &["John"] }
 		fn version(&self) -> Cow<str> { "0.0.0".into() }
 		fn description(&self) -> Option<Cow<str>> { None }
+		fn bins(&self) -> &[&str] { &[SOME_TARGET] }
+		fn examples(&self) -> &[&str] { &[] }
 		fn metadata(&self) -> Option<impl MetadataSource> { None::<Metadata> }
+
+		fn manifest_path(&self) -> Cow<Path> { Cow::Borrowed(Path::new("Cargo.toml")) }
 	}
 
 	#[test]
@@ -495,6 +520,11 @@ mod tests {
 		fn authors(&self) -> &[&str] { &["John"] }
 		fn version(&self) -> Cow<str> { "0.0.0".into() }
 		fn description(&self) -> Option<Cow<str>> { None }
+
+		fn bins(&self) -> &[&str] { &[SOME_TARGET] }
+		fn examples(&self) -> &[&str] { &[] }
+
+		fn manifest_path(&self) -> Cow<Path> { Cow::Borrowed(Path::new("Cargo.toml")) }
 
 		fn metadata(&self) -> Option<impl MetadataSource> {
 			let base = Manifest { name: Some("Meta Name"),
