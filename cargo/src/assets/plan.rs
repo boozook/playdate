@@ -74,7 +74,7 @@ pub fn plan_for<'cfg, 'env, 'l>(config: &'cfg Config,
 	let opts = metadata.assets_options();
 
 	let has_dev_assets = with_dev && !metadata.dev_assets().is_empty();
-	let is_empty = !metadata.assets().is_empty() && !has_dev_assets;
+	let is_empty = metadata.assets().is_empty() && !has_dev_assets;
 
 	if is_empty {
 		return Ok(PackageAssetsPlan { main: None,
