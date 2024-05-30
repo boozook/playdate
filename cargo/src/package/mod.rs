@@ -333,11 +333,11 @@ fn build_manifest<Layout: playdate::layout::Layout>(config: &Config,
 		}
 	};
 	let log_src_problem = |problem: Problem| {
-		let msg = format!("Manifest validation");
+		let msg = "Manifest validation".to_string();
 		log_problem(&msg, problem)
 	};
 	let log_meta_problem = |problem: Problem| {
-		let msg = format!("Metadata validation");
+		let msg = "Metadata validation".to_string();
 		log_problem(&msg, problem)
 	};
 
