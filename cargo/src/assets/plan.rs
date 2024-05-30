@@ -90,7 +90,7 @@ pub fn plan_for<'cfg, 'env, 'l>(config: &'cfg Config,
 		let plan = assets_build_plan(env, metadata.assets(), opts.as_ref(), Some(root))?;
 
 		// main-assets plan:
-		let path = layout.as_inner().assets_plan_for(config, package);
+		let path = layout.as_inner().assets_plan_for(config, &package.package_id());
 		let mut cached = CachedPlan::new(path, plan)?;
 		if config.compile_options.build_config.force_rebuild {
 			cached.difference = Difference::Missing;
@@ -107,7 +107,8 @@ pub fn plan_for<'cfg, 'env, 'l>(config: &'cfg Config,
 		let assets = metadata.dev_assets();
 		let dev_plan = assets_build_plan(env, assets, opts.as_ref(), Some(root))?;
 
-		let path = layout.as_inner().assets_plan_for_dev(config, package);
+		let path = layout.as_inner()
+		                 .assets_plan_for_dev(config, &package.package_id());
 		let mut dev_cached = CachedPlan::new(path, dev_plan)?;
 
 		// Inheritance, if main is stale or missing - this one is too:

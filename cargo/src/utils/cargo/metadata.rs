@@ -48,9 +48,9 @@ pub fn metadata(cfg: &Config) -> CargoResult<CargoMetadataPd> {
 			    }
 		    });
 
-		if !cfg.workspace.ignore_lock() && !cargo.get_args().any(|arg| arg == "--locked") {
-			cargo.arg("--locked");
-		}
+		// if !cfg.workspace.ignore_lock() && !cargo.get_args().any(|arg| arg == "--locked") {
+		// 	cargo.arg("--locked");
+		// }
 	}
 
 	read_cargo_json::<CargoMetadataPd>(cfg, cargo)

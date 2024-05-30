@@ -22,6 +22,7 @@ use playdate::manifest::format::ManifestFmt;
 use playdate::manifest::CrateInfoSource;
 use playdate::metadata::format::Metadata;
 use playdate::metadata::validation::Validate;
+use playdate::metadata::validation::ValidateCrate;
 
 use crate::assets::AssetsArtifact;
 use crate::assets::AssetsArtifacts;
@@ -236,7 +237,8 @@ fn package_multi_target<'p>(config: &Config,
 	// cross-target layout:
 	let layout_target_name = Name::with_names(package.name().as_str(), products.first().map(|p| &p.name));
 	let mut layout =
-		CrossTargetLayout::new(config, package, Some(layout_target_name))?.lock(config.workspace.config())?;
+		CrossTargetLayout::new(config, package.package_id(), Some(layout_target_name))?.lock(config.workspace
+		                                                                                           .config())?;
 	if let Some(assets) = assets {
 		debug_assert_eq!(
 		                 layout.as_ref().assets_layout(config).root(),
@@ -321,24 +323,53 @@ fn build_manifest<Layout: playdate::layout::Layout>(config: &Config,
 		            log.status("Manifest", msg);
 	            });
 
-	let manifest = if let Some(metadata) = assets.and_then(|a| a.metadata.as_ref()) {
-		let source = ManifestSource::new(package, metadata.into());
-		source.manifest_for_opt(cargo_target.as_deref(), dev)
-	} else {
-		let metadata = playdate_metadata(package);
-		let source = ManifestSource::new(package, metadata.as_ref());
-		source.manifest_for_opt(cargo_target.as_deref(), dev)
-	};
-
-	// validation, lints
-	for problem in manifest.validate() {
-		let msg = format!("Manifest validation: {problem}");
+	use ::playdate::metadata::validation::Problem;
+	let log_problem = |pre: &str, problem: Problem| {
+		let msg = format!("{pre}: {problem}");
 		if problem.is_err() {
 			config.log().error(msg);
 		} else {
 			config.log().warn(msg);
 		}
-	}
+	};
+	let log_src_problem = |problem: Problem| {
+		let msg = format!("Manifest validation");
+		log_problem(&msg, problem)
+	};
+	let log_meta_problem = |problem: Problem| {
+		let msg = format!("Metadata validation");
+		log_problem(&msg, problem)
+	};
+
+	let validate = |src: &ManifestSource| {
+		if let Some(target) = &cargo_target {
+			src.validate_for(target)
+			   .into_iter()
+			   // .filter(Problem::is_err)
+			   .for_each(log_meta_problem);
+		} else {
+			src.validate()
+			   .into_iter()
+			   // .filter(Problem::is_err)
+			   .for_each(log_meta_problem);
+		}
+	};
+
+	let manifest = if let Some(metadata) = assets.and_then(|a| a.metadata.as_ref()) {
+		let source = ManifestSource::new(package, metadata.into());
+		// This validation not needed at this step. May be earlier:
+		validate(&source);
+		source.manifest_for_opt(cargo_target.as_deref(), dev)
+	} else {
+		let metadata = playdate_metadata(package);
+		let source = ManifestSource::new(package, metadata.as_ref());
+		// This validation not needed at this step. May be earlier:
+		validate(&source);
+		source.manifest_for_opt(cargo_target.as_deref(), dev)
+	};
+
+	// validation, lints
+	manifest.validate().into_iter().for_each(log_src_problem);
 
 	std::fs::write(layout.manifest(), manifest.to_manifest_string()?)?;
 	Ok(())
@@ -520,17 +551,40 @@ impl<'cfg> TryFrom<BuildProduct<'cfg>> for SuccessfulBuildProduct<'cfg> {
 struct ManifestSource<'cfg, 'm> {
 	package: &'cfg Package,
 	authors: Vec<&'cfg str>,
+	bins: Vec<&'cfg str>,
+	examples: Vec<&'cfg str>,
 	metadata: Option<&'m Metadata>,
 }
 
 impl<'cfg, 'm> ManifestSource<'cfg, 'm> {
 	fn new(package: &'cfg Package, metadata: Option<&'m Metadata>) -> Self {
+		log::debug!("new manifest-source for {}", package.package_id());
+
+		let mut bins = Vec::new();
+		let mut examples = Vec::new();
+
+		package.targets()
+		       .iter()
+		       .inspect(|t| log::trace!("target: {} ({:?})", t.description_named(), t.crate_name()))
+		       .filter(|t| !t.is_custom_build())
+		       .for_each(|t| {
+			       if t.is_bin() {
+				       bins.push(t.name());
+				       log::debug!("+bin: {}", t.description_named());
+			       } else if t.is_example() {
+				       examples.push(t.name());
+				       log::debug!("+example: {}", t.description_named());
+			       }
+		       });
+
 		Self { authors: package.manifest()
 		                       .metadata()
 		                       .authors
 		                       .iter()
 		                       .map(|s| s.as_str())
 		                       .collect(),
+		       bins,
+		       examples,
 		       package,
 		       metadata }
 	}
@@ -538,7 +592,6 @@ impl<'cfg, 'm> ManifestSource<'cfg, 'm> {
 
 impl CrateInfoSource for ManifestSource<'_, '_> {
 	fn name(&self) -> Cow<str> { self.package.name().as_str().into() }
-	// fn authors(&self) -> &[String] { &self.package.manifest().metadata().authors }
 	fn authors(&self) -> &[&str] { &self.authors }
 	fn version(&self) -> Cow<str> { self.package.version().to_string().into() }
 	fn description(&self) -> Option<Cow<str>> {
@@ -549,5 +602,11 @@ impl CrateInfoSource for ManifestSource<'_, '_> {
 		    .as_deref()
 		    .map(|s: &str| s.into())
 	}
+
+	fn bins(&self) -> &[&str] { &self.bins }
+	fn examples(&self) -> &[&str] { &self.examples }
+
 	fn metadata(&self) -> Option<impl playdate::metadata::source::MetadataSource> { self.metadata }
+
+	fn manifest_path(&self) -> Cow<Path> { Cow::Borrowed(self.package.manifest_path()) }
 }

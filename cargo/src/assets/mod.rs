@@ -43,7 +43,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 	for (package, targets, ..) in config.possible_targets()? {
 		let env = plan::LazyEnvBuilder::new(config, package);
 		let mut plans: HashMap<&Package, _> = Default::default();
-		let global_layout = CrossTargetLayout::new(config, package, None)?;
+		let global_layout = CrossTargetLayout::new(config, package.package_id(), None)?;
 		let mut layout = global_layout.assets_layout(config);
 		let mut options = HashMap::new();
 

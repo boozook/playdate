@@ -7,7 +7,6 @@ use std::process::Command;
 
 use build::consts::SDK_ENV_VAR;
 use cargo::CargoResult;
-use cargo::Config as CargoConfig;
 use serde::de::DeserializeOwned;
 
 use crate::cli::cmd::Cmd;
@@ -25,7 +24,7 @@ pub fn cargo_proxy_with<S: AsRef<OsStr>>(cfg: &Config,
                                          cfg_args: bool)
                                          -> CargoResult<std::process::Command> {
 	let rustflags = cfg.rustflags()?.rustflags_to_args_from(cfg);
-	let mut proc = cargo(Some(cfg.workspace.config()))?;
+	let mut proc = cargo(Some(cfg))?;
 	proc.arg(cmd);
 	if cfg_args {
 		proc.args(&cfg.args);
@@ -40,11 +39,10 @@ pub fn cargo_proxy_with<S: AsRef<OsStr>>(cfg: &Config,
 }
 
 
-pub fn cargo(config: Option<&CargoConfig>) -> CargoResult<std::process::Command> {
-	let cargo = cargo_bin_path(config);
-	let mut proc = std::process::Command::new(cargo.as_ref());
+pub fn cargo(cfg: Option<&Config>) -> CargoResult<std::process::Command> {
+	let mut proc = cargo_cmd(cfg);
 
-	if let Some(cfg) = &config {
+	if let Some(cfg) = cfg.map(|cfg| cfg.workspace.config()) {
 		// transparent env:
 		cfg.env_config()?.iter().for_each(|(k, v)| {
 			                        let value = v.resolve(cfg);
@@ -71,20 +69,34 @@ pub fn cargo(config: Option<&CargoConfig>) -> CargoResult<std::process::Command>
 }
 
 
-pub fn cargo_bin_path(config: Option<&CargoConfig>) -> Cow<Path> {
-	if let Some(cfg) = config {
-		let path = cfg.cargo_exe().log_err().ok().map(Cow::from);
-		if path.is_some() && path == std::env::current_exe().log_err().ok().map(Into::into) {
-			// Seems to we're in standalone mode.
-			cargo_bin_path(None)
-		} else if let Some(path) = path {
-			path
+pub fn cargo_cmd(cfg: Option<&Config>) -> std::process::Command {
+	fn cargo_path<'t>(cfg: Option<&'t Config<'t>>) -> (Cow<'t, Path>, Option<&str>) {
+		if let Some(cfg) = cfg {
+			let path = cfg.workspace.config().cargo_exe().log_err().ok().map(Cow::from);
+			if path.is_some() && path == std::env::current_exe().log_err().ok().map(Into::into) {
+				// Seems to we're in standalone mode.
+				cargo_path(None)
+			} else if let Some(path) = path {
+				(path, None)
+			} else {
+				cargo_path(None)
+			}
+		} else if let Some(path) = env::var_os("CARGO") {
+			(PathBuf::from(path).into(), None)
 		} else {
-			cargo_bin_path(None)
+			let arg = cfg.and_then(|cfg| cfg.rustup.as_os_str()).map(|_| "+nightly");
+			(Path::new("cargo").into(), arg)
 		}
-	} else {
-		PathBuf::from(env::var_os("CARGO").unwrap_or("cargo".into())).into()
 	}
+
+	let (bin, arg) = cargo_path(cfg);
+
+	let mut proc = std::process::Command::new(bin.as_ref());
+	if let Some(arg) = arg {
+		proc.arg(arg);
+	}
+
+	proc
 }
 
 

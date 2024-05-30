@@ -4,10 +4,10 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::hash::{Hash, Hasher};
 
+use cargo::core::PackageId;
 use cargo::util::StableHasher;
 use cargo_util::paths;
 use cargo::CargoResult;
-use cargo::core::Package;
 use cargo::core::profiles::Profiles;
 pub use playdate::layout::Name as TargetName;
 use crate::config::Config;
@@ -59,10 +59,10 @@ impl ForTargetLayout<PathBuf> {
 
 
 #[derive(Debug, Clone)]
-pub struct CrossTargetLayout<'cfg> {
+pub struct CrossTargetLayout {
 	/// Target name (e.g. `game-example-name`)
 	name: TargetName,
-	package: &'cfg Package,
+	package: PackageId,
 
 	/// The root directory: `/$target-dir/playdate`.
 	root: PathBuf,
@@ -76,20 +76,20 @@ pub struct CrossTargetLayout<'cfg> {
 	assets: PathBuf,
 }
 
-impl<'cfg> CrossTargetLayout<'cfg> {
-	pub fn new(config: &'cfg Config, package: &'cfg Package, name: Option<TargetName>) -> CargoResult<Self> {
+impl<'cfg> CrossTargetLayout {
+	pub fn new(config: &'cfg Config, package_id: PackageId, name: Option<TargetName>) -> CargoResult<Self> {
 		let profiles = Profiles::new(
 		                             &config.workspace,
 		                             config.compile_options.build_config.requested_profile,
 		)?;
 		let profile = profiles.get_dir_name().as_str();
-		let name = name.unwrap_or_else(|| TargetName::with_package(package.name().as_str()));
+		let name = name.unwrap_or_else(|| TargetName::with_package(package_id.name().as_str()));
 		let root = config.workspace.target_dir().as_path_unlocked().join("playdate");
 		let dest = root.join(profile);
 		let target = dest.join(name.as_path());
 		let assets = root.join("assets");
 		Ok(Self { name,
-		          package,
+		          package: package_id,
 		          root,
 		          dest,
 		          target,
@@ -101,11 +101,11 @@ impl<'cfg> CrossTargetLayout<'cfg> {
 
 	/// Global assets layout for cross-target & cross-profile assets build.
 	pub fn assets_layout(&self, config: &Config) -> PlaydateAssets<PathBuf> {
-		PlaydateAssets::global(self, config, self.package)
+		PlaydateAssets::global(self, config, &self.package)
 	}
 }
 
-impl Layout for CrossTargetLayout<'_> {
+impl Layout for CrossTargetLayout {
 	fn root(&self) -> &Path { self.root.as_ref() }
 	fn dest(&self) -> Cow<Path> { self.dest.as_path().into() }
 
@@ -130,7 +130,7 @@ impl Layout for CrossTargetLayout<'_> {
 }
 
 
-impl playdate::layout::Layout for CrossTargetLayout<'_> {
+impl playdate::layout::Layout for CrossTargetLayout {
 	fn name(&self) -> &TargetName { &self.name }
 	fn root(&self) -> &Path { self.dest.as_path() }
 	fn dest(&self) -> Cow<Path> { self.target.as_path().into() }
@@ -154,7 +154,7 @@ impl playdate::layout::Layout for CrossTargetLayout<'_> {
 	}
 }
 
-impl crate::layout::LayoutLockable for CrossTargetLayout<'_> {
+impl crate::layout::LayoutLockable for CrossTargetLayout {
 	/// The lockfile filename for a build
 	fn lockfilename(&self) -> Cow<'static, str> { ".playdate-lock".into() }
 }
@@ -170,20 +170,20 @@ pub struct PlaydateAssets<Path> {
 }
 
 impl PlaydateAssets<PathBuf> {
-	fn global(root: &CrossTargetLayout<'_>, config: &Config, package: &Package) -> Self {
-		let name = Self::name_for_package(config, package);
+	fn global(root: &CrossTargetLayout, config: &Config, package_id: &PackageId) -> Self {
+		let name = Self::name_for_package(config, package_id);
 		Self { name,
 		       root: root.assets.to_owned() }
 	}
 
-	pub fn assets_plan_for(&self, config: &Config, package: &Package) -> PathBuf {
+	pub fn assets_plan_for(&self, config: &Config, package_id: &PackageId) -> PathBuf {
 		use playdate::layout::Layout;
-		let name = Self::name_for_package(config, package);
+		let name = Self::name_for_package(config, package_id);
 		self.assets_plan().with_file_name(name).with_extension("json")
 	}
 
-	pub fn assets_plan_for_dev(&self, config: &Config, package: &Package) -> PathBuf {
-		let mut path = self.assets_plan_for(config, package);
+	pub fn assets_plan_for_dev(&self, config: &Config, package_id: &PackageId) -> PathBuf {
+		let mut path = self.assets_plan_for(config, package_id);
 		let mut name = path.file_stem()
 		                   .map(std::ffi::OsStr::to_string_lossy)
 		                   .unwrap_or_default()
@@ -197,12 +197,12 @@ impl PlaydateAssets<PathBuf> {
 		path
 	}
 
-	fn name_for_package(config: &Config, package: &Package) -> TargetName {
+	fn name_for_package(config: &Config, package_id: &PackageId) -> TargetName {
 		let mut hasher = StableHasher::new();
-		let stable = package.package_id().stable_hash(config.workspace.root());
+		let stable = package_id.stable_hash(config.workspace.root());
 		stable.hash(&mut hasher);
 		let hash = hasher.finish();
-		TargetName::with_package(format!("{}-{hash:016x}", package.name()))
+		TargetName::with_package(format!("{}-{hash:016x}", package_id.name()))
 	}
 }
 
