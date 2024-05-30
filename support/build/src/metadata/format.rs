@@ -36,11 +36,13 @@ pub struct Metadata {
 	pub(super) inner: MetadataInner,
 }
 
+
 #[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for Metadata {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 		where D: Deserializer<'de> {
 		let meta = MetadataInner::deserialize(deserializer)?;
+		// here is should be some validation
 		Ok(Self { inner: meta })
 	}
 }
@@ -91,8 +93,10 @@ pub(super) struct MetadataInner<S = String> {
 	pub(super) manifest: Ext<Manifest<S>>,
 
 	#[cfg_attr(feature = "serde", serde(default))]
+	#[cfg_attr(feature = "serde", serde(deserialize_with = "AssetsRules::deserialize_ext"))]
 	pub(super) assets: AssetsRules,
 	#[cfg_attr(feature = "serde", serde(default, alias = "dev-assets"))]
+	#[cfg_attr(feature = "serde", serde(deserialize_with = "AssetsRules::deserialize_ext"))]
 	pub(super) dev_assets: AssetsRules,
 
 	#[cfg_attr(feature = "serde", serde(default))]
@@ -323,6 +327,40 @@ impl AssetsRules {
 		match self {
 			Self::List(list) => list.is_empty(),
 			Self::Map(map) => map.is_empty(),
+		}
+	}
+}
+
+
+/// Actually anti-compat, just validation and proper error message.
+mod compat {
+	use super::{AssetsOptions, Deserialize, Deserializer, HashMap, RuleValue};
+
+	#[derive(Debug, Clone, PartialEq)]
+	#[cfg_attr(feature = "serde", derive(Deserialize))]
+	#[cfg_attr(feature = "serde", serde(untagged, deny_unknown_fields))]
+	enum AssetsRules {
+		Normal(super::AssetsRules),
+		LegacyMap {
+			options: AssetsOptions,
+			#[cfg_attr(feature = "serde", serde(flatten))]
+			rules: HashMap<String, RuleValue>,
+		},
+	}
+
+	impl super::AssetsRules {
+		/// Deserialize through a wrapper that supports legacy,
+		/// then report it in error.
+		pub fn deserialize_ext<'de, D>(deserializer: D) -> Result<super::AssetsRules, D::Error>
+			where D: Deserializer<'de> {
+			match AssetsRules::deserialize(deserializer)? {
+				AssetsRules::Normal(rules) => Ok(rules),
+				AssetsRules::LegacyMap { .. } => {
+					let err = "unsupported field `assets.options` (that was before), use `options.assets` instead";
+					let err = serde::de::Error::custom(err);
+					Err(err)
+				},
+			}
 		}
 	}
 }
@@ -861,6 +899,20 @@ mod tests {
 		assert!(toml::from_str::<Metadata>(src).is_err());
 	}
 
+
+	#[test]
+	fn assets_num_err() {
+		let src = r#"
+		             [playdate]
+		             bundle-id = "test.workspace.main.crate"
+						 [playdate.assets]
+						 foo = "bar" # ok
+						 num = 42 # err
+		          "#;
+		assert!(toml::from_str::<CrateMetadata>(src).is_err());
+	}
+
+
 	#[test]
 	fn options_empty() {
 		let m = toml::from_str::<Options>("").unwrap();
@@ -947,7 +999,19 @@ mod tests {
 
 
 	#[test]
-	fn meta_assets_options_value() {
+	fn options_assets_wrong() {
+		let src = r#"
+		             [playdate]
+		             bundle-id = "test.workspace.main.crate"
+						 [playdate.options.assets]
+						 foo = "bar" # err
+						 [playdate.assets]
+		          "#;
+		assert!(toml::from_str::<CrateMetadata>(src).is_err());
+	}
+
+	#[test]
+	fn meta_assets_options() {
 		let src = r#"
 		             bundle-id = "test.workspace.main.crate"
 		             [options.assets]
@@ -970,14 +1034,38 @@ mod tests {
 	}
 
 	#[test]
-	fn meta_assets_options() {
+	fn meta_assets_options_legacy() {
 		let src = r#"
 		             bundle-id = "test.workspace.main.crate"
 		             [assets]
 		             options = {}
 		          "#;
-
 		assert!(toml::from_str::<Metadata>(src).is_err());
+
+		let src = r#"
+		             bundle-id = "test.workspace.main.crate"
+		             [assets]
+		             options = { dependencies = true }
+		          "#;
+		assert!(toml::from_str::<Metadata>(src).is_err());
+
+		let src = r#"
+		             bundle-id = "test.workspace.main.crate"
+		             [assets]
+						 foo = "bar"
+						 boo = true
+		             options = { }
+		          "#;
+		assert!(toml::from_str::<Metadata>(src).is_err());
+
+
+		let src = r#"
+		             [playdate]
+		             bundle-id = "test.workspace.main.crate"
+		             [playdate.assets]
+		             [playdate.assets.options] # err
+		          "#;
+		assert!(toml::from_str::<CrateMetadata>(src).is_err());
 	}
 
 	#[test]
