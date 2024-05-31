@@ -113,7 +113,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 				                        .map(|plan| (plan, AssetKind::Package))
 				                        .chain(plan.dev.as_ref().into_iter().map(|plan| (plan, AssetKind::Dev)))
 				{
-					let message = plan.printable_serializable(package, kind);
+					let message = plan.printable_serializable(package.package_id(), kind);
 					config.workspace.config().shell().print_json(&message)?;
 				}
 			}
@@ -149,7 +149,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 			let mut has_errors = false;
 			let mut targets = HashMap::new();
 
-			let mut check_duplicates = |package: &Package, target_kind: AssetKind, plan| {
+			let mut check_duplicates = |package_id: PackageId, target_kind: AssetKind, plan| {
 				for target in plan {
 					if let Some((pid, kind)) = targets.get::<Cow<Path>>(&target) {
 						has_errors = true;
@@ -160,7 +160,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 							}
 						};
 						let a = err_msg(pid, *kind);
-						let b = err_msg(&package.package_id(), target_kind);
+						let b = err_msg(&package_id, target_kind);
 						let message = format!(
 						                      "Duplicate dev-asset destination: '{}':\n\t{a}\n\t{b}",
 						                      target.as_relative_to_root(config).display(),
@@ -168,19 +168,20 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 
 						config.log().error(message);
 					} else {
-						targets.insert(target, (package.package_id(), target_kind));
+						targets.insert(target, (package_id, target_kind));
 					}
 				}
 			};
 
 
 			for (package, plan) in plans.iter() {
+				let package_id = package.package_id();
 				if let Some(plan) = plan.main.as_ref() {
-					check_duplicates(package, AssetKind::Package, plan.as_inner().targets());
+					check_duplicates(package_id, AssetKind::Package, plan.as_inner().targets());
 				}
-				if package.package_id() == target_pid {
+				if package_id == target_pid {
 					if let Some(plan) = plan.dev.as_ref() {
-						check_duplicates(package, AssetKind::Dev, plan.as_inner().targets());
+						check_duplicates(package_id, AssetKind::Dev, plan.as_inner().targets());
 					}
 				}
 			}
@@ -234,6 +235,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 					            });
 
 
+					// FIXME: use primary (top-level) assets-options, but not options of dependency!
 					let metadata = options.get(dependency).expect("Metadata is gone, impossible!");
 					let report = plan.apply(&dest, &metadata.assets_options(), config)?;
 

@@ -223,8 +223,8 @@ impl<'t, 'cfg> CachedPlan<'t, 'cfg> {
 	}
 
 
-	pub fn printable_serializable(&self, source: &Package, kind: AssetKind) -> SerializablePlan<'_, 't, 'cfg> {
-		SerializablePlan { package: source.package_id(),
+	pub fn printable_serializable(&self, source: PackageId, kind: AssetKind) -> SerializablePlan<'_, 't, 'cfg> {
+		SerializablePlan { package: source,
 		                   plan: &self.plan,
 		                   difference: &self.difference,
 		                   path: &self.path,
