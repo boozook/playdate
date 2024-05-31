@@ -88,16 +88,16 @@ impl MetadataSource for Metadata {
 #[cfg_attr(feature = "serde", derive(Deserialize))]
 #[cfg_attr(feature = "serde",
            serde(bound(deserialize = "S: Deserialize<'de> + Default + Eq + Hash")))]
-pub(super) struct MetadataInner<S = String> {
+pub(super) struct MetadataInner<S: Default + Eq + Hash = String> {
 	#[cfg_attr(feature = "serde", serde(flatten))]
 	pub(super) manifest: Ext<Manifest<S>>,
 
 	#[cfg_attr(feature = "serde", serde(default))]
-	#[cfg_attr(feature = "serde", serde(deserialize_with = "AssetsRules::deserialize_ext"))]
-	pub(super) assets: AssetsRules,
+	#[cfg_attr(feature = "serde", serde(deserialize_with = "one_of::assets_rules"))]
+	pub(super) assets: AssetsRules<S>,
 	#[cfg_attr(feature = "serde", serde(default, alias = "dev-assets"))]
-	#[cfg_attr(feature = "serde", serde(deserialize_with = "AssetsRules::deserialize_ext"))]
-	pub(super) dev_assets: AssetsRules,
+	#[cfg_attr(feature = "serde", serde(deserialize_with = "one_of::assets_rules"))]
+	pub(super) dev_assets: AssetsRules<S>,
 
 	#[cfg_attr(feature = "serde", serde(default))]
 	pub(super) options: Options,
@@ -105,39 +105,11 @@ pub(super) struct MetadataInner<S = String> {
 	pub(super) support: Support,
 
 	#[cfg_attr(feature = "serde", serde(default, alias = "bin", rename = "bin"))]
-	#[cfg_attr(feature = "serde", serde(deserialize_with = "deserialize_targets_overrides"))]
+	#[cfg_attr(feature = "serde", serde(deserialize_with = "one_of::targets_overrides"))]
 	pub(super) bins: Vec<Override<S>>,
 	#[cfg_attr(feature = "serde", serde(default, alias = "example", rename = "example"))]
-	#[cfg_attr(feature = "serde", serde(deserialize_with = "deserialize_targets_overrides"))]
+	#[cfg_attr(feature = "serde", serde(deserialize_with = "one_of::targets_overrides"))]
 	pub(super) examples: Vec<Override<S>>,
-}
-
-
-#[cfg(feature = "serde")]
-fn deserialize_targets_overrides<'de, D, S>(deserializer: D) -> Result<Vec<Override<S>>, D::Error>
-	where D: Deserializer<'de>,
-	      S: Deserialize<'de> + Default + Eq + Hash {
-	#[derive(Debug, Clone, PartialEq)]
-	#[cfg_attr(feature = "serde", derive(Deserialize))]
-	#[cfg_attr(feature = "serde", serde(untagged))]
-	pub enum Targets<S: Default + Eq + Hash> {
-		List(Vec<Override<S>>),
-		Map(HashMap<S, Ext<Manifest<S>>>),
-	}
-
-	let result = match Targets::<S>::deserialize(deserializer)? {
-		Targets::List(vec) => vec,
-		Targets::Map(map) => {
-			map.into_iter()
-			   .map(|(k, v)| {
-				   Override::<S> { target: k,
-				                   manifest: v }
-			   })
-			   .collect()
-		},
-	};
-
-	Ok(result)
 }
 
 
@@ -188,7 +160,7 @@ pub struct Manifest<S> {
 	#[cfg_attr(feature = "serde", serde(alias = "content-warning2"))]
 	pub content_warning2: Option<S>,
 	#[cfg_attr(feature = "serde", serde(default, alias = "build-number"))]
-	#[cfg_attr(feature = "serde", serde(deserialize_with = "deserialize_num_compat"))]
+	#[cfg_attr(feature = "serde", serde(deserialize_with = "one_of::usize_or_from_str"))]
 	pub build_number: Option<usize>,
 }
 
@@ -311,14 +283,16 @@ impl<S> Override<S> where S: ToOwned {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Deserialize))]
 #[cfg_attr(feature = "serde", serde(untagged, deny_unknown_fields))]
-pub enum AssetsRules {
+#[cfg_attr(feature = "serde",
+           serde(bound(deserialize = "S: Deserialize<'de> + Default + Eq + Hash")))]
+pub enum AssetsRules<S: Eq + Hash = String> {
 	/// List of paths to include.
-	List(Vec<String>),
+	List(Vec<S>),
 	/// Rules & queries used to resolve paths to include.
-	Map(HashMap<String, RuleValue>),
+	Map(HashMap<S, RuleValue>),
 }
 
-impl Default for AssetsRules {
+impl<S: Eq + Hash> Default for AssetsRules<S> {
 	fn default() -> Self { Self::List(Vec::with_capacity(0)) }
 }
 
@@ -327,49 +301,6 @@ impl AssetsRules {
 		match self {
 			Self::List(list) => list.is_empty(),
 			Self::Map(map) => map.is_empty(),
-		}
-	}
-}
-
-
-/// Actually anti-compat, just validation and proper error message.
-mod compat {
-	#![cfg(feature = "serde")]
-	use super::{AssetsOptions, Deserialize, Deserializer, HashMap, RuleValue};
-
-	#[derive(Debug, Clone, PartialEq, Deserialize)]
-	#[serde(untagged)]
-	enum AssetsRules {
-		Normal(super::AssetsRules),
-		LegacyMap {
-			options: AssetsOptions,
-			#[serde(flatten)]
-			rules: HashMap<String, RuleValue>,
-		},
-	}
-
-	impl super::AssetsRules {
-		/// Deserialize through a wrapper that supports legacy,
-		/// then report it in error.
-		pub fn deserialize_ext<'de, D>(deserializer: D) -> Result<super::AssetsRules, D::Error>
-			where D: Deserializer<'de> {
-			match AssetsRules::deserialize(deserializer) {
-				Ok(result) => {
-					match result {
-						AssetsRules::Normal(rules) => Ok(rules),
-						AssetsRules::LegacyMap { .. } => {
-							const ERR: &str =
-								"unsupported field `assets.options` (that was before), use `options.assets` instead";
-							Err(serde::de::Error::custom(ERR))
-						},
-					}
-				},
-				Err(err) => {
-					const PRE: &str = "invalid `assets`, expected a list of paths or map of rules";
-					let err = serde::de::Error::custom(format_args!("{}: {}", PRE, err));
-					Err(err)
-				},
-			}
 		}
 	}
 }
@@ -668,21 +599,125 @@ pub struct Support {
 }
 
 
+/// Because serde's error for untagged enum with various inner types is not pretty helpful,
+/// like "data did not match any variant of untagged enum AssetsRules",
+/// we need some custom implementations with more detailed error messages.
 #[cfg(feature = "serde")]
-fn deserialize_num_compat<'de, D>(deserializer: D) -> Result<Option<usize>, D::Error>
-	where D: Deserializer<'de> {
-	#[derive(Debug, Clone, PartialEq, Deserialize)]
-	#[serde(untagged)]
-	pub enum Value {
-		Num(usize),
-		Str(String),
+mod one_of {
+	use std::marker::PhantomData;
+
+	use std::fmt;
+	use serde::de;
+	use serde::de::MapAccess;
+	use serde::de::SeqAccess;
+	use serde::de::Visitor;
+
+	use super::*;
+
+
+	pub fn usize_or_from_str<'de, D>(deserializer: D) -> Result<Option<usize>, D::Error>
+		where D: Deserializer<'de> {
+		struct OneOf;
+
+		impl<'de> Visitor<'de> for OneOf {
+			type Value = Option<usize>;
+
+			fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+				formatter.write_str("unsigned integer or string with it")
+			}
+
+			fn visit_u8<E>(self, v: u8) -> Result<Self::Value, E> { Ok(Some(v as _)) }
+			fn visit_u16<E>(self, v: u16) -> Result<Self::Value, E> { Ok(Some(v as _)) }
+			fn visit_u32<E>(self, v: u32) -> Result<Self::Value, E> { Ok(Some(v as _)) }
+
+			fn visit_u64<E: de::Error>(self, v: u64) -> Result<Self::Value, E> {
+				Ok(Some(v.try_into().map_err(de::Error::custom)?))
+			}
+
+			fn visit_u128<E: de::Error>(self, v: u128) -> Result<Self::Value, E> {
+				Ok(Some(v.try_into().map_err(de::Error::custom)?))
+			}
+
+			fn visit_i64<E: de::Error>(self, v: i64) -> Result<Self::Value, E> {
+				if v.is_negative() {
+					Err(de::Error::invalid_type(de::Unexpected::Signed(v), &self))
+				} else {
+					Ok(Some(v.try_into().map_err(de::Error::custom)?))
+				}
+			}
+
+			fn visit_str<E: de::Error>(self, s: &str) -> Result<Self::Value, E> {
+				let v = s.parse().map_err(serde::de::Error::custom)?;
+				Ok(Some(v))
+			}
+		}
+
+		deserializer.deserialize_any(OneOf)
 	}
-	let result = match Option::<Value>::deserialize(deserializer)? {
-		Some(Value::Num(value)) => Some(value),
-		Some(Value::Str(s)) => Some(s.parse().map_err(serde::de::Error::custom)?),
-		None => None,
-	};
-	Ok(result)
+
+
+	pub fn assets_rules<'de, S, D>(deserializer: D) -> Result<super::AssetsRules<S>, D::Error>
+		where D: Deserializer<'de>,
+		      S: Deserialize<'de> + Eq + Hash + Default {
+		struct OneOf<S>(PhantomData<S>);
+
+		impl<'de, S> Visitor<'de> for OneOf<S> where S: Deserialize<'de> + Eq + Hash + Default {
+			type Value = super::AssetsRules<S>;
+
+			fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+				formatter.write_str("list of includes or map of rules")
+			}
+
+			fn visit_seq<A: SeqAccess<'de>>(self, seq: A) -> Result<Self::Value, A::Error> {
+				let deserializer = de::value::SeqAccessDeserializer::new(seq);
+				let res: Vec<S> = Deserialize::deserialize(deserializer)?;
+				Ok(super::AssetsRules::List(res))
+			}
+
+			fn visit_map<M: MapAccess<'de>>(self, map: M) -> Result<Self::Value, M::Error> {
+				let deserializer = de::value::MapAccessDeserializer::new(map);
+				let res: HashMap<S, super::RuleValue> = Deserialize::deserialize(deserializer)?;
+				Ok(super::AssetsRules::Map(res))
+			}
+		}
+
+		deserializer.deserialize_any(OneOf::<S>(PhantomData))
+	}
+
+
+	pub fn targets_overrides<'de, S, D>(deserializer: D) -> Result<Vec<super::Override<S>>, D::Error>
+		where D: Deserializer<'de>,
+		      S: Deserialize<'de> + Eq + Hash + Default {
+		struct OneOf<S>(PhantomData<S>);
+
+		impl<'de, S> Visitor<'de> for OneOf<S> where S: Deserialize<'de> + Eq + Hash + Default {
+			type Value = Vec<super::Override<S>>;
+
+			fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+				formatter.write_str("list of includes or map of rules")
+			}
+
+			fn visit_seq<A: SeqAccess<'de>>(self, seq: A) -> Result<Self::Value, A::Error> {
+				let deserializer = de::value::SeqAccessDeserializer::new(seq);
+				Deserialize::deserialize(deserializer)
+			}
+
+			fn visit_map<M: MapAccess<'de>>(self, map: M) -> Result<Self::Value, M::Error> {
+				use super::{Ext, Manifest};
+
+				let deserializer = de::value::MapAccessDeserializer::new(map);
+				let res: HashMap<S, Ext<Manifest<S>>> = Deserialize::deserialize(deserializer)?;
+				Ok(res.into_iter()
+				      .map(|(k, v)| {
+					      Override::<S> { target: k,
+					                      manifest: v }
+				      })
+				      .collect())
+			}
+		}
+
+		deserializer.deserialize_any(OneOf::<S>(PhantomData))
+	}
 }
 
 
@@ -1008,15 +1043,41 @@ mod tests {
 
 
 	#[test]
-	fn options_assets_wrong() {
+	fn options_assets_err() {
 		let src = r#"
 		             [playdate]
 		             bundle-id = "test.workspace.main.crate"
-						 [playdate.options.assets]
-						 foo = "bar" # err
-						 [playdate.assets]
+		             [playdate.options.assets]
+		             foo = "bar" # err
 		          "#;
-		assert!(toml::from_str::<CrateMetadata>(src).is_err());
+		let result = toml::from_str::<CrateMetadata>(src);
+		assert!(result.is_err(), "must be err, but {result:?}");
+		assert!(result.as_ref()
+		              .unwrap_err()
+		              .to_string()
+		              .contains("unknown field `foo`"));
+	}
+
+	#[test]
+	fn assets_options_err() {
+		let src = r#"
+		             [playdate]
+		             bundle-id = "test.workspace.main.crate"
+		             [playdate.assets]
+		             foo = "bar"
+		             options = { dependencies = true }
+		          "#;
+		let result = toml::from_str::<CrateMetadata>(src);
+		assert!(result.is_err(), "must be err, but {result:?}");
+
+		let src = r#"
+		             [playdate]
+		             bundle-id = "test.workspace.main.crate"
+		             [playdate.assets.options]
+		             dependencies = true
+		          "#;
+		let result = toml::from_str::<CrateMetadata>(src);
+		assert!(result.is_err(), "must be err, but {result:?}");
 	}
 
 	#[test]
