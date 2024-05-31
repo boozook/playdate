@@ -1,10 +1,8 @@
 use std::ops::Deref;
 use std::cmp::Eq;
+use std::hash::Hash;
 use std::borrow::Cow;
 use std::collections::HashMap;
-
-#[cfg(feature = "serde")]
-use std::hash::Hash;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer};
@@ -14,9 +12,11 @@ use super::source::*;
 
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
-pub struct CrateMetadata {
+#[cfg_attr(feature = "serde",
+           serde(bound(deserialize = "S: Deserialize<'de> + Default + Eq + Hash")))]
+pub struct CrateMetadata<S: Default + Eq + Hash = String> {
 	#[cfg_attr(feature = "serde", serde(rename = "playdate"))]
-	pub inner: Option<Metadata>,
+	pub inner: Option<Metadata<S>>,
 }
 
 /// Just ensure that `METADATA_FIELD` is not changed and something missed.
@@ -32,16 +32,17 @@ fn eq_metadata_field() {
 /// - Assets tables - `assets` & `dev-assets`
 /// - Configuration table - `options`
 #[derive(Debug, Clone, PartialEq)]
-pub struct Metadata {
-	pub(super) inner: MetadataInner,
+
+pub struct Metadata<S: Default + Eq + Hash = String> {
+	pub(super) inner: MetadataInner<S>,
 }
 
 
 #[cfg(feature = "serde")]
-impl<'de> Deserialize<'de> for Metadata {
+impl<'de, S: Deserialize<'de> + Default + Eq + Hash> Deserialize<'de> for Metadata<S> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 		where D: Deserializer<'de> {
-		let meta = MetadataInner::deserialize(deserializer)?;
+		let meta = MetadataInner::<S>::deserialize(deserializer)?;
 		// here is should be some validation
 		Ok(Self { inner: meta })
 	}

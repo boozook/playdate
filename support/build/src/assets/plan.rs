@@ -12,11 +12,13 @@ use super::resolver::*;
 
 
 /// Create build plan for assets.
-pub fn build_plan<'l, 'r, 'c: 'l /* V */>(env: &'c Env,
-                                          assets: &AssetsRules,
-                                          options: &AssetsOptions,
-                                          crate_root: Option<&'c Path>)
-                                          -> Result<BuildPlan<'l, 'r>, super::Error> {
+pub fn build_plan<'l, 'r, 'c: 'l, 'v, S>(env: &'c Env,
+                                         assets: &AssetsRules<S>,
+                                         options: &AssetsOptions,
+                                         crate_root: Option<&'c Path>)
+                                         -> Result<BuildPlan<'l, 'r>, super::Error>
+	where S: Eq + Hash + ToString
+{
 	// copy_unresolved    => get all files with glob
 	// include_unresolved => same
 	// exclude_unresolved =>
@@ -34,8 +36,9 @@ pub fn build_plan<'l, 'r, 'c: 'l /* V */>(env: &'c Env,
 	let crate_root = crate_root.unwrap_or_else(|| env.cargo_manifest_dir());
 	let link_behavior = options.link_behavior();
 
-	let to_relative = |s: &String| -> String {
-		let p = Path::new(s);
+	let to_relative = |s: &S| -> String {
+		let s = s.to_string();
+		let p = Path::new(&s);
 		if p.is_absolute() || p.has_root() {
 			let trailing_sep = p.components().count() > 1 && s.ends_with(PATH_SEPARATOR);
 			let mut s = p.components().skip(1).collect::<PathBuf>().display().to_string();
