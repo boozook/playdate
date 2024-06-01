@@ -13,8 +13,8 @@ use super::source::*;
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[cfg_attr(feature = "serde",
-           serde(bound(deserialize = "S: Deserialize<'de> + Default + Eq + Hash")))]
-pub struct CrateMetadata<S: Default + Eq + Hash = String> {
+           serde(bound(deserialize = "S: Deserialize<'de> + Eq + Hash")))]
+pub struct CrateMetadata<S: Eq + Hash = String> {
 	#[cfg_attr(feature = "serde", serde(rename = "playdate"))]
 	pub inner: Option<Metadata<S>>,
 }
@@ -33,13 +33,13 @@ fn eq_metadata_field() {
 /// - Configuration table - `options`
 #[derive(Debug, Clone, PartialEq)]
 
-pub struct Metadata<S: Default + Eq + Hash = String> {
+pub struct Metadata<S: Eq + Hash = String> {
 	pub(super) inner: MetadataInner<S>,
 }
 
 
 #[cfg(feature = "serde")]
-impl<'de, S: Deserialize<'de> + Default + Eq + Hash> Deserialize<'de> for Metadata<S> {
+impl<'de, S: Deserialize<'de> + Eq + Hash> Deserialize<'de> for Metadata<S> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 		where D: Deserializer<'de> {
 		let meta = MetadataInner::<S>::deserialize(deserializer)?;
@@ -49,23 +49,29 @@ impl<'de, S: Deserialize<'de> + Default + Eq + Hash> Deserialize<'de> for Metada
 }
 
 
-impl MetadataSource for Metadata {
-	type Manifest = Ext<Manifest<String>>;
-	type TargetManifest = Override<String>;
+impl<S> MetadataSource for Metadata<S>
+	where S: Eq + Hash + AsRef<str>,
+	      Override<S>: ManifestSourceOptExt,
+	      Ext<Manifest<S>>: ManifestSourceOptExt,
+	      for<'t> &'t Ext<Manifest<S>>: ManifestSourceOptExt
+{
+	type S = S;
+	type Manifest = Ext<Manifest<S>>;
+	type TargetManifest = Override<S>;
 
 
-	fn manifest(&self) -> impl ManifestSourceOptExt { &self.inner.manifest }
+	fn manifest(&self) -> &Self::Manifest { &self.inner.manifest }
 
 	fn bins(&self) -> &[Self::TargetManifest] { self.inner.bins.as_slice() }
 	fn examples(&self) -> &[Self::TargetManifest] { self.inner.examples.as_slice() }
 
-	fn bin_targets(&self) -> impl IntoIterator<Item = &str> { self.inner.bins.iter().map(|o| o.target.as_str()) }
+	fn bin_targets(&self) -> impl IntoIterator<Item = &str> { self.inner.bins.iter().map(|o| o.target.as_ref()) }
 	fn example_targets(&self) -> impl IntoIterator<Item = &str> {
-		self.inner.examples.iter().map(|o| o.target.as_str())
+		self.inner.examples.iter().map(|o| o.target.as_ref())
 	}
 
-	fn assets(&self) -> &AssetsRules { &self.inner.assets }
-	fn dev_assets(&self) -> &AssetsRules { &self.inner.dev_assets }
+	fn assets(&self) -> &AssetsRules<S> { &self.inner.assets }
+	fn dev_assets(&self) -> &AssetsRules<S> { &self.inner.dev_assets }
 
 
 	fn options(&self) -> &Options { &self.inner.options }
@@ -88,8 +94,8 @@ impl MetadataSource for Metadata {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Deserialize))]
 #[cfg_attr(feature = "serde",
-           serde(bound(deserialize = "S: Deserialize<'de> + Default + Eq + Hash")))]
-pub(super) struct MetadataInner<S: Default + Eq + Hash = String> {
+           serde(bound(deserialize = "S: Deserialize<'de> + Eq + Hash")))]
+pub(super) struct MetadataInner<S: Eq + Hash = String> {
 	#[cfg_attr(feature = "serde", serde(flatten))]
 	pub(super) manifest: Ext<Manifest<S>>,
 
@@ -134,7 +140,7 @@ impl<T> Ext<T> {
 }
 
 impl<S> Ext<Manifest<S>> where S: ToOwned {
-	pub fn clone_owned(self) -> Ext<Manifest<<S as ToOwned>::Owned>> {
+	pub fn clone_owned(&self) -> Ext<Manifest<<S as ToOwned>::Owned>> {
 		Ext { main: self.main.clone_owned(),
 		      extra: self.extra.to_owned() }
 	}
@@ -223,16 +229,16 @@ impl IntoOwned<Manifest<<str as ToOwned>::Owned>> for Manifest<Cow<'_, str>> {
 }
 
 impl<S> Manifest<S> where S: ToOwned {
-	pub fn clone_owned(self) -> Manifest<<S as ToOwned>::Owned> {
-		Manifest { name: self.name.map(|s| s.to_owned()),
-		           version: self.version.map(|s| s.to_owned()),
-		           author: self.author.map(|s| s.to_owned()),
-		           bundle_id: self.bundle_id.map(|s| s.to_owned()),
-		           description: self.description.map(|s| s.to_owned()),
-		           image_path: self.image_path.map(|s| s.to_owned()),
-		           launch_sound_path: self.launch_sound_path.map(|s| s.to_owned()),
-		           content_warning: self.content_warning.map(|s| s.to_owned()),
-		           content_warning2: self.content_warning2.map(|s| s.to_owned()),
+	pub fn clone_owned(&self) -> Manifest<<S as ToOwned>::Owned> {
+		Manifest { name: self.name.as_ref().map(|s| s.to_owned()),
+		           version: self.version.as_ref().map(|s| s.to_owned()),
+		           author: self.author.as_ref().map(|s| s.to_owned()),
+		           bundle_id: self.bundle_id.as_ref().map(|s| s.to_owned()),
+		           description: self.description.as_ref().map(|s| s.to_owned()),
+		           image_path: self.image_path.as_ref().map(|s| s.to_owned()),
+		           launch_sound_path: self.launch_sound_path.as_ref().map(|s| s.to_owned()),
+		           content_warning: self.content_warning.as_ref().map(|s| s.to_owned()),
+		           content_warning2: self.content_warning2.as_ref().map(|s| s.to_owned()),
 		           build_number: self.build_number }
 	}
 }
@@ -240,7 +246,7 @@ impl<S> Manifest<S> where S: ToOwned {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Deserialize))]
-#[cfg_attr(feature = "serde", serde(bound(deserialize = "S: Deserialize<'de> +Default")))]
+#[cfg_attr(feature = "serde", serde(bound(deserialize = "S: Deserialize<'de>")))]
 pub struct Override<S> {
 	/// Associated cargo-target name
 	#[cfg_attr(feature = "serde", serde(rename = "id", alias = "target"))]
@@ -274,7 +280,7 @@ impl<'t> IntoOwned<Override<String>> for Override<Cow<'t, str>> {
 }
 
 impl<S> Override<S> where S: ToOwned {
-	pub fn clone_owned(self) -> Override<<S as ToOwned>::Owned> {
+	pub fn clone_owned(&self) -> Override<<S as ToOwned>::Owned> {
 		Override { target: self.target.to_owned(),
 		           manifest: self.manifest.clone_owned() }
 	}
@@ -659,10 +665,10 @@ mod one_of {
 
 	pub fn assets_rules<'de, S, D>(deserializer: D) -> Result<super::AssetsRules<S>, D::Error>
 		where D: Deserializer<'de>,
-		      S: Deserialize<'de> + Eq + Hash + Default {
+		      S: Deserialize<'de> + Eq + Hash {
 		struct OneOf<S>(PhantomData<S>);
 
-		impl<'de, S> Visitor<'de> for OneOf<S> where S: Deserialize<'de> + Eq + Hash + Default {
+		impl<'de, S> Visitor<'de> for OneOf<S> where S: Deserialize<'de> + Eq + Hash {
 			type Value = super::AssetsRules<S>;
 
 			fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -688,10 +694,10 @@ mod one_of {
 
 	pub fn targets_overrides<'de, S, D>(deserializer: D) -> Result<Vec<super::Override<S>>, D::Error>
 		where D: Deserializer<'de>,
-		      S: Deserialize<'de> + Eq + Hash + Default {
+		      S: Deserialize<'de> + Eq + Hash {
 		struct OneOf<S>(PhantomData<S>);
 
-		impl<'de, S> Visitor<'de> for OneOf<S> where S: Deserialize<'de> + Eq + Hash + Default {
+		impl<'de, S> Visitor<'de> for OneOf<S> where S: Deserialize<'de> + Eq + Hash {
 			type Value = Vec<super::Override<S>>;
 
 			fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {

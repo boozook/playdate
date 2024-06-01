@@ -1,3 +1,4 @@
+use std::hash::Hash;
 use std::borrow::Cow;
 use std::path::Path;
 
@@ -27,46 +28,45 @@ pub trait CrateInfoSource {
 
 	fn manifest_for_crate(&self) -> impl ManifestSourceOptExt {
 		use super::format::Manifest;
-		{
-			let author = {
-				let author = self.authors().join(", ");
-				if author.trim().is_empty() {
-					None
-				} else {
-					Some(author.into())
-				}
-			};
-			let version = Some(self.version());
-			let package = Manifest { name: Some(self.name()),
-			                         description: self.description(),
-			                         author,
-			                         version,
-			                         bundle_id: None,
-			                         image_path: None,
-			                         launch_sound_path: None,
-			                         content_warning: None,
-			                         content_warning2: None,
-			                         build_number: None };
 
-			if let Some(meta) = self.metadata() {
-				let manifest = meta.manifest();
-				let base = Ext { main: package,
-				                 extra: Default::default() };
-				// TODO: Reduce coping, return associated type instead with all strings in the Cow<'self>.
-				// Also get merged manifest with refs, using `override_with_extra_ref`
-				let result = base.override_with_extra(&manifest);
-				Ext { main: Manifest::from(&result),
-				      extra: result.iter_extra()
-				                   .map(|m| {
-					                   m.into_iter()
-					                    .map(|(k, v)| (k.as_ref().to_owned(), v.as_ref().clone()))
-					                    .collect()
-				                   })
-				                   .unwrap_or_default() }
+		let author = {
+			let author = self.authors().join(", ");
+			if author.trim().is_empty() {
+				None
 			} else {
-				Ext { main: package.into_owned(),
-				      extra: Default::default() }
+				Some(author.into())
 			}
+		};
+		let version = Some(self.version());
+		let package = Manifest { name: Some(self.name()),
+		                         description: self.description(),
+		                         author,
+		                         version,
+		                         bundle_id: None,
+		                         image_path: None,
+		                         launch_sound_path: None,
+		                         content_warning: None,
+		                         content_warning2: None,
+		                         build_number: None };
+
+		if let Some(meta) = self.metadata() {
+			let manifest = meta.manifest();
+			let base = Ext { main: package,
+			                 extra: Default::default() };
+			// TODO: Reduce coping, return associated type instead with all strings in the Cow<'self>.
+			// Also get merged manifest with refs, using `override_with_extra_ref`
+			let result = base.override_with_extra(manifest);
+			Ext { main: Manifest::from(&result),
+			      extra: result.iter_extra()
+			                   .map(|m| {
+				                   m.into_iter()
+				                    .map(|(k, v)| (k.as_ref().to_owned(), v.as_ref().clone()))
+				                    .collect()
+			                   })
+			                   .unwrap_or_default() }
+		} else {
+			Ext { main: package.into_owned(),
+			      extra: Default::default() }
 		}
 	}
 
@@ -103,11 +103,12 @@ pub trait CrateInfoSource {
 
 
 pub trait MetadataSource {
+	type S: Eq + Hash;
 	type Manifest: ManifestSourceOptExt;
 	type TargetManifest: ManifestSourceOptExt + TargetId;
 
 	/// Main manifest, default and base for all cargo-targets.
-	fn manifest(&self) -> impl ManifestSourceOptExt;
+	fn manifest(&self) -> &Self::Manifest;
 
 	/// All manifests for "bin" cargo-targets.
 	/// Overrides main manifest field-by-field.
@@ -147,8 +148,8 @@ pub trait MetadataSource {
 		    .chain(self.examples_iter().into_iter().flatten())
 	}
 
-	fn assets(&self) -> &AssetsRules;
-	fn dev_assets(&self) -> &AssetsRules;
+	fn assets(&self) -> &AssetsRules<Self::S>;
+	fn dev_assets(&self) -> &AssetsRules<Self::S>;
 
 	fn options(&self) -> &Options;
 	fn assets_options(&self) -> Cow<'_, AssetsOptions>;
@@ -181,17 +182,18 @@ pub trait MetadataSource {
 		self.manifest_for_target(target, false)
 		    .or_else(|| self.manifest_for_target(target, true))
 		    .map(|m| m.into_manifest())
-		    .or_else(|| Some(self.manifest().into_manifest()))
+		    .or_else(|| Some(Ext::<Manifest<String>>::from(self.manifest())))
 	}
 }
 
 
 impl<T: MetadataSource> MetadataSource for &T {
+	type S = <T as MetadataSource>::S;
 	type Manifest = <T as MetadataSource>::Manifest;
 	type TargetManifest = <T as MetadataSource>::TargetManifest;
 
 
-	fn manifest(&self) -> impl ManifestSourceOptExt { (*self).manifest() }
+	fn manifest(&self) -> &Self::Manifest { (*self).manifest() }
 
 	fn bins(&self) -> &[Self::TargetManifest] { <T as MetadataSource>::bins(*self) }
 	fn examples(&self) -> &[Self::TargetManifest] { <T as MetadataSource>::examples(*self) }
@@ -199,8 +201,8 @@ impl<T: MetadataSource> MetadataSource for &T {
 	fn bin_targets(&self) -> impl IntoIterator<Item = &str> { (*self).bin_targets() }
 	fn example_targets(&self) -> impl IntoIterator<Item = &str> { (*self).example_targets() }
 
-	fn assets(&self) -> &AssetsRules { (*self).assets() }
-	fn dev_assets(&self) -> &AssetsRules { (*self).dev_assets() }
+	fn assets(&self) -> &AssetsRules<Self::S> { (*self).assets() }
+	fn dev_assets(&self) -> &AssetsRules<Self::S> { (*self).dev_assets() }
 	fn options(&self) -> &Options { (*self).options() }
 	fn assets_options(&self) -> Cow<'_, AssetsOptions> { (*self).assets_options() }
 	fn support(&self) -> &Support { (*self).support() }

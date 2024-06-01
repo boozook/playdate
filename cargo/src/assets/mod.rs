@@ -55,6 +55,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 			layout.clean()?;
 		}
 
+		// primary top-level package
 		let target_pid = package.package_id();
 		let has_dev = targets.iter()
 		                     .any(|t| t.is_example() || t.is_test() || t.is_bench());

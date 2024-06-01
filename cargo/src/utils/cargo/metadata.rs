@@ -1,5 +1,6 @@
 use std::ffi::OsStr;
 
+use cargo::util::interning::InternedString;
 use cargo::CargoResult;
 
 use crate::config::Config;
@@ -7,7 +8,7 @@ use crate::proc::cargo_proxy_with;
 use crate::proc::read_cargo_json;
 
 
-pub type CargoMetadataPd = format::Report<format::Metadata>;
+pub type CargoMetadataPd = format::Report<format::Metadata<InternedString>>;
 
 
 pub fn metadata(cfg: &Config) -> CargoResult<CargoMetadataPd> {
