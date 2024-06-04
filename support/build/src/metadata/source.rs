@@ -34,7 +34,6 @@ pub trait CrateInfoSource {
 		use std::slice::Join;
 
 		let author = {
-			// let author = self.authors().join(", ");
 			let author = Join::join(self.authors(), ", ");
 			if author.trim().is_empty() {
 				None

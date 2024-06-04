@@ -59,6 +59,7 @@ pub fn metadata(cfg: &Config) -> CargoResult<CargoMetadataPd> {
 
 
 pub mod format {
+	#![allow(dead_code)]
 	use std::path::PathBuf;
 
 	use cargo::core::dependency::DepKind;

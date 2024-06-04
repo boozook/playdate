@@ -7,6 +7,7 @@ use playdate::consts::DEVICE_TARGET;
 pub(crate) mod format;
 pub mod build_plan;
 pub mod unit_graph;
+pub mod meta_deps;
 pub mod metadata;
 
 
