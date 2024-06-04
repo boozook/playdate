@@ -30,6 +30,11 @@ const USE_BUILT_BINDINGS: &str = "PD_BUILD_BINDINGS_ONCE";
 fn main() {
 	println!("cargo:rerun-if-env-changed={SDK_PATH_ENV_VAR}");
 
+	println!("cargo::rustc-check-cfg=cfg(playdate)");
+	if matches!(Target::from_env_target(), Ok(Target::Playdate)) {
+		println!("cargo::rustc-cfg=playdate")
+	}
+
 	let mut cfg = Cfg::default();
 	cfg.derive.default = feature_derive_default();
 	cfg.derive.eq = feature_derive_eq();

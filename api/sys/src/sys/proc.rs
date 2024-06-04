@@ -12,6 +12,23 @@ pub fn abort() -> ! { core::intrinsics::abort() }
 /// In case of missed [`crate::sys::API`] (doesn't set) uses [`abort`].
 #[track_caller]
 pub fn error<S: AsRef<str>>(text: S) -> ! {
+	#[cfg(not(playdate))]
+	{
+		use core::sync::atomic::AtomicBool;
+		use core::sync::atomic::Ordering;
+
+		// This is unreachable on the device,
+		// `API.system.error` interrupts the execution.
+		// But simulator doesn't stops.
+		// So, instead of spin-loop just save the flag and use later in the event-handler.
+
+		#[no_mangle]
+		static END_WITH_ERR: AtomicBool = AtomicBool::new(false);
+
+		END_WITH_ERR.store(true, Ordering::Relaxed);
+	}
+
+
 	if let Some(f) = unsafe { (*(*crate::sys::API).system).error } {
 		// Casting fn->void to fn->!
 		// This ugly cast is safe because of `!` is a magic compile-time marker, not a type.
@@ -28,7 +45,4 @@ pub fn error<S: AsRef<str>>(text: S) -> ! {
 		// In case of `crate::sys::API` is missed (doesn't set) just abort the process.
 		abort()
 	}
-	// This is unreachable or the device,
-	// `API.system.error` interrupts the execution.
-	// But simulator doesn't stops on `error`.
 }
