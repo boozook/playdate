@@ -70,10 +70,21 @@ pub extern "C" fn eventHandlerShim(api: *const ffi::PlaydateAPI,
                                    -> core::ffi::c_int {
 	extern "Rust" {
 		fn event_handler(api: *const ffi::PlaydateAPI, event: ffi::PDSystemEvent, arg: u32) -> EventLoopCtrl;
+
+		#[cfg(not(playdate))]
+		// This is atomic in the `sys::proc::error`.
+		static END_WITH_ERR: core::sync::atomic::AtomicBool;
 	}
+
 	if let ffi::PDSystemEvent::kEventInit = event {
 		unsafe { API = api }
 	}
+
+	#[cfg(not(playdate))]
+	if unsafe { END_WITH_ERR.load(core::sync::atomic::Ordering::Relaxed) } {
+		return EventLoopCtrl::Stop.into();
+	}
+
 	unsafe { event_handler(api, event, arg) }.into()
 }
 
