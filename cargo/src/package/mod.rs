@@ -590,9 +590,11 @@ impl<'cfg, 'm> ManifestSource<'cfg, 'm> {
 	}
 }
 
-impl CrateInfoSource for ManifestSource<'_, '_> {
+impl<'cfg> CrateInfoSource for ManifestSource<'cfg, '_> {
+	type Authors = [&'cfg str];
+
 	fn name(&self) -> Cow<str> { self.package.name().as_str().into() }
-	fn authors(&self) -> &[&str] { &self.authors }
+	fn authors(&self) -> &[&'cfg str] { &self.authors }
 	fn version(&self) -> Cow<str> { self.package.version().to_string().into() }
 	fn description(&self) -> Option<Cow<str>> {
 		self.package

@@ -303,7 +303,7 @@ impl<S: Eq + Hash> Default for AssetsRules<S> {
 	fn default() -> Self { Self::List(Vec::with_capacity(0)) }
 }
 
-impl AssetsRules {
+impl<S: Eq + Hash> AssetsRules<S> {
 	pub fn is_empty(&self) -> bool {
 		match self {
 			Self::List(list) => list.is_empty(),

@@ -6,10 +6,13 @@ use super::format::{AssetsOptions, AssetsRules, Ext, ExtraFields, ExtraValue, Ma
 
 
 pub trait CrateInfoSource {
+	type Authors: ?Sized + std::slice::Join<&'static str, Output = String>;
+
 	/// Crate name.
 	fn name(&self) -> Cow<str>;
 	/// Crate authors.
-	fn authors(&self) -> &[&str];
+	fn authors(&self) -> &Self::Authors;
+	// fn authors(&self) -> &[&str];
 	/// Crate version (semver).
 	fn version(&self) -> Cow<str>;
 	/// Crate description.
@@ -28,9 +31,11 @@ pub trait CrateInfoSource {
 
 	fn manifest_for_crate(&self) -> impl ManifestSourceOptExt {
 		use super::format::Manifest;
+		use std::slice::Join;
 
 		let author = {
-			let author = self.authors().join(", ");
+			// let author = self.authors().join(", ");
+			let author = Join::join(self.authors(), ", ");
 			if author.trim().is_empty() {
 				None
 			} else {
@@ -495,8 +500,10 @@ mod tests {
 
 	struct CrateInfoNoMeta;
 	impl CrateInfoSource for CrateInfoNoMeta {
+		type Authors = [&'static str];
+
 		fn name(&self) -> Cow<str> { "Name".into() }
-		fn authors(&self) -> &[&str] { &["John"] }
+		fn authors(&self) -> &Self::Authors { &["John"] }
 		fn version(&self) -> Cow<str> { "0.0.0".into() }
 		fn description(&self) -> Option<Cow<str>> { None }
 		fn bins(&self) -> &[&str] { &[SOME_TARGET] }
@@ -518,8 +525,10 @@ mod tests {
 
 	struct CrateInfo;
 	impl CrateInfoSource for CrateInfo {
+		type Authors = [&'static str];
+
 		fn name(&self) -> Cow<str> { "Crate Name".into() }
-		fn authors(&self) -> &[&str] { &["John"] }
+		fn authors(&self) -> &[&'static str] { &["John"] }
 		fn version(&self) -> Cow<str> { "0.0.0".into() }
 		fn description(&self) -> Option<Cow<str>> { None }
 
