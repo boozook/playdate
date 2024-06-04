@@ -47,7 +47,7 @@ pub struct Node<'cfg> {
 }
 
 impl<'t> RootNode<'t> {
-	pub fn package_id(&self) -> &'t PackageId { &self.node.package_id() }
+	pub fn package_id(&self) -> &'t PackageId { self.node.package_id() }
 
 	pub fn node(&self) -> &Node<'t> { &self.node }
 
@@ -207,7 +207,7 @@ impl<'t> MetaDeps<'t> {
 				            root.node.unit.target.name
 				);
 
-				deps.insert(0, root.node.clone());
+				deps.insert(0, root.node);
 			}
 
 
@@ -245,8 +245,8 @@ impl<'t> MetaDeps<'t> {
 		    .ok_or_else(|| anyhow::anyhow!("Root not found for {id}::{tname}"))
 	}
 
-	pub fn units(&self) -> &'t UnitGraph { &*self.units }
-	pub fn meta(&self) -> &'t CargoMetadataPd { &*self.meta }
+	pub fn units(&self) -> &'t UnitGraph { self.units }
+	pub fn meta(&self) -> &'t CargoMetadataPd { self.meta }
 
 
 	pub fn deps_allowed_for(&self, root: PackageId) -> bool {
