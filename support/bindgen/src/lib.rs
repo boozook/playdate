@@ -126,7 +126,7 @@ fn create_generator(cfg: cfg::Cfg) -> Result<Generator, error::Error> {
 	let main_header = sdk_c_api.join("pd_api.h");
 	println!("cargo::rerun-if-changed={}", main_header.display());
 	println!("cargo::rerun-if-env-changed={SDK_ENV_VAR}");
-	println!("cargo::include={}", sdk_c_api.display());
+	println!("cargo::metadata=include={}", sdk_c_api.display());
 
 
 	// builder:
@@ -288,7 +288,7 @@ fn apply_target(mut builder: Builder, target: &str, gcc: &ArmToolchain) -> Build
 	builder = if DEVICE_TARGET == target {
 		let arm_eabi_include = gcc.include();
 		// println!("cargo::rustc-link-search={}", arm_eabi.join("lib").display()); // for executable
-		println!("cargo::include={}", arm_eabi_include.display());
+		println!("cargo::metadata=include={}", arm_eabi_include.display());
 
 		// TODO: prevent build this for other targets:
 		// builder = builder.raw_line(format!("#![cfg(target = \"{DEVICE_TARGET}\")]\n\n"));
