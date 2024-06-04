@@ -16,7 +16,6 @@ use crate::cli::cmd::Cmd;
 use crate::cli::deps::Dependency;
 use crate::cli::ide::Ide;
 use crate::cli::opts::Mount;
-use crate::utils::LazyBuildContext;
 
 
 pub struct Config<'cfg> {
@@ -62,7 +61,9 @@ pub struct Config<'cfg> {
 	sdk: Lazy<Sdk>,
 	gcc: Lazy<ArmToolchain>,
 	rustflags: Lazy<Rustflags>,
-	build_plan: Lazy<crate::build::plan::format::BuildPlan>,
+	build_plan: Lazy<crate::utils::cargo::build_plan::format::BuildPlan>,
+	unit_graph: Lazy<crate::utils::cargo::unit_graph::format::UnitGraph>,
+	ws_metadata: Lazy<crate::utils::cargo::metadata::CargoMetadataPd>,
 	target_infos: Lazy<HashMap<CompileKind, Lazy<TargetInfo>>>,
 
 	pub rustc: Rustc,
@@ -130,6 +131,8 @@ impl<'cfg> Config<'cfg> {
 		       gcc: Lazy::new(),
 		       rustflags: Lazy::new(),
 		       build_plan: Lazy::new(),
+		       unit_graph: Lazy::new(),
+		       ws_metadata: Lazy::new(),
 		       target_infos: Lazy::new(),
 		       rustup: Default::default() }
 	}
@@ -163,9 +166,19 @@ impl<'cfg> Config<'cfg> {
 		        })
 	}
 
-	pub fn build_plan(&self) -> CargoResult<&crate::build::plan::format::BuildPlan> {
+	pub fn build_plan(&self) -> CargoResult<&crate::utils::cargo::build_plan::format::BuildPlan> {
 		self.build_plan
-		    .try_get_or_create(|| crate::build::plan::build_plan(self))
+		    .try_get_or_create(|| crate::utils::cargo::build_plan::build_plan(self))
+	}
+
+	pub fn unit_graph(&self) -> CargoResult<&crate::utils::cargo::unit_graph::format::UnitGraph> {
+		self.unit_graph
+		    .try_get_or_create(|| crate::utils::cargo::unit_graph::unit_graph(self))
+	}
+
+	pub fn metadata(&self) -> CargoResult<&crate::utils::cargo::metadata::CargoMetadataPd> {
+		self.ws_metadata
+		    .try_get_or_create(|| crate::utils::cargo::metadata::metadata(self))
 	}
 
 	pub fn target_info_for(&self, kind: CompileKind) -> CargoResult<&TargetInfo> {
@@ -178,11 +191,6 @@ impl<'cfg> Config<'cfg> {
 		map.get(&kind)
 		   .map(|v| v.try_get_or_create(|| self.target_info(kind)))
 		   .ok_or_else(|| anyhow::anyhow!("Target-info for unexpected {kind:?}, not prepared."))?
-	}
-
-
-	pub fn create_bcx<'t: 'cfg>(&'t self) -> CargoResult<LazyBuildContext<'t, 'cfg>> {
-		LazyBuildContext::new(self)
 	}
 }
 

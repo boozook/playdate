@@ -39,7 +39,6 @@ use crate::utils::path::AsRelativeTo;
 use crate::utils::workspace::PossibleTargets;
 
 
-pub mod plan;
 pub mod rustflags;
 
 

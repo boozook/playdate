@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
@@ -17,8 +18,11 @@ use clap_lex::OsStrExt;
 use playdate::fs::soft_link_checked;
 use playdate::layout::Layout;
 use playdate::layout::Name;
-use playdate::manifest::ManifestDataSource;
-use playdate::manifest::format::Manifest;
+use playdate::manifest::format::ManifestFmt;
+use playdate::manifest::CrateInfoSource;
+use playdate::metadata::format::Metadata;
+use playdate::metadata::validation::Validate;
+use playdate::metadata::validation::ValidateCrate;
 
 use crate::assets::AssetsArtifact;
 use crate::assets::AssetsArtifacts;
@@ -98,7 +102,7 @@ fn package_single_target<'p>(config: &Config,
 	);
 
 	if let Some(assets) = assets {
-		assert_eq!(assets.package, product.package);
+		assert_eq!(assets.package_id, product.package.package_id());
 		log::debug!("Preparing assets for packaging {}", product.presentable_name());
 
 		prepare_assets(
@@ -112,9 +116,16 @@ fn package_single_target<'p>(config: &Config,
 	}
 
 	// manifest:
-	let ext_id = product.example.then(|| format!("dev.{}", product.name).into());
-	let ext_name = product.example.then_some(product.name.as_str().into());
-	build_manifest(config, &product.layout, product.package, assets, ext_id, ext_name)?;
+	let cargo_target = (matches!(product.src_ct, CrateType::Bin) || product.example).then_some(&product.name)
+	                                                                                .map(Cow::from);
+	build_manifest(
+	               config,
+	               &product.layout,
+	               product.package,
+	               assets,
+	               cargo_target,
+	               product.example,
+	)?;
 
 	// finally call pdc and pack:
 	let mut artifact = execute_pdc(config, &product.layout)?;
@@ -157,6 +168,23 @@ fn package_multi_target<'p>(config: &Config,
 	                      .map(|p| format!("{}", p.dst_ct))
 	                      .collect::<Vec<_>>()
 	                      .join(", ");
+
+	let cargo_targets = products.iter().fold(HashSet::new(), |mut set, product| {
+		                                   set.insert(product.name.as_str());
+		                                   set
+	                                   });
+	if cargo_targets.len() > 1 {
+		// TODO: instead of this, group them by cargo-target - one or two for single cargo-target.
+		let list = cargo_targets.into_iter().collect::<Vec<_>>().join(", ");
+		let msg = "Multiple cargo-targets not supported:";
+		if !config.compile_options.build_config.keep_going {
+			bail!("{msg} [{list}]");
+		} else {
+			config.log()
+			      .error(format!("{msg} [{list}] (sources: {src_cts}, targets: {dst_cts})",));
+		}
+	}
+
 	config.log().status(
 	                    "Packaging",
 	                    format!(
@@ -209,7 +237,8 @@ fn package_multi_target<'p>(config: &Config,
 	// cross-target layout:
 	let layout_target_name = Name::with_names(package.name().as_str(), products.first().map(|p| &p.name));
 	let mut layout =
-		CrossTargetLayout::new(config, package, Some(layout_target_name))?.lock(config.workspace.config())?;
+		CrossTargetLayout::new(config, package.package_id(), Some(layout_target_name))?.lock(config.workspace
+		                                                                                           .config())?;
 	if let Some(assets) = assets {
 		debug_assert_eq!(
 		                 layout.as_ref().assets_layout(config).root(),
@@ -234,8 +263,8 @@ fn package_multi_target<'p>(config: &Config,
 
 	// Then the same as for single-product package:
 	if let Some(assets) = assets {
-		log::debug!("Preparing assets for packaging {}", assets.package.name());
-		assert_eq!(package, assets.package, "package must be same");
+		log::debug!("Preparing assets for packaging {}", assets.package_id.name());
+		assert_eq!(package.package_id(), assets.package_id, "package must be same");
 		prepare_assets(
 		               config,
 		               assets,
@@ -247,9 +276,17 @@ fn package_multi_target<'p>(config: &Config,
 	}
 
 	// manifest:
-	let ext_id = dev.and_then(|p| p.example.then(|| format!("dev.{}", p.name).into()));
-	let ext_name = dev.and_then(|p| p.example.then_some(p.name.as_str().into()));
-	build_manifest(config, &layout, package, assets, ext_id, ext_name)?;
+	let cargo_target =
+		(matches!(products[0].src_ct, CrateType::Bin) || products[0].example).then_some(products[0].name.as_str())
+		                                                                     .map(Cow::from);
+	build_manifest(
+	               config,
+	               &layout,
+	               package,
+	               assets,
+	               cargo_target,
+	               products[0].example,
+	)?;
 
 	// finally call pdc and pack:
 	let mut artifact = execute_pdc(config, &layout)?;
@@ -277,42 +314,64 @@ fn package_multi_target<'p>(config: &Config,
 fn build_manifest<Layout: playdate::layout::Layout>(config: &Config,
                                                     layout: &Layout,
                                                     package: &Package,
-                                                    assets: Option<&AssetsArtifact<'_>>,
-                                                    id_suffix: Option<Cow<'_, str>>,
-                                                    name_override: Option<Cow<'_, str>>)
+                                                    assets: Option<&AssetsArtifact>,
+                                                    cargo_target: Option<Cow<'_, str>>,
+                                                    dev: bool)
                                                     -> CargoResult<()> {
 	config.log().verbose(|mut log| {
 		            let msg = format!("building package manifest for {}", package.package_id());
 		            log.status("Manifest", msg);
 	            });
 
-	let mut manifest = if let Some(metadata) = assets.and_then(|a| a.metadata.as_ref()) {
-		                   let source = ManifestSource { package,
-		                                                 metadata: metadata.into() };
-		                   Manifest::try_from_source(source)
-	                   } else {
-		                   let metadata = playdate_metadata(package);
-		                   let source = ManifestSource { package,
-		                                                 metadata: metadata.as_ref() };
-		                   Manifest::try_from_source(source)
-	                   }.map_err(|err| anyhow!(err))?;
-
-	// Override fields. This is a hacky not-so-braking hot-fix for issue #354.
-	// This is a temporary solution only until full metadata inheritance is implemented.
-	if id_suffix.is_some() || name_override.is_some() {
-		if let Some(id) = id_suffix {
-			log::trace!("Overriding bundle_id from {}", manifest.bundle_id);
-			manifest.bundle_id.push_str(".example.");
-			manifest.bundle_id.push_str(&id);
-			log::trace!("                       to {}", manifest.bundle_id);
+	use ::playdate::metadata::validation::Problem;
+	let log_problem = |pre: &str, problem: Problem| {
+		let msg = format!("{pre}: {problem}");
+		if problem.is_err() {
+			config.log().error(msg);
+		} else {
+			config.log().warn(msg);
 		}
-		if let Some(name) = name_override {
-			log::trace!("Overriding program name {} -> {name}", manifest.name);
-			manifest.name = name.into_owned();
-		}
-	}
+	};
+	let log_src_problem = |problem: Problem| {
+		let msg = "Manifest validation".to_string();
+		log_problem(&msg, problem)
+	};
+	let log_meta_problem = |problem: Problem| {
+		let msg = "Metadata validation".to_string();
+		log_problem(&msg, problem)
+	};
 
-	std::fs::write(layout.manifest(), manifest.to_manifest_string())?;
+	let validate = |src: &ManifestSource| {
+		if let Some(target) = &cargo_target {
+			src.validate_for(target)
+			   .into_iter()
+			   // .filter(Problem::is_err)
+			   .for_each(log_meta_problem);
+		} else {
+			src.validate()
+			   .into_iter()
+			   // .filter(Problem::is_err)
+			   .for_each(log_meta_problem);
+		}
+	};
+
+	let manifest = if let Some(metadata) = assets.and_then(|a| a.metadata.as_ref()) {
+		let source = ManifestSource::new(package, metadata.into());
+		// This validation not needed at this step. May be earlier:
+		validate(&source);
+		source.manifest_for_opt(cargo_target.as_deref(), dev)
+	} else {
+		let metadata = playdate_metadata(package);
+		let source = ManifestSource::new(package, metadata.as_ref());
+		// This validation not needed at this step. May be earlier:
+		validate(&source);
+		source.manifest_for_opt(cargo_target.as_deref(), dev)
+	};
+
+	// validation, lints
+	manifest.validate().into_iter().for_each(log_src_problem);
+
+	std::fs::write(layout.manifest(), manifest.to_manifest_string()?)?;
 	Ok(())
 }
 
@@ -491,15 +550,65 @@ impl<'cfg> TryFrom<BuildProduct<'cfg>> for SuccessfulBuildProduct<'cfg> {
 
 struct ManifestSource<'cfg, 'm> {
 	package: &'cfg Package,
-	metadata: Option<&'m playdate::metadata::format::PlayDateMetadata<toml::Value>>,
+	authors: Vec<&'cfg str>,
+	bins: Vec<&'cfg str>,
+	examples: Vec<&'cfg str>,
+	metadata: Option<&'m Metadata>,
 }
 
-impl ManifestDataSource for ManifestSource<'_, '_> {
-	type Value = toml::Value;
+impl<'cfg, 'm> ManifestSource<'cfg, 'm> {
+	fn new(package: &'cfg Package, metadata: Option<&'m Metadata>) -> Self {
+		log::debug!("new manifest-source for {}", package.package_id());
 
-	fn name(&self) -> &str { self.package.name().as_str() }
-	fn authors(&self) -> &[String] { &self.package.manifest().metadata().authors }
+		let mut bins = Vec::new();
+		let mut examples = Vec::new();
+
+		package.targets()
+		       .iter()
+		       .inspect(|t| log::trace!("target: {} ({:?})", t.description_named(), t.crate_name()))
+		       .filter(|t| !t.is_custom_build())
+		       .for_each(|t| {
+			       if t.is_bin() {
+				       bins.push(t.name());
+				       log::debug!("+bin: {}", t.description_named());
+			       } else if t.is_example() {
+				       examples.push(t.name());
+				       log::debug!("+example: {}", t.description_named());
+			       }
+		       });
+
+		Self { authors: package.manifest()
+		                       .metadata()
+		                       .authors
+		                       .iter()
+		                       .map(|s| s.as_str())
+		                       .collect(),
+		       bins,
+		       examples,
+		       package,
+		       metadata }
+	}
+}
+
+impl<'cfg> CrateInfoSource for ManifestSource<'cfg, '_> {
+	type Authors = [&'cfg str];
+
+	fn name(&self) -> Cow<str> { self.package.name().as_str().into() }
+	fn authors(&self) -> &[&'cfg str] { &self.authors }
 	fn version(&self) -> Cow<str> { self.package.version().to_string().into() }
-	fn description(&self) -> Option<&str> { self.package.manifest().metadata().description.as_deref() }
-	fn metadata(&self) -> Option<&playdate::metadata::format::PlayDateMetadata<Self::Value>> { self.metadata }
+	fn description(&self) -> Option<Cow<str>> {
+		self.package
+		    .manifest()
+		    .metadata()
+		    .description
+		    .as_deref()
+		    .map(|s: &str| s.into())
+	}
+
+	fn bins(&self) -> &[&str] { &self.bins }
+	fn examples(&self) -> &[&str] { &self.examples }
+
+	fn metadata(&self) -> Option<impl playdate::metadata::source::MetadataSource> { self.metadata }
+
+	fn manifest_path(&self) -> Cow<Path> { Cow::Borrowed(self.package.manifest_path()) }
 }

@@ -5,7 +5,9 @@ use std::path::{PathBuf, Path};
 use anstyle::AnsiColor as Color;
 use anyhow::bail;
 use cargo::CargoResult;
-use cargo::core::{Package, Verbosity};
+use cargo::core::{Package, PackageId, Verbosity};
+use playdate::manifest::ManifestSourceOpt as _;
+use playdate::metadata::source::MetadataSource as _;
 use playdate::metadata::METADATA_FIELD;
 use playdate::layout::Layout;
 
@@ -15,7 +17,7 @@ use crate::layout::{PlaydateAssets, LayoutLockable, Layout as _, CrossTargetLayo
 use crate::logger::LogErr;
 use crate::utils::LazyBuildContext;
 use crate::utils::path::AsRelativeTo;
-use self::plan::TomlMetadata;
+use self::plan::Metadata;
 
 
 mod plan;
@@ -23,15 +25,15 @@ mod pdc;
 
 
 #[derive(Debug)]
-pub struct AssetsArtifact<'cfg> {
-	pub package: &'cfg Package,
+pub struct AssetsArtifact {
+	pub package_id: PackageId,
 	pub layout: PlaydateAssets<PathBuf>,
 	/// Cached metadata
-	pub metadata: Option<TomlMetadata>,
+	pub metadata: Option<Metadata>,
 }
 
 /// One artifact per package.
-pub type AssetsArtifacts<'cfg> = HashMap<&'cfg Package, AssetsArtifact<'cfg>>;
+pub type AssetsArtifacts<'cfg> = HashMap<&'cfg Package, AssetsArtifact>;
 
 
 pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
@@ -41,7 +43,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 	for (package, targets, ..) in config.possible_targets()? {
 		let env = plan::LazyEnvBuilder::new(config, package);
 		let mut plans: HashMap<&Package, _> = Default::default();
-		let global_layout = CrossTargetLayout::new(config, package, None)?;
+		let global_layout = CrossTargetLayout::new(config, package.package_id(), None)?;
 		let mut layout = global_layout.assets_layout(config);
 		let mut options = HashMap::new();
 
@@ -53,6 +55,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 			layout.clean()?;
 		}
 
+		// primary top-level package
 		let target_pid = package.package_id();
 		let has_dev = targets.iter()
 		                     .any(|t| t.is_example() || t.is_test() || t.is_bench());
@@ -111,7 +114,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 				                        .map(|plan| (plan, AssetKind::Package))
 				                        .chain(plan.dev.as_ref().into_iter().map(|plan| (plan, AssetKind::Dev)))
 				{
-					let message = plan.printable_serializable(package, kind);
+					let message = plan.printable_serializable(package.package_id(), kind);
 					config.workspace.config().shell().print_json(&message)?;
 				}
 			}
@@ -147,7 +150,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 			let mut has_errors = false;
 			let mut targets = HashMap::new();
 
-			let mut check_duplicates = |package: &Package, target_kind: AssetKind, plan| {
+			let mut check_duplicates = |package_id: PackageId, target_kind: AssetKind, plan| {
 				for target in plan {
 					if let Some((pid, kind)) = targets.get::<Cow<Path>>(&target) {
 						has_errors = true;
@@ -158,7 +161,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 							}
 						};
 						let a = err_msg(pid, *kind);
-						let b = err_msg(&package.package_id(), target_kind);
+						let b = err_msg(&package_id, target_kind);
 						let message = format!(
 						                      "Duplicate dev-asset destination: '{}':\n\t{a}\n\t{b}",
 						                      target.as_relative_to_root(config).display(),
@@ -166,19 +169,20 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 
 						config.log().error(message);
 					} else {
-						targets.insert(target, (package.package_id(), target_kind));
+						targets.insert(target, (package_id, target_kind));
 					}
 				}
 			};
 
 
 			for (package, plan) in plans.iter() {
+				let package_id = package.package_id();
 				if let Some(plan) = plan.main.as_ref() {
-					check_duplicates(package, AssetKind::Package, plan.as_inner().targets());
+					check_duplicates(package_id, AssetKind::Package, plan.as_inner().targets());
 				}
-				if package.package_id() == target_pid {
+				if package_id == target_pid {
 					if let Some(plan) = plan.dev.as_ref() {
-						check_duplicates(package, AssetKind::Dev, plan.as_inner().targets());
+						check_duplicates(package_id, AssetKind::Dev, plan.as_inner().targets());
 					}
 				}
 			}
@@ -232,6 +236,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 					            });
 
 
+					// FIXME: use primary (top-level) assets-options, but not options of dependency!
 					let metadata = options.get(dependency).expect("Metadata is gone, impossible!");
 					let report = plan.apply(&dest, &metadata.assets_options(), config)?;
 
@@ -348,7 +353,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 			let metadata = options.remove(package);
 			artifacts.insert(
 			                 package,
-			                 AssetsArtifact { package,
+			                 AssetsArtifact { package_id: package.package_id(),
 			                                  layout,
 			                                  metadata, },
 			);
@@ -369,7 +374,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 fn deps_tree_metadata<'cfg: 'r, 't: 'r, 'r>(package: &'cfg Package,
                                             bcx: &'t LazyBuildContext<'t, 'cfg>,
                                             config: &Config<'_>)
-                                            -> CargoResult<HashMap<&'r Package, TomlMetadata>> {
+                                            -> CargoResult<HashMap<&'r Package, Metadata>> {
 	let mut packages = HashMap::new();
 	if let Some(metadata) = playdate_metadata(package) {
 		// if explicitly allowed collect deps => scan deps-tree
@@ -470,11 +475,10 @@ fn deps_tree_metadata<'cfg: 'r, 't: 'r, 'r>(package: &'cfg Package,
 }
 
 
-pub fn playdate_metadata(package: &Package) -> Option<TomlMetadata> {
+pub fn playdate_metadata(package: &Package) -> Option<Metadata> {
 	package.manifest()
 	       .custom_metadata()
 	       .and_then(|m| m.as_table().map(|t| t.get(METADATA_FIELD)))
 	       .flatten()
-	       .and_then(|v| v.to_owned().try_into::<TomlMetadata>().log_err().ok())
-	       .and_then(|mut m| m.merge_opts().map(|_| m).log_err().ok())
+	       .and_then(|v| v.to_owned().try_into::<Metadata>().log_err().ok())
 }

@@ -16,7 +16,8 @@ pub mod path;
 pub mod logging;
 
 
-// TODO: It used several times, make it global.
+#[deprecated(since = "0.5",
+             note = "TODO: use crate::utils::cargo:: unit_graph with metadata instead")]
 pub struct LazyBuildContext<'a, 'cfg> {
 	workspace: &'cfg Workspace<'cfg>,
 	bcx: Lazy<BuildContext<'a, 'cfg>>,

@@ -3,6 +3,14 @@ use cargo::core::compiler::CompileTarget;
 use playdate::consts::DEVICE_TARGET;
 
 
+/// Shared format
+pub(crate) mod format;
+pub mod build_plan;
+pub mod unit_graph;
+pub mod meta_deps;
+pub mod metadata;
+
+
 pub trait CompileKindExt {
 	fn is_playdate(&self) -> bool;
 	fn is_simulator(&self) -> bool;

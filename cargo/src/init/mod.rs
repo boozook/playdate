@@ -89,7 +89,7 @@ pub fn new_or_init<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<()> {
 	for dep in deps_to_add {
 		// TODO call cargo add WITH PWD=path
 
-		let mut cargo = proc::cargo(config.workspace.config().into())?;
+		let mut cargo = proc::cargo(config.into())?;
 		cargo.current_dir(path);
 		cargo.arg("add");
 		cargo.arg(dep.as_ref());
@@ -242,7 +242,7 @@ fn cargo_add<'s>(config: &Config<'_>,
                  rename: Option<&str>,
                  features: Option<impl IntoIterator<Item = &'s str>>)
                  -> CargoResult<()> {
-	let mut cargo = proc::cargo(config.workspace.config().into())?;
+	let mut cargo = proc::cargo(config.into())?;
 	cargo.current_dir(pwd);
 
 	cargo.arg("add");
