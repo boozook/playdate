@@ -228,7 +228,7 @@ impl FromStr for Derive {
 				"partialeq" => this.partialeq = true,
 				"partialord" => this.partialord = true,
 				"constparamty" => this.constparamty = true,
-				_ => println!("cargo:warning=Unknown derive '{word}'."),
+				_ => println!("cargo::warning=Unknown derive '{word}'."),
 			}
 		}
 
@@ -305,7 +305,7 @@ impl FromStr for Features {
 		for word in s.to_ascii_lowercase().split(',') {
 			match word {
 				"documentation" => this.documentation = true,
-				_ => println!("cargo:warning=Unknown feature '{word}'."),
+				_ => println!("cargo::warning=Unknown feature '{word}'."),
 			}
 		}
 

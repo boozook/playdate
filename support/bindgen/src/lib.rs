@@ -107,10 +107,10 @@ impl Generator {
 
 
 fn create_generator(cfg: cfg::Cfg) -> Result<Generator, error::Error> {
-	println!("cargo:rerun-if-env-changed=TARGET");
+	println!("cargo::rerun-if-env-changed=TARGET");
 	let cargo_target_triple = env::var("TARGET").expect("TARGET cargo env var");
 
-	println!("cargo:rerun-if-env-changed=PROFILE");
+	println!("cargo::rerun-if-env-changed=PROFILE");
 	let cargo_profile = env::var("PROFILE").expect("PROFILE cargo env var");
 	let is_debug = cargo_profile == "debug" || env_cargo_feature("DEBUG");
 
@@ -120,13 +120,13 @@ fn create_generator(cfg: cfg::Cfg) -> Result<Generator, error::Error> {
 	let version_path = sdk.version_file();
 	let version_raw = sdk.read_version()?;
 	let version = check_sdk_version(&version_raw)?;
-	println!("cargo:rerun-if-changed={}", version_path.display());
+	println!("cargo::rerun-if-changed={}", version_path.display());
 	let sdk_c_api = sdk.c_api();
 
 	let main_header = sdk_c_api.join("pd_api.h");
-	println!("cargo:rerun-if-changed={}", main_header.display());
-	println!("cargo:rerun-if-env-changed={SDK_ENV_VAR}");
-	println!("cargo:include={}", sdk_c_api.display());
+	println!("cargo::rerun-if-changed={}", main_header.display());
+	println!("cargo::rerun-if-env-changed={SDK_ENV_VAR}");
+	println!("cargo::include={}", sdk_c_api.display());
 
 
 	// builder:
@@ -287,8 +287,8 @@ fn apply_profile(mut builder: Builder, debug: bool) -> Builder {
 fn apply_target(mut builder: Builder, target: &str, gcc: &ArmToolchain) -> Builder {
 	builder = if DEVICE_TARGET == target {
 		let arm_eabi_include = gcc.include();
-		// println!("cargo:rustc-link-search={}", arm_eabi.join("lib").display()); // for executable
-		println!("cargo:include={}", arm_eabi_include.display());
+		// println!("cargo::rustc-link-search={}", arm_eabi.join("lib").display()); // for executable
+		println!("cargo::include={}", arm_eabi_include.display());
 
 		// TODO: prevent build this for other targets:
 		// builder = builder.raw_line(format!("#![cfg(target = \"{DEVICE_TARGET}\")]\n\n"));

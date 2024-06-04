@@ -28,7 +28,7 @@ const USE_BUILT_BINDINGS: &str = "PD_BUILD_BINDINGS_ONCE";
 
 
 fn main() {
-	println!("cargo:rerun-if-env-changed={SDK_PATH_ENV_VAR}");
+	println!("cargo::rerun-if-env-changed={SDK_PATH_ENV_VAR}");
 
 	println!("cargo::rustc-check-cfg=cfg(playdate)");
 	if matches!(Target::from_env_target(), Ok(Target::Playdate)) {
@@ -60,7 +60,7 @@ fn main() {
 	let pdbindgen_found = Runner::find_tool(&cfg);
 	if cfg!(feature = "bindgen") && pdbindgen_found.is_some() {
 		println!(
-		         "cargo:warning=Playdate bindgen found but also built as dependency of the {} by enabled feature 'bindgen'. You might want to disable that feature to significantly decrease build time.",
+		         "cargo::warning=Playdate bindgen found but also built as dependency of the {} by enabled feature 'bindgen'. You might want to disable that feature to significantly decrease build time.",
 		         pkg_name
 		);
 		// better wording: significantly speed up the compilation process?
@@ -77,7 +77,7 @@ fn main() {
 		#[cfg(not(feature = "bindgen"))]
 		{
 			let rec = format!("Install it or enable feature 'bindgen' for {pkg_name}.");
-			println!("cargo:warning=Playdate bindgen executable not found. {rec}");
+			println!("cargo::warning=Playdate bindgen executable not found. {rec}");
 			panic!("Unable to find Playdate bindgen executable and feature 'bindgen' disabled, so can't generate bindings.");
 		}
 	}
@@ -97,12 +97,12 @@ fn main() {
 		panic!("Unable to find Playdate SDK and read its version.");
 	}
 	let sdk_version = sdk_version.expect("SDK version");
-	println!("cargo:rustc-env={BINDINGS_VER_ENV}={}", sdk_version);
+	println!("cargo::rustc-env={BINDINGS_VER_ENV}={}", sdk_version);
 
 
 	// get filename
 	let filename = Filename::new(sdk_version, &cfg.derive).expect("output filename");
-	println!("cargo:rustc-env={BINDINGS_NAME_ENV}={}", filename.to_string());
+	println!("cargo::rustc-env={BINDINGS_NAME_ENV}={}", filename.to_string());
 
 
 	// determine output path (prebuilt or OUT_DIR)
@@ -120,7 +120,7 @@ fn main() {
 	} else {
 		#[cfg(feature = "bindgen")]
 		{
-			println!("cargo:warning=Playdate bindgen exited with error. Trying to build without it.");
+			println!("cargo::warning=Playdate bindgen exited with error. Trying to build without it.");
 			return with_builtin_bindgen(cfg);
 		}
 
@@ -139,10 +139,10 @@ fn with_builtin_bindgen(mut cfg: Cfg) {
 	let generator = bindgen::Generator::new(cfg).expect("Couldn't create bindings generator.");
 
 	println!(
-	         "cargo:rustc-env={BINDINGS_NAME_ENV}={}",
+	         "cargo::rustc-env={BINDINGS_NAME_ENV}={}",
 	         generator.filename.to_string()
 	);
-	println!("cargo:rustc-env={BINDINGS_VER_ENV}={}", generator.filename.sdk);
+	println!("cargo::rustc-env={BINDINGS_VER_ENV}={}", generator.filename.sdk);
 
 	// determine output path, also check cache/prebuilt:
 	let out_path = out_path_or_finish_with_prebuilt(&generator.filename);
@@ -179,12 +179,12 @@ fn use_existing_prebuilt(cfg: &Cfg) {
 	println!("using pre-built {version}");
 	let filename = Filename::new(version, &cfg.derive).expect("filename");
 
-	println!("cargo:rustc-env={BINDINGS_VER_ENV}={version}");
-	println!("cargo:rustc-env={BINDINGS_NAME_ENV}={}", filename.to_string());
+	println!("cargo::rustc-env={BINDINGS_VER_ENV}={version}");
+	println!("cargo::rustc-env={BINDINGS_NAME_ENV}={}", filename.to_string());
 
 	let out_path = out_file_prebuilt(&filename);
-	println!("cargo:rerun-if-changed={}", out_path.display());
-	println!("cargo:rustc-env={BINDINGS_PATH_ENV}={}", out_path.display());
+	println!("cargo::rerun-if-changed={}", out_path.display());
+	println!("cargo::rustc-env={BINDINGS_PATH_ENV}={}", out_path.display());
 	assert!(out_path.exists(), "pre-built bindings not found.");
 }
 
@@ -210,12 +210,12 @@ fn out_path_or_finish_with_prebuilt(filename: &Filename) -> PathBuf {
 		println!("rebuild pre-built bindings requested");
 		let out_dir = out_dir_prebuilt();
 		let out_path = out_dir.join(filename.to_string());
-		println!("cargo:rerun-if-changed={}", out_path.display());
-		println!("cargo:warning=Rebuilding `pre-built` bindings");
+		println!("cargo::rerun-if-changed={}", out_path.display());
+		println!("cargo::warning=Rebuilding `pre-built` bindings");
 		if !out_dir.exists() {
 			std::fs::create_dir_all(&out_dir).unwrap();
 			println!(
-			         "cargo:warning=OUT_DIR for `pre-built` bindings created: {}",
+			         "cargo::warning=OUT_DIR for `pre-built` bindings created: {}",
 			         out_dir.display()
 			);
 		}
@@ -226,8 +226,8 @@ fn out_path_or_finish_with_prebuilt(filename: &Filename) -> PathBuf {
 
 		// cache-hit:
 		if out_path.exists() {
-			println!("cargo:rerun-if-changed={}", out_path.display());
-			println!("cargo:rustc-env={BINDINGS_PATH_ENV}={}", out_path.display());
+			println!("cargo::rerun-if-changed={}", out_path.display());
+			println!("cargo::rustc-env={BINDINGS_PATH_ENV}={}", out_path.display());
 			println!("bindings: cache-hit in pre-built directory");
 			exit(0);
 		}
@@ -239,8 +239,8 @@ fn out_path_or_finish_with_prebuilt(filename: &Filename) -> PathBuf {
 		let out_dir_reuse_allowed = env::var_os(USE_BUILT_BINDINGS).filter(|s| s == "1" || s == "true")
 		                                                           .is_some();
 		if out_path.exists() && out_dir_reuse_allowed {
-			println!("cargo:rerun-if-changed={}", out_path.display());
-			println!("cargo:rustc-env={BINDINGS_PATH_ENV}={}", out_path.display());
+			println!("cargo::rerun-if-changed={}", out_path.display());
+			println!("cargo::rustc-env={BINDINGS_PATH_ENV}={}", out_path.display());
 			println!("bindings: cache-hit in build directory");
 			exit(0);
 		}
@@ -248,7 +248,7 @@ fn out_path_or_finish_with_prebuilt(filename: &Filename) -> PathBuf {
 		println!("bindings: cache-miss, continuing");
 		out_path
 	};
-	println!("cargo:rustc-env={BINDINGS_PATH_ENV}={}", out_path.display());
+	println!("cargo::rustc-env={BINDINGS_PATH_ENV}={}", out_path.display());
 
 
 	out_path
@@ -265,7 +265,7 @@ fn is_env_without_sdk() -> bool {
 }
 
 fn is_rebuild_prebuilt_requested() -> bool {
-	println!("cargo:rerun-if-env-changed={BINDINGS_BUILD_PREBUILT}");
+	println!("cargo::rerun-if-env-changed={BINDINGS_BUILD_PREBUILT}");
 	env::var_os(BINDINGS_BUILD_PREBUILT).is_some()
 }
 
