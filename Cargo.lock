@@ -4113,7 +4113,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-build"
-version = "0.4.0-pre1"
+version = "0.4.0-pre2"
 dependencies = [
  "dirs",
  "fs_extra",

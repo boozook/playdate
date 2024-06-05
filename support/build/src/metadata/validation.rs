@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use super::source::CrateInfoSource;
+use super::source::PackageSource;
 use super::source::ManifestSourceOptExt;
 use super::source::MetadataSource;
 
@@ -160,7 +160,7 @@ fn validate_version(value: &str) -> Option<Problem> {
 
 
 /// Lint the crate-level source.
-pub trait ValidateCrate: CrateInfoSource {
+pub trait ValidateCrate: PackageSource {
 	fn validate<'t>(&'t self) -> impl IntoIterator<Item = Problem> + 't {
 		// - main manifest missing fields
 		// - main manifest fields in bad format
@@ -214,7 +214,7 @@ pub trait ValidateCrate: CrateInfoSource {
 	}
 }
 
-impl<T> ValidateCrate for T where T: CrateInfoSource {}
+impl<T> ValidateCrate for T where T: PackageSource {}
 
 
 #[cfg(test)]

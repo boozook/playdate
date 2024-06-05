@@ -3,9 +3,10 @@ use std::borrow::Cow;
 use std::path::Path;
 
 use super::format::{AssetsOptions, AssetsRules, Ext, ExtraFields, ExtraValue, Manifest, Options, Support};
+use super::format::ws::OptionsDefault;
 
 
-pub trait CrateInfoSource {
+pub trait PackageSource {
 	type Authors: ?Sized + std::slice::Join<&'static str, Output = String>;
 
 	/// Crate name.
@@ -19,6 +20,14 @@ pub trait CrateInfoSource {
 	fn description(&self) -> Option<Cow<str>>;
 	/// Crate metadata - `playdate` table.
 	fn metadata(&self) -> Option<impl MetadataSource>;
+
+	/// [`Options`] used as default.
+	///
+	/// Usually it may be from `workspace.metadata.playdate.options` or some external config,
+	/// depends on implementation.
+	///
+	/// If this __and__ `metadata.options` is `None` - [`Options::default()`] is used.
+	fn default_options(&self) -> Option<&OptionsDefault> { None }
 
 	/// Names of `bin` cargo-targets.
 	fn bins(&self) -> &[&str];
@@ -498,7 +507,7 @@ mod tests {
 
 
 	struct CrateInfoNoMeta;
-	impl CrateInfoSource for CrateInfoNoMeta {
+	impl PackageSource for CrateInfoNoMeta {
 		type Authors = [&'static str];
 
 		fn name(&self) -> Cow<str> { "Name".into() }
@@ -523,7 +532,7 @@ mod tests {
 
 
 	struct CrateInfo;
-	impl CrateInfoSource for CrateInfo {
+	impl PackageSource for CrateInfo {
 		type Authors = [&'static str];
 
 		fn name(&self) -> Cow<str> { "Crate Name".into() }

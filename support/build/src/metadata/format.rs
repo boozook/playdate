@@ -27,6 +27,33 @@ fn eq_metadata_field() {
 }
 
 
+pub mod ws {
+	use super::Deserialize;
+
+	#[derive(Debug)]
+	#[cfg_attr(feature = "serde", derive(Deserialize))]
+	pub struct WorkspaceMetadata {
+		#[cfg_attr(feature = "serde", serde(rename = "playdate"))]
+		pub inner: Option<Metadata>,
+	}
+
+	#[derive(Debug, Clone, PartialEq)]
+	#[cfg_attr(feature = "serde", derive(Deserialize))]
+	#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+	pub struct Metadata {
+		pub options: Option<OptionsDefault>,
+		pub support: Option<super::Support>,
+	}
+
+	#[derive(Debug, Clone, Default, PartialEq)]
+	#[cfg_attr(feature = "serde", derive(Deserialize))]
+	#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+	pub struct OptionsDefault {
+		pub assets: Option<super::AssetsOptions>,
+	}
+}
+
+
 /// Package Playdate Metadata, contains:
 /// - Package Manifest fields
 /// - Assets tables - `assets` & `dev-assets`
@@ -542,6 +569,9 @@ impl<S> ManifestSourceOptExt for Override<S> where Manifest<S>: ManifestSourceOp
 #[cfg_attr(feature = "serde", derive(Deserialize))]
 #[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub struct Options {
+	/// Use [`PackageSource::default_options`] as defaults for this.
+	#[cfg_attr(feature = "serde", serde(default))]
+	pub workspace: bool, // not implemented yet
 	pub assets: Option<AssetsOptions>,
 	// Output layout ctrl, temporary removed.
 }

@@ -138,6 +138,25 @@ Also this way supports simple include and exclude instructions:
 ```
 
 
+### Options
+
+Package build options, instruction for Playdate Package Build System such as cargo-playdate.
+
+```toml
+[package.metadata.playdate.options]
+```
+
+Available options is `assets`, see [Assets Options](#assets-options).
+
+_Currently there is no more options, it's just reserved for future use._
+
+This configuration is used for primary packages only. Primary packages are the ones the user selected on the command-line, either with `-p` flags or the defaults based on the current directory and the default workspace members.
+So, `options` from top-level package are applying to entire dependency tree ignoring `options` of dependencies. Thus, only the end user controls how the assets will be collected & built.
+
+Note: this is depends on implementation, above is how it works in the reference impl `cargo-playdate`.
+
+
+
 #### Assets Options
 
 This is how assets will be collected for your package.
@@ -149,19 +168,6 @@ overwrite = true       # overwrite existing assets in build dir (default is `tru
 method = "link"        # "copy" or "link"   (default is `link`)  -  how assets should be collected, make symlinks or copy files
 follow-symlinks = true # follow symlinks    (default is `true`)
 ```
-
-
-### Options
-
-Package build options, instruction for Playdate Package Build System such as cargo-playdate.
-
-```toml
-[package.metadata.playdate.options]
-```
-
-Available options is `assets`, see [Assets Options](#assets-options).
-
-Currently there is no more options, it's just reserved for future use.
 
 
 
