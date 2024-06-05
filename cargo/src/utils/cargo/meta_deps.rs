@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
 use cargo::core::compiler::CompileMode;
-use cargo::core::PackageId;
+use cargo::core::{PackageId, PackageIdSpecQuery};
 use cargo::util::interning::InternedString;
 use cargo::CargoResult;
-use playdate::manifest::CrateInfoSource;
+use playdate::manifest::PackageSource;
 use playdate::metadata::source::MetadataSource;
 use serde::Deserialize;
 use serde::de::IntoDeserializer;
@@ -14,9 +14,9 @@ use crate::logger::LogErr;
 
 use super::build_plan::format::TargetKind;
 use super::build_plan::TargetKindWild;
-use super::metadata::format::{Package, Metadata};
+use super::metadata::format::{Package, CrateMetadata};
 use super::metadata::CargoMetadataPd;
-use super::unit_graph::format::Unit;
+use super::unit_graph::format::{Unit, UnitTarget};
 use super::unit_graph::format::UnitGraph;
 
 
@@ -39,13 +39,6 @@ pub struct RootNode<'cfg> {
 	deps: Vec<Node<'cfg>>,
 }
 
-
-#[derive(Debug, Clone, Copy)]
-pub struct Node<'cfg> {
-	meta: Option<&'cfg Package<Metadata<InternedString>>>,
-	unit: &'cfg Unit,
-}
-
 impl<'t> RootNode<'t> {
 	pub fn package_id(&self) -> &'t PackageId { self.node.package_id() }
 
@@ -57,15 +50,24 @@ impl<'t> RootNode<'t> {
 	pub fn deps(&self) -> &[Node<'t>] { &self.deps }
 }
 
+
+#[derive(Debug, Clone, Copy)]
+pub struct Node<'cfg> {
+	meta: Option<&'cfg Package<CrateMetadata<InternedString>>>,
+	unit: &'cfg Unit,
+}
+
 impl<'t> Node<'t> {
 	pub fn package_id(&self) -> &'t PackageId { &self.unit.package_id }
+
+	pub fn target(&self) -> &'t UnitTarget { &self.unit.target }
 }
 
 
 impl<'t> MetaDeps<'t> {
 	pub fn new(units: &'t UnitGraph, meta: &'t CargoMetadataPd) -> Self {
 		let mode_is_build = |u: &&Unit| matches!(u.mode, CompileMode::Build);
-		let is_prime_tk = |u: &&Unit| {
+		let is_norm_tk = |u: &&Unit| {
 			matches!(
 			         u.target.kind,
 			         TargetKind::Lib(_) | TargetKind::Bin | TargetKind::Example
@@ -78,9 +80,10 @@ impl<'t> MetaDeps<'t> {
 		                     .iter()
 		                     .map(|i| &units.units[*i])
 		                     .filter(mode_is_build)
-		                     .filter(is_prime_tk)
+		                     .filter(is_norm_tk)
 		                     .map(|u| {
-			                     let m = meta.packages.iter().find(|p| p.id == u.package_id);
+			                     // let m = meta.packages.iter().find(|p| p.id == u.package_id);
+			                     let m = meta.packages.iter().find(|p| p.id.matches(u.package_id));
 			                     Node::<'t> { meta: m, unit: u }
 		                     })
 		                     .map(|node| {
@@ -98,7 +101,8 @@ impl<'t> MetaDeps<'t> {
 			 .filter(mode_is_build)
 			 .filter(is_sub_tk)
 			 .map(|u| {
-				 let m = meta.packages.iter().find(|p| p.id == u.package_id);
+				 //  let m = meta.packages.iter().find(|p| p.id == u.package_id);
+				 let m = meta.packages.iter().find(|p| p.id.matches(u.package_id));
 				 Node::<'t> { meta: m, unit: u }
 			 })
 			 .inspect(|n| {
@@ -294,8 +298,8 @@ impl DependenciesAllowed for cargo::core::Package {
 		self.manifest()
 		    .custom_metadata()
 		    .and_then(|v| {
-			    Metadata::<InternedString>::deserialize(v.to_owned().into_deserializer()).log_err()
-			                                                                             .ok()
+			    CrateMetadata::<InternedString>::deserialize(v.to_owned().into_deserializer()).log_err()
+			                                                                                  .ok()
 		    })
 		    .and_then(|m| m.inner)
 		    .map(|m| m.assets_options().dependencies)
@@ -305,13 +309,13 @@ impl DependenciesAllowed for cargo::core::Package {
 
 
 impl<'t> Node<'t> {
-	pub fn into_source(self) -> impl CrateInfoSource + 't { CrateNode::from(self) }
-	pub fn as_source(&self) -> impl CrateInfoSource + 't { self.to_owned().into_source() }
+	pub fn into_source(self) -> impl PackageSource + 't { CrateNode::from(self) }
+	pub fn as_source(&self) -> impl PackageSource + 't { self.to_owned().into_source() }
 }
 
 impl<'t> RootNode<'t> {
-	pub fn into_source(self) -> impl CrateInfoSource + 't { CrateNode::from(self.node) }
-	pub fn as_source(&self) -> impl CrateInfoSource + 't { self.to_owned().into_source() }
+	pub fn into_source(self) -> impl PackageSource + 't { CrateNode::from(self.node) }
+	pub fn as_source(&self) -> impl PackageSource + 't { self.to_owned().into_source() }
 }
 
 
@@ -341,7 +345,7 @@ impl<'t> From<Node<'t>> for CrateNode<'t> {
 	}
 }
 
-impl CrateInfoSource for CrateNode<'_> {
+impl PackageSource for CrateNode<'_> {
 	type Authors = [String];
 
 	fn name(&self) -> std::borrow::Cow<str> { self.node.package_id().name().as_str().into() }

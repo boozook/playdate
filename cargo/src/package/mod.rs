@@ -19,7 +19,7 @@ use playdate::fs::soft_link_checked;
 use playdate::layout::Layout;
 use playdate::layout::Name;
 use playdate::manifest::format::ManifestFmt;
-use playdate::manifest::CrateInfoSource;
+use playdate::manifest::PackageSource;
 use playdate::metadata::format::Metadata;
 use playdate::metadata::validation::Validate;
 use playdate::metadata::validation::ValidateCrate;
@@ -590,7 +590,7 @@ impl<'cfg, 'm> ManifestSource<'cfg, 'm> {
 	}
 }
 
-impl<'cfg> CrateInfoSource for ManifestSource<'cfg, '_> {
+impl<'cfg> PackageSource for ManifestSource<'cfg, '_> {
 	type Authors = [&'cfg str];
 
 	fn name(&self) -> Cow<str> { self.package.name().as_str().into() }

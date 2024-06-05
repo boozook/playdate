@@ -6,6 +6,8 @@ use crate::proc::cargo_proxy_cmd;
 use crate::proc::read_cargo_json;
 use self::format::UnitGraph;
 
+use super::build_plan::TargetKindWild;
+
 
 pub fn unit_graph(cfg: &Config) -> CargoResult<UnitGraph> {
 	let mut cargo = cargo_proxy_cmd(cfg, &Cmd::Build)?;
@@ -14,6 +16,57 @@ pub fn unit_graph(cfg: &Config) -> CargoResult<UnitGraph> {
 
 	let value: UnitGraph = read_cargo_json(cfg, cargo)?;
 	Ok(value)
+}
+
+
+impl format::UnitTarget {
+	pub fn is_dev(&self) -> bool {
+		// This is not so correct because `format::TargetKind::CustomBuild` isn't dev-target,
+		// bu we're working with libs, bins and examples only.
+		// Also in meta-tree roots are already filtered out, so we have no custom-build here anyway.
+		!matches!(self.kind, format::TargetKind::Lib(_) | format::TargetKind::Bin)
+	}
+
+
+	pub fn kind(&self) -> cargo::core::TargetKind {
+		use cargo::core::TargetKind as TK;
+		use cargo::core::compiler::CrateType as CT;
+
+		match self.kind {
+			format::TargetKind::Lib(ref ct) => TK::Lib(ct.clone()),
+			format::TargetKind::Bin => TK::Bin,
+			format::TargetKind::Test => TK::Test,
+			format::TargetKind::Bench => TK::Bench,
+			format::TargetKind::Example => {
+				if &self.crate_types == &[CT::Bin] {
+					TK::ExampleBin
+				} else {
+					TK::ExampleLib(self.crate_types.clone())
+				}
+			},
+			format::TargetKind::CustomBuild => TK::CustomBuild,
+		}
+	}
+
+
+	pub fn kind_wild(&self) -> TargetKindWild {
+		use cargo::core::compiler::CrateType as CT;
+
+		match self.kind {
+			format::TargetKind::Lib(_) => TargetKindWild::Lib,
+			format::TargetKind::Bin => TargetKindWild::Bin,
+			format::TargetKind::Test => TargetKindWild::Test,
+			format::TargetKind::Bench => TargetKindWild::Bench,
+			format::TargetKind::Example => {
+				if &self.crate_types == &[CT::Bin] {
+					TargetKindWild::ExampleBin
+				} else {
+					TargetKindWild::ExampleLib
+				}
+			},
+			format::TargetKind::CustomBuild => TargetKindWild::CustomBuild,
+		}
+	}
 }
 
 
@@ -54,7 +107,7 @@ pub mod format {
 
 	#[derive(Debug, Deserialize, Eq, Hash, PartialEq)]
 	pub struct UnitTarget {
-		pub kind: TargetKind,
+		pub(crate) kind: TargetKind,
 		#[serde(deserialize_with = "deserialize_crate_types")]
 		pub crate_types: Vec<CrateType>,
 		pub name: String,

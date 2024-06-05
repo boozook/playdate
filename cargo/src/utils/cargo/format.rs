@@ -117,8 +117,23 @@ pub fn string_to_package_id<Error: serde::de::Error>(mut line: String) -> Result
 	// try actual format first:
 	let res = serde_json::from_str::<PackageId>(&line).map_err(Error::custom);
 
-	// otherwise try old formats:
-	res.or_else(move |err| {
+
+	res.or_else(|err| {
+		   // it also can be PackageIdSpec
+		   use cargo::core::PackageIdSpec;
+
+		   let spec = PackageIdSpec::parse(&line).map_err(Error::custom)?;
+		   spec.url()
+		       .map(|url| url.as_str())
+		       .map(SourceId::from_url)
+		       .and_then(|res| res.ok())
+		       .map(|src| (spec, src))
+		       .and_then(|(spec, src)| spec.version().map(|ver| (spec, src, ver)))
+		       .map(|(spec, src, ver)| PackageId::new(spec.name().into(), ver, src))
+		       .ok_or(err)
+	   })
+	   .or_else(move |err| {
+		   // otherwise try old formats:
 		   if let Some((uri, name_ver)) = value.split_once('#') {
 			   let sid = SourceId::from_url(uri).map_err(Error::custom)?;
 
@@ -180,14 +195,14 @@ mod tests {
 
 	/// Before cargo 0.78
 	#[test]
-	fn message_format_old_a() {
+	fn package_spec_a() {
 		let msg = r#"{"package_id": "path+file:///Users/U/Developer/Projects/Playdate/playdate-rs/api/sys#playdate-sys@0.3.3"}"#;
 		serde_json::from_str::<PackageIdWrapped>(msg).unwrap();
 	}
 
 	/// Before cargo 0.78
 	#[test]
-	fn message_format_old_b() {
+	fn package_spec_b() {
 		let msg = r#"{"package_id": "path+file:///Users/U/Developer/Projects/Playdate/playdate-rs/cargo/tests/crates/simple/with-cfg#0.1.0"}"#;
 		serde_json::from_str::<PackageIdWrapped>(msg).unwrap();
 	}
@@ -195,7 +210,7 @@ mod tests {
 
 	/// From cargo 0.78
 	#[test]
-	fn message_format_new() {
+	fn package_id() {
 		let msg = r#"{"package_id": "playdate-sys 0.3.3 (path+file:///Users/U/Developer/Projects/Playdate/playdate-rs/api/sys)"}"#;
 		serde_json::from_str::<PackageIdWrapped>(msg).unwrap();
 	}
