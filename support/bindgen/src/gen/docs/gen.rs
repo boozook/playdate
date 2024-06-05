@@ -64,7 +64,7 @@ fn walk_struct(items: &[Cell<Item>],
 								field.attrs.push(attr);
 							} else {
 								#[cfg(feature = "log")]
-								println!("cargo:warning=Doc not found for '{key}'");
+								println!("cargo::warning=Doc not found for '{key}'");
 							}
 						},
 						_ => unimplemented!("unexpected ty: '{}'", quote::quote!(#ty)),

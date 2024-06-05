@@ -79,7 +79,7 @@ impl Bindings {
 		let output = match crate::rustfmt(None, source.clone(), None) {
 			Ok(output) => output,
 			Err(err) => {
-				println!("cargo:warning=Rustfmt error: {err}");
+				println!("cargo::warning=Rustfmt error: {err}");
 
 				let output: String;
 				#[cfg(feature = "pretty-please")]
