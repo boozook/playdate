@@ -63,15 +63,12 @@ pub mod format {
 	use std::path::PathBuf;
 
 	use cargo::core::dependency::DepKind;
-	use cargo::core::PackageId;
 	use cargo::core::PackageIdSpec;
 	use cargo::core::SourceId;
 	use serde::Deserialize;
 	use serde::Deserializer;
 
 	use crate::utils::cargo::unit_graph::format::UnitTarget;
-
-	pub use super::super::format::*;
 
 	pub use playdate::metadata::format::CrateMetadata;
 	pub use playdate::metadata::format::ws::WorkspaceMetadata;

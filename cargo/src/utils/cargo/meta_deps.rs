@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::Path;
 
 use cargo::core::compiler::CompileMode;
 use cargo::core::{PackageId, PackageIdSpecQuery};
@@ -6,6 +7,7 @@ use cargo::util::interning::InternedString;
 use cargo::CargoResult;
 use playdate::manifest::PackageSource;
 use playdate::metadata::source::MetadataSource;
+use playdate::metadata::format::Metadata as MainMetadata;
 use serde::Deserialize;
 use serde::de::IntoDeserializer;
 
@@ -60,7 +62,11 @@ pub struct Node<'cfg> {
 impl<'t> Node<'t> {
 	pub fn package_id(&self) -> &'t PackageId { &self.unit.package_id }
 
+	pub fn unit(&self) -> &'t Unit { &self.unit }
+	pub fn meta(&self) -> Option<&'t Package<CrateMetadata<InternedString>>> { self.meta }
 	pub fn target(&self) -> &'t UnitTarget { &self.unit.target }
+
+	pub fn manifest_path(&self) -> Option<&'t Path> { self.meta.as_ref().map(|m| m.manifest_path.as_path()) }
 }
 
 
@@ -309,13 +315,21 @@ impl DependenciesAllowed for cargo::core::Package {
 
 
 impl<'t> Node<'t> {
-	pub fn into_source(self) -> impl PackageSource + 't { CrateNode::from(self) }
-	pub fn as_source(&self) -> impl PackageSource + 't { self.to_owned().into_source() }
+	pub fn into_source(self) -> impl PackageSource<Metadata = MainMetadata<InternedString>> + 't {
+		CrateNode::from(self)
+	}
+	pub fn as_source(&self) -> impl PackageSource<Metadata = MainMetadata<InternedString>> + 't {
+		self.to_owned().into_source()
+	}
 }
 
 impl<'t> RootNode<'t> {
-	pub fn into_source(self) -> impl PackageSource + 't { CrateNode::from(self.node) }
-	pub fn as_source(&self) -> impl PackageSource + 't { self.to_owned().into_source() }
+	pub fn into_source(self) -> impl PackageSource<Metadata = MainMetadata<InternedString>> + 't {
+		CrateNode::from(self.node)
+	}
+	pub fn as_source(&self) -> impl PackageSource<Metadata = MainMetadata<InternedString>> + 't {
+		self.to_owned().into_source()
+	}
 }
 
 
@@ -347,6 +361,7 @@ impl<'t> From<Node<'t>> for CrateNode<'t> {
 
 impl PackageSource for CrateNode<'_> {
 	type Authors = [String];
+	type Metadata = MainMetadata<InternedString>;
 
 	fn name(&self) -> std::borrow::Cow<str> { self.node.package_id().name().as_str().into() }
 
@@ -374,7 +389,7 @@ impl PackageSource for CrateNode<'_> {
 		    .map(Into::into)
 	}
 
-	fn metadata(&self) -> Option<impl MetadataSource> {
+	fn metadata(&self) -> Option<&Self::Metadata> {
 		self.node
 		    .meta
 		    .as_ref()

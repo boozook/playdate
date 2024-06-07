@@ -22,22 +22,28 @@ use crate::layout::{PlaydateAssets, LayoutLock};
 
 pub struct LazyEnvBuilder<'a, 'cfg> {
 	config: &'a Config<'cfg>,
-	package: &'cfg Package,
+	package_id: PackageId,
+	root: &'cfg Path,
 	env: Lazy<Env>,
 }
 
 impl<'a, 'cfg> LazyEnvBuilder<'a, 'cfg> {
-	pub fn new(config: &'cfg Config, package: &'cfg Package) -> Self {
+	pub fn new(config: &'cfg Config, pkg_id: PackageId, root: &'cfg Path) -> Self {
 		Self { env: Lazy::new(),
-		       package,
+		       package_id: pkg_id,
+		       root,
 		       config }
+	}
+
+	pub fn new_for(config: &'cfg Config, package: &'cfg Package) -> Self {
+		Self::new(config, package.package_id(), package.root())
 	}
 
 	pub fn get(&'a self) -> CargoResult<&'a Env> {
 		self.env.try_get_or_create(move || {
-			        let root = self.package.root().display().to_string();
+			        let root = self.root.display().to_string();
 			        let vars = vec![
-			                        ("CARGO_PKG_NAME", self.package.name().to_string()),
+			                        ("CARGO_PKG_NAME", self.package_id.name().to_string()),
 			                        ("CARGO_MANIFEST_DIR", root.to_string()),
 			];
 
@@ -87,7 +93,7 @@ pub fn plan_for<'cfg, 'env, 'l>(config: &'cfg Config,
 	                  .ok_or(anyhow!("No parent of manifest-path"))?;
 
 	let main = if !metadata.assets().is_empty() {
-		let plan = assets_build_plan(env, metadata.assets(), opts.as_ref(), Some(root))?;
+		let plan = assets_build_plan(env, metadata.assets(), opts.as_ref(), Some(root.into()))?;
 
 		// main-assets plan:
 		let path = layout.as_inner().assets_plan_for(config, &package.package_id());
@@ -105,7 +111,7 @@ pub fn plan_for<'cfg, 'env, 'l>(config: &'cfg Config,
 	// dev-assets plan:
 	let dev = if has_dev_assets && !metadata.dev_assets().is_empty() {
 		let assets = metadata.dev_assets();
-		let dev_plan = assets_build_plan(env, assets, opts.as_ref(), Some(root))?;
+		let dev_plan = assets_build_plan(env, assets, opts.as_ref(), Some(root.into()))?;
 
 		let path = layout.as_inner()
 		                 .assets_plan_for_dev(config, &package.package_id());

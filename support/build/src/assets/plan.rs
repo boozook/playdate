@@ -12,11 +12,11 @@ use super::resolver::*;
 
 
 /// Create build plan for assets.
-pub fn build_plan<'l, 'r, 'c: 'l, 'v, S>(env: &'c Env,
-                                         assets: &AssetsRules<S>,
-                                         options: &AssetsOptions,
-                                         crate_root: Option<&'c Path>)
-                                         -> Result<BuildPlan<'l, 'r>, super::Error>
+pub fn build_plan<'l, 'r, S>(env: &Env,
+                             assets: &AssetsRules<S>,
+                             options: &AssetsOptions,
+                             crate_root: Option<Cow<'_, Path>>)
+                             -> Result<BuildPlan<'l, 'r>, super::Error>
 	where S: Eq + Hash + ToString
 {
 	// copy_unresolved    => get all files with glob
@@ -33,7 +33,7 @@ pub fn build_plan<'l, 'r, 'c: 'l, 'v, S>(env: &'c Env,
 	const PATH_SEPARATOR: [char; 2] = [MAIN_SEPARATOR, '/'];
 
 	let enver = EnvResolver::new();
-	let crate_root = crate_root.unwrap_or_else(|| env.cargo_manifest_dir());
+	let crate_root = crate_root.unwrap_or_else(|| env.cargo_manifest_dir().into());
 	let link_behavior = options.link_behavior();
 
 	let to_relative = |s: &S| -> String {
@@ -97,13 +97,13 @@ pub fn build_plan<'l, 'r, 'c: 'l, 'v, S>(env: &'c Env,
 		let key = PathBuf::from(k.as_str());
 		let value = Cow::Borrowed(v.as_str());
 		let into_dir = k.as_str().ends_with(PATH_SEPARATOR);
-		let source_exists = abs_if_existing(Path::new(value.as_ref()), crate_root)?.is_some();
+		let source_exists = abs_if_existing(Path::new(value.as_ref()), &crate_root)?.is_some();
 
 		let mapping = match (source_exists, into_dir) {
 			(true, true) => Mapping::Into(Match::new(value.as_ref(), key), (k, v)),
 			(true, false) => Mapping::AsIs(Match::new(value.as_ref(), key), (k, v)),
 			(false, _) => {
-				let mut resolved = resolve_includes(value, crate_root, &exclude_exprs, link_behavior)?;
+				let mut resolved = resolve_includes(value, &crate_root, &exclude_exprs, link_behavior)?;
 
 				debug!("Possible ManyInto, resolved: {}", resolved.len());
 
@@ -184,7 +184,7 @@ pub fn build_plan<'l, 'r, 'c: 'l, 'v, S>(env: &'c Env,
 
 
 	for k in include_unresolved {
-		let resolved = resolve_includes(&k, crate_root, &exclude_exprs, link_behavior)?;
+		let resolved = resolve_includes(&k, &crate_root, &exclude_exprs, link_behavior)?;
 		mappings.extend(resolved.into_iter()
 		                        .map(|inc| Mapping::AsIs(inc, (k.clone(), "true".into()))));
 	}
@@ -196,7 +196,7 @@ pub fn build_plan<'l, 'r, 'c: 'l, 'v, S>(env: &'c Env,
 	// TODO: find source duplicates and warn!
 
 	Ok(BuildPlan { plan: mappings,
-	               crate_root })
+	               crate_root: crate_root.to_path_buf() })
 }
 
 
@@ -272,18 +272,17 @@ pub struct BuildPlan<'left, 'right> {
 	/// Instructions - what file where to put
 	plan: Vec<Mapping<'left, 'right>>,
 	/// Root directory of associated crate
-	crate_root: &'left Path,
+	crate_root: PathBuf,
 }
 
 impl<'left, 'right> BuildPlan<'left, 'right> {
 	pub fn into_inner(self) -> Vec<Mapping<'left, 'right>> { self.plan }
 	pub fn as_inner(&self) -> &[Mapping<'left, 'right>] { &self.plan[..] }
-	pub fn into_parts(self) -> (Vec<Mapping<'left, 'right>>, &'left Path) { (self.plan, self.crate_root) }
+	pub fn into_parts(self) -> (Vec<Mapping<'left, 'right>>, PathBuf) { (self.plan, self.crate_root) }
 
-	pub fn crate_root(&self) -> &Path { self.crate_root }
-	pub fn set_crate_root(&mut self, path: &'left Path) -> &Path {
-		let old = self.crate_root;
-		self.crate_root = path;
+	pub fn crate_root(&self) -> &Path { &self.crate_root }
+	pub fn set_crate_root<T: Into<PathBuf>>(&mut self, path: T) -> PathBuf {
+		let old = std::mem::replace(&mut self.crate_root, path.into());
 		old
 	}
 }
@@ -295,24 +294,44 @@ impl<'left, 'right> AsRef<[Mapping<'left, 'right>]> for BuildPlan<'left, 'right>
 
 impl std::fmt::Display for BuildPlan<'_, '_> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		let mut print = |inc: &Match, (left, right): &(Expr, Expr)| -> std::fmt::Result {
-			let target = inc.target();
-			let source = inc.source();
-			let left = left.original();
-			let right = right.original();
-			write!(f, "{target:#?} <- {source:#?}  ({left} = {right})")
+		let align = |f: &mut std::fmt::Formatter<'_>| -> std::fmt::Result {
+			if !matches!(f.align(), Some(std::fmt::Alignment::Right)) {
+				return Ok(());
+			}
+
+			let c = f.fill();
+			if let Some(width) = f.width() {
+				for _ in 0..width {
+					write!(f, "{c}")?;
+				}
+				Ok(())
+			} else {
+				write!(f, "{c}")
+			}
 		};
+
+
+		let print =
+			|f: &mut std::fmt::Formatter<'_>, inc: &Match, (left, right): &(Expr, Expr)| -> std::fmt::Result {
+				let target = inc.target();
+				let source = inc.source();
+				let left = left.original();
+				let right = right.original();
+				align(f)?;
+				write!(f, "{target:#?} <- {source:#?}  ({left} = {right})")
+			};
 
 		for item in self.as_inner() {
 			match item {
-				Mapping::AsIs(inc, exprs) => print(inc, exprs)?,
-				Mapping::Into(inc, exprs) => print(inc, exprs)?,
+				Mapping::AsIs(inc, exprs) => print(f, inc, exprs)?,
+				Mapping::Into(inc, exprs) => print(f, inc, exprs)?,
 				Mapping::ManyInto { sources,
 				                    target,
 				                    exprs,
 				                    .. } => {
 					for inc in sources {
-						print(&Match::new(inc.source(), target.join(inc.target())), exprs)?
+						print(f, &Match::new(inc.source(), target.join(inc.target())), exprs)?;
+						writeln!(f)?;
 					}
 				},
 			}
@@ -342,7 +361,7 @@ impl BuildPlan<'_, '_> {
 		&self)
 		-> impl Iterator<Item = (MappingKind, PathBuf, (PathBuf, Option<std::time::SystemTime>))> + '_ {
 		let pair = |inc: &Match| {
-			(inc.target().to_path_buf(), abs_if_existing_any(inc.source(), self.crate_root).to_path_buf())
+			(inc.target().to_path_buf(), abs_if_existing_any(inc.source(), &self.crate_root).to_path_buf())
 		};
 
 		self.as_inner()
@@ -602,7 +621,7 @@ mod tests {
 					let opts = AssetsOptions::default();
 
 					let root = crate_root();
-					let root = Some(root.as_path());
+					let root = Some(Cow::Borrowed(root.as_path()));
 
 					let tests: HashSet<_> = vec!["Cargo.toml", "src/lib.rs"].into_iter().collect();
 
@@ -635,7 +654,7 @@ mod tests {
 					let opts = AssetsOptions::default();
 
 					let root = crate_root();
-					let root = Some(root.as_path());
+					let root = Some(root.as_path().into());
 
 					let tests: HashMap<_, _> = {
 						let man_abs = PathBuf::from("Cargo.toml").canonicalize()
@@ -681,7 +700,7 @@ mod tests {
 					let opts = AssetsOptions::default();
 
 					let root = crate_root();
-					let root = Some(root.as_path());
+					let root = Some(root.as_path().into());
 
 					let tests: HashMap<_, _> = { vec![("${SRC}/lib.rs", "src/lib.rs"),].into_iter().collect() };
 
@@ -716,7 +735,7 @@ mod tests {
 					let opts = AssetsOptions::default();
 
 					let root = crate_root();
-					let root = Some(root.as_path());
+					let root = Some(root.as_path().into());
 
 
 					// tests:
@@ -767,7 +786,7 @@ mod tests {
 					let opts = AssetsOptions::default();
 
 					let root = crate_root();
-					let root = Some(root.as_path());
+					let root = Some(root.as_path().into());
 
 					let exprs = ["${TMP}/*.txt", "${SUB}/*.txt"];
 
@@ -820,7 +839,7 @@ mod tests {
 					let opts = AssetsOptions::default();
 
 					let root = crate_root();
-					let root = Some(root.as_path());
+					let root = Some(root.as_path().into());
 
 					let tests: HashSet<_> = vec!["Cargo.toml", "src/lib.rs"].into_iter().collect();
 
@@ -853,7 +872,7 @@ mod tests {
 					let opts = AssetsOptions::default();
 
 					let root = crate_root();
-					let root = Some(root.as_path());
+					let root = Some(root.as_path().into());
 
 					// left hand of rule:
 					let targets = ["trg", "/trg", "//trg"];
@@ -870,7 +889,7 @@ mod tests {
 
 						let assets = AssetsRules::Map(exprs);
 
-						let plan = build_plan(&env, &assets, &opts, root).unwrap();
+						let plan = build_plan(&env, &assets, &opts, root.clone()).unwrap();
 
 						for pair in plan.as_inner() {
 							if let Mapping::AsIs(
@@ -901,7 +920,7 @@ mod tests {
 					let opts = AssetsOptions::default();
 
 					let root = crate_root();
-					let root = Some(root.as_path());
+					let root = Some(root.as_path().into());
 
 					// left hand of rule:
 					let targets = ["trg/", "trg//", "/trg/", "//trg/"];
@@ -916,7 +935,7 @@ mod tests {
 
 						let assets = AssetsRules::Map(exprs);
 
-						let plan = build_plan(&env, &assets, &opts, root).unwrap();
+						let plan = build_plan(&env, &assets, &opts, root.clone()).unwrap();
 
 						for pair in plan.as_inner() {
 							if let Mapping::Into(
@@ -947,7 +966,7 @@ mod tests {
 					let opts = AssetsOptions::default();
 
 					let root = crate_root();
-					let root = Some(root.as_path());
+					let root = Some(root.as_path().into());
 
 					// left hand of rule:
 					let targets = ["/trg/", "//trg/", "/trg", "trg"];
@@ -963,7 +982,7 @@ mod tests {
 
 						let assets = AssetsRules::Map(exprs);
 
-						let plan = build_plan(&env, &assets, &opts, root).unwrap();
+						let plan = build_plan(&env, &assets, &opts, root.clone()).unwrap();
 
 						for pair in plan.as_inner() {
 							if let Mapping::ManyInto { sources,

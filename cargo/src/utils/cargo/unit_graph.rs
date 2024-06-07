@@ -88,7 +88,7 @@ pub mod format {
 		pub roots: Vec<usize>,
 	}
 
-	#[derive(Debug, Deserialize, Eq, Hash, PartialEq)]
+	#[derive(Debug, Deserialize, Eq, Hash, PartialEq, PartialOrd, Ord)]
 	pub struct Unit {
 		#[serde(deserialize_with = "deserialize_package_id", alias = "pkg_id")]
 		pub package_id: PackageId,
@@ -105,7 +105,7 @@ pub mod format {
 		// pub profile: crate::proc::reader::format::ArtifactProfile,
 	}
 
-	#[derive(Debug, Deserialize, Eq, Hash, PartialEq)]
+	#[derive(Debug, Deserialize, Eq, Hash, PartialEq, PartialOrd, Ord)]
 	pub struct UnitTarget {
 		pub(crate) kind: TargetKind,
 		#[serde(deserialize_with = "deserialize_crate_types")]
@@ -115,7 +115,7 @@ pub mod format {
 		// ...
 	}
 
-	#[derive(Debug, Deserialize, Eq, Hash, PartialEq)]
+	#[derive(Debug, Deserialize, Eq, Hash, PartialEq, PartialOrd, Ord)]
 	pub struct UnitDep {
 		pub index: usize,
 		pub extern_crate_name: String,

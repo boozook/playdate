@@ -592,6 +592,7 @@ impl<'cfg, 'm> ManifestSource<'cfg, 'm> {
 
 impl<'cfg> PackageSource for ManifestSource<'cfg, '_> {
 	type Authors = [&'cfg str];
+	type Metadata = Metadata<String>;
 
 	fn name(&self) -> Cow<str> { self.package.name().as_str().into() }
 	fn authors(&self) -> &[&'cfg str] { &self.authors }
@@ -608,7 +609,7 @@ impl<'cfg> PackageSource for ManifestSource<'cfg, '_> {
 	fn bins(&self) -> &[&str] { &self.bins }
 	fn examples(&self) -> &[&str] { &self.examples }
 
-	fn metadata(&self) -> Option<impl playdate::metadata::source::MetadataSource> { self.metadata }
+	fn metadata(&self) -> Option<&Self::Metadata> { self.metadata }
 
 	fn manifest_path(&self) -> Cow<Path> { Cow::Borrowed(self.package.manifest_path()) }
 }

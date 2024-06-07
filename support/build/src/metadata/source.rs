@@ -8,6 +8,8 @@ use super::format::ws::OptionsDefault;
 
 pub trait PackageSource {
 	type Authors: ?Sized + std::slice::Join<&'static str, Output = String>;
+	type Metadata: MetadataSource;
+
 
 	/// Crate name.
 	fn name(&self) -> Cow<str>;
@@ -19,7 +21,7 @@ pub trait PackageSource {
 	/// Crate description.
 	fn description(&self) -> Option<Cow<str>>;
 	/// Crate metadata - `playdate` table.
-	fn metadata(&self) -> Option<impl MetadataSource>;
+	fn metadata(&self) -> Option<&Self::Metadata>;
 
 	/// [`Options`] used as default.
 	///
@@ -509,6 +511,7 @@ mod tests {
 	struct CrateInfoNoMeta;
 	impl PackageSource for CrateInfoNoMeta {
 		type Authors = [&'static str];
+		type Metadata = Metadata<String>;
 
 		fn name(&self) -> Cow<str> { "Name".into() }
 		fn authors(&self) -> &Self::Authors { &["John"] }
@@ -516,7 +519,7 @@ mod tests {
 		fn description(&self) -> Option<Cow<str>> { None }
 		fn bins(&self) -> &[&str] { &[SOME_TARGET] }
 		fn examples(&self) -> &[&str] { &[] }
-		fn metadata(&self) -> Option<impl MetadataSource> { None::<Metadata> }
+		fn metadata(&self) -> Option<&Self::Metadata> { None }
 
 		fn manifest_path(&self) -> Cow<Path> { Cow::Borrowed(Path::new("Cargo.toml")) }
 	}
@@ -531,21 +534,9 @@ mod tests {
 	}
 
 
-	struct CrateInfo;
-	impl PackageSource for CrateInfo {
-		type Authors = [&'static str];
-
-		fn name(&self) -> Cow<str> { "Crate Name".into() }
-		fn authors(&self) -> &[&'static str] { &["John"] }
-		fn version(&self) -> Cow<str> { "0.0.0".into() }
-		fn description(&self) -> Option<Cow<str>> { None }
-
-		fn bins(&self) -> &[&str] { &[SOME_TARGET] }
-		fn examples(&self) -> &[&str] { &[] }
-
-		fn manifest_path(&self) -> Cow<Path> { Cow::Borrowed(Path::new("Cargo.toml")) }
-
-		fn metadata(&self) -> Option<impl MetadataSource> {
+	struct CrateInfo(Metadata);
+	impl CrateInfo {
+		fn new() -> Self {
 			let base = Manifest { name: Some("Meta Name"),
 			                      bundle_id: Some("crate.id"),
 			                      ..Default::default() };
@@ -581,15 +572,33 @@ mod tests {
 			                                             options: Default::default(),
 			                                             support: Default::default() } };
 
-			Some(meta)
+			Self(meta)
 		}
+	}
+
+	impl PackageSource for CrateInfo {
+		type Authors = [&'static str];
+		type Metadata = Metadata<String>;
+
+		fn name(&self) -> Cow<str> { "Crate Name".into() }
+		fn authors(&self) -> &[&'static str] { &["John"] }
+		fn version(&self) -> Cow<str> { "0.0.0".into() }
+		fn description(&self) -> Option<Cow<str>> { None }
+
+		fn bins(&self) -> &[&str] { &[SOME_TARGET] }
+		fn examples(&self) -> &[&str] { &[] }
+
+		fn manifest_path(&self) -> Cow<Path> { Cow::Borrowed(Path::new("Cargo.toml")) }
+
+		fn metadata(&self) -> Option<&Self::Metadata> { Some(&self.0) }
 	}
 
 	const SOME_TARGET: &str = "some-target";
 
 	#[test]
 	fn manifest_for_crate() {
-		let base = CrateInfo.manifest_for_crate();
+		let base_src = CrateInfo::new();
+		let base = base_src.manifest_for_crate();
 		assert_eq!(Some("Meta Name"), base.name());
 		assert_eq!(Some("John"), base.author());
 		assert_eq!(Some("0.0.0"), base.version());
@@ -617,8 +626,9 @@ mod tests {
 
 	#[test]
 	fn manifest_for_target_wrong() {
-		let base = CrateInfo.manifest_for_crate();
-		let spec = CrateInfo.manifest_for_opt(Some("WRONG"), false);
+		let base_src = CrateInfo::new();
+		let base = base_src.manifest_for_crate();
+		let spec = base_src.manifest_for_opt(Some("WRONG"), false);
 		assert_eq!(Some("Meta Name"), spec.name());
 		assert_eq!(Some("John"), spec.author());
 		assert_eq!(Some("0.0.0"), spec.version());
@@ -628,7 +638,8 @@ mod tests {
 
 	#[test]
 	fn manifest_for_target_bin() {
-		let spec = CrateInfo.manifest_for_opt(SOME_TARGET.into(), false);
+		let base_src = CrateInfo::new();
+		let spec = base_src.manifest_for_opt(SOME_TARGET.into(), false);
 		assert_eq!(Some("Bin Name"), spec.name());
 		assert_eq!(Some("Alex"), spec.author());
 		assert_eq!(Some("0.0.0"), spec.version());
