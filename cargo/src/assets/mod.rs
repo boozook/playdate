@@ -1,13 +1,12 @@
 use std::borrow::Cow;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{PathBuf, Path};
 
 use anstyle::AnsiColor as Color;
 use anyhow::bail;
 use cargo::CargoResult;
 use cargo::core::{Package, PackageId, Verbosity};
-use playdate::manifest::ManifestSourceOpt as _;
-use playdate::metadata::source::MetadataSource as _;
+use playdate::metadata::source::MetadataSource;
 use playdate::metadata::METADATA_FIELD;
 use playdate::layout::Layout;
 
@@ -41,7 +40,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 	let mut artifacts = AssetsArtifacts::new();
 
 	for (package, targets, ..) in config.possible_targets()? {
-		let env = plan::LazyEnvBuilder::new(config, package);
+		let env = plan::LazyEnvBuilder::new_for(config, package);
 		let mut plans: HashMap<&Package, _> = Default::default();
 		let global_layout = CrossTargetLayout::new(config, package.package_id(), None)?;
 		let mut layout = global_layout.assets_layout(config);
@@ -291,7 +290,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 						let msg = format!("{kind_prefix}assets pre-build for {}, {REASON}.", dep_pkg_id);
 						config.log().status("Skip", msg);
 					} else {
-						match pdc::build(config, dependency, locked.as_inner(), kind) {
+						match pdc::build(config, &dependency.package_id(), locked.as_inner(), kind) {
 							Ok(_) => {
 								let msg = format!("{kind_prefix}assets for {}", dep_pkg_id);
 								config.log().status("Finished", msg);

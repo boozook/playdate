@@ -52,12 +52,14 @@ pub fn cmd_logged(config: &Config, mut cmd: Command) -> CargoResult<Command> {
 		            });
 	} else {
 		config.log_extra_verbose(|mut log| {
-			      log.status(&tool, "output:");
-			      output.stdout.lines().for_each(|line| {
-				                           if let Ok(line) = line {
-					                           log.status("", line);
-				                           }
-			                           });
+			      if !output.stdout.trim_ascii().is_empty() {
+				      log.status(&tool, "output:");
+				      output.stdout.lines().for_each(|line| {
+					                           if let Ok(line) = line {
+						                           log.status("", line);
+					                           }
+				                           });
+			      }
 		      });
 	}
 
