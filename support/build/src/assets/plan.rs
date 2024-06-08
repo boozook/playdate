@@ -311,27 +311,36 @@ impl std::fmt::Display for BuildPlan<'_, '_> {
 		};
 
 
-		let print =
-			|f: &mut std::fmt::Formatter<'_>, inc: &Match, (left, right): &(Expr, Expr)| -> std::fmt::Result {
-				let target = inc.target();
-				let source = inc.source();
-				let left = left.original();
-				let right = right.original();
-				align(f)?;
-				write!(f, "{target:#?} <- {source:#?}  ({left} = {right})")
-			};
+		let print = |f: &mut std::fmt::Formatter<'_>,
+		             inc: &Match,
+		             (left, right): &(Expr, Expr),
+		             br: bool|
+		 -> std::fmt::Result {
+			let target = inc.target();
+			let source = inc.source();
+			let left = left.original();
+			let right = right.original();
+			align(f)?;
+			write!(f, "{target:#?} <- {source:#?}  ({left} = {right})")?;
+			if br { writeln!(f) } else { Ok(()) }
+		};
 
-		for item in self.as_inner() {
+		let items = self.as_inner();
+		let len = items.len();
+		for (i, item) in items.into_iter().enumerate() {
+			let last = i == len - 1;
 			match item {
-				Mapping::AsIs(inc, exprs) => print(f, inc, exprs)?,
-				Mapping::Into(inc, exprs) => print(f, inc, exprs)?,
+				Mapping::AsIs(inc, exprs) => print(f, inc, exprs, !last)?,
+				Mapping::Into(inc, exprs) => print(f, inc, exprs, !last)?,
 				Mapping::ManyInto { sources,
 				                    target,
 				                    exprs,
 				                    .. } => {
-					for inc in sources {
-						print(f, &Match::new(inc.source(), target.join(inc.target())), exprs)?;
-						writeln!(f)?;
+					let len = sources.len();
+					for (i_in, inc) in sources.iter().enumerate() {
+						let last = last && i_in == len - 1;
+						let m = Match::new(inc.source(), target.join(inc.target()));
+						print(f, &m, exprs, !last)?;
 					}
 				},
 			}
@@ -357,31 +366,33 @@ impl BuildPlan<'_, '_> {
 		                      })
 	}
 
-	pub fn iter_flatten(
-		&self)
-		-> impl Iterator<Item = (MappingKind, PathBuf, (PathBuf, Option<std::time::SystemTime>))> + '_ {
+	pub fn iter_flatten(&self) -> impl Iterator<Item = (MappingKind, PathBuf, PathBuf)> + '_ {
 		let pair = |inc: &Match| {
 			(inc.target().to_path_buf(), abs_if_existing_any(inc.source(), &self.crate_root).to_path_buf())
 		};
 
-		self.as_inner()
-		    .iter()
-		    .flat_map(move |mapping| {
-			    let mut rows = Vec::new();
-			    let kind = mapping.kind();
-			    match mapping {
-				    Mapping::AsIs(inc, _) | Mapping::Into(inc, _) => rows.push(pair(inc)),
-			       Mapping::ManyInto { sources, target, .. } => {
-				       rows.extend(sources.iter()
-				                          .map(|inc| pair(&Match::new(inc.source(), target.join(inc.target())))));
-			       },
-			    };
-			    rows.into_iter().map(move |(l, r)| (kind, l, r))
-		    })
-		    .map(|(k, t, p)| {
-			    let time = p.metadata().ok().and_then(|m| m.modified().ok());
-			    (k, t, (p, time))
-		    })
+		self.as_inner().iter().flat_map(move |mapping| {
+			                      let mut rows = Vec::new();
+			                      let kind = mapping.kind();
+			                      match mapping {
+				                      Mapping::AsIs(inc, _) | Mapping::Into(inc, _) => rows.push(pair(inc)),
+			                         Mapping::ManyInto { sources, target, .. } => {
+				                         rows.extend(sources.iter().map(|inc| {
+					                             pair(&Match::new(inc.source(), target.join(inc.target())))
+				                             }));
+			                         },
+			                      };
+			                      rows.into_iter().map(move |(l, r)| (kind, l, r))
+		                      })
+	}
+
+	pub fn iter_flatten_meta(
+		&self)
+		-> impl Iterator<Item = (MappingKind, PathBuf, (PathBuf, Option<std::time::SystemTime>))> + '_ {
+		self.iter_flatten().map(|(k, t, p)| {
+			                   let time = p.metadata().ok().and_then(|m| m.modified().ok());
+			                   (k, t, (p, time))
+		                   })
 	}
 }
 
@@ -454,10 +465,20 @@ impl Mapping<'_, '_> {
 			Mapping::ManyInto { .. } => MappingKind::ManyInto,
 		}
 	}
+
+
+	pub fn pretty_print_compact(&self) -> String {
+		let (k, l, r) = match self {
+			Mapping::AsIs(_, (l, r)) => ('=', l, r),
+			Mapping::Into(_, (l, r)) => ('I', l, r),
+			Mapping::ManyInto { exprs: (l, r), .. } => ('M', l, r),
+		};
+		format!("{{{k}:{:?}={:?}}}", l.original(), r.original())
+	}
 }
 
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Eq, Hash, PartialEq, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum MappingKind {
 	/// Copy source __to__ target.

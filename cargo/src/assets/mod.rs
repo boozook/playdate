@@ -35,6 +35,380 @@ pub struct AssetsArtifact {
 pub type AssetsArtifacts<'cfg> = HashMap<&'cfg Package, AssetsArtifact>;
 
 
+pub mod proto {
+	use super::*;
+
+	use plan::proto::MultiKey;
+	use plan::Difference;
+	use playdate::assets::plan::BuildPlan;
+	use playdate::assets::BuildReport;
+	use playdate::layout::Layout as _;
+	use playdate::metadata::format::AssetsOptions;
+
+	use crate::utils::cargo::meta_deps::{MetaDeps, RootNode};
+	use crate::layout::{PlaydateAssets, Layout};
+
+
+	#[derive(Debug)]
+	pub struct AssetsArtifact {
+		pub package_id: PackageId,
+		pub layout: PlaydateAssets<PathBuf>,
+		pub kind: AssetKind,
+	}
+
+
+	pub struct AssetsArtifactsNew<'t, 'cfg> {
+		artifacts: Vec<AssetsArtifact>,
+		index: BTreeMap<MultiKey, Vec<usize>>,
+		tree: &'t MetaDeps<'cfg>,
+	}
+
+
+	impl AssetsArtifactsNew<'_, '_> {
+		pub fn iter(&self) -> impl Iterator<Item = (&RootNode, impl Iterator<Item = &AssetsArtifact>)> {
+			self.index
+			    .iter()
+			    .flat_map(|(key, index)| {
+				    self.tree
+				        .roots()
+				        .into_iter()
+				        .filter(|r| key.is_for(r))
+				        .map(|root| (root, index.as_slice()))
+			    })
+			    .map(|(root, index)| {
+				    let arts = index.into_iter().map(|i| &self.artifacts[*i]);
+				    (root, arts)
+			    })
+		}
+	}
+
+	impl core::fmt::Debug for AssetsArtifactsNew<'_, '_> {
+		fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+			f.debug_struct("AssetsArtifacts")
+			 .field_with("artifacts", |f| {
+				 self.artifacts
+				     .iter()
+				     .enumerate()
+				     .collect::<BTreeMap<_, _>>()
+				     .fmt(f)
+			 })
+			 .field("index", &self.index)
+			 .finish_non_exhaustive()
+		}
+	}
+
+
+	pub fn build_all<'t, 'cfg>(cfg: &Config<'cfg>,
+	                           tree: &'t MetaDeps<'cfg>)
+	                           -> CargoResult<AssetsArtifactsNew<'t, 'cfg>> {
+		// planning:
+		let plans = plan::proto::plan_all(cfg, tree)?;
+
+		// validation:
+		if let Err(err) = plan::proto::merge_all_virtually(cfg, tree, &plans) &&
+		   !cfg.compile_options.build_config.keep_going
+		{
+			return Err(err.context("Assets validation failed"));
+		}
+
+		// results:
+		let mut artifacts = AssetsArtifactsNew { artifacts: Vec::with_capacity(plans.plans.len()),
+		                                         index: Default::default(),
+		                                         tree };
+
+
+		// checking cache, apply each plan:
+		for (index, plan) in plans.plans.into_iter().enumerate() {
+			let key = plans.index.iter().find(|(_, v)| **v == index).expect("key").0;
+
+			log::debug!("#{index} build (dev:{}) {}", key.dev, key.id);
+
+
+			let global_layout = CrossTargetLayout::new(cfg, key.id, None)?;
+			let mut layout = global_layout.assets_layout(cfg);
+
+
+			// clean layout if needed:
+			if !cfg.dry_run && cfg.compile_options.build_config.force_rebuild {
+				if !matches!(cfg.workspace.config().shell().verbosity(), Verbosity::Quiet) {
+					cfg.log().status("Clean", format!("assets for {}", key.id));
+				}
+				layout.clean()?;
+			}
+
+
+			let mut locked = layout.lock_mut(cfg.workspace.config())?;
+			locked.prepare()?;
+
+			// path of build-plan file:
+			let path = if key.dev {
+				locked.as_inner().assets_plan_for_dev(cfg, &key.id)
+			} else {
+				locked.as_inner().assets_plan_for(cfg, &key.id)
+			};
+
+			let mut cache = plan_cache(path, &plan)?;
+			if cfg.compile_options.build_config.force_rebuild {
+				cache.difference = Difference::Missing;
+			}
+
+
+			let dest = if key.dev {
+				locked.as_inner().assets_dev()
+			} else {
+				locked.as_inner().assets()
+			};
+
+
+			// kind of assets just for log:
+			let kind_prefix = key.dev.then_some("dev-").unwrap_or_default();
+
+
+			// build if needed:
+			if cache.difference.is_same() {
+				cfg.log().status(
+				                 "Skip",
+				                 format!(
+					"{} {kind_prefix}assets cache state is {:?}",
+					key.id, &cache.difference
+				),
+				);
+			} else {
+				cfg.log()
+				   .status("Build", format!("{kind_prefix}assets for {}", key.id));
+				cfg.log().verbose(|mut log| {
+					         let dep_root = plan.crate_root();
+					         let dest = format!("destination: {:?}", dest.as_relative_to_root(cfg));
+					         log.status("", dest);
+					         let src = format!("root: {:?}", dep_root.as_relative_to_root(cfg));
+					         log.status("", src);
+				         });
+
+
+				// Since we build each plan separately independently, the default options are sufficient.
+				// The options are needed further when merging assets into a package.
+				let dep_opts = Default::default();
+				let report = apply(cache, plan, &dest, &dep_opts, cfg)?;
+
+
+				// print report:
+				for (x, (m, results)) in report.results.iter().enumerate() {
+					let results = results.iter().enumerate();
+					let expr = m.exprs();
+					let incs = m.sources();
+
+					for (y, res) in results {
+						let path = incs[y].target();
+						let path = path.as_relative_to_root(cfg);
+						match res {
+							Ok(op) => {
+								cfg.log().verbose(|mut log| {
+									         let msg = format!("asset [{x}:{y}] {}", path.display());
+									         log.status(format!("{op:?}"), msg)
+								         })
+							},
+							Err(err) => {
+								use fs_extra::error::ErrorKind as FsExtraErrorKind;
+
+								let error = match &err.kind {
+									FsExtraErrorKind::Io(err) => format!("IO: {err}"),
+									FsExtraErrorKind::StripPrefix(err) => format!("StripPrefix: {err}"),
+									FsExtraErrorKind::OsString(err) => format!("OsString: {err:?}"),
+									_ => err.to_string(),
+								};
+								let message = format!(
+								                      "Asset [{x}:{y}], rule: '{} <- {} | {}', {error}",
+								                      expr.0.original(),
+								                      expr.1.original(),
+								                      path.display()
+								);
+
+								cfg.log().status_with_color("Error", message, Color::Red)
+							},
+						};
+					}
+				}
+
+				// TODO: log report.exclusions
+
+				if report.has_errors() && !cfg.compile_options.build_config.keep_going {
+					use anyhow::Error;
+
+					#[derive(Debug)]
+					pub struct Mapping(String);
+					impl std::error::Error for Mapping {}
+					impl std::fmt::Display for Mapping {
+						fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { self.0.fmt(f) }
+					}
+
+					let err = report.results
+					                .into_iter()
+					                .filter_map(|(map, res)| {
+						                if res.iter().any(|res| res.is_err()) {
+							                let err = Mapping(map.pretty_print_compact());
+							                let err = res.into_iter()
+							                             .filter_map(|res| res.err())
+							                             .fold(Error::new(err), Error::context);
+							                Some(err)
+						                } else {
+							                None
+						                }
+					                })
+					                .fold(Error::msg("Assets build failed"), Error::context);
+					return Err(err);
+				}
+
+
+				// finally build with pdc:
+				// if not disallowed explicitly
+				if cfg.skip_prebuild {
+					const REASON: &str = "as requested";
+					let msg = format!("{kind_prefix}assets pre-build for {}, {REASON}.", key.id);
+					cfg.log().status("Skip", msg);
+				} else {
+					let kind = key.dev.then_some(AssetKind::Dev).unwrap_or(AssetKind::Package);
+					match pdc::build(cfg, &key.id, locked.as_inner(), kind) {
+						Ok(_) => {
+							let msg = format!("{kind_prefix}assets for {}", key.id);
+							cfg.log().status("Finished", msg);
+						},
+						Err(err) => {
+							let msg = format!("build {kind_prefix}assets with pdc failed: {err}");
+							cfg.log().status_with_color("Error", msg, Color::Red);
+							if !cfg.compile_options.build_config.keep_going {
+								bail!("Assets build failed.");
+							}
+						},
+					}
+				}
+			}
+
+
+			// Finale:
+
+			locked.unlock();
+
+
+			let kind = key.dev.then_some(AssetKind::Dev).unwrap_or(AssetKind::Package);
+			let art_index = artifacts.artifacts.len();
+			artifacts.artifacts.push(AssetsArtifact { kind,
+			                                          package_id: key.id,
+			                                          layout: layout.clone() });
+
+			log::debug!(
+			            "Assets artifact for {} at {:?}",
+			            key.id,
+			            crate::layout::Layout::dest(&layout).as_relative_to_root(cfg)
+			);
+
+			for (r_key, index) in plans.targets.iter().filter(|(_, i)| i.contains(&index)) {
+				artifacts.index
+				         .entry(r_key.to_owned())
+				         .or_insert(Vec::with_capacity(index.len()))
+				         .push(art_index);
+			}
+		}
+
+
+		cfg.log_extra_verbose(|mut logger| {
+			   artifacts.iter().for_each(|(root, arts)| {
+				                   let root = format!(
+				                                      "({}) {}::{}",
+				                                      root.node().target().kind().description(),
+				                                      root.node().package_id().name(),
+				                                      root.node().target().name,
+				);
+				                   logger.status("Assets", format!("artifacts for {root}:"));
+				                   arts.for_each(|art| {
+					                       let dest = match art.kind {
+						                       AssetKind::Package => art.layout.assets(),
+					                          AssetKind::Dev => art.layout.assets_dev(),
+					                       };
+					                       let msg = format!(
+					                                         "[{:?}] {} - {:?}",
+					                                         art.kind,
+					                                         art.package_id.name(),
+					                                         dest.as_relative_to_root(cfg)
+					);
+					                       logger.status("", msg);
+				                       });
+			                   });
+		   });
+
+		Ok(artifacts)
+	}
+
+
+	struct PlanCache {
+		pub difference: Difference,
+		pub serialized: Option<String>,
+		pub path: PathBuf,
+	}
+
+
+	#[must_use = "Cached plan must be used"]
+	fn plan_cache(path: PathBuf, plan: &BuildPlan<'_, '_>) -> CargoResult<PlanCache> {
+		let mut serializable = plan.iter_flatten_meta().collect::<Vec<_>>();
+		serializable.sort();
+		let json = serde_json::to_string(&serializable)?;
+
+		let difference = if path.try_exists()? {
+			if std::fs::read_to_string(&path)? == json {
+				log::debug!("Cached plan is the same");
+				Difference::Same
+			} else {
+				log::debug!("Cache mismatch, need diff & rebuild");
+				Difference::Different
+			}
+		} else {
+			log::debug!("Cache mismatch, full rebuilding");
+			Difference::Missing
+		};
+
+		let serialized = (!difference.is_same()).then_some(json);
+
+		Ok(PlanCache { path,
+		               difference,
+		               serialized })
+	}
+
+
+	fn apply<'l, 'r>(cache: PlanCache,
+	                 plan: BuildPlan<'l, 'r>,
+	                 dest: &Path,
+	                 options: &AssetsOptions,
+	                 config: &Config)
+	                 -> CargoResult<BuildReport<'l, 'r>> {
+		use crate::playdate::assets::apply_build_plan;
+
+		let report = apply_build_plan(plan, dest, options)?;
+		// and finally save cache of just successfully applied plan:
+		// only if there is no errors
+		if !report.has_errors() {
+			if let Some(data) = cache.serialized.as_deref() {
+				log::trace!("writing cache to {:?}", cache.path);
+				std::fs::write(&cache.path, data)?;
+				config.log().verbose(|mut log| {
+					            let path = cache.path.as_relative_to_root(config);
+					            log.status("Cache", format_args!("saved to {}", path.display()));
+				            });
+			} else {
+				config.log().verbose(|mut log| {
+					            log.status("Cache", "nothing to save");
+				            });
+			}
+		} else {
+			config.log().verbose(|mut log| {
+				            let message = "build has errors, so cache was not saved";
+				            log.status("Cache", message);
+			            });
+		}
+
+		Ok(report)
+	}
+}
+
+
 pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 	let bcx = LazyBuildContext::new(config)?;
 	let mut artifacts = AssetsArtifacts::new();
@@ -62,6 +436,31 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 
 		log::debug!("Inspecting dependencies tree for {}", package.package_id());
 		let packages = deps_tree_metadata(package, &bcx, config)?;
+
+
+		// XXX: compare with beta-proto
+		#[cfg(debug_assertions)]
+		{
+			let tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
+
+			// planning:
+			let plans = plan::proto::plan_all(config, &tree)?;
+
+
+			for (p, _) in packages.iter()
+			                      .filter(|(_, m)| !m.assets().is_empty() || !m.dev_assets().is_empty())
+			{
+				let id = p.package_id();
+				assert!(plans.index.keys().any(|k| k.id == id), "not found: {id}");
+			}
+
+			// validation:
+			if let Err(err) = plan::proto::merge_all_virtually(config, &tree, &plans) &&
+			   !config.compile_options.build_config.keep_going
+			{
+				return Err(err.context("Assets validation failed"));
+			}
+		}
 
 
 		// TODO: list deps in the plan

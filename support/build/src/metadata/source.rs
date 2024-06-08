@@ -31,6 +31,23 @@ pub trait PackageSource {
 	/// If this __and__ `metadata.options` is `None` - [`Options::default()`] is used.
 	fn default_options(&self) -> Option<&OptionsDefault> { None }
 
+	/// Cloned or default [`AssetsOptions`] from `metadata.options`,
+	/// merged with `default_options`,
+	/// if `metadata.options.workspace` is `true`.
+	fn assets_options(&self) -> AssetsOptions {
+		// TODO: impl assets-options merge instead just choosing one
+		self.metadata()
+		    .and_then(|m| {
+			    m.options().assets.clone().or_else(|| {
+				                              m.options()
+				                               .workspace
+				                               .then(|| self.default_options().and_then(|o| o.assets.clone()))
+				                               .flatten()
+			                              })
+		    })
+		    .unwrap_or_default()
+	}
+
 	/// Names of `bin` cargo-targets.
 	fn bins(&self) -> &[&str];
 	/// Names of `example` cargo-targets.
