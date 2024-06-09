@@ -96,7 +96,7 @@ pub mod proto {
 		pub targets: BTreeMap<MultiKey, Vec<usize>>,
 	}
 
-	#[derive(Debug, Hash, PartialEq, PartialOrd, Eq, Ord)]
+	#[derive(Debug, Clone, Copy, Hash, PartialEq, PartialOrd, Eq, Ord)]
 	pub struct Key {
 		pub id: PackageId,
 		pub dev: bool,
@@ -209,8 +209,8 @@ pub mod proto {
 
 				let env = env(dep.package_id(), crate_root)?;
 
+				// dep_key is dev only if this it a primary target (root unit) and dev is requested:
 				let with_dev = root_is_dev && dep.package_id() == root.package_id();
-
 				let dep_key = Key::from(dep).with_dev(with_dev);
 
 
@@ -275,9 +275,9 @@ pub mod proto {
 					// else just build a plan
 					plan_for(&mut plans, &mut indices, dep_key, false)?;
 
-					// TODO: it must be norm+dev assets, if dev needed - `with_dev`
+					// also for dev targets if needed
 					if with_dev {
-						log::warn!("    TODO: WITH DEV")
+						plan_for(&mut plans, &mut indices, dep_key, true)?;
 					}
 				}
 			}

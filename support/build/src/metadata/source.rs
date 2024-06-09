@@ -112,13 +112,13 @@ pub trait PackageSource {
 				if let Some(man) = root.example(target) {
 					Some(base.override_with_extra(man).into_owned())
 				} else {
-					log::debug!("target not found: {}", target);
+					log::debug!("dev-target override not found for {target:?}");
 					None
 				}
 			} else if let Some(man) = root.bin(target) {
 				Some(base.override_with_extra(man).into_owned())
 			} else {
-				log::debug!("target not found: {}", target);
+				log::debug!("target override not found for {target:?}");
 				None
 			}
 		} else {
