@@ -57,6 +57,12 @@ pub fn event_handler(_api: NonNull<PlaydateAPI>, event: SystemEvent, _sim_key_co
 		unsafe { STATE = Some(state) }
 	}
 
+	// We call `set_update_handler` here because it requires (mutably) borrowing
+	// all of `State`.
+	//
+	// If we were to do this inside of `event` it would prevent us from being able
+	// to (mutably) borrow any of `State`, which means we couldn't update any
+	// state inside of our `set_serial_message_callback` closure.
 	if event == SystemEvent::Init {
 		unsafe { STATE.as_mut().expect("impossible").set_update_handler() }
 	}
