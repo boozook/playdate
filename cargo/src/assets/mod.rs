@@ -71,12 +71,12 @@ pub mod proto {
 			    .flat_map(|(key, index)| {
 				    self.tree
 				        .roots()
-				        .into_iter()
+				        .iter()
 				        .filter(|r| key.is_for(r))
 				        .map(|root| (root, index.as_slice()))
 			    })
 			    .map(|(root, index)| {
-				    let arts = index.into_iter().map(|i| &self.artifacts[*i]);
+				    let arts = index.iter().map(|i| &self.artifacts[*i]);
 				    (root, arts)
 			    })
 		}
@@ -266,7 +266,7 @@ pub mod proto {
 					let msg = format!("{kind_prefix}assets pre-build for {}, {REASON}.", key.id);
 					cfg.log().status("Skip", msg);
 				} else {
-					let kind = key.dev.then_some(AssetKind::Dev).unwrap_or(AssetKind::Package);
+					let kind = if key.dev { AssetKind::Dev } else { AssetKind::Package };
 					match pdc::build(cfg, &key.id, locked.as_inner(), kind) {
 						Ok(_) => {
 							let msg = format!("{kind_prefix}assets for {}", key.id);
@@ -289,7 +289,7 @@ pub mod proto {
 			locked.unlock();
 
 
-			let kind = key.dev.then_some(AssetKind::Dev).unwrap_or(AssetKind::Package);
+			let kind = if key.dev { AssetKind::Dev } else { AssetKind::Package };
 			let art_index = artifacts.artifacts.len();
 			artifacts.artifacts.push(AssetsArtifact { kind,
 			                                          package_id: key.id,

@@ -80,7 +80,7 @@ pub mod proto {
 	use playdate::assets::plan::BuildPlan;
 	use playdate::consts::SDK_ENV_VAR;
 	use playdate::manifest::PackageSource as _;
-	use playdate::metadata::format::{AssetsOptions, Options};
+	use playdate::metadata::format::AssetsOptions;
 	use playdate::metadata::source::MetadataSource as _;
 
 	use crate::utils::cargo::meta_deps::MetaDeps;
@@ -127,7 +127,7 @@ pub mod proto {
 		fn from(root: &'_ RootNode<'_>) -> Self {
 			Self { dev: root.node().target().is_dev(),
 			       id: root.deps()
-			               .into_iter()
+			               .iter()
 			               .map(|d| d.package_id().to_owned())
 			               .collect() }
 		}
@@ -138,7 +138,7 @@ pub mod proto {
 		pub fn is_for(&self, root: &'_ RootNode<'_>) -> bool {
 			root.node().target().is_dev() == self.dev &&
 			root.deps()
-			    .into_iter()
+			    .iter()
 			    .enumerate()
 			    .all(|(i, d)| self.id.get(i).filter(|k| *k == d.package_id()).is_some())
 			// root.deps().into_iter().enumerate().all(|(i, d)| d.package_id() == &self.id[i])
@@ -154,13 +154,12 @@ pub mod proto {
 
 		// prepare env:
 		let global_env: BTreeMap<_, _> =
-			std::env::vars().into_iter()
-			                .map(|(k, v)| (k, v))
+			std::env::vars()
 			                .chain({
 				                cfg.sdk()
 				                   .map(|sdk| sdk.path())
 				                   .ok()
-				                   .or_else(|| cfg.sdk_path.as_deref())
+				                   .or(cfg.sdk_path.as_deref())
 				                   .map(|p| (SDK_ENV_VAR.to_string(), p.display().to_string()))
 				                   .into_iter()
 			                })
@@ -175,7 +174,7 @@ pub mod proto {
 
 			let iter = global_env.iter()
 			                     .map(|(k, v)| (Cow::Borrowed(k.as_str()), Cow::Borrowed(v.as_str())))
-			                     .chain(vars.into_iter());
+			                     .chain(vars);
 
 			Env::try_from_iter(iter).map_err(|err| anyhow::anyhow!("{err}"))
 		};
@@ -230,7 +229,7 @@ pub mod proto {
 							// let plan =
 							match assets_build_plan(&env, assets, &options, Some(crate_root.into())) {
 								Ok(plan) => {
-									let pid = key.id.clone();
+									let pid = key.id;
 									let is_dev = key.dev;
 									let dev_index = plans.plans.len();
 									plans.index.insert(key, dev_index);
@@ -334,7 +333,7 @@ pub mod proto {
 		     .iter()
 		     .flat_map(|(key, _)| {
 			     tree.roots()
-			         .into_iter()
+			         .iter()
 			         .filter(|r| key.is_for(r))
 			         .map(move |r| (key, r))
 		     })
@@ -397,7 +396,7 @@ pub mod proto {
 						if let Some(past) = targets.get(&target) &&
 						   past.len() > 1
 						{
-							let id = past.into_iter()
+							let id = past.iter()
 							             .flat_map(|x| plans.index.iter().find_map(|(key, i)| (i == x).then_some(key)))
 							             .collect::<Vec<_>>();
 							debug_assert!(!id.is_empty());
@@ -410,7 +409,7 @@ pub mod proto {
 							                  .then_some("by itself")
 							                  .map(Cow::from)
 							                  .unwrap_or_else(|| {
-								                  other.into_iter()
+								                  other.iter()
 								                       .map(|k| {
 									                       let dev = k.dev.then_some("dev-").unwrap_or_default();
 									                       format!("{}'s '{dev}assets'", k.id.name())

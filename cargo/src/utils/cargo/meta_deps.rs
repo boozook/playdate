@@ -62,7 +62,7 @@ pub struct Node<'cfg> {
 impl<'t> Node<'t> {
 	pub fn package_id(&self) -> &'t PackageId { &self.unit.package_id }
 
-	pub fn unit(&self) -> &'t Unit { &self.unit }
+	pub fn unit(&self) -> &'t Unit { self.unit }
 	pub fn meta(&self) -> Option<&'t Package<CrateMetadata<InternedString>>> { self.meta }
 	pub fn target(&self) -> &'t UnitTarget { &self.unit.target }
 
