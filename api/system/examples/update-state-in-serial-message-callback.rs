@@ -29,8 +29,6 @@ impl State {
 					                 self.latest_message = Some(msg);
 				                 }));
 
-				self.set_update_handler();
-
 				println!("Game init complete");
 			},
 			_ => {},
@@ -56,6 +54,10 @@ pub fn event_handler(_api: NonNull<PlaydateAPI>, event: SystemEvent, _sim_key_co
 	if unsafe { STATE.is_none() } {
 		let state = State::new();
 		unsafe { STATE = Some(state) }
+	}
+
+	if event == SystemEvent::Init {
+		unsafe { STATE.as_mut().expect("impossible").set_update_handler() }
 	}
 
 	unsafe { STATE.as_mut().expect("impossible").event(event) }
