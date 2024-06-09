@@ -47,7 +47,8 @@ pub mod ws {
 	#[cfg_attr(feature = "serde", derive(super::Deserialize))]
 	#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 	pub struct OptionsDefault {
-		pub assets: Option<super::AssetsOptions>,
+		#[cfg_attr(feature = "serde", serde(default))]
+		pub assets: super::AssetsOptions,
 	}
 }
 
@@ -100,13 +101,7 @@ impl<S> MetadataSource for Metadata<S>
 
 
 	fn options(&self) -> &Options { &self.inner.options }
-
-	fn assets_options(&self) -> Cow<'_, AssetsOptions> {
-		self.options()
-		    .assets
-		    .as_ref()
-		    .map_or_else(Default::default, Cow::Borrowed)
-	}
+	fn assets_options(&self) -> Cow<'_, AssetsOptions> { Cow::Borrowed(&self.options().assets) }
 
 	fn support(&self) -> &Support { &self.inner.support }
 }
@@ -569,45 +564,76 @@ impl<S> ManifestSourceOptExt for Override<S> where Manifest<S>: ManifestSourceOp
 pub struct Options {
 	/// Use [`PackageSource::default_options`] as defaults for this.
 	#[cfg_attr(feature = "serde", serde(default))]
-	pub workspace: bool, // not implemented yet
-	pub assets: Option<AssetsOptions>,
+	pub workspace: bool,
+	#[cfg_attr(feature = "serde", serde(default))]
+	pub assets: AssetsOptions,
 	// Output layout ctrl, temporary removed.
 }
 
+impl Options {
+	pub fn with_workspace(&self, def: Option<&ws::OptionsDefault>) -> Cow<'_, Options> {
+		let merge_assets = |assets: &AssetsOptions| {
+			if def.is_some() {
+				log::debug!("merge options.assets with ws.defaults")
+			}
 
-#[derive(Debug, Clone, PartialEq)]
+			let overwrite = assets.overwrite
+			                      .or_else(|| def.and_then(|d| d.assets.overwrite))
+			                      .unwrap_or(AssetsOptions::default_overwrite());
+			let follow_symlinks = assets.follow_symlinks
+			                            .or_else(|| def.and_then(|d| d.assets.follow_symlinks))
+			                            .unwrap_or(AssetsOptions::default_follow_symlinks());
+			let method = assets.method
+			                   .or_else(|| def.and_then(|d| d.assets.method))
+			                   .unwrap_or_default();
+			let dependencies = assets.dependencies
+			                         .or_else(|| def.and_then(|d| d.assets.dependencies))
+			                         .unwrap_or(AssetsOptions::default_dependencies());
+
+			AssetsOptions { overwrite: Some(overwrite),
+			                follow_symlinks: Some(follow_symlinks),
+			                method: Some(method),
+			                dependencies: Some(dependencies) }
+		};
+
+
+		if self.workspace {
+			let res = Self { workspace: self.workspace,
+			                 assets: merge_assets(&self.assets) };
+			Cow::Owned(res)
+		} else {
+			Cow::Borrowed(self)
+		}
+	}
+}
+
+
+#[derive(Default, Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Deserialize))]
 #[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub struct AssetsOptions {
 	#[cfg_attr(feature = "serde", serde(alias = "override"))]
-	#[cfg_attr(feature = "serde", serde(default = "AssetsOptions::default_overwrite"))]
-	pub overwrite: bool,
+	overwrite: Option<bool>,
 
 	#[cfg_attr(feature = "serde", serde(alias = "follow-symlinks"))]
-	#[cfg_attr(feature = "serde", serde(default = "AssetsOptions::default_follow_symlinks"))]
-	pub follow_symlinks: bool,
+	follow_symlinks: Option<bool>,
 
-	#[cfg_attr(feature = "serde", serde(alias = "build-method", default))]
-	pub method: AssetsBuildMethod,
+	#[cfg_attr(feature = "serde", serde(alias = "build-method"))]
+	method: Option<AssetsBuildMethod>,
 
 	/// Allow building assets for dependencies
-	#[cfg_attr(feature = "serde", serde(default = "AssetsOptions::default_dependencies"))]
-	pub dependencies: bool,
+	dependencies: Option<bool>,
 }
 
 impl AssetsOptions {
+	pub fn overwrite(&self) -> bool { self.overwrite.unwrap_or(Self::default_overwrite()) }
+	pub fn dependencies(&self) -> bool { self.dependencies.unwrap_or(Self::default_dependencies()) }
+	pub fn follow_symlinks(&self) -> bool { self.follow_symlinks.unwrap_or(Self::default_follow_symlinks()) }
+	pub fn method(&self) -> AssetsBuildMethod { self.method.unwrap_or_default() }
+
 	const fn default_overwrite() -> bool { true }
 	const fn default_follow_symlinks() -> bool { true }
 	const fn default_dependencies() -> bool { false }
-}
-
-impl Default for AssetsOptions {
-	fn default() -> Self {
-		Self { overwrite: Self::default_overwrite(),
-		       follow_symlinks: Self::default_follow_symlinks(),
-		       dependencies: Self::default_dependencies(),
-		       method: Default::default() }
-	}
 }
 
 
@@ -995,7 +1021,7 @@ mod tests {
 	#[test]
 	fn options_empty() {
 		let m = toml::from_str::<Options>("").unwrap();
-		assert!(m.assets.is_none());
+		assert_eq!(Options::default(), m);
 	}
 
 	#[test]
@@ -1006,8 +1032,8 @@ mod tests {
 		let m = toml::from_str::<Options>(src).unwrap();
 		assert_matches!(
 		                m.assets,
-		                Some(AssetsOptions { dependencies: false,
-		                                     .. })
+		                AssetsOptions { dependencies: None,
+		                                .. }
 		);
 
 		// overrides default
@@ -1018,8 +1044,8 @@ mod tests {
 		let m = toml::from_str::<Options>(src).unwrap();
 		assert_matches!(
 		                m.assets,
-		                Some(AssetsOptions { dependencies: true,
-		                                     .. })
+		                AssetsOptions { dependencies: Some(true),
+		                                .. }
 		);
 	}
 
@@ -1133,8 +1159,8 @@ mod tests {
 		assert!(m.assets.is_empty());
 		assert_matches!(
 		                m.options.assets,
-		                Some(AssetsOptions { dependencies: true,
-		                                     .. })
+		                AssetsOptions { dependencies: Some(true),
+		                                .. }
 		);
 	}
 
@@ -1341,7 +1367,7 @@ mod tests {
 
 
 		let opts = m.assets_options();
-		assert!(opts.dependencies);
+		assert!(opts.dependencies());
 		assert!(!AssetsOptions::default_dependencies());
 
 		assert_matches!(m.assets(), AssetsRules::Map(_));

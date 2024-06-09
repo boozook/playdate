@@ -144,7 +144,12 @@ Package build options, instruction for Playdate Package Build System such as car
 
 ```toml
 [package.metadata.playdate.options]
+workspace = true           # use `workspace.metadata.playdate.options` as defaults (default is `false`)
+assets.dependencies = true # just set or override corresponding value from `workspace.metadata`
 ```
+
+Field `workspace` works like the cargo's feature [inheriting a dependency from a workspace][cargo-inheriting-dep-ws], turning on structural inheritance of `package.metadata.playdate.options` by `workspace.metadata.playdate.options`.
+
 
 Available options is `assets`, see [Assets Options](#assets-options).
 
@@ -153,8 +158,10 @@ _Currently there is no more options, it's just reserved for future use._
 This configuration is used for primary packages only. Primary packages are the ones the user selected on the command-line, either with `-p` flags or the defaults based on the current directory and the default workspace members.
 So, `options` from top-level package are applying to entire dependency tree ignoring `options` of dependencies. Thus, only the end user controls how the assets will be collected & built.
 
-Note: this is depends on implementation, above is how it works in the reference impl `cargo-playdate`.
+_Note: this is depends on implementation, above is how it works in the reference impl `cargo-playdate`._
 
+
+[cargo-inheriting-dep-ws]: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#inheriting-a-dependency-from-a-workspace
 
 
 #### Assets Options
@@ -164,12 +171,12 @@ This is how assets will be collected for your package.
 ```toml
 [package.metadata.playdate.options.assets]
 dependencies = true    # allow to build assets for dependencies (default is `false`)
-overwrite = true       # overwrite existing assets in build dir (default is `true`)
+overwrite = true       # overwrite existing assets in build dir (default is `true`, alias: `override`)
 method = "link"        # "copy" or "link"   (default is `link`)  -  how assets should be collected, make symlinks or copy files
 follow-symlinks = true # follow symlinks    (default is `true`)
 ```
 
-
+Field `overwrite` also allows higher dependencies to overwrite assets of deeper dependency.
 
 
 - - -

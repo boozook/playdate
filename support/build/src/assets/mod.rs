@@ -23,8 +23,8 @@ pub fn apply_build_plan<'l, 'r, P: AsRef<Path>>(plan: BuildPlan<'l, 'r>,
 	use crate::fs::ensure_dir_exists;
 
 	let target_root = target_root.as_ref();
-	let build_method = assets_options.method;
-	let overwrite = assets_options.overwrite;
+	let build_method = assets_options.method();
+	let overwrite = assets_options.overwrite();
 	info!("collecting assets:");
 	debug!("assets build method: {build_method:?}, overwrite: {overwrite}");
 
@@ -171,7 +171,7 @@ pub enum OpRes {
 
 impl AssetsOptions {
 	fn link_behavior(&self) -> LinkBehavior {
-		if self.follow_symlinks {
+		if self.follow_symlinks() {
 			LinkBehavior::ReadTarget
 		} else {
 			LinkBehavior::ReadFile

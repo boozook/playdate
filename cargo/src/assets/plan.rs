@@ -188,7 +188,7 @@ pub mod proto {
 			            root.package_id(),
 			            root.node().target().kind().description()
 			);
-			log::debug!("  dependencies are allowed: {}", options.dependencies);
+			log::debug!("  dependencies are allowed: {}", options.dependencies());
 
 
 			let plan_key = MultiKey::from(root);
@@ -420,7 +420,7 @@ pub mod proto {
 							let why = format!("but that's not allowed by the top-level crate {root_name}");
 							let msg = format!("{name}'s `{dev}assets.{target:?}` overrides {others}, {why}");
 
-							if options.overwrite {
+							if options.overwrite() {
 								cfg.log().warn(msg)
 							} else {
 								cfg.log().error(&msg);

@@ -35,17 +35,11 @@ pub trait PackageSource {
 	/// merged with `default_options`,
 	/// if `metadata.options.workspace` is `true`.
 	fn assets_options(&self) -> AssetsOptions {
-		// TODO: impl assets-options merge instead just choosing one
 		self.metadata()
-		    .and_then(|m| {
-			    m.options().assets.clone().or_else(|| {
-				                              m.options()
-				                               .workspace
-				                               .then(|| self.default_options().and_then(|o| o.assets.clone()))
-				                               .flatten()
-			                              })
-		    })
+		    .map(|m| m.options().with_workspace(self.default_options()))
 		    .unwrap_or_default()
+		    .assets
+		    .to_owned()
 	}
 
 	/// Names of `bin` cargo-targets.

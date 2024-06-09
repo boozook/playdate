@@ -780,7 +780,7 @@ fn deps_tree_metadata<'cfg: 'r, 't: 'r, 'r>(package: &'cfg Package,
 	let mut packages = HashMap::new();
 	if let Some(metadata) = playdate_metadata(package) {
 		// if explicitly allowed collect deps => scan deps-tree
-		if metadata.assets_options().dependencies {
+		if metadata.assets_options().dependencies() {
 			log::debug!("inspecting deps-tree of {}", package.package_id());
 
 			packages.insert(package, metadata);
