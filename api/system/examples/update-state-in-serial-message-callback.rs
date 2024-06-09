@@ -15,11 +15,15 @@ use system::event::SystemEventExt as _;
 use system::prelude::*;
 
 struct State {
+	initialized: bool,
 	latest_message: Option<String>,
 }
 
 impl State {
-	fn new() -> Self { Self { latest_message: None } }
+	fn new() -> Self {
+		Self { initialized: false,
+		       latest_message: None }
+	}
 
 	/// System event handler
 	fn event(&'static mut self, event: SystemEvent) -> EventLoopCtrl {
@@ -28,6 +32,10 @@ impl State {
 				System::Default().set_serial_message_callback(Some(|msg| {
 					                 self.latest_message = Some(msg);
 				                 }));
+
+				// Verify that `set_serial_message_callback` doesn't prevent us from
+				// updating other parts of `State`
+				self.initialized = true;
 
 				println!("Game init complete");
 			},
