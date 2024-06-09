@@ -209,8 +209,21 @@ pub trait ValidateCrate: PackageSource {
 
 
 	fn validate_for(&self, target: &str) -> impl IntoIterator<Item = Problem> {
-		println!("TODO: validate_for(target={target:?}) not implemented yet!");
-		[]
+		let no_meta = self.metadata()
+		                  .is_none()
+		                  .then(|| Problem::Warning(Warning::MissingMetadata));
+
+		let man = self.bins()
+		              .contains(&target)
+		              .then_some(false)
+		              .or_else(|| self.examples().contains(&target).then_some(true))
+		              .map(|dev| self.manifest_override_or_crate(target.into(), dev))
+		              .map_or_else(
+		                           || vec![Problem::UnknownTarget { name: target.to_owned(), }],
+		                           |m| m.validate().into_iter().collect::<Vec<_>>(),
+		);
+
+		no_meta.into_iter().chain(man)
 	}
 }
 

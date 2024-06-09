@@ -359,13 +359,13 @@ fn build_manifest<Layout: playdate::layout::Layout>(config: &Config,
 		let source = ManifestSource::new(package, metadata.into());
 		// This validation not needed at this step. May be earlier:
 		validate(&source);
-		source.manifest_for_opt(cargo_target.as_deref(), dev)
+		source.manifest_override_or_crate(cargo_target.as_deref(), dev)
 	} else {
 		let metadata = playdate_metadata(package);
 		let source = ManifestSource::new(package, metadata.as_ref());
 		// This validation not needed at this step. May be earlier:
 		validate(&source);
-		source.manifest_for_opt(cargo_target.as_deref(), dev)
+		source.manifest_override_or_crate(cargo_target.as_deref(), dev)
 	};
 
 	// validation, lints

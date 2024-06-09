@@ -55,4 +55,4 @@ async-std = { version = "1.12", default-features = false }
 
 [workspace.metadata.playdate.options.assets]
 dependencies = true
-overwrite = true
+overwrite = false

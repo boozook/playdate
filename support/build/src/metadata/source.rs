@@ -104,7 +104,7 @@ pub trait PackageSource {
 
 
 	/// Returns `None` if manifest for `target` not found, no fallback.
-	fn manifest_for(&self, target: &str, dev: bool) -> Option<Ext<Manifest<String>>> {
+	fn manifest_override_for(&self, target: &str, dev: bool) -> Option<Ext<Manifest<String>>> {
 		let base = self.manifest_for_crate();
 
 		if let Some(root) = self.metadata() {
@@ -127,8 +127,8 @@ pub trait PackageSource {
 	}
 
 	/// Returns manifest for specified `target`. If not found, returns manifest for crate.
-	fn manifest_for_opt(&self, target: Option<&str>, dev: bool) -> Ext<Manifest<String>> {
-		target.and_then(|target| self.manifest_for(target, dev))
+	fn manifest_override_or_crate(&self, target: Option<&str>, dev: bool) -> Ext<Manifest<String>> {
+		target.and_then(|target| self.manifest_override_for(target, dev))
 		      .unwrap_or_else(|| self.manifest_for_crate().into_owned())
 	}
 }
@@ -544,8 +544,8 @@ mod tests {
 	#[test]
 	fn manifest_for_base() {
 		let base = CrateInfoNoMeta.manifest_for_crate();
-		let spec = CrateInfoNoMeta.manifest_for_opt("target".into(), false);
-		let opt = CrateInfoNoMeta.manifest_for("target", false);
+		let spec = CrateInfoNoMeta.manifest_override_or_crate("target".into(), false);
+		let opt = CrateInfoNoMeta.manifest_override_for("target", false);
 		assert_eq!(opt, Some(spec.to_owned()));
 		assert_eq!(spec, base.into_owned());
 	}
@@ -633,7 +633,7 @@ mod tests {
 
 	#[test]
 	fn manifest_for_target_wrong_no_meta() {
-		let spec = CrateInfoNoMeta.manifest_for_opt(Some("WRONG"), false);
+		let spec = CrateInfoNoMeta.manifest_override_or_crate(Some("WRONG"), false);
 
 		assert_eq!(Some("Name"), spec.name());
 		assert_eq!(Some("John"), spec.author());
@@ -645,7 +645,7 @@ mod tests {
 	fn manifest_for_target_wrong() {
 		let base_src = CrateInfo::new();
 		let base = base_src.manifest_for_crate();
-		let spec = base_src.manifest_for_opt(Some("WRONG"), false);
+		let spec = base_src.manifest_override_or_crate(Some("WRONG"), false);
 		assert_eq!(Some("Meta Name"), spec.name());
 		assert_eq!(Some("John"), spec.author());
 		assert_eq!(Some("0.0.0"), spec.version());
@@ -656,7 +656,7 @@ mod tests {
 	#[test]
 	fn manifest_for_target_bin() {
 		let base_src = CrateInfo::new();
-		let spec = base_src.manifest_for_opt(SOME_TARGET.into(), false);
+		let spec = base_src.manifest_override_or_crate(SOME_TARGET.into(), false);
 		assert_eq!(Some("Bin Name"), spec.name());
 		assert_eq!(Some("Alex"), spec.author());
 		assert_eq!(Some("0.0.0"), spec.version());
