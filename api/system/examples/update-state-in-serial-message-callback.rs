@@ -41,6 +41,7 @@ impl Update for State {
 	fn update(&mut self) -> UpdateCtrl {
 		if let Some(latest_message) = self.latest_message.clone() {
 			println!("Latest message: {:#?}", latest_message);
+			self.latest_message = None;
 		}
 		UpdateCtrl::Continue
 	}
