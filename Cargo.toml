@@ -51,3 +51,8 @@ futures-lite = "2.3"
 thiserror = "1.0"
 tokio = { version = "1.37", default-features = false }
 async-std = { version = "1.12", default-features = false }
+
+
+[workspace.metadata.playdate.options.assets]
+dependencies = true
+overwrite = true

@@ -28,17 +28,15 @@ fn eq_metadata_field() {
 
 
 pub mod ws {
-	use super::Deserialize;
-
 	#[derive(Debug)]
-	#[cfg_attr(feature = "serde", derive(Deserialize))]
+	#[cfg_attr(feature = "serde", derive(super::Deserialize))]
 	pub struct WorkspaceMetadata {
 		#[cfg_attr(feature = "serde", serde(rename = "playdate"))]
 		pub inner: Option<Metadata>,
 	}
 
 	#[derive(Debug, Clone, PartialEq)]
-	#[cfg_attr(feature = "serde", derive(Deserialize))]
+	#[cfg_attr(feature = "serde", derive(super::Deserialize))]
 	#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 	pub struct Metadata {
 		pub options: Option<OptionsDefault>,
@@ -46,7 +44,7 @@ pub mod ws {
 	}
 
 	#[derive(Debug, Clone, Default, PartialEq)]
-	#[cfg_attr(feature = "serde", derive(Deserialize))]
+	#[cfg_attr(feature = "serde", derive(super::Deserialize))]
 	#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 	pub struct OptionsDefault {
 		pub assets: Option<super::AssetsOptions>,
