@@ -2,9 +2,9 @@
 #![feature(never_type)]
 #![feature(exit_status_error)]
 #![feature(btree_extract_if)]
-#![feature(byte_slice_trim_ascii)]
 #![feature(const_trait_impl)]
 #![feature(let_chains)]
+#![feature(debug_closure_helpers)]
 
 extern crate build as playdate;
 

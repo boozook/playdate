@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use anyhow::bail;
+use cargo::core::PackageId;
 use cargo::CargoResult;
-use cargo::core::Package;
 use playdate::fs::soft_link_checked;
 use playdate::layout::Layout;
 
@@ -16,7 +16,7 @@ use super::plan::AssetKind;
 
 
 pub fn build(config: &Config,
-             package: &Package,
+             package_id: &PackageId,
              layout: &PlaydateAssets<PathBuf>,
              kind: AssetKind)
              -> CargoResult<()> {
@@ -34,12 +34,12 @@ pub fn build(config: &Config,
 		},
 	};
 
-	build_in(config, package, &src, &build, &layout.dest())
+	build_in(config, package_id, &src, &build, &layout.dest())
 }
 
-fn build_in(config: &Config, package: &Package, src: &Path, build: &Path, root: &Path) -> CargoResult<()> {
+fn build_in(config: &Config, package_id: &PackageId, src: &Path, build: &Path, root: &Path) -> CargoResult<()> {
 	config.log()
-	      .status("Compiling", format!("assets for {}", package.package_id()));
+	      .status("Compiling", format!("assets for {}", package_id));
 
 	if config.no_sdk {
 		bail!("Build without Playdate SDK is not supported yet.");

@@ -8,7 +8,7 @@ use crate::proc::cargo_proxy_with;
 use crate::proc::read_cargo_json;
 
 
-pub type CargoMetadataPd = format::Report<format::Metadata<InternedString>>;
+pub type CargoMetadataPd = format::Report<format::CrateMetadata<InternedString>, format::WorkspaceMetadata>;
 
 
 pub fn metadata(cfg: &Config) -> CargoResult<CargoMetadataPd> {
@@ -63,32 +63,31 @@ pub mod format {
 	use std::path::PathBuf;
 
 	use cargo::core::dependency::DepKind;
-	use cargo::core::PackageId;
+	use cargo::core::PackageIdSpec;
 	use cargo::core::SourceId;
 	use serde::Deserialize;
 	use serde::Deserializer;
 
 	use crate::utils::cargo::unit_graph::format::UnitTarget;
 
-	pub use super::super::format::*;
-
-	pub use playdate::metadata::format::CrateMetadata as Metadata;
+	pub use playdate::metadata::format::CrateMetadata;
+	pub use playdate::metadata::format::ws::WorkspaceMetadata;
 
 
 	/// `cargo metadata` output __v1__,
 	/// just necessary fields.
 	#[derive(Debug, Deserialize)]
-	#[serde(bound(deserialize = "Metadata: Deserialize<'de>"))]
-	pub struct Report<Metadata = serde_json::Value> {
+	#[serde(bound(deserialize = "Meta: Deserialize<'de>, WsMeta: Deserialize<'de>"))]
+	pub struct Report<Meta = serde_json::Value, WsMeta = serde_json::Value> {
 		pub version: usize,
-		pub packages: Vec<Package<Metadata>>,
+		pub packages: Vec<Package<Meta>>,
 		pub target_directory: PathBuf,
 
 		pub workspace_members: Vec<SourceId>,
 		pub workspace_default_members: Vec<SourceId>,
 		pub workspace_root: PathBuf,
 		#[serde(alias = "metadata")]
-		pub workspace_metadata: Option<Metadata>,
+		pub workspace_metadata: Option<WsMeta>,
 
 		pub resolve: Resolve,
 	}
@@ -101,10 +100,8 @@ pub mod format {
 
 	#[derive(Deserialize, Debug)]
 	pub struct ResolveNode {
-		#[serde(deserialize_with = "deserialize_package_id")]
-		pub id: PackageId,
-		#[serde(deserialize_with = "deserialize_package_ids")]
-		pub dependencies: Vec<PackageId>,
+		pub id: PackageIdSpec,
+		pub dependencies: Vec<PackageIdSpec>,
 		pub deps: Vec<NodeDep>,
 	}
 
@@ -112,8 +109,7 @@ pub mod format {
 	#[derive(Deserialize, Debug)]
 	#[serde(bound(deserialize = "Metadata: Deserialize<'de>"))]
 	pub struct Package<Metadata> {
-		#[serde(deserialize_with = "deserialize_package_id")]
-		pub id: PackageId,
+		pub id: PackageIdSpec,
 		pub source: Option<SourceId>,
 		pub dependencies: Vec<PackageDep>,
 
@@ -145,8 +141,7 @@ pub mod format {
 	#[derive(Deserialize, Debug)]
 	pub struct NodeDep {
 		pub name: String,
-		#[serde(deserialize_with = "deserialize_package_id")]
-		pub pkg: PackageId,
+		pub pkg: PackageIdSpec,
 		pub dep_kinds: serde_json::Value,
 	}
 

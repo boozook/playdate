@@ -1,11 +1,14 @@
 use std::collections::HashMap;
+use std::path::Path;
 
 use cargo::core::compiler::CompileMode;
-use cargo::core::PackageId;
+use cargo::core::{PackageId, PackageIdSpecQuery};
 use cargo::util::interning::InternedString;
 use cargo::CargoResult;
-use playdate::manifest::CrateInfoSource;
+use playdate::manifest::PackageSource;
+use playdate::metadata::format::ws::WorkspaceMetadata;
 use playdate::metadata::source::MetadataSource;
+use playdate::metadata::format::Metadata as MainMetadata;
 use serde::Deserialize;
 use serde::de::IntoDeserializer;
 
@@ -14,9 +17,9 @@ use crate::logger::LogErr;
 
 use super::build_plan::format::TargetKind;
 use super::build_plan::TargetKindWild;
-use super::metadata::format::{Package, Metadata};
+use super::metadata::format::{Package, CrateMetadata};
 use super::metadata::CargoMetadataPd;
-use super::unit_graph::format::Unit;
+use super::unit_graph::format::{Unit, UnitTarget};
 use super::unit_graph::format::UnitGraph;
 
 
@@ -37,13 +40,8 @@ pub struct MetaDeps<'cfg> {
 pub struct RootNode<'cfg> {
 	node: Node<'cfg>,
 	deps: Vec<Node<'cfg>>,
-}
 
-
-#[derive(Debug, Clone, Copy)]
-pub struct Node<'cfg> {
-	meta: Option<&'cfg Package<Metadata<InternedString>>>,
-	unit: &'cfg Unit,
+	ws: Option<&'cfg WorkspaceMetadata>,
 }
 
 impl<'t> RootNode<'t> {
@@ -57,15 +55,28 @@ impl<'t> RootNode<'t> {
 	pub fn deps(&self) -> &[Node<'t>] { &self.deps }
 }
 
+
+#[derive(Debug, Clone, Copy)]
+pub struct Node<'cfg> {
+	meta: Option<&'cfg Package<CrateMetadata<InternedString>>>,
+	unit: &'cfg Unit,
+}
+
 impl<'t> Node<'t> {
 	pub fn package_id(&self) -> &'t PackageId { &self.unit.package_id }
+
+	pub fn unit(&self) -> &'t Unit { self.unit }
+	pub fn meta(&self) -> Option<&'t Package<CrateMetadata<InternedString>>> { self.meta }
+	pub fn target(&self) -> &'t UnitTarget { &self.unit.target }
+
+	pub fn manifest_path(&self) -> Option<&'t Path> { self.meta.as_ref().map(|m| m.manifest_path.as_path()) }
 }
 
 
 impl<'t> MetaDeps<'t> {
 	pub fn new(units: &'t UnitGraph, meta: &'t CargoMetadataPd) -> Self {
 		let mode_is_build = |u: &&Unit| matches!(u.mode, CompileMode::Build);
-		let is_prime_tk = |u: &&Unit| {
+		let is_norm_tk = |u: &&Unit| {
 			matches!(
 			         u.target.kind,
 			         TargetKind::Lib(_) | TargetKind::Bin | TargetKind::Example
@@ -73,18 +84,20 @@ impl<'t> MetaDeps<'t> {
 		};
 		let is_sub_tk = |u: &&Unit| matches!(u.target.kind, TargetKind::Lib(_));
 
+		let ws = meta.workspace_metadata.as_ref();
 
 		let mut roots = units.roots
 		                     .iter()
 		                     .map(|i| &units.units[*i])
 		                     .filter(mode_is_build)
-		                     .filter(is_prime_tk)
+		                     .filter(is_norm_tk)
 		                     .map(|u| {
-			                     let m = meta.packages.iter().find(|p| p.id == u.package_id);
+			                     let m = meta.packages.iter().find(|p| p.id.matches(u.package_id));
 			                     Node::<'t> { meta: m, unit: u }
 		                     })
 		                     .map(|node| {
-			                     RootNode::<'t> { node,
+			                     RootNode::<'t> { ws,
+			                                      node,
 			                                      deps: Vec::with_capacity(0) }
 		                     })
 		                     .collect::<Vec<_>>();
@@ -98,7 +111,7 @@ impl<'t> MetaDeps<'t> {
 			 .filter(mode_is_build)
 			 .filter(is_sub_tk)
 			 .map(|u| {
-				 let m = meta.packages.iter().find(|p| p.id == u.package_id);
+				 let m = meta.packages.iter().find(|p| p.id.matches(u.package_id));
 				 Node::<'t> { meta: m, unit: u }
 			 })
 			 .inspect(|n| {
@@ -262,7 +275,7 @@ impl<'t> MetaDeps<'t> {
 			     .map(|m| m.assets_options())
 		    })
 		    .unwrap_or_default()
-		    .dependencies
+		    .dependencies()
 	}
 }
 
@@ -273,7 +286,7 @@ pub trait DependenciesAllowed {
 
 
 impl DependenciesAllowed for RootNode<'_> {
-	fn deps_allowed(&self) -> bool { self.node.deps_allowed() }
+	fn deps_allowed(&self) -> bool { self.node.deps_allowed() || self.as_source().assets_options().dependencies() }
 }
 
 impl DependenciesAllowed for Node<'_> {
@@ -284,7 +297,7 @@ impl DependenciesAllowed for Node<'_> {
 		    .and_then(|m| m.inner.as_ref())
 		    .map(|m| m.assets_options())
 		    .unwrap_or_default()
-		    .dependencies
+		    .dependencies()
 	}
 }
 
@@ -294,24 +307,32 @@ impl DependenciesAllowed for cargo::core::Package {
 		self.manifest()
 		    .custom_metadata()
 		    .and_then(|v| {
-			    Metadata::<InternedString>::deserialize(v.to_owned().into_deserializer()).log_err()
-			                                                                             .ok()
+			    CrateMetadata::<InternedString>::deserialize(v.to_owned().into_deserializer()).log_err()
+			                                                                                  .ok()
 		    })
 		    .and_then(|m| m.inner)
-		    .map(|m| m.assets_options().dependencies)
+		    .map(|m| m.assets_options().dependencies())
 		    .unwrap_or_default()
 	}
 }
 
 
 impl<'t> Node<'t> {
-	pub fn into_source(self) -> impl CrateInfoSource + 't { CrateNode::from(self) }
-	pub fn as_source(&self) -> impl CrateInfoSource + 't { self.to_owned().into_source() }
+	pub fn into_source(self) -> impl PackageSource<Metadata = MainMetadata<InternedString>> + 't {
+		CrateNode::from(self)
+	}
+	pub fn as_source(&self) -> impl PackageSource<Metadata = MainMetadata<InternedString>> + 't {
+		self.to_owned().into_source()
+	}
 }
 
 impl<'t> RootNode<'t> {
-	pub fn into_source(self) -> impl CrateInfoSource + 't { CrateNode::from(self.node) }
-	pub fn as_source(&self) -> impl CrateInfoSource + 't { self.to_owned().into_source() }
+	pub fn into_source(self) -> impl PackageSource<Metadata = MainMetadata<InternedString>> + 't {
+		CrateNode::from(&self)
+	}
+	pub fn as_source(&self) -> impl PackageSource<Metadata = MainMetadata<InternedString>> + 't {
+		CrateNode::from(self)
+	}
 }
 
 
@@ -319,6 +340,8 @@ struct CrateNode<'t> {
 	node: Node<'t>,
 	bins: Vec<&'t str>,
 	examples: Vec<&'t str>,
+
+	ws: Option<&'t WorkspaceMetadata>,
 }
 
 impl<'t> From<Node<'t>> for CrateNode<'t> {
@@ -337,12 +360,36 @@ impl<'t> From<Node<'t>> for CrateNode<'t> {
 		                     .flat_map(|m| m.targets.iter())
 		                     .filter(|t| t.kind == TargetKind::Example)
 		                     .map(|t| t.name.as_str())
-		                     .collect() }
+		                     .collect(),
+		       ws: None }
 	}
 }
 
-impl CrateInfoSource for CrateNode<'_> {
+impl<'t> From<&RootNode<'t>> for CrateNode<'t> {
+	fn from(root: &RootNode<'t>) -> Self {
+		let node = root.node;
+		Self { node,
+		       bins: node.meta
+		                 .as_ref()
+		                 .into_iter()
+		                 .flat_map(|m| m.targets.iter())
+		                 .filter(|t| t.kind == TargetKind::Bin)
+		                 .map(|t| t.name.as_str())
+		                 .collect(),
+		       examples: node.meta
+		                     .as_ref()
+		                     .into_iter()
+		                     .flat_map(|m| m.targets.iter())
+		                     .filter(|t| t.kind == TargetKind::Example)
+		                     .map(|t| t.name.as_str())
+		                     .collect(),
+		       ws: root.ws }
+	}
+}
+
+impl PackageSource for CrateNode<'_> {
 	type Authors = [String];
+	type Metadata = MainMetadata<InternedString>;
 
 	fn name(&self) -> std::borrow::Cow<str> { self.node.package_id().name().as_str().into() }
 
@@ -370,7 +417,7 @@ impl CrateInfoSource for CrateNode<'_> {
 		    .map(Into::into)
 	}
 
-	fn metadata(&self) -> Option<impl MetadataSource> {
+	fn metadata(&self) -> Option<&Self::Metadata> {
 		self.node
 		    .meta
 		    .as_ref()
@@ -388,5 +435,14 @@ impl CrateInfoSource for CrateNode<'_> {
 		    .as_ref()
 		    .map(|m| m.manifest_path.as_path().into())
 		    .unwrap_or_default()
+	}
+
+
+	// from ws metadata:
+	fn default_options(&self) -> Option<&playdate::metadata::format::ws::OptionsDefault> {
+		self.ws
+		    .and_then(|m| m.inner.as_ref())
+		    .as_ref()
+		    .and_then(|m| m.options.as_ref())
 	}
 }

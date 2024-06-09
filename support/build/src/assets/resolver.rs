@@ -119,7 +119,7 @@ impl Default for EnvResolver {
 }
 
 impl EnvResolver {
-	pub fn str<'c, S: AsRef<str>>(&self, s: S, env: &'c Env) -> Cow<'c, str> {
+	pub fn str<S: AsRef<str>>(&self, s: S, env: &Env) -> String {
 		let re = &self.0;
 
 		// Possible recursion for case "${VAR}" where $VAR="${VAR}"
@@ -144,7 +144,7 @@ impl EnvResolver {
 				break;
 			}
 		}
-		replaced.into()
+		replaced
 	}
 
 	pub fn str_only<'c, S: AsRef<str>>(&self, s: S) -> Cow<'c, str> {
@@ -165,7 +165,7 @@ impl EnvResolver {
 		replaced.into()
 	}
 
-	pub fn expr<'a, 'e, 'c: 'e, Ex: AsMut<Expr<'e>>>(&self, mut expr: Ex, env: &'c Env) -> Ex {
+	pub fn expr<'e, Ex: AsMut<Expr<'e>>>(&self, mut expr: Ex, env: &Env) -> Ex {
 		let editable = expr.as_mut();
 		let replaced = self.str(editable.actual(), env);
 		if replaced != editable.actual() {
