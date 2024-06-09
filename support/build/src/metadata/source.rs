@@ -3,10 +3,13 @@ use std::borrow::Cow;
 use std::path::Path;
 
 use super::format::{AssetsOptions, AssetsRules, Ext, ExtraFields, ExtraValue, Manifest, Options, Support};
+use super::format::ws::OptionsDefault;
 
 
-pub trait CrateInfoSource {
+pub trait PackageSource {
 	type Authors: ?Sized + std::slice::Join<&'static str, Output = String>;
+	type Metadata: MetadataSource;
+
 
 	/// Crate name.
 	fn name(&self) -> Cow<str>;
@@ -18,7 +21,26 @@ pub trait CrateInfoSource {
 	/// Crate description.
 	fn description(&self) -> Option<Cow<str>>;
 	/// Crate metadata - `playdate` table.
-	fn metadata(&self) -> Option<impl MetadataSource>;
+	fn metadata(&self) -> Option<&Self::Metadata>;
+
+	/// [`Options`] used as default.
+	///
+	/// Usually it may be from `workspace.metadata.playdate.options` or some external config,
+	/// depends on implementation.
+	///
+	/// If this __and__ `metadata.options` is `None` - [`Options::default()`] is used.
+	fn default_options(&self) -> Option<&OptionsDefault> { None }
+
+	/// Cloned or default [`AssetsOptions`] from `metadata.options`,
+	/// merged with `default_options`,
+	/// if `metadata.options.workspace` is `true`.
+	fn assets_options(&self) -> AssetsOptions {
+		self.metadata()
+		    .map(|m| m.options().with_workspace(self.default_options()))
+		    .unwrap_or_default()
+		    .assets
+		    .to_owned()
+	}
 
 	/// Names of `bin` cargo-targets.
 	fn bins(&self) -> &[&str];
@@ -76,7 +98,7 @@ pub trait CrateInfoSource {
 
 
 	/// Returns `None` if manifest for `target` not found, no fallback.
-	fn manifest_for(&self, target: &str, dev: bool) -> Option<Ext<Manifest<String>>> {
+	fn manifest_override_for(&self, target: &str, dev: bool) -> Option<Ext<Manifest<String>>> {
 		let base = self.manifest_for_crate();
 
 		if let Some(root) = self.metadata() {
@@ -84,13 +106,13 @@ pub trait CrateInfoSource {
 				if let Some(man) = root.example(target) {
 					Some(base.override_with_extra(man).into_owned())
 				} else {
-					log::debug!("target not found: {}", target);
+					log::debug!("dev-target override not found for {target:?}");
 					None
 				}
 			} else if let Some(man) = root.bin(target) {
 				Some(base.override_with_extra(man).into_owned())
 			} else {
-				log::debug!("target not found: {}", target);
+				log::debug!("target override not found for {target:?}");
 				None
 			}
 		} else {
@@ -99,8 +121,8 @@ pub trait CrateInfoSource {
 	}
 
 	/// Returns manifest for specified `target`. If not found, returns manifest for crate.
-	fn manifest_for_opt(&self, target: Option<&str>, dev: bool) -> Ext<Manifest<String>> {
-		target.and_then(|target| self.manifest_for(target, dev))
+	fn manifest_override_or_crate(&self, target: Option<&str>, dev: bool) -> Ext<Manifest<String>> {
+		target.and_then(|target| self.manifest_override_for(target, dev))
 		      .unwrap_or_else(|| self.manifest_for_crate().into_owned())
 	}
 }
@@ -498,8 +520,9 @@ mod tests {
 
 
 	struct CrateInfoNoMeta;
-	impl CrateInfoSource for CrateInfoNoMeta {
+	impl PackageSource for CrateInfoNoMeta {
 		type Authors = [&'static str];
+		type Metadata = Metadata<String>;
 
 		fn name(&self) -> Cow<str> { "Name".into() }
 		fn authors(&self) -> &Self::Authors { &["John"] }
@@ -507,7 +530,7 @@ mod tests {
 		fn description(&self) -> Option<Cow<str>> { None }
 		fn bins(&self) -> &[&str] { &[SOME_TARGET] }
 		fn examples(&self) -> &[&str] { &[] }
-		fn metadata(&self) -> Option<impl MetadataSource> { None::<Metadata> }
+		fn metadata(&self) -> Option<&Self::Metadata> { None }
 
 		fn manifest_path(&self) -> Cow<Path> { Cow::Borrowed(Path::new("Cargo.toml")) }
 	}
@@ -515,28 +538,16 @@ mod tests {
 	#[test]
 	fn manifest_for_base() {
 		let base = CrateInfoNoMeta.manifest_for_crate();
-		let spec = CrateInfoNoMeta.manifest_for_opt("target".into(), false);
-		let opt = CrateInfoNoMeta.manifest_for("target", false);
+		let spec = CrateInfoNoMeta.manifest_override_or_crate("target".into(), false);
+		let opt = CrateInfoNoMeta.manifest_override_for("target", false);
 		assert_eq!(opt, Some(spec.to_owned()));
 		assert_eq!(spec, base.into_owned());
 	}
 
 
-	struct CrateInfo;
-	impl CrateInfoSource for CrateInfo {
-		type Authors = [&'static str];
-
-		fn name(&self) -> Cow<str> { "Crate Name".into() }
-		fn authors(&self) -> &[&'static str] { &["John"] }
-		fn version(&self) -> Cow<str> { "0.0.0".into() }
-		fn description(&self) -> Option<Cow<str>> { None }
-
-		fn bins(&self) -> &[&str] { &[SOME_TARGET] }
-		fn examples(&self) -> &[&str] { &[] }
-
-		fn manifest_path(&self) -> Cow<Path> { Cow::Borrowed(Path::new("Cargo.toml")) }
-
-		fn metadata(&self) -> Option<impl MetadataSource> {
+	struct CrateInfo(Metadata);
+	impl CrateInfo {
+		fn new() -> Self {
 			let base = Manifest { name: Some("Meta Name"),
 			                      bundle_id: Some("crate.id"),
 			                      ..Default::default() };
@@ -572,15 +583,33 @@ mod tests {
 			                                             options: Default::default(),
 			                                             support: Default::default() } };
 
-			Some(meta)
+			Self(meta)
 		}
+	}
+
+	impl PackageSource for CrateInfo {
+		type Authors = [&'static str];
+		type Metadata = Metadata<String>;
+
+		fn name(&self) -> Cow<str> { "Crate Name".into() }
+		fn authors(&self) -> &[&'static str] { &["John"] }
+		fn version(&self) -> Cow<str> { "0.0.0".into() }
+		fn description(&self) -> Option<Cow<str>> { None }
+
+		fn bins(&self) -> &[&str] { &[SOME_TARGET] }
+		fn examples(&self) -> &[&str] { &[] }
+
+		fn manifest_path(&self) -> Cow<Path> { Cow::Borrowed(Path::new("Cargo.toml")) }
+
+		fn metadata(&self) -> Option<&Self::Metadata> { Some(&self.0) }
 	}
 
 	const SOME_TARGET: &str = "some-target";
 
 	#[test]
 	fn manifest_for_crate() {
-		let base = CrateInfo.manifest_for_crate();
+		let base_src = CrateInfo::new();
+		let base = base_src.manifest_for_crate();
 		assert_eq!(Some("Meta Name"), base.name());
 		assert_eq!(Some("John"), base.author());
 		assert_eq!(Some("0.0.0"), base.version());
@@ -598,7 +627,7 @@ mod tests {
 
 	#[test]
 	fn manifest_for_target_wrong_no_meta() {
-		let spec = CrateInfoNoMeta.manifest_for_opt(Some("WRONG"), false);
+		let spec = CrateInfoNoMeta.manifest_override_or_crate(Some("WRONG"), false);
 
 		assert_eq!(Some("Name"), spec.name());
 		assert_eq!(Some("John"), spec.author());
@@ -608,8 +637,9 @@ mod tests {
 
 	#[test]
 	fn manifest_for_target_wrong() {
-		let base = CrateInfo.manifest_for_crate();
-		let spec = CrateInfo.manifest_for_opt(Some("WRONG"), false);
+		let base_src = CrateInfo::new();
+		let base = base_src.manifest_for_crate();
+		let spec = base_src.manifest_override_or_crate(Some("WRONG"), false);
 		assert_eq!(Some("Meta Name"), spec.name());
 		assert_eq!(Some("John"), spec.author());
 		assert_eq!(Some("0.0.0"), spec.version());
@@ -619,7 +649,8 @@ mod tests {
 
 	#[test]
 	fn manifest_for_target_bin() {
-		let spec = CrateInfo.manifest_for_opt(SOME_TARGET.into(), false);
+		let base_src = CrateInfo::new();
+		let spec = base_src.manifest_override_or_crate(SOME_TARGET.into(), false);
 		assert_eq!(Some("Bin Name"), spec.name());
 		assert_eq!(Some("Alex"), spec.author());
 		assert_eq!(Some("0.0.0"), spec.version());

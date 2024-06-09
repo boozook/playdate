@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use super::source::CrateInfoSource;
+use super::source::PackageSource;
 use super::source::ManifestSourceOptExt;
 use super::source::MetadataSource;
 
@@ -160,7 +160,7 @@ fn validate_version(value: &str) -> Option<Problem> {
 
 
 /// Lint the crate-level source.
-pub trait ValidateCrate: CrateInfoSource {
+pub trait ValidateCrate: PackageSource {
 	fn validate<'t>(&'t self) -> impl IntoIterator<Item = Problem> + 't {
 		// - main manifest missing fields
 		// - main manifest fields in bad format
@@ -209,12 +209,25 @@ pub trait ValidateCrate: CrateInfoSource {
 
 
 	fn validate_for(&self, target: &str) -> impl IntoIterator<Item = Problem> {
-		println!("TODO: validate_for(target={target:?}) not implemented yet!");
-		[]
+		let no_meta = self.metadata()
+		                  .is_none()
+		                  .then(|| Problem::Warning(Warning::MissingMetadata));
+
+		let man = self.bins()
+		              .contains(&target)
+		              .then_some(false)
+		              .or_else(|| self.examples().contains(&target).then_some(true))
+		              .map(|dev| self.manifest_override_or_crate(target.into(), dev))
+		              .map_or_else(
+		                           || vec![Problem::UnknownTarget { name: target.to_owned(), }],
+		                           |m| m.validate().into_iter().collect::<Vec<_>>(),
+		);
+
+		no_meta.into_iter().chain(man)
 	}
 }
 
-impl<T> ValidateCrate for T where T: CrateInfoSource {}
+impl<T> ValidateCrate for T where T: PackageSource {}
 
 
 #[cfg(test)]

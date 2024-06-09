@@ -19,7 +19,7 @@ use playdate::fs::soft_link_checked;
 use playdate::layout::Layout;
 use playdate::layout::Name;
 use playdate::manifest::format::ManifestFmt;
-use playdate::manifest::CrateInfoSource;
+use playdate::manifest::PackageSource;
 use playdate::metadata::format::Metadata;
 use playdate::metadata::validation::Validate;
 use playdate::metadata::validation::ValidateCrate;
@@ -359,13 +359,13 @@ fn build_manifest<Layout: playdate::layout::Layout>(config: &Config,
 		let source = ManifestSource::new(package, metadata.into());
 		// This validation not needed at this step. May be earlier:
 		validate(&source);
-		source.manifest_for_opt(cargo_target.as_deref(), dev)
+		source.manifest_override_or_crate(cargo_target.as_deref(), dev)
 	} else {
 		let metadata = playdate_metadata(package);
 		let source = ManifestSource::new(package, metadata.as_ref());
 		// This validation not needed at this step. May be earlier:
 		validate(&source);
-		source.manifest_for_opt(cargo_target.as_deref(), dev)
+		source.manifest_override_or_crate(cargo_target.as_deref(), dev)
 	};
 
 	// validation, lints
@@ -590,8 +590,9 @@ impl<'cfg, 'm> ManifestSource<'cfg, 'm> {
 	}
 }
 
-impl<'cfg> CrateInfoSource for ManifestSource<'cfg, '_> {
+impl<'cfg> PackageSource for ManifestSource<'cfg, '_> {
 	type Authors = [&'cfg str];
+	type Metadata = Metadata<String>;
 
 	fn name(&self) -> Cow<str> { self.package.name().as_str().into() }
 	fn authors(&self) -> &[&'cfg str] { &self.authors }
@@ -608,7 +609,7 @@ impl<'cfg> CrateInfoSource for ManifestSource<'cfg, '_> {
 	fn bins(&self) -> &[&str] { &self.bins }
 	fn examples(&self) -> &[&str] { &self.examples }
 
-	fn metadata(&self) -> Option<impl playdate::metadata::source::MetadataSource> { self.metadata }
+	fn metadata(&self) -> Option<&Self::Metadata> { self.metadata }
 
 	fn manifest_path(&self) -> Cow<Path> { Cow::Borrowed(self.package.manifest_path()) }
 }

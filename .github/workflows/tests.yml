@@ -570,6 +570,7 @@ jobs:
 
       - name: Suggestions
         uses: reviewdog/action-suggester@v1
+        continue-on-error: ${{ runner.os == 'Windows' }} # sometimes reviewdog fails on windows
         with:
           filter_mode: diff_context
           fail_on_error: false

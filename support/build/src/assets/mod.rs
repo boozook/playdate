@@ -23,8 +23,8 @@ pub fn apply_build_plan<'l, 'r, P: AsRef<Path>>(plan: BuildPlan<'l, 'r>,
 	use crate::fs::ensure_dir_exists;
 
 	let target_root = target_root.as_ref();
-	let build_method = assets_options.method;
-	let overwrite = assets_options.overwrite;
+	let build_method = assets_options.method();
+	let overwrite = assets_options.overwrite();
 	info!("collecting assets:");
 	debug!("assets build method: {build_method:?}, overwrite: {overwrite}");
 
@@ -123,16 +123,16 @@ pub fn apply_build_plan<'l, 'r, P: AsRef<Path>>(plan: BuildPlan<'l, 'r>,
 	for entry in plan.drain(..) {
 		let current: Vec<_> = match &entry {
 			Mapping::AsIs(inc, ..) => {
-				let source = abs_if_existing_any(inc.source(), crate_root);
+				let source = abs_if_existing_any(inc.source(), &crate_root);
 				vec![method(&source, &inc.target(), false)]
 			},
 			Mapping::Into(inc, ..) => {
-				let source = abs_if_existing_any(inc.source(), crate_root);
+				let source = abs_if_existing_any(inc.source(), &crate_root);
 				vec![method(&source, &inc.target(), true)]
 			},
 			Mapping::ManyInto { sources, target, .. } => {
 				sources.iter()
-				       .map(|inc| (abs_if_existing_any(inc.source(), crate_root), target.join(inc.target())))
+				       .map(|inc| (abs_if_existing_any(inc.source(), &crate_root), target.join(inc.target())))
 				       .map(|(ref source, ref target)| method(source, target, false))
 				       .collect()
 			},
@@ -171,7 +171,7 @@ pub enum OpRes {
 
 impl AssetsOptions {
 	fn link_behavior(&self) -> LinkBehavior {
-		if self.follow_symlinks {
+		if self.follow_symlinks() {
 			LinkBehavior::ReadTarget
 		} else {
 			LinkBehavior::ReadFile
