@@ -162,6 +162,12 @@ pub mod proto {
 
 			// kind of assets just for log:
 			let kind_prefix = key.dev.then_some("dev-").unwrap_or_default();
+			// this one for assets:
+			let kind = if key.dev {
+				AssetKind::Dev
+			} else {
+				AssetKind::Package
+			};
 
 
 			// build if needed:
@@ -266,7 +272,6 @@ pub mod proto {
 					let msg = format!("{kind_prefix}assets pre-build for {}, {REASON}.", key.id);
 					cfg.log().status("Skip", msg);
 				} else {
-					let kind = if key.dev { AssetKind::Dev } else { AssetKind::Package };
 					match pdc::build(cfg, &key.id, locked.as_inner(), kind) {
 						Ok(_) => {
 							let msg = format!("{kind_prefix}assets for {}", key.id);
@@ -289,7 +294,6 @@ pub mod proto {
 			locked.unlock();
 
 
-			let kind = if key.dev { AssetKind::Dev } else { AssetKind::Package };
 			let art_index = artifacts.artifacts.len();
 			artifacts.artifacts.push(AssetsArtifact { kind,
 			                                          package_id: key.id,

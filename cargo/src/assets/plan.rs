@@ -126,10 +126,7 @@ pub mod proto {
 	impl From<&'_ RootNode<'_>> for MultiKey {
 		fn from(root: &'_ RootNode<'_>) -> Self {
 			Self { dev: root.node().target().is_dev(),
-			       id: root.deps()
-			               .iter()
-			               .map(|d| d.package_id().to_owned())
-			               .collect() }
+			       id: root.deps().iter().map(|d| d.package_id().to_owned()).collect() }
 		}
 	}
 	impl MultiKey {
@@ -154,8 +151,7 @@ pub mod proto {
 
 		// prepare env:
 		let global_env: BTreeMap<_, _> =
-			std::env::vars()
-			                .chain({
+			std::env::vars().chain({
 				                cfg.sdk()
 				                   .map(|sdk| sdk.path())
 				                   .ok()
