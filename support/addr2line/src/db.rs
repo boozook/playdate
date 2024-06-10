@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::io::{Error as IoError, ErrorKind as IoErrorKind};
 
 use anyhow::Result;
-use sqlx::{Executor, Pool, Sqlite, SqlitePool};
+use rusqlite::Connection;
 use symbolic::common::{Language, Name, NameMangling};
 use utils::toolchain::sdk::Sdk;
 
@@ -16,7 +16,7 @@ const QUERY_LN: &str = include_str!("query-ln.sql");
 
 
 pub struct Resolver {
-	pool: Pool<Sqlite>,
+	conn: Connection,
 }
 
 impl Resolver {
@@ -38,14 +38,16 @@ impl Resolver {
 	}
 
 	pub async fn with_exact(db_path: &Path) -> Result<Self> {
-		let db_url = format!("sqlite://{}", db_path.display());
-		let pool = SqlitePool::connect(&db_url).await?;
-		trace!("query fn prepared: {}", pool.prepare(QUERY_FN).await.is_ok());
-		trace!("query ln prepared: {}", pool.prepare(QUERY_LN).await.is_ok());
-		Ok(Self { pool })
+		let conn = Connection::open(db_path)?;
+		Ok(Self { conn })
 	}
 
-	pub async fn close(&self) { self.pool.close().await }
+	pub async fn close(self) -> rusqlite::Result<()> {
+		self.conn.close().map_err(|(conn, err)| {
+			                 conn.close().ok();
+			                 err
+		                 })
+	}
 
 
 	pub async fn resolve(&self, addr: u32) -> anyhow::Result<report::Report> {
@@ -86,28 +88,33 @@ impl Resolver {
 	}
 
 	pub async fn resolve_fn(&self, addr: u32) -> anyhow::Result<report::Report> {
-		#[cfg(query_validation)] // build with RUSTFLAGS='--cfg query_validation'
-		let recs = sqlx::query_file!("src/query-fn.sql", addr).fetch_all(&self.pool);
-		#[cfg(not(query_validation))]
-		let recs = {
-			#[derive(sqlx::FromRow)]
-			struct Record {
-				name: Option<String>,
-				low: Option<i64>,
-				size: Option<i64>,
-				fn_hw_id: Option<i64>,
-				ln_low: Option<i64>,
-				ln_hw_id: Option<i64>,
-				lineno: Option<i64>,
-				path: Option<String>,
-			}
-			sqlx::query_as::<_, Record>(QUERY_FN).bind(addr)
-			                                     .fetch_all(&self.pool)
-		};
+		struct Record {
+			name: Option<String>,
+			low: Option<i64>,
+			size: Option<i64>,
+			fn_hw_id: Option<i64>,
+			ln_low: Option<i64>,
+			ln_hw_id: Option<i64>,
+			lineno: Option<i64>,
+			path: Option<String>,
+		}
+
+		let mut stmt = self.conn.prepare(QUERY_FN)?;
+		let records = stmt.query_map([addr], |row| {
+			                  Ok(Record { name: row.get(0)?,
+			                              low: row.get(1)?,
+			                              size: row.get(2)?,
+			                              fn_hw_id: row.get(3)?,
+			                              ln_low: row.get(4)?,
+			                              ln_hw_id: row.get(4)?,
+			                              lineno: row.get(6)?,
+			                              path: row.get(7)? })
+		                  })?;
 
 		let mut results = HashMap::new();
 
-		for func in recs.await? {
+		for record in records {
+			let func = record?;
 			let fn_name = func.name.as_deref().map(Cow::from).unwrap_or(UNKNOWN.into());
 			let fn_id = format_args!("{fn_name}{}", func.fn_hw_id.unwrap_or_default()).to_string();
 			let name = Name::new(fn_name.to_string(), NameMangling::Unmangled, Language::C);
@@ -140,31 +147,32 @@ impl Resolver {
 
 
 	pub async fn resolve_ln(&self, addr: u32) -> anyhow::Result<report::Report> {
-		#[cfg(query_validation)] // build with RUSTFLAGS='--cfg query_validation'
-		let recs = sqlx::query_file!("src/query-ln.sql", addr).fetch_all(&self.pool);
-		#[cfg(not(query_validation))]
-		let recs = {
-			#[derive(sqlx::FromRow)]
-			struct Record {
-				low: Option<i64>,
-				hw_id: Option<i64>,
-				lineno: Option<i64>,
-				path: Option<String>,
-			}
-			sqlx::query_as::<_, Record>(QUERY_LN).bind(addr)
-			                                     .fetch_all(&self.pool)
-		};
+		struct Record {
+			low: Option<i64>,
+			hw_id: Option<i64>,
+			lineno: Option<i64>,
+			path: Option<String>,
+		}
 
-		let mut lines: Vec<_> = recs.await?
-		                            .into_iter()
-		                            .map(|ln| {
-			                            report::Span { hw_id: ln.hw_id,
-			                                           address: ln.low.map(|p| p as _).unwrap_or_default(),
-			                                           size: None,
-			                                           line: ln.lineno.map(|p| p as _),
-			                                           file: ln.path.unwrap_or(UNKNOWN.into()).into() }
-		                            })
-		                            .collect();
+		let mut stmt = self.conn.prepare(QUERY_LN)?;
+		let records = stmt.query_map([addr], |row| {
+			                  Ok(Record { low: row.get(0)?,
+			                              hw_id: row.get(1)?,
+			                              lineno: row.get(2)?,
+			                              path: row.get(3)? })
+		                  })?;
+
+		let mut lines = records.into_iter()
+		                       .try_fold(Vec::new(), |mut acc, res| -> rusqlite::Result<_> {
+			                       let ln = res?;
+			                       let span = report::Span { hw_id: ln.hw_id,
+			                                                 address: ln.low.map(|p| p as _).unwrap_or_default(),
+			                                                 size: None,
+			                                                 line: ln.lineno.map(|p| p as _),
+			                                                 file: ln.path.unwrap_or(UNKNOWN.into()).into() };
+			                       acc.push(span);
+			                       Ok(acc)
+		                       })?;
 
 		let result = if lines.is_empty() {
 			report::Report { addr: (addr as u64).into(),

@@ -1,6 +1,6 @@
 [package]
 name = "playdate-symbolize"
-version = "0.1.1"
+version = "0.1.2"
 readme = "README.md"
 description = "Tools for symbolise addresses from bin (pdex.elf) and Playdate's trace or crashlog."
 keywords = ["playdate", "bin", "elf", "addr2line", "utility"]
@@ -10,7 +10,6 @@ license.workspace = true
 authors.workspace = true
 homepage.workspace = true
 repository.workspace = true
-build = "src/build.rs"
 
 
 [[bin]]
@@ -48,12 +47,9 @@ features = ["std", "env", "derive", "help", "usage", "color"]
 workspace = true
 optional = true
 
-[dependencies.sqlx]
-version = "0.7"
-# TODO: support runtime-async-std
-features = ["runtime-tokio", "sqlite", "macros"]
-default-features = false
-
+[dependencies.rusqlite]
+version = "0.30"
+features = ["bundled"]
 
 [dependencies.utils]
 features = ["log"]
@@ -62,4 +58,5 @@ workspace = true
 
 
 [features]
-default = ["clap", "env_logger", "const-str"]
+default = ["clap", "env_logger", "const-str", "sqlite-bundled"]
+sqlite-bundled = ["rusqlite/bundled"]
