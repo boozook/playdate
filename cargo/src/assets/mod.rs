@@ -130,14 +130,14 @@ pub mod proto {
 
 			// clean layout if needed:
 			if !cfg.dry_run && cfg.compile_options.build_config.force_rebuild {
-				if !matches!(cfg.workspace.config().shell().verbosity(), Verbosity::Quiet) {
+				if !matches!(cfg.workspace.gctx().shell().verbosity(), Verbosity::Quiet) {
 					cfg.log().status("Clean", format!("assets for {}", key.id));
 				}
 				layout.clean()?;
 			}
 
 
-			let mut locked = layout.lock_mut(cfg.workspace.config())?;
+			let mut locked = layout.lock_mut(cfg.workspace.gctx())?;
 			locked.prepare()?;
 
 			// path of build-plan file:
@@ -425,7 +425,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 		let mut options = HashMap::new();
 
 		if !config.dry_run && config.compile_options.build_config.force_rebuild {
-			if !matches!(config.workspace.config().shell().verbosity(), Verbosity::Quiet) {
+			if !matches!(config.workspace.gctx().shell().verbosity(), Verbosity::Quiet) {
 				config.log()
 				      .status("Clean", format!("assets for {}", package.package_id()));
 			}
@@ -470,7 +470,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 		// TODO: list deps in the plan
 
 		for (package, metadata) in packages {
-			let locked = layout.lock_mut(config.workspace.config())?;
+			let locked = layout.lock_mut(config.workspace.gctx())?;
 			let dev = has_dev && package.package_id() == target_pid;
 			let err_msg = |err| format!("{err}, caused when planning assets for {}.", package.package_id());
 
@@ -517,12 +517,12 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 				                        .chain(plan.dev.as_ref().into_iter().map(|plan| (plan, AssetKind::Dev)))
 				{
 					let message = plan.printable_serializable(package.package_id(), kind);
-					config.workspace.config().shell().print_json(&message)?;
+					config.workspace.gctx().shell().print_json(&message)?;
 				}
 			}
 		} else {
 			config.workspace
-			      .config()
+			      .gctx()
 			      .shell()
 			      .verbose(|shell| {
 				      for (package, plan) in plans.iter() {
@@ -605,7 +605,7 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 
 		// finally apply plans:
 		if !config.dry_run && !config.compile_options.build_config.build_plan && !plans.is_empty() {
-			let mut locked = layout.lock_mut(config.workspace.config())?;
+			let mut locked = layout.lock_mut(config.workspace.gctx())?;
 			locked.prepare()?;
 
 			for (dependency, mut plan) in plans.into_iter() {
@@ -764,8 +764,8 @@ pub fn build<'cfg>(config: &'cfg Config) -> CargoResult<AssetsArtifacts<'cfg>> {
 
 
 	if config.compile_options.build_config.build_plan {
-		config.workspace.config().shell().out().flush()?;
-		config.workspace.config().shell().err().flush()?;
+		config.workspace.gctx().shell().out().flush()?;
+		config.workspace.gctx().shell().err().flush()?;
 		std::process::exit(0);
 	}
 

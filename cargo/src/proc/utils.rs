@@ -42,7 +42,7 @@ pub fn cargo_proxy_with<S: AsRef<OsStr>>(cfg: &Config,
 pub fn cargo(cfg: Option<&Config>) -> CargoResult<std::process::Command> {
 	let mut proc = cargo_cmd(cfg);
 
-	if let Some(cfg) = cfg.map(|cfg| cfg.workspace.config()) {
+	if let Some(cfg) = cfg.map(|cfg| cfg.workspace.gctx()) {
 		// transparent env:
 		cfg.env_config()?.iter().for_each(|(k, v)| {
 			                        let value = v.resolve(cfg);
@@ -72,7 +72,7 @@ pub fn cargo(cfg: Option<&Config>) -> CargoResult<std::process::Command> {
 pub fn cargo_cmd(cfg: Option<&Config>) -> std::process::Command {
 	fn cargo_path<'t>(cfg: Option<&'t Config<'t>>) -> (Cow<'t, Path>, Option<&str>) {
 		if let Some(cfg) = cfg {
-			let path = cfg.workspace.config().cargo_exe().log_err().ok().map(Cow::from);
+			let path = cfg.workspace.gctx().cargo_exe().log_err().ok().map(Cow::from);
 			if path.is_some() && path == std::env::current_exe().log_err().ok().map(Into::into) {
 				// Seems to we're in standalone mode.
 				cargo_path(None)
@@ -115,7 +115,7 @@ pub fn read_cargo_json<T: DeserializeOwned>(cfg: &Config, mut cmd: Command) -> C
 
 	let output = cmd.output()?;
 	if !output.status.success() {
-		cfg.workspace.config().shell().err().write_all(&output.stderr)?;
+		cfg.workspace.gctx().shell().err().write_all(&output.stderr)?;
 		output.status.exit_ok()?;
 	}
 

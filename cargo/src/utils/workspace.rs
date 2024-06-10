@@ -24,6 +24,7 @@ impl<'t> Config<'t> {
 		Ok(members)
 	}
 
+	#[deprecated(since = "0.5", note = "TODO: use unit_graph instead")]
 	/// Returns a list of targets that are requested by the user.
 	/// Resolved by requested spec initially, with fallback to all possible targets.
 	pub fn possible_targets_ext(&'t self) -> CargoResult<Vec<PossibleTargets<'t>>> {
@@ -37,6 +38,7 @@ impl<'t> Config<'t> {
 		Ok(possible)
 	}
 
+	#[deprecated(since = "0.5", note = "TODO: use unit_graph instead")]
 	/// Returns a list of potential targets that are requested by the user.
 	pub fn possible_targets(&'t self) -> CargoResult<impl Iterator<Item = PossibleTargets<'t>>> {
 		let packages = self.members_with_features()?.into_iter().map(|(p, _)| p);
@@ -44,6 +46,7 @@ impl<'t> Config<'t> {
 		Ok(members)
 	}
 
+	#[deprecated(since = "0.5", note = "TODO: use unit_graph instead")]
 	pub fn possible_targets_with(&'t self,
 	                             members: impl IntoIterator<Item = &'t Package>)
 	                             -> impl Iterator<Item = PossibleTargets<'t>> {
@@ -57,6 +60,7 @@ impl<'t> Config<'t> {
 		                   })
 	}
 
+	#[deprecated(since = "0.5", note = "TODO: determine from unit_graph instead")]
 	pub fn possible_compile_kinds(&'t self) -> CargoResult<Vec<CompileKind>> {
 		let member_kinds = self.members_with_features()?.into_iter().flat_map(|(p, _)| {
 			                                                            p.manifest()
@@ -79,7 +83,7 @@ impl<'t> Config<'t> {
 
 	pub fn target_info(&self, kind: CompileKind) -> CargoResult<TargetInfo> {
 		TargetInfo::new(
-		                self.workspace.config(),
+		                self.workspace.gctx(),
 		                &self.possible_compile_kinds()?,
 		                &self.rustc,
 		                kind,

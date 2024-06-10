@@ -17,7 +17,7 @@ use cargo::core::{Workspace, VirtualManifest, WorkspaceConfig, WorkspaceRootConf
 use cargo::core::compiler::{CompileTarget, CompileKind};
 use cargo::ops::CompileOptions;
 use cargo::util::command_prelude::{ArgMatchesExt, CompileMode, ProfileChecking};
-use cargo::util::Config as CargoConfig;
+use cargo::util::GlobalContext as CargoConfig;
 use cargo::util::CargoResult;
 use clap_lex::SeekFrom;
 
@@ -196,7 +196,7 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 			matches.check_optional_opts(&workspace, &compile_options)?;
 		}
 
-		let rustc = workspace.config().load_global_rustc(Some(&workspace))?;
+		let rustc = workspace.gctx().load_global_rustc(Some(&workspace))?;
 		let host_target = CompileTarget::new(&rustc.host)?;
 
 
@@ -365,7 +365,7 @@ fn presented_dangerous_global_args_values<'m>(matches: &'m ArgMatches,
 
 
 fn compile_options(cmd: &Cmd, matches: &ArgMatches, ws: &Workspace<'_>) -> CargoResult<CompileOptions> {
-	let cfg = ws.config();
+	let cfg = ws.gctx();
 	let mut compile_options = match cmd {
 		// allow multiple crates:
 		Cmd::Build | Cmd::Package | Cmd::Migrate | Cmd::Assets => {
@@ -373,7 +373,7 @@ fn compile_options(cmd: &Cmd, matches: &ArgMatches, ws: &Workspace<'_>) -> Cargo
 		},
 
 		Cmd::New | Cmd::Init => {
-			let mut opts = CompileOptions::new(ws.config(), CompileMode::Check { test: false })?;
+			let mut opts = CompileOptions::new(ws.gctx(), CompileMode::Check { test: false })?;
 			opts.build_config
 			    .requested_kinds
 			    .push(PlaydateTarget::Device.into());

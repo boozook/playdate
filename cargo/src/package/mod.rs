@@ -238,7 +238,7 @@ fn package_multi_target<'p>(config: &Config,
 	let layout_target_name = Name::with_names(package.name().as_str(), products.first().map(|p| &p.name));
 	let mut layout =
 		CrossTargetLayout::new(config, package.package_id(), Some(layout_target_name))?.lock(config.workspace
-		                                                                                           .config())?;
+		                                                                                           .gctx())?;
 	if let Some(assets) = assets {
 		debug_assert_eq!(
 		                 layout.as_ref().assets_layout(config).root(),

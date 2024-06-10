@@ -127,14 +127,14 @@ impl Config<'_> {
 	#[must_use]
 	pub fn log(&self) -> CargoLogger<RefMut<'_, Shell>> {
 		CargoLogger(
-		            self.workspace.config().shell(),
+		            self.workspace.gctx().shell(),
 		            self.compile_options.build_config.emit_json(),
 		)
 	}
 
 	pub fn log_extra_verbose<F>(&self, mut callback: F)
 		where F: FnMut(CargoLogger<RefMut<'_, Shell>>) {
-		if self.workspace.config().extra_verbose() {
+		if self.workspace.gctx().extra_verbose() {
 			callback(self.log())
 		}
 	}
