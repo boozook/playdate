@@ -125,7 +125,7 @@ pub fn build<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<Vec<BuildProduct<'
 
 
 		for (path, ct, inv) in mapping {
-			let layout = config.layout_for(inv.kind)?.lock(config.workspace.config())?;
+			let layout = config.layout_for(inv.kind)?.lock(config.workspace.gctx())?;
 			let artifact = CargoArtifact { package,
 			                               path,
 			                               name: art.target.name,
@@ -395,7 +395,7 @@ fn build_binary<'cfg, Layout, S>(config: &'cfg Config,
 	                                   layout.as_ref(),
 	                                   package_crate_name,
 	                                   Some(artifact.name.as_ref()),
-	).lock(config.workspace.config())?;
+	).lock(config.workspace.gctx())?;
 	pdl.as_mut().prepare()?;
 
 	let product = if artifact.ck.is_playdate() {
@@ -445,7 +445,7 @@ fn build_library<'cfg, Layout, S>(config: &'cfg Config,
 		"{} of {}{}",
 		artifact.ct,
 		artifact.package,
-		if config.workspace.config().extra_verbose() {
+		if config.workspace.gctx().extra_verbose() {
 			format!(" from {}", artifact.path.as_relative_to_root(config).display())
 		} else {
 			Default::default()
@@ -464,7 +464,7 @@ fn build_library<'cfg, Layout, S>(config: &'cfg Config,
 	                                   layout.as_ref(),
 	                                   package_crate_name,
 	                                   Some(artifact.name.as_ref()),
-	).lock(config.workspace.config())?;
+	).lock(config.workspace.gctx())?;
 	pdl.as_mut().prepare()?;
 
 	let product = if artifact.ck.is_playdate() {
@@ -511,8 +511,8 @@ fn build_library<'cfg, Layout, S>(config: &'cfg Config,
 		            });
 
 		// Print gcc's output in verbose mode only!
-		let quiet = config.workspace.config().shell().verbosity() == Verbosity::Quiet;
-		let extra_verbose = config.workspace.config().extra_verbose();
+		let quiet = config.workspace.gctx().shell().verbosity() == Verbosity::Quiet;
+		let extra_verbose = config.workspace.gctx().extra_verbose();
 		gcc.stderr(if quiet { Stdio::null() } else { Stdio::inherit() });
 		gcc.stdout(if extra_verbose {
 			   Stdio::inherit()

@@ -1,6 +1,6 @@
 [package]
 name = "playdate-symbolize"
-version = "0.1.2"
+version = "0.1.3"
 readme = "README.md"
 description = "Tools for symbolise addresses from bin (pdex.elf) and Playdate's trace or crashlog."
 keywords = ["playdate", "bin", "elf", "addr2line", "utility"]
@@ -48,7 +48,7 @@ workspace = true
 optional = true
 
 [dependencies.rusqlite]
-version = "0.30"
+version = "0.31"
 features = ["bundled"]
 
 [dependencies.utils]

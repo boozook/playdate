@@ -27,7 +27,7 @@ pub struct LazyBuildContext<'a, 'cfg> {
 
 impl<'a, 'cfg> LazyBuildContext<'a, 'cfg> {
 	pub fn new(config: &'cfg Config) -> CargoResult<Self> {
-		let options = CompileOptions::new(config.workspace.config(), CompileMode::Check { test: false })?;
+		let options = CompileOptions::new(config.workspace.gctx(), CompileMode::Check { test: false })?;
 		Ok(Self { bcx: Lazy::new(),
 		          interner: UnitInterner::new(),
 		          workspace: &config.workspace,

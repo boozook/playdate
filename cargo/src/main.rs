@@ -13,7 +13,7 @@ use std::borrow::Cow;
 use anyhow::bail;
 use cargo::core::Verbosity;
 use cargo::core::compiler::{CrateType, CompileKind};
-use cargo::util::{CargoResult, Config as CargoConfig};
+use cargo::util::{CargoResult, GlobalContext as CargoConfig};
 use config::Config;
 use anstyle::AnsiColor as Color;
 
@@ -42,7 +42,7 @@ fn main() -> CargoResult<()> {
 	                             |err| {
 		                             #[cfg(debug_assertions)]
 		                             eprintln!("Error: {err:?}");
-		                             let config = config.workspace.config();
+		                             let config = config.workspace.gctx();
 		                             config.shell().set_verbosity(Verbosity::Normal);
 		                             config.shell().error(err).ok();
 		                             std::process::exit(1);
