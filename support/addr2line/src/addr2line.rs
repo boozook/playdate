@@ -51,7 +51,7 @@ async fn main() -> anyhow::Result<()> {
 		}
 	}
 
-	os_db.close().await;
+	os_db.close().await?;
 
 	Ok(())
 }
