@@ -277,9 +277,7 @@ impl<'t> MetaDeps<'t> {
 	pub fn roots_by_compile_target(&self) -> BTreeMap<TargetKey, BTreeSet<cargo::core::compiler::CompileKind>> {
 		self.roots.iter().fold(BTreeMap::new(), |mut acc, root| {
 			                 let key = TargetKey::from(root);
-			                 acc.entry(key)
-			                    .or_default()
-			                    .insert(root.node().unit().platform);
+			                 acc.entry(key).or_default().insert(root.node().unit().platform);
 			                 acc
 		                 })
 	}
