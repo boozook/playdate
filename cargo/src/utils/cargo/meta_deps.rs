@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::Path;
 
 use cargo::core::compiler::CompileMode;
@@ -251,6 +251,40 @@ impl<'t> MetaDeps<'t> {
 
 	pub fn roots(&self) -> &[RootNode<'t>] { self.roots.as_slice() }
 
+
+	/// Groups of root-units by compile-target.
+	///
+	/// Possible groups:
+	/// 1. Contains just one root-unit;
+	/// 2. Contains two units with __same cargo-target__ and different rustc-targets __including__ playdate.
+	pub fn root_groups(&self) { unimplemented!() }
+
+
+	/// Returns first root for each group by [`roots_by_compile_target`][Self::roots_by_compile_target].
+	pub fn roots_compile_target_agnostic(&self) -> impl Iterator<Item = &RootNode<'t>> {
+		self.roots_by_compile_target().into_iter().flat_map(|(key, _)| {
+			                                          self.roots().iter().find(|n| {
+				                                                             n.node().unit().package_id ==
+				                                                             *key.package_id &&
+				                                                             &n.node().unit().target == key.target
+			                                                             })
+		                                          })
+	}
+
+	/// Groups of root-units by target.
+	///
+	/// Grouping: (package_id + cargo-target) => [rustc-target].
+	pub fn roots_by_compile_target(&self) -> BTreeMap<TargetKey, BTreeSet<cargo::core::compiler::CompileKind>> {
+		self.roots.iter().fold(BTreeMap::new(), |mut acc, root| {
+			                 let key = TargetKey::from(root);
+			                 acc.entry(key)
+			                    .or_insert(BTreeSet::new())
+			                    .insert(root.node().unit().platform);
+			                 acc
+		                 })
+	}
+
+
 	pub fn root_for(&self, id: &PackageId, tk: &TargetKindWild, tname: &str) -> CargoResult<&RootNode<'t>> {
 		self.roots
 		    .iter()
@@ -276,6 +310,28 @@ impl<'t> MetaDeps<'t> {
 		    })
 		    .unwrap_or_default()
 		    .dependencies()
+	}
+}
+
+
+#[derive(Debug, Hash, PartialEq, PartialOrd, Eq, Ord)]
+pub struct TargetKey<'t> {
+	package_id: &'t PackageId,
+	target: &'t UnitTarget,
+}
+
+impl<'t> From<&'t RootNode<'t>> for TargetKey<'t> {
+	fn from(node: &'t RootNode<'t>) -> Self { TargetKey::from(node.node()) }
+}
+
+impl<'t> From<&'t Node<'t>> for TargetKey<'t> {
+	fn from(node: &'t Node<'t>) -> Self { TargetKey::from(node.unit()) }
+}
+
+impl<'t> From<&'t Unit> for TargetKey<'t> {
+	fn from(unit: &'t Unit) -> Self {
+		TargetKey { package_id: &unit.package_id,
+		            target: &unit.target }
 	}
 }
 

@@ -64,7 +64,8 @@ fn main() -> CargoResult<()> {
 fn execute(config: &Config) -> CargoResult<()> {
 	match config.cmd {
 		cli::cmd::Cmd::Assets => {
-			let _result = assets::build(config)?;
+			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
+			assets::proto::build_all(config, &deps_tree)?;
 		},
 
 		cli::cmd::Cmd::Build => {

@@ -38,7 +38,7 @@ pub type AssetsArtifacts<'cfg> = HashMap<&'cfg Package, AssetsArtifact>;
 pub mod proto {
 	use super::*;
 
-	use plan::proto::MultiKey;
+	use plan::proto::RootKey;
 	use plan::Difference;
 	use playdate::assets::plan::BuildPlan;
 	use playdate::assets::BuildReport;
@@ -59,7 +59,7 @@ pub mod proto {
 
 	pub struct AssetsArtifactsNew<'t, 'cfg> {
 		artifacts: Vec<AssetsArtifact>,
-		index: BTreeMap<MultiKey, Vec<usize>>,
+		index: BTreeMap<RootKey, Vec<usize>>,
 		tree: &'t MetaDeps<'cfg>,
 	}
 
@@ -316,11 +316,17 @@ pub mod proto {
 
 		cfg.log_extra_verbose(|mut logger| {
 			   artifacts.iter().for_each(|(root, arts)| {
+				                   use cargo::core::compiler::CompileKind;
+				                   let ct: Cow<_> = match root.node().unit().platform {
+					                   CompileKind::Host => "host".into(),
+				                      CompileKind::Target(kind) => kind.short_name().to_owned().into(),
+				                   };
+
 				                   let root = format!(
-				                                      "({}) {}::{}",
+				                                      "{} {} of {} for {ct}",
 				                                      root.node().target().kind().description(),
-				                                      root.node().package_id().name(),
 				                                      root.node().target().name,
+				                                      root.node().package_id().name(),
 				);
 				                   logger.status("Assets", format!("artifacts for {root}:"));
 				                   arts.for_each(|art| {
@@ -354,6 +360,15 @@ pub mod proto {
 	fn plan_cache(path: PathBuf, plan: &BuildPlan<'_, '_>) -> CargoResult<PlanCache> {
 		let mut serializable = plan.iter_flatten_meta().collect::<Vec<_>>();
 		serializable.sort();
+
+		#[derive(serde::Serialize)]
+		struct SerializablePlan<'t> {
+			items: &'t [(playdate::assets::plan::MappingKind, PathBuf, (PathBuf, Option<std::time::SystemTime>))],
+			env: &'t BTreeMap<String, String>,
+		}
+
+		let serializable = SerializablePlan { items: &serializable,
+		                               env: plan.used_env_vars() };
 		let json = serde_json::to_string(&serializable)?;
 
 		let difference = if path.try_exists()? {

@@ -726,7 +726,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-playdate"
-version = "0.5.0-beta.3"
+version = "0.5.0-beta.4"
 dependencies = [
  "anstyle",
  "anyhow",
@@ -2759,9 +2759,9 @@ dependencies = [
 
 [[package]]
 name = "httparse"
-version = "1.9.1"
+version = "1.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8720bf4c5bfb5b6c350840c4cd14b787bf00ed51c148c857fbf7a6ddb7062764"
+checksum = "9f3935c160d00ac752e09787e6e6bfc26494c2183cc922f1bc678a60d4733bc2"
 
 [[package]]
 name = "httpdate"
@@ -4182,7 +4182,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-build"
-version = "0.4.0-pre2"
+version = "0.4.0-pre3"
 dependencies = [
  "dirs",
  "fs_extra",

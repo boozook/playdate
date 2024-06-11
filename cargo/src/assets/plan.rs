@@ -93,9 +93,10 @@ pub mod proto {
 		/// per-dep ?dev plan
 		pub index: BTreeMap<Key, usize>,
 		/// per-root plans to merge
-		pub targets: BTreeMap<MultiKey, Vec<usize>>,
+		pub targets: BTreeMap<RootKey, Vec<usize>>,
 	}
 
+	/// Target-agnostic package key.
 	#[derive(Debug, Clone, Copy, Hash, PartialEq, PartialOrd, Eq, Ord)]
 	pub struct Key {
 		pub id: PackageId,
@@ -116,20 +117,21 @@ pub mod proto {
 	}
 
 
+	/// Target-agnostic root-package key with all dependencies.
 	#[derive(Debug, Clone, Hash, PartialEq, PartialOrd, Eq, Ord)]
-	pub struct MultiKey {
+	pub struct RootKey {
 		/// Dependencies
 		id: Vec<PackageId>,
 		/// Primary target is dev
 		dev: bool,
 	}
-	impl From<&'_ RootNode<'_>> for MultiKey {
+	impl From<&'_ RootNode<'_>> for RootKey {
 		fn from(root: &'_ RootNode<'_>) -> Self {
 			Self { dev: root.node().target().is_dev(),
 			       id: root.deps().iter().map(|d| d.package_id().to_owned()).collect() }
 		}
 	}
-	impl MultiKey {
+	impl RootKey {
 		pub fn dev(&self) -> bool { self.dev }
 
 		pub fn is_for(&self, root: &'_ RootNode<'_>) -> bool {
@@ -138,7 +140,6 @@ pub mod proto {
 			    .iter()
 			    .enumerate()
 			    .all(|(i, d)| self.id.get(i).filter(|k| *k == d.package_id()).is_some())
-			// root.deps().into_iter().enumerate().all(|(i, d)| d.package_id() == &self.id[i])
 		}
 	}
 
@@ -176,7 +177,8 @@ pub mod proto {
 		};
 
 
-		for root in tree.roots() {
+		// use target-agnostic selection of roots:
+		for root in tree.roots_compile_target_agnostic() {
 			let meta_source = root.as_source();
 
 			let options = meta_source.assets_options();
@@ -191,7 +193,7 @@ pub mod proto {
 			log::debug!("  dependencies are allowed: {}", options.dependencies());
 
 
-			let plan_key = MultiKey::from(root);
+			let plan_key = RootKey::from(root);
 			if plans.targets.contains_key(&plan_key) {
 				log::debug!("  skip: already done");
 				continue;
@@ -222,12 +224,12 @@ pub mod proto {
 						                            .map(|m| if dev { m.dev_assets() } else { m.assets() }) &&
 						   !assets.is_empty()
 						{
-							// let plan =
 							match assets_build_plan(&env, assets, &options, Some(crate_root.into())) {
 								Ok(plan) => {
 									let pid = key.id;
 									let is_dev = key.dev;
 									let dev_index = plans.plans.len();
+									let compile_target_agnostic = plan.compile_target_agnostic();
 									plans.index.insert(key, dev_index);
 									plans.plans.push(plan);
 									indices.push(dev_index);
@@ -235,7 +237,12 @@ pub mod proto {
 									log::debug!("    done: +#{dev_index} (dev:{is_dev})");
 									cfg.log().verbose(|mut log| {
 										         log.status("Plan", format_args!("{name_log}assets for {pid} planned",))
-									         })
+									         });
+
+									if !compile_target_agnostic {
+										cfg.log()
+										   .error("Assets is not compile-target-agnostic, this is not supported");
+									}
 								},
 								Err(err) => {
 									cfg.log()
@@ -307,7 +314,7 @@ pub mod proto {
 
 		// check:
 		for root in tree.roots() {
-			let key = MultiKey::from(root);
+			let key = RootKey::from(root);
 			debug_assert!(plans.targets.contains_key(&key));
 		}
 
@@ -322,7 +329,7 @@ pub mod proto {
 	                                 plans: &AssetsPlans<'cfg>)
 	                                 -> CargoResult<()> {
 		// prepare context:
-		let mut root_package: HashMap<&MultiKey, HashSet<&PackageId>> = HashMap::with_capacity(tree.roots().len());
+		let mut root_package: HashMap<&RootKey, HashSet<&PackageId>> = HashMap::with_capacity(tree.roots().len());
 		let mut root_options: HashMap<&PackageId, AssetsOptions> = HashMap::with_capacity(tree.roots().len());
 
 		plans.targets
