@@ -368,7 +368,7 @@ pub mod proto {
 		}
 
 		let serializable = SerializablePlan { items: &serializable,
-		                               env: plan.used_env_vars() };
+		                                      env: plan.used_env_vars() };
 		let json = serde_json::to_string(&serializable)?;
 
 		let difference = if path.try_exists()? {

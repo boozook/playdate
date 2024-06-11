@@ -278,7 +278,7 @@ impl<'t> MetaDeps<'t> {
 		self.roots.iter().fold(BTreeMap::new(), |mut acc, root| {
 			                 let key = TargetKey::from(root);
 			                 acc.entry(key)
-			                    .or_insert(BTreeSet::new())
+			                    .or_default()
 			                    .insert(root.node().unit().platform);
 			                 acc
 		                 })
