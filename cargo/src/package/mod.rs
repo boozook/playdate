@@ -51,9 +51,9 @@ pub struct Product {
 }
 
 
-pub fn build_all<'b>(config: &'_ Config,
+pub fn build_all(config: &'_ Config,
                      assets: AssetsArtifactsNew<'_, '_>,
-                     products: Vec<BuildProduct<'b>>)
+                     products: Vec<BuildProduct<'_>>)
                      -> CargoResult<Vec<Product>> {
 	let products: Vec<SuccessfulBuildProduct> = products.into_iter().flat_map(TryInto::try_into).collect();
 	let mut targets = HashMap::<_, Vec<_>>::new();
