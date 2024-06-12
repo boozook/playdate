@@ -34,7 +34,7 @@ impl format::BuildPlan {
 }
 
 
-#[allow(dead_code)]
+#[derive(Debug, Clone, Copy)]
 pub enum TargetKindWild {
 	Lib,
 	Bin,
