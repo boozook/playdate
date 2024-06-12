@@ -70,10 +70,12 @@ pub fn build_all(config: &'_ Config,
 	let mut results = Vec::new();
 
 	for ((package, _), mut products) in targets {
+		let package_id = package.package_id();
+
 		log::debug!(
 		            "Looking for assets artifacts for ({}) {}::{} for {}:",
 		            &products[0].src_ct,
-		            package.package_id(),
+		            package_id,
 		            products[0].name,
 		            match &products[0].ck {
 			            CompileKind::Host => "host",
@@ -81,36 +83,50 @@ pub fn build_all(config: &'_ Config,
 		            }
 		);
 
-		let (root, assets_ng) = assets.iter()
-		                              .find(|(r, _)| {
-			                              let unit = r.node().unit();
-			                              unit.package_id == package.package_id() &&
-			                              unit.platform == products[0].ck &&
-			                              unit.target.crate_types.contains(&products[0].src_ct) &&
-			                              unit.target.name == products[0].name
-		                              })
-		                              .ok_or_else(|| {
-			                              let ck: Cow<_> = match products[0].ck {
-				                              CompileKind::Host => "host".into(),
-			                                 CompileKind::Target(ref kind) => kind.short_name().into(),
-			                              };
-			                              anyhow!(
-			                                      "No assets artifacts for ({}) {}::{} for {ck}",
-			                                      &products[0].src_ct,
-			                                      package.package_id(),
-			                                      products[0].name,
+		let (root, assets) = assets.iter()
+		                           .find_map(|(r, arts)| {
+			                           let unit = r.node().unit();
+			                           (unit.package_id == package_id &&
+			                            unit.platform == products[0].ck &&
+			                            unit.target.crate_types.contains(&products[0].src_ct) &&
+			                            unit.target.name == products[0].name)
+			                                                        .then_some((r, Some(arts)))
+		                           })
+		                           .or_else(|| {
+			                           assets.tree
+			                                 .roots()
+			                                 .iter()
+			                                 .find(|r| {
+				                                 let unit = r.node().unit();
+				                                 unit.package_id == package_id &&
+				                                 unit.platform == products[0].ck &&
+				                                 unit.target.crate_types.contains(&products[0].src_ct) &&
+				                                 unit.target.name == products[0].name
+			                                 })
+			                                 .map(|r| (r, None))
+		                           })
+		                           .ok_or_else(|| {
+			                           anyhow!(
+			                                   "Root not found for ({}) {}::{} for {}",
+			                                   &products[0].src_ct,
+			                                   package_id,
+			                                   products[0].name,
+			                                   match products[0].ck {
+				                                   CompileKind::Host => "host",
+			                                      CompileKind::Target(ref kind) => kind.short_name(),
+			                                   }
 			)
-		                              })?;
+		                           })?;
 
 		match products.len() {
 			0 => unreachable!("impossible len=0"),
 			1 => {
 				let product = products.pop().unwrap();
-				let result = package_single_target(config, product, root, assets_ng)?;
+				let result = package_single_target(config, product, root, assets)?;
 				results.push(result);
 			},
 			_ => {
-				let result = package_multi_target(config, package, products, root, assets_ng)?;
+				let result = package_multi_target(config, package, products, root, assets)?;
 				results.push(result);
 			},
 		}
@@ -123,7 +139,7 @@ pub fn build_all(config: &'_ Config,
 fn package_single_target<'p, 'art>(config: &Config,
                                    product: SuccessfulBuildProduct<'p>,
                                    root: &RootNode<'_>,
-                                   assets: impl Iterator<Item = &'art AssetsArtifactNew>)
+                                   assets: Option<impl Iterator<Item = &'art AssetsArtifactNew>>)
                                    -> CargoResult<Product> {
 	let presentable_name = product.presentable_name();
 	config.log().status(
@@ -140,10 +156,12 @@ fn package_single_target<'p, 'art>(config: &Config,
 	}
 
 
-	for art in assets {
-		log::debug!("Packaging assets {:?} {}", art.kind, product.presentable_name());
+	if let Some(assets) = assets {
+		for art in assets {
+			log::debug!("Packaging assets {:?} {}", art.kind, product.presentable_name());
 
-		prepare_assets(config, art, product.layout.build(), true, product.layout.root())?;
+			prepare_assets(config, art, product.layout.build(), true, product.layout.root())?;
+		}
 	}
 
 	// manifest:
@@ -190,7 +208,7 @@ fn package_multi_target<'p, 'art>(config: &Config,
                                   package: &'p Package,
                                   products: Vec<SuccessfulBuildProduct>,
                                   root: &RootNode<'_>,
-                                  assets: impl Iterator<Item = &'art AssetsArtifactNew>)
+                                  assets: Option<impl Iterator<Item = &'art AssetsArtifactNew>>)
                                   -> CargoResult<Product> {
 	let src_cts = products.iter()
 	                      .map(|p| format!("{}", p.src_ct))
@@ -293,25 +311,27 @@ fn package_multi_target<'p, 'art>(config: &Config,
 
 
 	// Then the same as for single-product package:
-	let mut was_dev = false;
-	for artifact in assets {
-		log::debug!(
-		            "Packaging assets {:?} {}",
-		            artifact.kind,
-		            artifact.package_id.name()
-		);
+	if let Some(assets) = assets {
+		let mut has_dev = false;
+		for artifact in assets {
+			log::debug!(
+			            "Packaging assets {:?} {}",
+			            artifact.kind,
+			            artifact.package_id.name()
+			);
 
-		debug_assert_eq!(
-		                 layout.as_ref().assets_layout(config).root(),
-		                 artifact.layout.root(),
-		                 "wrong layout root"
-		);
+			debug_assert_eq!(
+			                 layout.as_ref().assets_layout(config).root(),
+			                 artifact.layout.root(),
+			                 "wrong layout root"
+			);
 
-		was_dev = was_dev || artifact.kind.is_dev();
+			has_dev = has_dev || artifact.kind.is_dev();
 
-		prepare_assets(config, artifact, layout.build(), true, layout.as_inner().target())?;
+			prepare_assets(config, artifact, layout.build(), true, layout.as_inner().target())?;
+		}
+		assert_eq!(dev.is_some(), has_dev);
 	}
-	assert_eq!(dev.is_some(), was_dev);
 
 	// manifest:
 	let cargo_target =

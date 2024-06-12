@@ -355,10 +355,21 @@ impl<'t> MetaDeps<'t> {
 	}
 
 
-	pub fn root_for(&self, id: &PackageId, tk: &TargetKindWild, tname: &str) -> CargoResult<&RootNode<'t>> {
+	pub fn root_for(&self,
+	                id: &PackageId,
+	                tk: cargo::core::TargetKind,
+	                tname: &str)
+	                -> CargoResult<&RootNode<'t>> {
 		self.roots
 		    .iter()
-		    .find(|n| n.package_id() == id && *tk == n.node.unit.target.kind && n.node.unit.target.name == tname)
+		    .find(|n| n.package_id() == id && tk == n.node.unit.target.kind() && n.node.unit.target.name == tname)
+		    .ok_or_else(|| anyhow::anyhow!("Root not found for {id}::{tname}"))
+	}
+
+	pub fn root_for_wild(&self, id: &PackageId, tk: TargetKindWild, tname: &str) -> CargoResult<&RootNode<'t>> {
+		self.roots
+		    .iter()
+		    .find(|n| n.package_id() == id && tk == n.node.unit.target.kind && n.node.unit.target.name == tname)
 		    .ok_or_else(|| anyhow::anyhow!("Root not found for {id}::{tname}"))
 	}
 
