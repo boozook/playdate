@@ -216,57 +216,56 @@ pub mod proto {
 				let dep_key = Key::from(dep).with_dev(with_dev);
 
 
-				let plan_for =
-					|plans: &mut AssetsPlans, indices: &mut Vec<usize>, key: Key, dev: bool| -> anyhow::Result<()> {
-						let source = dep.as_source();
-						let name_log = dev.then_some("dev-").unwrap_or_default();
-						if let Some(assets) = source.metadata()
-						                            .map(|m| if dev { m.dev_assets() } else { m.assets() }) &&
-						   !assets.is_empty()
-						{
-							match assets_build_plan(&env, assets, &options, Some(crate_root.into())) {
-								Ok(plan) => {
-									let pid = key.id;
-									let is_dev = key.dev;
-									let dev_index = plans.plans.len();
-									let compile_target_agnostic = plan.compile_target_agnostic();
-									plans.index.insert(key, dev_index);
-									plans.plans.push(plan);
-									indices.push(dev_index);
+				let plan_for = |plans: &mut AssetsPlans, indices: &mut Vec<usize>, key: Key| -> anyhow::Result<()> {
+					let source = dep.as_source();
+					let dev_prefix = key.dev.then_some("dev-").unwrap_or_default();
+					if let Some(assets) = source.metadata()
+					                            .map(|m| if key.dev { m.dev_assets() } else { m.assets() }) &&
+					   !assets.is_empty()
+					{
+						match assets_build_plan(&env, assets, &options, Some(crate_root.into())) {
+							Ok(plan) => {
+								let pid = key.id;
+								let is_dev = key.dev;
+								let dev_index = plans.plans.len();
+								let compile_target_agnostic = plan.compile_target_agnostic();
+								plans.index.insert(key, dev_index);
+								plans.plans.push(plan);
+								indices.push(dev_index);
 
-									log::debug!("    done: +#{dev_index} (dev:{is_dev})");
-									cfg.log().verbose(|mut log| {
-										         log.status("Plan", format_args!("{name_log}assets for {pid} planned",))
-									         });
+								log::debug!("    done: +#{dev_index} (dev:{is_dev})");
+								cfg.log().verbose(|mut log| {
+									         log.status("Plan", format_args!("{dev_prefix}assets for {pid} planned"))
+								         });
 
-									if !compile_target_agnostic {
-										cfg.log()
-										   .error("Assets is not compile-target-agnostic, this is not supported");
-									}
-								},
-								Err(err) => {
+								if !compile_target_agnostic {
 									cfg.log()
-									   .error(format_args!("{err}, caused when planning {name_log}assets for {}", key.id));
-									return cfg.compile_options
-									          .build_config
-									          .keep_going
-									          .then_some(())
-									          .ok_or(err.into());
-								},
-							}
-						} else {
-							cfg.log().verbose(|mut log| {
-								         log.status(
-								                    "Skip",
-								                    format_args!(
-									"{name_log}assets for {} without plan, reason: empty",
-									key.id
-								),
-								)
-							         })
+									   .error("Assets is not compile-target-agnostic, this is not supported");
+								}
+							},
+							Err(err) => {
+								cfg.log()
+								   .error(format_args!("{err}, caused when planning {dev_prefix}assets for {}", key.id));
+								return cfg.compile_options
+								          .build_config
+								          .keep_going
+								          .then_some(())
+								          .ok_or(err.into());
+							},
 						}
-						Ok(())
-					};
+					} else {
+						cfg.log().verbose(|mut log| {
+							         log.status(
+							                    "Skip",
+							                    format_args!(
+								"{dev_prefix}assets for {} without plan, reason: empty",
+								key.id
+							),
+							)
+						         })
+					}
+					Ok(())
+				};
 
 				if let Some(i) = plans.index.get(&dep_key) {
 					// we already have plan for this dep
@@ -275,16 +274,16 @@ pub mod proto {
 				} else if with_dev && let Some(base_index) = plans.index.get(&dep_key.with_dev(false)).copied() {
 					// we already have plan for this dep, but not for dev part
 					indices.push(base_index);
-					log::debug!("    done (~#{base_index}) (dev:{})", dep_key.dev);
+					log::debug!("    done (~#{base_index}) (dev:{})", false);
 
-					plan_for(&mut plans, &mut indices, dep_key, true)?;
+					plan_for(&mut plans, &mut indices, dep_key.with_dev(true))?;
 				} else {
 					// else just build a plan
-					plan_for(&mut plans, &mut indices, dep_key, false)?;
+					plan_for(&mut plans, &mut indices, dep_key.with_dev(false))?;
 
 					// also for dev targets if needed
 					if with_dev {
-						plan_for(&mut plans, &mut indices, dep_key, true)?;
+						plan_for(&mut plans, &mut indices, dep_key.with_dev(true))?;
 					}
 				}
 			}
@@ -424,13 +423,13 @@ pub mod proto {
 
 							let name = this.id.name();
 							let root_name = root_id.name();
-							let why = format!("but that's not allowed by the top-level crate {root_name}");
-							let msg = format!("{name}'s `{dev}assets.{target:?}` overrides {others}, {why}");
+							let msg = format!("{name}'s `{dev}assets.{target:?}` overrides {others}");
 
 							if options.overwrite() {
 								cfg.log().warn(msg)
 							} else {
-								cfg.log().error(&msg);
+								let why = format!("but that's not allowed by the top-level crate {root_name}");
+								cfg.log().error(format_args!("{msg}, {why}"));
 								overrides.push(msg);
 							}
 						}

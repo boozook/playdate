@@ -77,17 +77,21 @@ fn execute(config: &Config) -> CargoResult<()> {
 				return Err(anyhow::anyhow!("build-plan in not implemented yet"));
 			}
 
+			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
 			build::build(config)?;
 		},
 
 		cli::cmd::Cmd::Package => {
+			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
+			let assets_new = assets::proto::build_all(config, &deps_tree)?;
+
 			let assets = assets::build(config)?;
 			let products = build::build(config)?;
 
-			log::debug!("assets artifacts: {}", assets.len());
+			log::debug!("assets artifacts: old:{} / new:{}", assets.len(), assets_new.len());
 			log::debug!("build  artifacts: {}", products.len());
 
-			package::build_all(config, assets, products)?;
+			package::build_all(config, assets, assets_new, products)?;
 		},
 
 		cli::cmd::Cmd::Run => {
@@ -145,6 +149,9 @@ fn execute(config: &Config) -> CargoResult<()> {
 				bail!("Nothing found to run");
 			}
 
+			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
+			let assets_new = assets::proto::build_all(config, &deps_tree)?;
+
 			// build requested package(s):
 			let assets = assets::build(config)?;
 			let mut products = build::build(config)?;
@@ -171,7 +178,7 @@ fn execute(config: &Config) -> CargoResult<()> {
 			        })
 			        .count();
 
-			let packages = package::build_all(config, assets, products)?;
+			let packages = package::build_all(config, assets, assets_new, products)?;
 			match packages.len() {
 				1 => (),
 				0 => bail!("No packages have been produced, nothing to run."),

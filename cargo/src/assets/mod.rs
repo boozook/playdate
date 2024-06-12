@@ -60,11 +60,15 @@ pub mod proto {
 	pub struct AssetsArtifactsNew<'t, 'cfg> {
 		artifacts: Vec<AssetsArtifact>,
 		index: BTreeMap<RootKey, Vec<usize>>,
-		tree: &'t MetaDeps<'cfg>,
+		pub tree: &'t MetaDeps<'cfg>,
 	}
 
 
 	impl AssetsArtifactsNew<'_, '_> {
+		pub fn len(&self) -> usize { self.artifacts.len() }
+		pub fn artifacts(&self) -> &[AssetsArtifact] { &self.artifacts }
+		pub fn index(&self) -> &BTreeMap<RootKey, Vec<usize>> { &self.index }
+
 		pub fn iter(&self) -> impl Iterator<Item = (&RootNode, impl Iterator<Item = &AssetsArtifact>)> {
 			self.index
 			    .iter()
@@ -119,7 +123,10 @@ pub mod proto {
 
 		// checking cache, apply each plan:
 		for (index, plan) in plans.plans.into_iter().enumerate() {
-			let key = plans.index.iter().find(|(_, v)| **v == index).expect("key").0;
+			let key = plans.index
+			               .iter()
+			               .find_map(|(k, i)| (*i == index).then_some(k))
+			               .ok_or_else(|| anyhow::anyhow!("No assets-plan key in plan #{index}"))?;
 
 			log::debug!("#{index} build (dev:{}) {}", key.dev, key.id);
 

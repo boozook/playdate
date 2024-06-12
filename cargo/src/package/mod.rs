@@ -24,6 +24,7 @@ use playdate::metadata::format::Metadata;
 use playdate::metadata::validation::Validate;
 use playdate::metadata::validation::ValidateCrate;
 
+use crate::assets::proto::AssetsArtifactsNew;
 use crate::assets::AssetsArtifact;
 use crate::assets::AssetsArtifacts;
 use crate::assets::playdate_metadata;
@@ -51,6 +52,7 @@ pub struct Product<'p> {
 
 pub fn build_all<'b>(config: &'_ Config,
                      assets: AssetsArtifacts<'_>,
+                     assets_new: AssetsArtifactsNew<'_, '_>,
                      products: Vec<BuildProduct<'b>>)
                      -> CargoResult<Vec<Product<'b>>> {
 	let products: Vec<SuccessfulBuildProduct> = products.into_iter().flat_map(TryInto::try_into).collect();
@@ -68,6 +70,38 @@ pub fn build_all<'b>(config: &'_ Config,
 	let mut results = Vec::new();
 
 	for ((package, _), mut products) in targets {
+		log::debug!(
+		            "Looking for assets artifacts for ({}) {}::{} for {}:",
+		            &products[0].src_ct,
+		            package.package_id(),
+		            products[0].name,
+		            match &products[0].ck {
+			            CompileKind::Host => "host",
+		               CompileKind::Target(ref kind) => kind.short_name(),
+		            }
+		);
+
+		let (root, assets_ng) = assets_new.iter()
+		                                  .find(|(r, _)| {
+			                                  let unit = r.node().unit();
+			                                  unit.package_id == package.package_id() &&
+			                                  unit.platform == products[0].ck &&
+			                                  unit.target.crate_types.contains(&products[0].src_ct) &&
+			                                  unit.target.name == products[0].name
+		                                  })
+		                                  .ok_or_else(|| {
+			                                  let ck: Cow<_> = match products[0].ck {
+				                                  CompileKind::Host => "host".into(),
+			                                     CompileKind::Target(ref kind) => kind.short_name().into(),
+			                                  };
+			                                  anyhow!(
+			                                          "No assets artifacts for ({}) {}::{} for {ck}",
+			                                          &products[0].src_ct,
+			                                          package.package_id(),
+			                                          products[0].name,
+			)
+		                                  })?;
+
 		match products.len() {
 			0 => unreachable!("impossible len=0"),
 			1 => {
