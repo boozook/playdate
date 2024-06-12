@@ -757,3 +757,7 @@ pub enum AssetKind {
 	Package,
 	Dev,
 }
+
+impl AssetKind {
+	pub fn is_dev(&self) -> bool { matches!(self, Self::Dev) }
+}

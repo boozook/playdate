@@ -7,6 +7,7 @@ use std::process::Command;
 
 use anyhow::anyhow;
 use anyhow::bail;
+use cargo::core::PackageId;
 use cargo::CargoResult;
 use cargo::core::Package;
 use cargo::core::compiler::CompileKind;
@@ -20,14 +21,11 @@ use playdate::layout::Layout;
 use playdate::layout::Name;
 use playdate::manifest::format::ManifestFmt;
 use playdate::manifest::PackageSource;
-use playdate::metadata::format::Metadata;
 use playdate::metadata::validation::Validate;
 use playdate::metadata::validation::ValidateCrate;
 
 use crate::assets::proto::AssetsArtifactsNew;
-use crate::assets::AssetsArtifact;
-use crate::assets::AssetsArtifacts;
-use crate::assets::playdate_metadata;
+use crate::assets::proto::AssetsArtifact as AssetsArtifactNew;
 use crate::build::BuildProduct;
 use crate::config::Config;
 use crate::layout::CrossTargetLayout;
@@ -35,26 +33,28 @@ use crate::layout::LayoutLockable;
 use crate::layout::ForTargetLayout;
 use crate::proc::logging::cmd_logged;
 use crate::proc::reader::format::ArtifactProfile;
+use crate::utils::cargo::meta_deps::RootNode;
 use crate::utils::path::AsRelativeTo;
 
 mod ar;
 
 
 #[derive(Debug)]
-pub struct Product<'p> {
-	pub package: &'p Package,
+pub struct Product {
+	pub package_id: PackageId,
 	pub crate_types: Vec<CrateType>,
 	pub targets: Vec<CompileKind>,
+	/// Build-product name
 	pub name: String,
+	/// Path of produced artifact - pdx-dir or zip-file
 	pub path: PathBuf,
 }
 
 
 pub fn build_all<'b>(config: &'_ Config,
-                     assets: AssetsArtifacts<'_>,
-                     assets_new: AssetsArtifactsNew<'_, '_>,
+                     assets: AssetsArtifactsNew<'_, '_>,
                      products: Vec<BuildProduct<'b>>)
-                     -> CargoResult<Vec<Product<'b>>> {
+                     -> CargoResult<Vec<Product>> {
 	let products: Vec<SuccessfulBuildProduct> = products.into_iter().flat_map(TryInto::try_into).collect();
 	let mut targets = HashMap::<_, Vec<_>>::new();
 
@@ -81,38 +81,36 @@ pub fn build_all<'b>(config: &'_ Config,
 		            }
 		);
 
-		let (root, assets_ng) = assets_new.iter()
-		                                  .find(|(r, _)| {
-			                                  let unit = r.node().unit();
-			                                  unit.package_id == package.package_id() &&
-			                                  unit.platform == products[0].ck &&
-			                                  unit.target.crate_types.contains(&products[0].src_ct) &&
-			                                  unit.target.name == products[0].name
-		                                  })
-		                                  .ok_or_else(|| {
-			                                  let ck: Cow<_> = match products[0].ck {
-				                                  CompileKind::Host => "host".into(),
-			                                     CompileKind::Target(ref kind) => kind.short_name().into(),
-			                                  };
-			                                  anyhow!(
-			                                          "No assets artifacts for ({}) {}::{} for {ck}",
-			                                          &products[0].src_ct,
-			                                          package.package_id(),
-			                                          products[0].name,
+		let (root, assets_ng) = assets.iter()
+		                              .find(|(r, _)| {
+			                              let unit = r.node().unit();
+			                              unit.package_id == package.package_id() &&
+			                              unit.platform == products[0].ck &&
+			                              unit.target.crate_types.contains(&products[0].src_ct) &&
+			                              unit.target.name == products[0].name
+		                              })
+		                              .ok_or_else(|| {
+			                              let ck: Cow<_> = match products[0].ck {
+				                              CompileKind::Host => "host".into(),
+			                                 CompileKind::Target(ref kind) => kind.short_name().into(),
+			                              };
+			                              anyhow!(
+			                                      "No assets artifacts for ({}) {}::{} for {ck}",
+			                                      &products[0].src_ct,
+			                                      package.package_id(),
+			                                      products[0].name,
 			)
-		                                  })?;
+		                              })?;
 
 		match products.len() {
 			0 => unreachable!("impossible len=0"),
 			1 => {
-				let assets = assets.get(package);
 				let product = products.pop().unwrap();
-				let result = package_single_target(config, product, assets)?;
+				let result = package_single_target(config, product, root, assets_ng)?;
 				results.push(result);
 			},
 			_ => {
-				let assets = assets.get(package);
-				let result = package_multi_target(config, package, products, assets)?;
+				let result = package_multi_target(config, package, products, root, assets_ng)?;
 				results.push(result);
 			},
 		}
@@ -122,10 +120,11 @@ pub fn build_all<'b>(config: &'_ Config,
 }
 
 
-fn package_single_target<'p>(config: &Config,
-                             product: SuccessfulBuildProduct<'p>,
-                             assets: Option<&AssetsArtifact>)
-                             -> CargoResult<Product<'p>> {
+fn package_single_target<'p, 'art>(config: &Config,
+                                   product: SuccessfulBuildProduct<'p>,
+                                   root: &RootNode<'_>,
+                                   assets: impl Iterator<Item = &'art AssetsArtifactNew>)
+                                   -> CargoResult<Product> {
 	let presentable_name = product.presentable_name();
 	config.log().status(
 	                    "Packaging",
@@ -135,18 +134,16 @@ fn package_single_target<'p>(config: &Config,
 	),
 	);
 
-	if let Some(assets) = assets {
-		assert_eq!(assets.package_id, product.package.package_id());
-		log::debug!("Preparing assets for packaging {}", product.presentable_name());
 
-		prepare_assets(
-		               config,
-		               assets,
-		               product.example,
-		               product.layout.build(),
-		               true,
-		               product.layout.root(),
-		)?;
+	if config.compile_options.build_config.force_rebuild {
+		// TODO: clean entire product.layout.build() if force rebuild requested
+	}
+
+
+	for art in assets {
+		log::debug!("Packaging assets {:?} {}", art.kind, product.presentable_name());
+
+		prepare_assets(config, art, product.layout.build(), true, product.layout.root())?;
 	}
 
 	// manifest:
@@ -156,7 +153,7 @@ fn package_single_target<'p>(config: &Config,
 	               config,
 	               &product.layout,
 	               product.package,
-	               assets,
+	               root.as_source(),
 	               cargo_target,
 	               product.example,
 	)?;
@@ -171,7 +168,7 @@ fn package_single_target<'p>(config: &Config,
 	}
 
 	let result = Product { name: product.name,
-	                       package: product.package,
+	                       package_id: product.package.package_id(),
 	                       crate_types: vec![product.src_ct.clone()],
 	                       targets: vec![product.ck],
 	                       path: artifact.to_path_buf() };
@@ -189,11 +186,12 @@ fn package_single_target<'p>(config: &Config,
 /// So one executable and one or two dylibs.
 ///
 /// __Can't mix macos dylib with linux dylib in a one package.__
-fn package_multi_target<'p>(config: &Config,
-                            package: &'p Package,
-                            products: Vec<SuccessfulBuildProduct>,
-                            assets: Option<&AssetsArtifact>)
-                            -> CargoResult<Product<'p>> {
+fn package_multi_target<'p, 'art>(config: &Config,
+                                  package: &'p Package,
+                                  products: Vec<SuccessfulBuildProduct>,
+                                  root: &RootNode<'_>,
+                                  assets: impl Iterator<Item = &'art AssetsArtifactNew>)
+                                  -> CargoResult<Product> {
 	let src_cts = products.iter()
 	                      .map(|p| format!("{}", p.src_ct))
 	                      .collect::<Vec<_>>()
@@ -273,14 +271,13 @@ fn package_multi_target<'p>(config: &Config,
 	let mut layout =
 		CrossTargetLayout::new(config, package.package_id(), Some(layout_target_name))?.lock(config.workspace
 		                                                                                           .gctx())?;
-	if let Some(assets) = assets {
-		debug_assert_eq!(
-		                 layout.as_ref().assets_layout(config).root(),
-		                 assets.layout.root(),
-		                 "wrong layout root"
-		);
-	}
 	crate::layout::Layout::prepare(&mut layout.as_mut())?;
+
+
+	if config.compile_options.build_config.force_rebuild {
+		// TODO: clean entire product.layout.build() if force rebuild requested
+	}
+
 
 	let mut dev = Default::default();
 	for product in &products {
@@ -296,18 +293,25 @@ fn package_multi_target<'p>(config: &Config,
 
 
 	// Then the same as for single-product package:
-	if let Some(assets) = assets {
-		log::debug!("Preparing assets for packaging {}", assets.package_id.name());
-		assert_eq!(package.package_id(), assets.package_id, "package must be same");
-		prepare_assets(
-		               config,
-		               assets,
-		               dev.is_some(),
-		               layout.build(),
-		               true,
-		               layout.as_inner().target(),
-		)?;
+	let mut was_dev = false;
+	for artifact in assets {
+		log::debug!(
+		            "Packaging assets {:?} {}",
+		            artifact.kind,
+		            artifact.package_id.name()
+		);
+
+		debug_assert_eq!(
+		                 layout.as_ref().assets_layout(config).root(),
+		                 artifact.layout.root(),
+		                 "wrong layout root"
+		);
+
+		was_dev = was_dev || artifact.kind.is_dev();
+
+		prepare_assets(config, artifact, layout.build(), true, layout.as_inner().target())?;
 	}
+	assert_eq!(dev.is_some(), was_dev);
 
 	// manifest:
 	let cargo_target =
@@ -317,7 +321,7 @@ fn package_multi_target<'p>(config: &Config,
 	               config,
 	               &layout,
 	               package,
-	               assets,
+	               root.as_source(),
 	               cargo_target,
 	               products[0].example,
 	)?;
@@ -336,7 +340,7 @@ fn package_multi_target<'p>(config: &Config,
 		soft_link_checked(&artifact, &link, true, product.layout.root())?;
 	}
 
-	let result = Product { package,
+	let result = Product { package_id: package.package_id(),
 	                       name: products[0].name.clone(),
 	                       crate_types: products.iter().map(|p| p.src_ct.clone()).collect(),
 	                       targets: products.iter().map(|p| p.ck).collect(),
@@ -348,7 +352,7 @@ fn package_multi_target<'p>(config: &Config,
 fn build_manifest<Layout: playdate::layout::Layout>(config: &Config,
                                                     layout: &Layout,
                                                     package: &Package,
-                                                    assets: Option<&AssetsArtifact>,
+                                                    source: impl PackageSource,
                                                     cargo_target: Option<Cow<'_, str>>,
                                                     dev: bool)
                                                     -> CargoResult<()> {
@@ -366,42 +370,24 @@ fn build_manifest<Layout: playdate::layout::Layout>(config: &Config,
 			config.log().warn(msg);
 		}
 	};
-	let log_src_problem = |problem: Problem| {
-		let msg = "Manifest validation".to_string();
-		log_problem(&msg, problem)
-	};
-	let log_meta_problem = |problem: Problem| {
-		let msg = "Metadata validation".to_string();
-		log_problem(&msg, problem)
-	};
+	let log_src_problem = |problem: Problem| log_problem("Manifest validation", problem);
+	let log_meta_problem = |problem: Problem| log_problem("Metadata validation", problem);
 
-	let validate = |src: &ManifestSource| {
-		if let Some(target) = &cargo_target {
-			src.validate_for(target)
-			   .into_iter()
-			   // .filter(Problem::is_err)
-			   .for_each(log_meta_problem);
-		} else {
-			src.validate()
-			   .into_iter()
-			   // .filter(Problem::is_err)
-			   .for_each(log_meta_problem);
-		}
-	};
 
-	let manifest = if let Some(metadata) = assets.and_then(|a| a.metadata.as_ref()) {
-		let source = ManifestSource::new(package, metadata.into());
-		// This validation not needed at this step. May be earlier:
-		validate(&source);
-		source.manifest_override_or_crate(cargo_target.as_deref(), dev)
+	// validate the source:
+	if let Some(target) = &cargo_target {
+		source.validate_for(target)
+			.into_iter()
+			// .filter(Problem::is_err)
+			.for_each(log_meta_problem);
 	} else {
-		let metadata = playdate_metadata(package);
-		let source = ManifestSource::new(package, metadata.as_ref());
-		// This validation not needed at this step. May be earlier:
-		validate(&source);
-		source.manifest_override_or_crate(cargo_target.as_deref(), dev)
-	};
+		source.validate()
+			.into_iter()
+			// .filter(Problem::is_err)
+			.for_each(log_meta_problem);
+	}
 
+	let manifest = source.manifest_override_or_crate(cargo_target.as_deref(), dev);
 	// validation, lints
 	manifest.validate().into_iter().for_each(log_src_problem);
 
@@ -456,8 +442,7 @@ fn execute_pdc<'l, Layout: playdate::layout::Layout>(config: &Config,
 
 
 fn prepare_assets<Dst: AsRef<Path>>(config: &Config,
-                                    assets: &AssetsArtifact,
-                                    dev: bool,
+                                    assets: &AssetsArtifactNew,
                                     dst: Dst,
                                     overwrite: bool,
                                     root: impl AsRef<Path>)
@@ -465,6 +450,8 @@ fn prepare_assets<Dst: AsRef<Path>>(config: &Config,
 	// Choose what assets we will use:
 	// - `assets.layout.build` points to pre-built assets, but that can fail
 	// - `assets.layout.assets` points to original assets, so use it as fallback
+
+	let dev = assets.kind.is_dev();
 
 	let filter_hidden = |path: &PathBuf| {
 		if let Some(filename) = path.file_name() {
@@ -501,25 +488,15 @@ fn prepare_assets<Dst: AsRef<Path>>(config: &Config,
 		Ok(())
 	};
 
+	let (assets_src, assets_build) = if dev {
+		(assets.layout.assets_dev(), assets.layout.build_dev())
+	} else {
+		(assets.layout.assets(), assets.layout.build())
+	};
 
-	// Main assets:
-	let files: Vec<_> = select_files_in(&assets.layout.build(), &assets.layout.assets())?;
+	let files: Vec<_> = select_files_in(&assets_build, &assets_src)?;
 	link_assets(files)?;
 
-	// Dev assets:
-	if dev {
-		let assets_dev = assets.layout.assets_dev();
-		if assets_dev.exists() {
-			let files: Vec<_> = select_files_in(&assets.layout.build_dev(), &assets_dev)?;
-			link_assets(files)?;
-		} else {
-			// That's OK, dev-assets can be missing, we doesn't create dir without need.
-			log::debug!(
-			            "Asset (dev) not found at {}",
-			            assets_dev.as_relative_to_root(config).display()
-			);
-		}
-	}
 	Ok(())
 }
 
@@ -579,71 +556,4 @@ impl<'cfg> TryFrom<BuildProduct<'cfg>> for SuccessfulBuildProduct<'cfg> {
 			BuildProduct::Skip { .. } => Err(()),
 		}
 	}
-}
-
-
-struct ManifestSource<'cfg, 'm> {
-	package: &'cfg Package,
-	authors: Vec<&'cfg str>,
-	bins: Vec<&'cfg str>,
-	examples: Vec<&'cfg str>,
-	metadata: Option<&'m Metadata>,
-}
-
-impl<'cfg, 'm> ManifestSource<'cfg, 'm> {
-	fn new(package: &'cfg Package, metadata: Option<&'m Metadata>) -> Self {
-		log::debug!("new manifest-source for {}", package.package_id());
-
-		let mut bins = Vec::new();
-		let mut examples = Vec::new();
-
-		package.targets()
-		       .iter()
-		       .inspect(|t| log::trace!("target: {} ({:?})", t.description_named(), t.crate_name()))
-		       .filter(|t| !t.is_custom_build())
-		       .for_each(|t| {
-			       if t.is_bin() {
-				       bins.push(t.name());
-				       log::debug!("+bin: {}", t.description_named());
-			       } else if t.is_example() {
-				       examples.push(t.name());
-				       log::debug!("+example: {}", t.description_named());
-			       }
-		       });
-
-		Self { authors: package.manifest()
-		                       .metadata()
-		                       .authors
-		                       .iter()
-		                       .map(|s| s.as_str())
-		                       .collect(),
-		       bins,
-		       examples,
-		       package,
-		       metadata }
-	}
-}
-
-impl<'cfg> PackageSource for ManifestSource<'cfg, '_> {
-	type Authors = [&'cfg str];
-	type Metadata = Metadata<String>;
-
-	fn name(&self) -> Cow<str> { self.package.name().as_str().into() }
-	fn authors(&self) -> &[&'cfg str] { &self.authors }
-	fn version(&self) -> Cow<str> { self.package.version().to_string().into() }
-	fn description(&self) -> Option<Cow<str>> {
-		self.package
-		    .manifest()
-		    .metadata()
-		    .description
-		    .as_deref()
-		    .map(|s: &str| s.into())
-	}
-
-	fn bins(&self) -> &[&str] { &self.bins }
-	fn examples(&self) -> &[&str] { &self.examples }
-
-	fn metadata(&self) -> Option<&Self::Metadata> { self.metadata }
-
-	fn manifest_path(&self) -> Cow<Path> { Cow::Borrowed(self.package.manifest_path()) }
 }

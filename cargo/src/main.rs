@@ -83,15 +83,13 @@ fn execute(config: &Config) -> CargoResult<()> {
 
 		cli::cmd::Cmd::Package => {
 			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
-			let assets_new = assets::proto::build_all(config, &deps_tree)?;
-
-			let assets = assets::build(config)?;
+			let assets = assets::proto::build_all(config, &deps_tree)?;
 			let products = build::build(config)?;
 
-			log::debug!("assets artifacts: old:{} / new:{}", assets.len(), assets_new.len());
+			log::debug!("assets artifacts: {}", assets.len());
 			log::debug!("build  artifacts: {}", products.len());
 
-			package::build_all(config, assets, assets_new, products)?;
+			package::build_all(config, assets, products)?;
 		},
 
 		cli::cmd::Cmd::Run => {
@@ -150,10 +148,9 @@ fn execute(config: &Config) -> CargoResult<()> {
 			}
 
 			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
-			let assets_new = assets::proto::build_all(config, &deps_tree)?;
 
 			// build requested package(s):
-			let assets = assets::build(config)?;
+			let assets = assets::proto::build_all(config, &deps_tree)?;
 			let mut products = build::build(config)?;
 
 			// filter products with expected:
@@ -178,7 +175,7 @@ fn execute(config: &Config) -> CargoResult<()> {
 			        })
 			        .count();
 
-			let packages = package::build_all(config, assets, assets_new, products)?;
+			let packages = package::build_all(config, assets, products)?;
 			match packages.len() {
 				1 => (),
 				0 => bail!("No packages have been produced, nothing to run."),
@@ -186,8 +183,7 @@ fn execute(config: &Config) -> CargoResult<()> {
 			}
 			let package = packages.first().unwrap();
 
-			config.log()
-			      .build_finished(true, Some(package.package.package_id()));
+			config.log().build_finished(true, Some(package.package_id));
 
 
 			{
