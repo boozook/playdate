@@ -130,7 +130,7 @@ pub mod format {
 		pub source: Option<SourceId>,
 		pub req: semver::VersionReq,
 		#[serde(serialize_with = "DepKind::serialize")]
-		#[serde(deserialize_with = "deserialize_dep_kind")]
+		#[serde(deserialize_with = "de_dep_kind")]
 		pub kind: DepKind,
 
 		pub optional: bool,
@@ -145,7 +145,7 @@ pub mod format {
 		pub dep_kinds: serde_json::Value,
 	}
 
-	pub fn deserialize_dep_kind<'de, D>(deserializer: D) -> Result<DepKind, D::Error>
+	pub fn de_dep_kind<'de, D>(deserializer: D) -> Result<DepKind, D::Error>
 		where D: Deserializer<'de> {
 		let kind = Option::<&str>::deserialize(deserializer)?;
 		let kind = match kind {

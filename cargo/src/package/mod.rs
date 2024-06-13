@@ -24,8 +24,8 @@ use playdate::manifest::PackageSource;
 use playdate::metadata::validation::Validate;
 use playdate::metadata::validation::ValidateCrate;
 
-use crate::assets::proto::AssetsArtifactsNew;
-use crate::assets::proto::AssetsArtifact as AssetsArtifactNew;
+use crate::assets::Artifacts as AssetsArtifacts;
+use crate::assets::Artifact as AssetsArtifact;
 use crate::build::BuildProduct;
 use crate::config::Config;
 use crate::layout::CrossTargetLayout;
@@ -52,7 +52,7 @@ pub struct Product {
 
 
 pub fn build_all(config: &'_ Config,
-                 assets: AssetsArtifactsNew<'_, '_>,
+                 assets: AssetsArtifacts<'_, '_>,
                  products: Vec<BuildProduct<'_>>)
                  -> CargoResult<Vec<Product>> {
 	let products: Vec<SuccessfulBuildProduct> = products.into_iter().flat_map(TryInto::try_into).collect();
@@ -139,7 +139,7 @@ pub fn build_all(config: &'_ Config,
 fn package_single_target<'p, 'art>(config: &Config,
                                    product: SuccessfulBuildProduct<'p>,
                                    root: &RootNode<'_>,
-                                   assets: Option<impl Iterator<Item = &'art AssetsArtifactNew>>)
+                                   assets: Option<impl Iterator<Item = &'art AssetsArtifact>>)
                                    -> CargoResult<Product> {
 	let presentable_name = product.presentable_name();
 	config.log().status(
@@ -208,7 +208,7 @@ fn package_multi_target<'p, 'art>(config: &Config,
                                   package: &'p Package,
                                   products: Vec<SuccessfulBuildProduct>,
                                   root: &RootNode<'_>,
-                                  assets: Option<impl Iterator<Item = &'art AssetsArtifactNew>>)
+                                  assets: Option<impl Iterator<Item = &'art AssetsArtifact>>)
                                   -> CargoResult<Product> {
 	let src_cts = products.iter()
 	                      .map(|p| format!("{}", p.src_ct))
@@ -462,7 +462,7 @@ fn execute_pdc<'l, Layout: playdate::layout::Layout>(config: &Config,
 
 
 fn prepare_assets<Dst: AsRef<Path>>(config: &Config,
-                                    assets: &AssetsArtifactNew,
+                                    assets: &AssetsArtifact,
                                     dst: Dst,
                                     overwrite: bool,
                                     root: impl AsRef<Path>)

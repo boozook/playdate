@@ -65,7 +65,7 @@ fn execute(config: &Config) -> CargoResult<()> {
 	match config.cmd {
 		cli::cmd::Cmd::Assets => {
 			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
-			assets::proto::build_all(config, &deps_tree)?;
+			assets::build_all(config, &deps_tree)?;
 		},
 
 		cli::cmd::Cmd::Build => {
@@ -77,13 +77,12 @@ fn execute(config: &Config) -> CargoResult<()> {
 				return Err(anyhow::anyhow!("build-plan in not implemented yet"));
 			}
 
-			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
 			build::build(config)?;
 		},
 
 		cli::cmd::Cmd::Package => {
 			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
-			let assets = assets::proto::build_all(config, &deps_tree)?;
+			let assets = assets::build_all(config, &deps_tree)?;
 			let products = build::build(config)?;
 
 			log::debug!("assets artifacts: {}", assets.len());
@@ -150,7 +149,7 @@ fn execute(config: &Config) -> CargoResult<()> {
 			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
 
 			// build requested package(s):
-			let assets = assets::proto::build_all(config, &deps_tree)?;
+			let assets = assets::build_all(config, &deps_tree)?;
 			let mut products = build::build(config)?;
 
 			// filter products with expected:
