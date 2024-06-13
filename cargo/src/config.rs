@@ -166,6 +166,7 @@ impl<'cfg> Config<'cfg> {
 		        })
 	}
 
+	#[deprecated = "corrupts cargo build cache"]
 	pub fn build_plan(&self) -> CargoResult<&crate::utils::cargo::build_plan::format::BuildPlan> {
 		self.build_plan
 		    .try_get_or_create(|| crate::utils::cargo::build_plan::build_plan(self))

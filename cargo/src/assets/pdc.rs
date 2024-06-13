@@ -12,21 +12,21 @@ use crate::config::Config;
 use crate::layout::PlaydateAssets;
 use crate::proc::logging::cmd_logged;
 
-use super::plan::AssetKind;
+use super::Kind;
 
 
 pub fn build(config: &Config,
              package_id: &PackageId,
              layout: &PlaydateAssets<PathBuf>,
-             kind: AssetKind)
+             kind: Kind)
              -> CargoResult<()> {
 	let (src, build) = match kind {
-		AssetKind::Package => {
+		Kind::Package => {
 			let src = layout.assets();
 			let build = layout.build();
 			(src, build)
 		},
-		AssetKind::Dev => {
+		Kind::Dev => {
 			let src = layout.assets_dev();
 			let build = layout.build_dev();
 			std::fs::create_dir(&build).ok();

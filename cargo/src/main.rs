@@ -65,7 +65,7 @@ fn execute(config: &Config) -> CargoResult<()> {
 	match config.cmd {
 		cli::cmd::Cmd::Assets => {
 			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
-			assets::proto::build_all(config, &deps_tree)?;
+			assets::build_all(config, &deps_tree)?;
 		},
 
 		cli::cmd::Cmd::Build => {
@@ -81,7 +81,8 @@ fn execute(config: &Config) -> CargoResult<()> {
 		},
 
 		cli::cmd::Cmd::Package => {
-			let assets = assets::build(config)?;
+			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
+			let assets = assets::build_all(config, &deps_tree)?;
 			let products = build::build(config)?;
 
 			log::debug!("assets artifacts: {}", assets.len());
@@ -145,8 +146,10 @@ fn execute(config: &Config) -> CargoResult<()> {
 				bail!("Nothing found to run");
 			}
 
+			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
+
 			// build requested package(s):
-			let assets = assets::build(config)?;
+			let assets = assets::build_all(config, &deps_tree)?;
 			let mut products = build::build(config)?;
 
 			// filter products with expected:
@@ -179,8 +182,7 @@ fn execute(config: &Config) -> CargoResult<()> {
 			}
 			let package = packages.first().unwrap();
 
-			config.log()
-			      .build_finished(true, Some(package.package.package_id()));
+			config.log().build_finished(true, Some(package.package_id));
 
 
 			{

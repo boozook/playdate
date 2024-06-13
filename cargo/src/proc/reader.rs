@@ -126,8 +126,8 @@ pub mod format {
 	use serde::Serialize;
 	use serde::Deserialize;
 	use cargo::core::PackageId;
-	use crate::utils::cargo::build_plan::format::deserialize_crate_types;
-	use crate::utils::cargo::format::deserialize_package_id;
+	use crate::utils::cargo::build_plan::format::de_crate_types;
+	use crate::utils::cargo::format::de_package_id_or_spec;
 	pub use crate::utils::cargo::format::TargetKind;
 
 
@@ -161,7 +161,7 @@ pub mod format {
 
 	#[derive(Debug, Serialize, Deserialize)]
 	pub struct Artifact {
-		#[serde(deserialize_with = "deserialize_package_id")]
+		#[serde(deserialize_with = "de_package_id_or_spec")]
 		pub package_id: PackageId,
 		pub manifest_path: PathBuf,
 		pub target: SerializedTarget,
@@ -185,7 +185,7 @@ pub mod format {
 		pub kind: TargetKind,
 		/// Corresponds to `--crate-type` compiler attribute.
 		/// See <https://doc.rust-lang.org/reference/linkage.html>
-		#[serde(deserialize_with = "deserialize_crate_types")]
+		#[serde(deserialize_with = "de_crate_types")]
 		pub crate_types: Vec<CrateType>,
 		pub name: InternedString,
 		pub src_path: Option<PathBuf>,

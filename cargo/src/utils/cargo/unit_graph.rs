@@ -90,11 +90,11 @@ pub mod format {
 
 	#[derive(Debug, Deserialize, Eq, Hash, PartialEq, PartialOrd, Ord)]
 	pub struct Unit {
-		#[serde(deserialize_with = "deserialize_package_id", alias = "pkg_id")]
+		#[serde(deserialize_with = "de_package_id_or_spec", alias = "pkg_id")]
 		pub package_id: PackageId,
 		pub target: UnitTarget,
 		#[serde(serialize_with = "CompileKind::serialize")]
-		#[serde(deserialize_with = "deserialize_compile_kind")]
+		#[serde(deserialize_with = "de_compile_kind")]
 		pub platform: CompileKind,
 		#[serde(serialize_with = "CompileMode::serialize")]
 		#[serde(deserialize_with = "CompileModeProxy::deserialize")]
@@ -108,7 +108,7 @@ pub mod format {
 	#[derive(Debug, Deserialize, Eq, Hash, PartialEq, PartialOrd, Ord)]
 	pub struct UnitTarget {
 		pub(crate) kind: TargetKind,
-		#[serde(deserialize_with = "deserialize_crate_types")]
+		#[serde(deserialize_with = "de_crate_types")]
 		pub crate_types: Vec<CrateType>,
 		pub name: String,
 		pub src_path: String,

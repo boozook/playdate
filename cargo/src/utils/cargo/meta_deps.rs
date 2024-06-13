@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::fmt::Write;
 use std::path::Path;
 
 use cargo::core::compiler::CompileMode;
@@ -33,6 +34,10 @@ pub fn meta_deps<'cfg>(cfg: &'cfg Config<'cfg>) -> CargoResult<MetaDeps<'cfg>> {
 pub struct MetaDeps<'cfg> {
 	units: &'cfg UnitGraph,
 	meta: &'cfg CargoMetadataPd,
+
+	/// Root units filtered,
+	/// only those matches: [`CompileMode::Build`]
+	/// and [`TargetKind::Lib`] `|` [`TargetKind::Bin`] `|` [`TargetKind::Example`]
 	roots: Vec<RootNode<'cfg>>,
 }
 
@@ -55,6 +60,25 @@ impl<'t> RootNode<'t> {
 	pub fn deps(&self) -> &[Node<'t>] { &self.deps }
 }
 
+impl std::fmt::Display for RootNode<'_> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		self.node.fmt(f)?;
+
+		if !self.deps.is_empty() {
+			f.write_fmt(format_args!(" with {} deps", self.deps.len()))?;
+
+			if f.alternate() {
+				f.write_char(':')?;
+				for dep in self.deps().iter() {
+					f.write_str("\n  ")?;
+					dep.fmt(f)?;
+				}
+			}
+		}
+		Ok(())
+	}
+}
+
 
 #[derive(Debug, Clone, Copy)]
 pub struct Node<'cfg> {
@@ -70,6 +94,57 @@ impl<'t> Node<'t> {
 	pub fn target(&self) -> &'t UnitTarget { &self.unit.target }
 
 	pub fn manifest_path(&self) -> Option<&'t Path> { self.meta.as_ref().map(|m| m.manifest_path.as_path()) }
+}
+
+impl std::fmt::Display for Node<'_> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		use cargo::core::compiler::CompileKind;
+
+		f.write_fmt(format_args!(
+			"{} {} of {}",
+			self.target().kind().description(),
+			self.target().name,
+			self.package_id().name()
+		))?;
+
+		if f.alternate() {
+			f.write_str(" for")?;
+			match self.unit().platform {
+				CompileKind::Host => f.write_str(" host"),
+				CompileKind::Target(kind) => f.write_fmt(format_args!(" {}", kind.short_name())),
+			}?;
+
+			let meta = self.meta
+			               .and_then(|p| p.metadata.as_ref())
+			               .and_then(|m| m.inner.as_ref());
+			if let Some(meta) = meta {
+				f.write_str(" (meta")?;
+
+				let assets = !meta.assets().is_empty();
+				let assets_dev = !meta.dev_assets().is_empty();
+
+				if assets || assets_dev {
+					f.write_str(": ")?
+				}
+
+				if assets {
+					f.write_str("assets")?
+				}
+
+				if assets && assets_dev {
+					f.write_str(", ")?
+				}
+
+				if assets_dev {
+					f.write_str("dev")?
+				}
+
+				f.write_char(')')?;
+			}
+		}
+
+		Ok(())
+	}
 }
 
 
@@ -215,7 +290,7 @@ impl<'t> MetaDeps<'t> {
 			       .filter(|m| !m.assets().is_empty() || (root_is_dev && !m.dev_assets().is_empty()))
 			       .is_some()
 			{
-				log::trace!(
+				log::debug!(
 				            "add root too because it has assets for {}",
 				            root.node.unit.target.name
 				);
@@ -224,15 +299,10 @@ impl<'t> MetaDeps<'t> {
 			}
 
 
-			deps.iter().enumerate().for_each(|(i, n)| {
-				                       log::trace!(
-				                                   "{i}: {}::{} ({:?}), meta: {}",
-				                                   root.package_id().name(),
-				                                   root.node.unit.target.name,
-				                                   root.node.unit.target.kind,
-				                                   n.meta.is_some()
-				);
-			                       });
+			log::debug!("ready: {root:#}, deps:");
+			deps.iter()
+			    .enumerate()
+			    .for_each(|(i, n)| log::debug!("{i}: {n:#}"));
 
 			log::debug!(
 			            "Total finally deps for {}::{} ({:?}) : {}",
@@ -249,6 +319,8 @@ impl<'t> MetaDeps<'t> {
 	}
 
 
+	/// Filtered root units, contains only those with mode is [build][CompileMode::Build]
+	/// and kind matches [`TargetKind::Lib`] `|` [`TargetKind::Bin`] `|` [`TargetKind::Example`].
 	pub fn roots(&self) -> &[RootNode<'t>] { self.roots.as_slice() }
 
 
@@ -283,10 +355,21 @@ impl<'t> MetaDeps<'t> {
 	}
 
 
-	pub fn root_for(&self, id: &PackageId, tk: &TargetKindWild, tname: &str) -> CargoResult<&RootNode<'t>> {
+	pub fn root_for(&self,
+	                id: &PackageId,
+	                tk: cargo::core::TargetKind,
+	                tname: &str)
+	                -> CargoResult<&RootNode<'t>> {
 		self.roots
 		    .iter()
-		    .find(|n| n.package_id() == id && *tk == n.node.unit.target.kind && n.node.unit.target.name == tname)
+		    .find(|n| n.package_id() == id && tk == n.node.unit.target.kind() && n.node.unit.target.name == tname)
+		    .ok_or_else(|| anyhow::anyhow!("Root not found for {id}::{tname}"))
+	}
+
+	pub fn root_for_wild(&self, id: &PackageId, tk: TargetKindWild, tname: &str) -> CargoResult<&RootNode<'t>> {
+		self.roots
+		    .iter()
+		    .find(|n| n.package_id() == id && tk == n.node.unit.target.kind && n.node.unit.target.name == tname)
 		    .ok_or_else(|| anyhow::anyhow!("Root not found for {id}::{tname}"))
 	}
 
