@@ -41,6 +41,10 @@ pub struct CargoLayout {
 	tmp: PathBuf,
 }
 
+impl AsRef<CargoLayout> for &'_ CargoLayout {
+	fn as_ref(&self) -> &CargoLayout { *self }
+}
+
 impl CargoLayout {
 	/// Calculate the paths for build output and return as a Layout.
 	///

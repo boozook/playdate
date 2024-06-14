@@ -155,12 +155,12 @@ fn execute(config: &Config) -> CargoResult<()> {
 			// filter products with expected:
 			products.extract_if(|product| {
 				        match product {
-					        build::BuildProduct::Success { package,
+					        build::BuildProduct::Success { package_id,
 				                                          name,
 				                                          src_ct,
 				                                          .. } => {
 					           !expected.iter().any(|(p, targets)| {
-						                           p == package &&
+						                           p.package_id() == *package_id &&
 						                           targets.iter().any(|t| {
 							                                         let crate_name = t.crate_name();
 							                                         (name == &crate_name ||

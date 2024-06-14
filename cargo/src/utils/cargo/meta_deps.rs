@@ -49,6 +49,21 @@ pub struct RootNode<'cfg> {
 	ws: Option<&'cfg WorkspaceMetadata>,
 }
 
+impl Eq for RootNode<'_> {}
+impl PartialEq for RootNode<'_> {
+	fn eq(&self, other: &Self) -> bool {
+		self.ws.is_some() == other.ws.is_some() && self.node == other.node && self.deps == other.deps
+	}
+}
+
+impl std::hash::Hash for RootNode<'_> {
+	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+		self.node.hash(state);
+		self.deps.hash(state);
+		self.ws.is_some().hash(state);
+	}
+}
+
 impl<'t> RootNode<'t> {
 	pub fn package_id(&self) -> &'t PackageId { self.node.package_id() }
 
@@ -82,9 +97,22 @@ impl std::fmt::Display for RootNode<'_> {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Node<'cfg> {
-	meta: Option<&'cfg Package<CrateMetadata<InternedString>>>,
 	unit: &'cfg Unit,
+	meta: Option<&'cfg Package<CrateMetadata<InternedString>>>,
 }
+
+impl Eq for Node<'_> {}
+impl PartialEq for Node<'_> {
+	fn eq(&self, other: &Self) -> bool { self.meta.is_some() == other.meta.is_some() && self.unit == other.unit }
+}
+
+impl std::hash::Hash for Node<'_> {
+	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+		self.unit.hash(state);
+		self.meta.is_some().hash(state);
+	}
+}
+
 
 impl<'t> Node<'t> {
 	pub fn package_id(&self) -> &'t PackageId { &self.unit.package_id }

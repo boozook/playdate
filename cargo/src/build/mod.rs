@@ -9,6 +9,7 @@ use std::process::Stdio;
 use anyhow::Context;
 use anyhow::anyhow;
 use anyhow::ensure;
+use cargo::core::PackageId;
 use cargo::CargoResult;
 use cargo::core::Package;
 use cargo::core::Target;
@@ -126,7 +127,7 @@ pub fn build<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<Vec<BuildProduct<'
 
 		for (path, ct, inv) in mapping {
 			let layout = config.layout_for(inv.kind)?.lock(config.workspace.gctx())?;
-			let artifact = CargoArtifact { package,
+			let artifact = CargoArtifact { package_id: package.package_id(),
 			                               path,
 			                               name: art.target.name,
 			                               ct: ct.clone(),
@@ -304,8 +305,8 @@ fn map_artifacts<'cargo, 'cc>(
 
 
 #[derive(Debug)]
-struct CargoArtifact<'cfg, 'cr, Name: AsRef<str> + Debug> {
-	package: &'cfg Package,
+struct CargoArtifact<'cr, Name: AsRef<str> + Debug> {
+	package_id: PackageId,
 	path: &'cr Path,
 	/// Crate name
 	name: Name,
@@ -319,9 +320,9 @@ struct CargoArtifact<'cfg, 'cr, Name: AsRef<str> + Debug> {
 
 
 #[derive(Debug)]
-pub enum BuildProduct<'cfg> {
+pub enum BuildProduct {
 	Success {
-		package: &'cfg Package,
+		package_id: PackageId,
 
 		/// Crate-target ID
 		name: String,
@@ -339,17 +340,17 @@ pub enum BuildProduct<'cfg> {
 	Skip {
 		reason: String,
 
-		package: &'cfg Package,
+		package_id: PackageId,
 		ct: CrateType,
 		ck: CompileKind,
 	},
 }
 
-impl<'cfg> BuildProduct<'cfg> {
-	fn skip_as_unsupported<S: AsRef<str> + Debug>(artifact: CargoArtifact<'cfg, '_, S>) -> Self {
+impl BuildProduct {
+	fn skip_as_unsupported<S: AsRef<str> + Debug>(artifact: CargoArtifact<'_, S>) -> Self {
 		let reason = format!(
 		                     "{} ({}) {:?} unsupported target {:?}",
-		                     artifact.package.name(),
+		                     artifact.package_id.name(),
 		                     artifact.name.as_ref(),
 		                     artifact.ct,
 		                     artifact.ck
@@ -357,7 +358,7 @@ impl<'cfg> BuildProduct<'cfg> {
 		Self::Skip { reason,
 		             ct: artifact.ct,
 		             ck: artifact.ck,
-		             package: artifact.package }
+		             package_id: artifact.package_id }
 	}
 }
 
@@ -378,8 +379,8 @@ impl<'t> Config<'t> {
 
 fn build_binary<'cfg, Layout, S>(config: &'cfg Config,
                                  layout: Layout,
-                                 artifact: CargoArtifact<'cfg, '_, S>)
-                                 -> anyhow::Result<BuildProduct<'cfg>>
+                                 artifact: CargoArtifact<'_, S>)
+                                 -> anyhow::Result<BuildProduct>
 	where Layout: AsRef<CargoLayout>,
 	      S: AsRef<str> + Debug
 {
@@ -390,7 +391,7 @@ fn build_binary<'cfg, Layout, S>(config: &'cfg Config,
 	        artifact.path.display()
 	);
 
-	let package_crate_name = artifact.package.name().replace('-', "_");
+	let package_crate_name = artifact.package_id.name().replace('-', "_");
 	let mut pdl = ForTargetLayout::new(
 	                                   layout.as_ref(),
 	                                   package_crate_name,
@@ -420,7 +421,7 @@ fn build_binary<'cfg, Layout, S>(config: &'cfg Config,
 		                        profile: artifact.profile,
 		                        layout: pdl_ref.to_owned(),
 		                        path: product.to_path_buf(),
-		                        package: artifact.package,
+		                        package_id: artifact.package_id,
 		                        name: artifact.name.as_ref().to_owned(),
 		                        example: artifact.example }
 	} else {
@@ -434,8 +435,8 @@ fn build_binary<'cfg, Layout, S>(config: &'cfg Config,
 
 fn build_library<'cfg, Layout, S>(config: &'cfg Config,
                                   layout: Layout,
-                                  artifact: CargoArtifact<'cfg, '_, S>)
-                                  -> anyhow::Result<BuildProduct<'cfg>>
+                                  artifact: CargoArtifact<'_, S>)
+                                  -> anyhow::Result<BuildProduct>
 	where Layout: AsRef<CargoLayout>,
 	      S: AsRef<str> + Debug
 {
@@ -444,7 +445,7 @@ fn build_library<'cfg, Layout, S>(config: &'cfg Config,
 	                    format!(
 		"{} of {}{}",
 		artifact.ct,
-		artifact.package,
+		artifact.package_id,
 		if config.workspace.gctx().extra_verbose() {
 			format!(" from {}", artifact.path.as_relative_to_root(config).display())
 		} else {
@@ -459,7 +460,7 @@ fn build_library<'cfg, Layout, S>(config: &'cfg Config,
 	        artifact.path.display()
 	);
 
-	let package_crate_name = artifact.package.name().replace('-', "_");
+	let package_crate_name = artifact.package_id.name().replace('-', "_");
 	let mut pdl = ForTargetLayout::new(
 	                                   layout.as_ref(),
 	                                   package_crate_name,
@@ -526,7 +527,7 @@ fn build_library<'cfg, Layout, S>(config: &'cfg Config,
 		                        profile: artifact.profile,
 		                        layout: pdl_ref.to_owned(),
 		                        path: product.to_path_buf(),
-		                        package: artifact.package,
+		                        package_id: artifact.package_id,
 		                        name: artifact.name.as_ref().to_owned(),
 		                        example: artifact.example }
 	} else if artifact.ck.is_simulator() {
@@ -549,7 +550,7 @@ fn build_library<'cfg, Layout, S>(config: &'cfg Config,
 		                        profile: artifact.profile,
 		                        layout: pdl.to_owned(),
 		                        path: product,
-		                        package: artifact.package,
+		                        package_id: artifact.package_id,
 		                        name: artifact.name.as_ref().to_owned(),
 		                        example: artifact.example }
 	} else {
