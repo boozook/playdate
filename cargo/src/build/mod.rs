@@ -43,7 +43,7 @@ use crate::utils::workspace::PossibleTargets;
 pub mod rustflags;
 
 
-pub fn build<'cfg>(config: &'cfg Config<'cfg>) -> CargoResult<Vec<BuildProduct<'cfg>>> {
+pub fn build<'cfg>(config: &'_ Config<'cfg>) -> CargoResult<Vec<BuildProduct>> {
 	if config.dry_run {
 		return Ok(Default::default());
 	}
