@@ -6,8 +6,8 @@ use cargo::core::compiler::CompileTarget;
 use cargo::core::compiler::CrateType;
 use cargo::core::PackageId;
 use cargo::core::SourceId;
-use serde::{Serialize, Deserialize};
-use serde::{Serializer, Deserializer};
+pub use serde::{Serialize, Deserialize};
+pub use serde::{Serializer, Deserializer};
 
 
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]

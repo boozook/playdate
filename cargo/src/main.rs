@@ -1,5 +1,6 @@
-#![feature(extract_if)]
 #![feature(never_type)]
+#![feature(extract_if)]
+#![feature(iter_intersperse)]
 #![feature(exit_status_error)]
 #![feature(btree_extract_if)]
 #![feature(const_trait_impl)]
@@ -77,13 +78,14 @@ fn execute(config: &Config) -> CargoResult<()> {
 				return Err(anyhow::anyhow!("build-plan in not implemented yet"));
 			}
 
-			build::build(config)?;
+			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
+			build::build(config, &deps_tree)?;
 		},
 
 		cli::cmd::Cmd::Package => {
 			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
 			let assets = assets::build_all(config, &deps_tree)?;
-			let products = build::build(config)?;
+			let products = build::build(config, &deps_tree)?;
 
 			log::debug!("assets artifacts: {}", assets.len());
 			log::debug!("build  artifacts: {}", products.len());
@@ -150,17 +152,17 @@ fn execute(config: &Config) -> CargoResult<()> {
 
 			// build requested package(s):
 			let assets = assets::build_all(config, &deps_tree)?;
-			let mut products = build::build(config)?;
+			let mut products = build::build(config, &deps_tree)?;
 
 			// filter products with expected:
 			products.extract_if(|product| {
 				        match product {
-					        build::BuildProduct::Success { package,
+					        build::BuildProduct::Success { package_id,
 				                                          name,
 				                                          src_ct,
 				                                          .. } => {
 					           !expected.iter().any(|(p, targets)| {
-						                           p == package &&
+						                           p.package_id() == *package_id &&
 						                           targets.iter().any(|t| {
 							                                         let crate_name = t.crate_name();
 							                                         (name == &crate_name ||

@@ -53,13 +53,13 @@ pub struct Product {
 
 pub fn build_all(config: &'_ Config,
                  assets: AssetsArtifacts<'_, '_>,
-                 products: Vec<BuildProduct<'_>>)
+                 products: Vec<BuildProduct>)
                  -> CargoResult<Vec<Product>> {
 	let products: Vec<SuccessfulBuildProduct> = products.into_iter().flat_map(TryInto::try_into).collect();
 	let mut targets = HashMap::<_, Vec<_>>::new();
 
 	for product in products {
-		let key = (product.package, product.name.to_owned());
+		let key = (product.package_id, product.name.to_owned());
 		if let Some(products) = targets.get_mut(&key) {
 			products.push(product);
 		} else {
@@ -69,9 +69,7 @@ pub fn build_all(config: &'_ Config,
 
 	let mut results = Vec::new();
 
-	for ((package, _), mut products) in targets {
-		let package_id = package.package_id();
-
+	for ((package_id, _), mut products) in targets {
 		log::debug!(
 		            "Looking for assets artifacts for ({}) {}::{} for {}:",
 		            &products[0].src_ct,
@@ -126,7 +124,7 @@ pub fn build_all(config: &'_ Config,
 				results.push(result);
 			},
 			_ => {
-				let result = package_multi_target(config, package, products, root, assets)?;
+				let result = package_multi_target(config, package_id, products, root, assets)?;
 				results.push(result);
 			},
 		}
@@ -136,11 +134,11 @@ pub fn build_all(config: &'_ Config,
 }
 
 
-fn package_single_target<'p, 'art>(config: &Config,
-                                   product: SuccessfulBuildProduct<'p>,
-                                   root: &RootNode<'_>,
-                                   assets: Option<impl Iterator<Item = &'art AssetsArtifact>>)
-                                   -> CargoResult<Product> {
+fn package_single_target<'art>(config: &Config,
+                               product: SuccessfulBuildProduct,
+                               root: &RootNode<'_>,
+                               assets: Option<impl Iterator<Item = &'art AssetsArtifact>>)
+                               -> CargoResult<Product> {
 	let presentable_name = product.presentable_name();
 	config.log().status(
 	                    "Packaging",
@@ -170,7 +168,7 @@ fn package_single_target<'p, 'art>(config: &Config,
 	build_manifest(
 	               config,
 	               &product.layout,
-	               product.package,
+	               &product.package_id,
 	               root.as_source(),
 	               cargo_target,
 	               product.example,
@@ -186,7 +184,7 @@ fn package_single_target<'p, 'art>(config: &Config,
 	}
 
 	let result = Product { name: product.name,
-	                       package_id: product.package.package_id(),
+	                       package_id: product.package_id,
 	                       crate_types: vec![product.src_ct.clone()],
 	                       targets: vec![product.ck],
 	                       path: artifact.to_path_buf() };
@@ -204,12 +202,12 @@ fn package_single_target<'p, 'art>(config: &Config,
 /// So one executable and one or two dylibs.
 ///
 /// __Can't mix macos dylib with linux dylib in a one package.__
-fn package_multi_target<'p, 'art>(config: &Config,
-                                  package: &'p Package,
-                                  products: Vec<SuccessfulBuildProduct>,
-                                  root: &RootNode<'_>,
-                                  assets: Option<impl Iterator<Item = &'art AssetsArtifact>>)
-                                  -> CargoResult<Product> {
+fn package_multi_target<'art>(config: &Config,
+                              package_id: PackageId,
+                              products: Vec<SuccessfulBuildProduct>,
+                              root: &RootNode<'_>,
+                              assets: Option<impl Iterator<Item = &'art AssetsArtifact>>)
+                              -> CargoResult<Product> {
 	let src_cts = products.iter()
 	                      .map(|p| format!("{}", p.src_ct))
 	                      .collect::<Vec<_>>()
@@ -285,10 +283,9 @@ fn package_multi_target<'p, 'art>(config: &Config,
 	}
 
 	// cross-target layout:
-	let layout_target_name = Name::with_names(package.name().as_str(), products.first().map(|p| &p.name));
+	let layout_target_name = Name::with_names(package_id.name().as_str(), products.first().map(|p| &p.name));
 	let mut layout =
-		CrossTargetLayout::new(config, package.package_id(), Some(layout_target_name))?.lock(config.workspace
-		                                                                                           .gctx())?;
+		CrossTargetLayout::new(config, package_id, Some(layout_target_name))?.lock(config.workspace.gctx())?;
 	crate::layout::Layout::prepare(&mut layout.as_mut())?;
 
 
@@ -300,7 +297,7 @@ fn package_multi_target<'p, 'art>(config: &Config,
 	let mut dev = Default::default();
 	for product in &products {
 		log::debug!("Preparing binaries for packaging {}", product.presentable_name());
-		assert_eq!(package, product.package, "package must be same");
+		assert_eq!(package_id, product.package_id, "package must be same");
 		let dst = layout.build().join(product.path.file_name().expect("file_name"));
 		soft_link_checked(&product.path, &dst, true, layout.as_inner().target())?;
 
@@ -340,7 +337,7 @@ fn package_multi_target<'p, 'art>(config: &Config,
 	build_manifest(
 	               config,
 	               &layout,
-	               package,
+	               &package_id,
 	               root.as_source(),
 	               cargo_target,
 	               products[0].example,
@@ -360,7 +357,7 @@ fn package_multi_target<'p, 'art>(config: &Config,
 		soft_link_checked(&artifact, &link, true, product.layout.root())?;
 	}
 
-	let result = Product { package_id: package.package_id(),
+	let result = Product { package_id,
 	                       name: products[0].name.clone(),
 	                       crate_types: products.iter().map(|p| p.src_ct.clone()).collect(),
 	                       targets: products.iter().map(|p| p.ck).collect(),
@@ -371,13 +368,13 @@ fn package_multi_target<'p, 'art>(config: &Config,
 
 fn build_manifest<Layout: playdate::layout::Layout>(config: &Config,
                                                     layout: &Layout,
-                                                    package: &Package,
+                                                    package_id: &PackageId,
                                                     source: impl PackageSource,
                                                     cargo_target: Option<Cow<'_, str>>,
                                                     dev: bool)
                                                     -> CargoResult<()> {
 	config.log().verbose(|mut log| {
-		            let msg = format!("building package manifest for {}", package.package_id());
+		            let msg = format!("building package manifest for {}", package_id);
 		            log.status("Manifest", msg);
 	            });
 
@@ -522,8 +519,8 @@ fn prepare_assets<Dst: AsRef<Path>>(config: &Config,
 
 
 #[allow(dead_code)]
-struct SuccessfulBuildProduct<'cfg> {
-	package: &'cfg Package,
+struct SuccessfulBuildProduct {
+	package_id: PackageId,
 
 	/// Crate-target ID
 	name: String,
@@ -539,22 +536,22 @@ struct SuccessfulBuildProduct<'cfg> {
 	example: bool,
 }
 
-impl SuccessfulBuildProduct<'_> {
+impl SuccessfulBuildProduct {
 	pub fn presentable_name(&self) -> Cow<'_, str> {
-		if self.package.name().as_str() == self.name.as_str() {
+		if self.package_id.name().as_str() == self.name.as_str() {
 			Cow::from(self.name.as_str())
 		} else {
-			Cow::from(format!("{}:{}", self.package.name(), self.name))
+			Cow::from(format!("{}:{}", self.package_id.name(), self.name))
 		}
 	}
 }
 
-impl<'cfg> TryFrom<BuildProduct<'cfg>> for SuccessfulBuildProduct<'cfg> {
+impl TryFrom<BuildProduct> for SuccessfulBuildProduct {
 	type Error = ();
 
-	fn try_from(product: BuildProduct<'cfg>) -> Result<Self, Self::Error> {
+	fn try_from(product: BuildProduct) -> Result<Self, Self::Error> {
 		match product {
-			BuildProduct::Success { package,
+			BuildProduct::Success { package_id: package,
 			                        name,
 			                        src_ct,
 			                        dst_ct,
@@ -563,7 +560,7 @@ impl<'cfg> TryFrom<BuildProduct<'cfg>> for SuccessfulBuildProduct<'cfg> {
 			                        path,
 			                        layout,
 			                        example, } => {
-				Ok(Self { package,
+				Ok(Self { package_id: package,
 				          name,
 				          src_ct,
 				          dst_ct,

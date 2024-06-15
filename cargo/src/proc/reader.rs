@@ -166,7 +166,7 @@ pub mod format {
 		pub manifest_path: PathBuf,
 		pub target: SerializedTarget,
 		pub profile: ArtifactProfile,
-		pub features: Vec<String>,
+		pub features: Vec<InternedString>,
 		pub filenames: Vec<PathBuf>,
 		pub executable: Option<PathBuf>,
 		pub fresh: bool,
@@ -190,7 +190,7 @@ pub mod format {
 		pub name: InternedString,
 		pub src_path: Option<PathBuf>,
 		pub edition: InternedString,
-		pub required_features: Option<Vec<String>>,
+		pub required_features: Option<Vec<InternedString>>,
 		/// Whether docs should be built for the target via `cargo doc`
 		/// See <https://doc.rust-lang.org/cargo/commands/cargo-doc.html#target-selection>
 		pub doc: bool,
