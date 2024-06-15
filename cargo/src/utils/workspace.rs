@@ -79,7 +79,7 @@ impl<'t> Config<'t> {
 
 	pub fn target_info(&self, kind: CompileKind) -> CargoResult<TargetInfo> {
 		TargetInfo::new(
-		                self.workspace.config(),
+		                self.workspace.gctx(),
 		                &self.possible_compile_kinds()?,
 		                &self.rustc,
 		                kind,

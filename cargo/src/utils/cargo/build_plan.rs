@@ -8,6 +8,7 @@ use crate::proc::read_cargo_json;
 use self::format::TargetKind;
 
 
+#[deprecated = "corrupts cargo build cache"]
 pub fn build_plan(cfg: &Config) -> CargoResult<format::BuildPlan> {
 	let mut cargo = cargo_proxy_cmd(cfg, &Cmd::Build)?;
 
@@ -20,6 +21,7 @@ pub fn build_plan(cfg: &Config) -> CargoResult<format::BuildPlan> {
 
 
 impl format::BuildPlan {
+	#[deprecated]
 	pub fn build_package_invocations<'plan: 'i, 'p: 'i, 'i>(
 		&'plan self,
 		package: &'p PackageId)
@@ -34,7 +36,7 @@ impl format::BuildPlan {
 }
 
 
-#[allow(dead_code)]
+#[derive(Debug, Clone, Copy)]
 pub enum TargetKindWild {
 	Lib,
 	Bin,
@@ -71,6 +73,7 @@ pub mod format {
 
 
 	#[derive(Debug, Serialize, Deserialize)]
+	#[deprecated = "Do not use, corrupts cargo build cache"]
 	pub struct BuildPlan {
 		/// Program invocations needed to build the target (along with dependency information).
 		pub invocations: Vec<Invocation>,
@@ -79,6 +82,7 @@ pub mod format {
 	}
 
 	/// A tool invocation.
+	#[deprecated = "Do not use, corrupts cargo build cache"]
 	#[derive(Debug, Serialize, Deserialize, PartialEq)]
 	pub struct Invocation {
 		/// The package this invocation is building a part of.
@@ -89,7 +93,7 @@ pub mod format {
 		pub target_kind: TargetKind,
 		/// Whether the files created by this invocation are for the host or target system.
 		#[serde(serialize_with = "CompileKind::serialize")]
-		#[serde(deserialize_with = "deserialize_compile_kind")]
+		#[serde(deserialize_with = "de_compile_kind")]
 		pub kind: CompileKind,
 		#[serde(serialize_with = "CompileMode::serialize")]
 		#[serde(deserialize_with = "CompileModeProxy::deserialize")]

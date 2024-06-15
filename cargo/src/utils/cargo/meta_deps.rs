@@ -1,4 +1,5 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::fmt::Write;
 use std::path::Path;
 
 use cargo::core::compiler::CompileMode;
@@ -33,6 +34,10 @@ pub fn meta_deps<'cfg>(cfg: &'cfg Config<'cfg>) -> CargoResult<MetaDeps<'cfg>> {
 pub struct MetaDeps<'cfg> {
 	units: &'cfg UnitGraph,
 	meta: &'cfg CargoMetadataPd,
+
+	/// Root units filtered,
+	/// only those matches: [`CompileMode::Build`]
+	/// and [`TargetKind::Lib`] `|` [`TargetKind::Bin`] `|` [`TargetKind::Example`]
 	roots: Vec<RootNode<'cfg>>,
 }
 
@@ -42,6 +47,21 @@ pub struct RootNode<'cfg> {
 	deps: Vec<Node<'cfg>>,
 
 	ws: Option<&'cfg WorkspaceMetadata>,
+}
+
+impl Eq for RootNode<'_> {}
+impl PartialEq for RootNode<'_> {
+	fn eq(&self, other: &Self) -> bool {
+		self.ws.is_some() == other.ws.is_some() && self.node == other.node && self.deps == other.deps
+	}
+}
+
+impl std::hash::Hash for RootNode<'_> {
+	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+		self.node.hash(state);
+		self.deps.hash(state);
+		self.ws.is_some().hash(state);
+	}
 }
 
 impl<'t> RootNode<'t> {
@@ -55,12 +75,44 @@ impl<'t> RootNode<'t> {
 	pub fn deps(&self) -> &[Node<'t>] { &self.deps }
 }
 
+impl std::fmt::Display for RootNode<'_> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		self.node.fmt(f)?;
+
+		if !self.deps.is_empty() {
+			f.write_fmt(format_args!(" with {} deps", self.deps.len()))?;
+
+			if f.alternate() {
+				f.write_char(':')?;
+				for dep in self.deps().iter() {
+					f.write_str("\n  ")?;
+					dep.fmt(f)?;
+				}
+			}
+		}
+		Ok(())
+	}
+}
+
 
 #[derive(Debug, Clone, Copy)]
 pub struct Node<'cfg> {
-	meta: Option<&'cfg Package<CrateMetadata<InternedString>>>,
 	unit: &'cfg Unit,
+	meta: Option<&'cfg Package<CrateMetadata<InternedString>>>,
 }
+
+impl Eq for Node<'_> {}
+impl PartialEq for Node<'_> {
+	fn eq(&self, other: &Self) -> bool { self.meta.is_some() == other.meta.is_some() && self.unit == other.unit }
+}
+
+impl std::hash::Hash for Node<'_> {
+	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+		self.unit.hash(state);
+		self.meta.is_some().hash(state);
+	}
+}
+
 
 impl<'t> Node<'t> {
 	pub fn package_id(&self) -> &'t PackageId { &self.unit.package_id }
@@ -70,6 +122,57 @@ impl<'t> Node<'t> {
 	pub fn target(&self) -> &'t UnitTarget { &self.unit.target }
 
 	pub fn manifest_path(&self) -> Option<&'t Path> { self.meta.as_ref().map(|m| m.manifest_path.as_path()) }
+}
+
+impl std::fmt::Display for Node<'_> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		use cargo::core::compiler::CompileKind;
+
+		f.write_fmt(format_args!(
+			"{} {} of {}",
+			self.target().kind().description(),
+			self.target().name,
+			self.package_id().name()
+		))?;
+
+		if f.alternate() {
+			f.write_str(" for")?;
+			match self.unit().platform {
+				CompileKind::Host => f.write_str(" host"),
+				CompileKind::Target(kind) => f.write_fmt(format_args!(" {}", kind.short_name())),
+			}?;
+
+			let meta = self.meta
+			               .and_then(|p| p.metadata.as_ref())
+			               .and_then(|m| m.inner.as_ref());
+			if let Some(meta) = meta {
+				f.write_str(" (meta")?;
+
+				let assets = !meta.assets().is_empty();
+				let assets_dev = !meta.dev_assets().is_empty();
+
+				if assets || assets_dev {
+					f.write_str(": ")?
+				}
+
+				if assets {
+					f.write_str("assets")?
+				}
+
+				if assets && assets_dev {
+					f.write_str(", ")?
+				}
+
+				if assets_dev {
+					f.write_str("dev")?
+				}
+
+				f.write_char(')')?;
+			}
+		}
+
+		Ok(())
+	}
 }
 
 
@@ -215,7 +318,7 @@ impl<'t> MetaDeps<'t> {
 			       .filter(|m| !m.assets().is_empty() || (root_is_dev && !m.dev_assets().is_empty()))
 			       .is_some()
 			{
-				log::trace!(
+				log::debug!(
 				            "add root too because it has assets for {}",
 				            root.node.unit.target.name
 				);
@@ -224,15 +327,10 @@ impl<'t> MetaDeps<'t> {
 			}
 
 
-			deps.iter().enumerate().for_each(|(i, n)| {
-				                       log::trace!(
-				                                   "{i}: {}::{} ({:?}), meta: {}",
-				                                   root.package_id().name(),
-				                                   root.node.unit.target.name,
-				                                   root.node.unit.target.kind,
-				                                   n.meta.is_some()
-				);
-			                       });
+			log::debug!("ready: {root:#}, deps:");
+			deps.iter()
+			    .enumerate()
+			    .for_each(|(i, n)| log::debug!("{i}: {n:#}"));
 
 			log::debug!(
 			            "Total finally deps for {}::{} ({:?}) : {}",
@@ -249,12 +347,57 @@ impl<'t> MetaDeps<'t> {
 	}
 
 
+	/// Filtered root units, contains only those with mode is [build][CompileMode::Build]
+	/// and kind matches [`TargetKind::Lib`] `|` [`TargetKind::Bin`] `|` [`TargetKind::Example`].
 	pub fn roots(&self) -> &[RootNode<'t>] { self.roots.as_slice() }
 
-	pub fn root_for(&self, id: &PackageId, tk: &TargetKindWild, tname: &str) -> CargoResult<&RootNode<'t>> {
+
+	/// Groups of root-units by compile-target.
+	///
+	/// Possible groups:
+	/// 1. Contains just one root-unit;
+	/// 2. Contains two units with __same cargo-target__ and different rustc-targets __including__ playdate.
+	pub fn root_groups(&self) { unimplemented!() }
+
+
+	/// Returns first root for each group by [`roots_by_compile_target`][Self::roots_by_compile_target].
+	pub fn roots_compile_target_agnostic(&self) -> impl Iterator<Item = &RootNode<'t>> {
+		self.roots_by_compile_target().into_iter().flat_map(|(key, _)| {
+			                                          self.roots().iter().find(|n| {
+				                                                             n.node().unit().package_id ==
+				                                                             *key.package_id &&
+				                                                             &n.node().unit().target == key.target
+			                                                             })
+		                                          })
+	}
+
+	/// Groups of root-units by target.
+	///
+	/// Grouping: (package_id + cargo-target) => [rustc-target].
+	pub fn roots_by_compile_target(&self) -> BTreeMap<TargetKey, BTreeSet<cargo::core::compiler::CompileKind>> {
+		self.roots.iter().fold(BTreeMap::new(), |mut acc, root| {
+			                 let key = TargetKey::from(root);
+			                 acc.entry(key).or_default().insert(root.node().unit().platform);
+			                 acc
+		                 })
+	}
+
+
+	pub fn root_for(&self,
+	                id: &PackageId,
+	                tk: cargo::core::TargetKind,
+	                tname: &str)
+	                -> CargoResult<&RootNode<'t>> {
 		self.roots
 		    .iter()
-		    .find(|n| n.package_id() == id && *tk == n.node.unit.target.kind && n.node.unit.target.name == tname)
+		    .find(|n| n.package_id() == id && tk == n.node.unit.target.kind() && n.node.unit.target.name == tname)
+		    .ok_or_else(|| anyhow::anyhow!("Root not found for {id}::{tname}"))
+	}
+
+	pub fn root_for_wild(&self, id: &PackageId, tk: TargetKindWild, tname: &str) -> CargoResult<&RootNode<'t>> {
+		self.roots
+		    .iter()
+		    .find(|n| n.package_id() == id && tk == n.node.unit.target.kind && n.node.unit.target.name == tname)
 		    .ok_or_else(|| anyhow::anyhow!("Root not found for {id}::{tname}"))
 	}
 
@@ -276,6 +419,28 @@ impl<'t> MetaDeps<'t> {
 		    })
 		    .unwrap_or_default()
 		    .dependencies()
+	}
+}
+
+
+#[derive(Debug, Hash, PartialEq, PartialOrd, Eq, Ord)]
+pub struct TargetKey<'t> {
+	package_id: &'t PackageId,
+	target: &'t UnitTarget,
+}
+
+impl<'t> From<&'t RootNode<'t>> for TargetKey<'t> {
+	fn from(node: &'t RootNode<'t>) -> Self { TargetKey::from(node.node()) }
+}
+
+impl<'t> From<&'t Node<'t>> for TargetKey<'t> {
+	fn from(node: &'t Node<'t>) -> Self { TargetKey::from(node.unit()) }
+}
+
+impl<'t> From<&'t Unit> for TargetKey<'t> {
+	fn from(unit: &'t Unit) -> Self {
+		TargetKey { package_id: &unit.package_id,
+		            target: &unit.target }
 	}
 }
 

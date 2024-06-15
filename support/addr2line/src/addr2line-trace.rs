@@ -146,7 +146,7 @@ async fn process_trace<R: AsyncRead>(reader: R,
 		}
 	}
 
-	os_db.close().await;
+	os_db.close().await?;
 
 	info!("Resolved addresses: {resolved}");
 	info!("Unknown addresses: {missed}");

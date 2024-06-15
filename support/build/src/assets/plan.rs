@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::hash::Hash;
 use std::borrow::Cow;
 use std::str::FromStr;
@@ -17,7 +18,7 @@ pub fn build_plan<'l, 'r, S>(env: &Env,
                              options: &AssetsOptions,
                              crate_root: Option<Cow<'_, Path>>)
                              -> Result<BuildPlan<'l, 'r>, super::Error>
-	where S: Eq + Hash + ToString
+	where S: Eq + Hash + ToString + AsRef<str>
 {
 	// copy_unresolved    => get all files with glob
 	// include_unresolved => same
@@ -32,7 +33,7 @@ pub fn build_plan<'l, 'r, S>(env: &Env,
 
 	const PATH_SEPARATOR: [char; 2] = [MAIN_SEPARATOR, '/'];
 
-	let enver = EnvResolver::new();
+	let enver = EnvResolver::with_cache();
 	let crate_root = crate_root.unwrap_or_else(|| env.cargo_manifest_dir().into());
 	let link_behavior = options.link_behavior();
 
@@ -51,6 +52,13 @@ pub fn build_plan<'l, 'r, S>(env: &Env,
 			s.to_owned()
 		}
 	};
+
+
+	let assets_requirements = assets.env_required();
+	let compile_target_agnostic = !assets_requirements.contains(&"TARGET");
+	log::debug!("assets required env vars: {assets_requirements:?}");
+	log::debug!("compile-target-agnostic: {compile_target_agnostic}");
+
 
 	match assets {
 		AssetsRules::List(vec) => {
@@ -195,8 +203,14 @@ pub fn build_plan<'l, 'r, S>(env: &Env,
 
 	// TODO: find source duplicates and warn!
 
+
+	// get all used env vars:
+	let vars = enver.into_cache().unwrap_or_default();
+
 	Ok(BuildPlan { plan: mappings,
-	               crate_root: crate_root.to_path_buf() })
+	               crate_root: crate_root.to_path_buf(),
+	               compile_target_agnostic,
+	               vars })
 }
 
 
@@ -273,6 +287,11 @@ pub struct BuildPlan<'left, 'right> {
 	plan: Vec<Mapping<'left, 'right>>,
 	/// Root directory of associated crate
 	crate_root: PathBuf,
+
+	/// `true` if assets requires `TARGET` env var
+	compile_target_agnostic: bool,
+	/// Environment variables used by assets
+	vars: BTreeMap<String, String>,
 }
 
 impl<'left, 'right> BuildPlan<'left, 'right> {
@@ -285,6 +304,9 @@ impl<'left, 'right> BuildPlan<'left, 'right> {
 		let old = std::mem::replace(&mut self.crate_root, path.into());
 		old
 	}
+
+	pub fn compile_target_agnostic(&self) -> bool { self.compile_target_agnostic }
+	pub fn used_env_vars(&self) -> &BTreeMap<String, String> { &self.vars }
 }
 
 impl<'left, 'right> AsRef<[Mapping<'left, 'right>]> for BuildPlan<'left, 'right> {
@@ -496,6 +518,79 @@ impl std::fmt::Display for MappingKind {
 			Self::Into => "into".fmt(f),
 			Self::ManyInto => "many-into".fmt(f),
 		}
+	}
+}
+
+
+pub trait EnvRequired<'t> {
+	type Item;
+	type Output: IntoIterator<Item = Self::Item>;
+
+	fn env_required(&'t self) -> Self::Output;
+}
+
+
+impl<'t> EnvRequired<'t> for Mapping<'_, '_> where Self: 't {
+	type Item = &'t str;
+	type Output = Vec<Self::Item>;
+
+	fn env_required(&'t self) -> Self::Output {
+		let resolver = EnvResolver::new();
+
+		let keys = match self {
+			Mapping::AsIs(_, (l, r)) => [l.original(), r.original()],
+			Mapping::Into(_, (l, r)) => [l.original(), r.original()],
+			Mapping::ManyInto { exprs: (l, r), .. } => [l.original(), r.original()],
+		};
+
+		keys.into_iter()
+		    .flat_map(|s| resolver.matches(s))
+		    .map(|m| m.as_str())
+		    .collect()
+	}
+}
+
+
+impl<'s, S: 's + Eq + Hash + AsRef<str>> EnvRequired<'s> for AssetsRules<S> {
+	type Item = &'s str;
+	type Output = Vec<Self::Item>;
+
+	fn env_required(&'s self) -> Self::Output {
+		let resolver = EnvResolver::new();
+		self.env_required_with(&resolver).collect()
+	}
+}
+
+
+impl<S: Eq + Hash + AsRef<str>> AssetsRules<S> {
+	pub fn all_keys(&self) -> impl Iterator<Item = &str> {
+		let mut a = None;
+		let mut b = None;
+		match self {
+			AssetsRules::List(list) => {
+				a = Some(list.into_iter().map(AsRef::as_ref));
+			},
+			AssetsRules::Map(map) => {
+				let keys = map.keys().into_iter().map(AsRef::as_ref);
+				let values = map.values().into_iter().filter_map(|v| {
+					                                     match v {
+						                                     RuleValue::String(s) => Some(s.as_str()),
+					                                        RuleValue::Boolean(_) => None,
+					                                     }
+				                                     });
+				b = Some(keys.chain(values));
+			},
+		};
+
+		a.into_iter().flatten().chain(b.into_iter().flatten())
+	}
+
+	pub fn env_required_with<'t: 'r, 'r>(&'t self,
+	                                     resolver: &'r EnvResolver)
+	                                     -> impl Iterator<Item = &'t str> + 'r {
+		self.all_keys()
+		    .flat_map(|s| resolver.matches(s))
+		    .map(|m| m.as_str())
 	}
 }
 

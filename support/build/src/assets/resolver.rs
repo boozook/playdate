@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::hash::Hash;
 use std::borrow::Cow;
 use std::str;
@@ -109,23 +111,47 @@ pub fn sanitize_path_pattern(path: &str) -> Cow<'_, str> {
 }
 
 
-// TODO: use config.env .unwrap_or
-pub struct EnvResolver(Regex);
+pub struct EnvResolver(Regex, Option<RefCell<BTreeMap<String, String>>>);
 impl EnvResolver {
-	pub fn new() -> Self { Self(Regex::new(r"(\$\{([^}]+)\})").unwrap()) }
+	pub fn new() -> Self { Self(Regex::new(r"(\$\{([^}]+)\})").unwrap(), None) }
+
+	pub fn with_cache() -> Self {
+		let mut this = Self::new();
+		this.1 = Some(RefCell::new(BTreeMap::new()));
+		this
+	}
+
+	pub fn cache(&self) -> Option<std::cell::Ref<BTreeMap<String, String>>> { self.1.as_ref().map(|v| v.borrow()) }
+	pub fn into_cache(self) -> Option<BTreeMap<String, String>> { self.1.map(|cell| cell.into_inner()) }
 }
 impl Default for EnvResolver {
 	fn default() -> Self { Self::new() }
 }
 
 impl EnvResolver {
+	/// Do not uses cache.
+	pub fn matches<'t, 's: 't>(&'t self, s: &'s str) -> impl Iterator<Item = regex::Match<'s>> + 't {
+		self.0.captures_iter(s.as_ref()).flat_map(|caps| caps.get(2))
+	}
+
+	/// Uses cache if it has been set.
 	pub fn str<S: AsRef<str>>(&self, s: S, env: &Env) -> String {
 		let re = &self.0;
+		let cache = self.1.as_ref();
 
 		// Possible recursion for case "${VAR}" where $VAR="${VAR}"
 		let mut anti_recursion_counter: u8 = 42;
 
 		let mut replaced = String::from(s.as_ref());
+
+		fn resolve<'a>(name: &'a str, env: &'a Env) -> Cow<'a, str> {
+			env.vars
+			   .get(name)
+			   .map(Cow::from)
+			   .or_else(|| std::env::var(name).map_err(log_err).ok().map(Cow::from))
+			   .unwrap_or_else(|| name.into())
+		}
+
 		while re.is_match(replaced.as_str()) && anti_recursion_counter > 0 {
 			anti_recursion_counter -= 1;
 
@@ -133,13 +159,20 @@ impl EnvResolver {
 				let full = &captures[0];
 				let name = &captures[2];
 
-				let var = env.vars
-				             .get(name)
-				             .map(Cow::from)
-				             .or_else(|| std::env::var(name).map_err(log_err).ok().map(Cow::from))
-				             .unwrap_or_else(|| name.into());
-
-				replaced = replaced.replace(full, &var);
+				// use cache if it is:
+				if let Some(cache) = cache {
+					replaced = replaced.replace(
+					                            full,
+					                            // get from cache or resolve+insert and then use it:
+					                            cache.borrow_mut()
+					                                 .entry(name.to_owned())
+					                                 .or_insert_with(|| resolve(name, env).into_owned())
+					                                 .as_str(),
+					);
+				} else {
+					let s = resolve(name, env);
+					replaced = replaced.replace(full, &s);
+				}
 			} else {
 				break;
 			}
@@ -147,6 +180,7 @@ impl EnvResolver {
 		replaced
 	}
 
+	/// Do not uses cache.
 	pub fn str_only<'c, S: AsRef<str>>(&self, s: S) -> Cow<'c, str> {
 		let re = &self.0;
 
@@ -165,6 +199,7 @@ impl EnvResolver {
 		replaced.into()
 	}
 
+	/// Uses cache if it has been set.
 	pub fn expr<'e, Ex: AsMut<Expr<'e>>>(&self, mut expr: Ex, env: &Env) -> Ex {
 		let editable = expr.as_mut();
 		let replaced = self.str(editable.actual(), env);
@@ -237,15 +272,16 @@ impl Match {
 
 	// TODO: tests for `Match::set_target`
 	fn set_target<P: Into<PathBuf>>(&mut self, path: P) {
-		trace!("old target: {}", self.target().display());
+		let path = path.into();
+		debug!("match: update target: {:?} <- {:?}", self.target(), path);
 		match self {
 			Match::Match(entry) => {
 				let mut new = Self::Pair { source: entry.path().into(),
-				                           target: path.into() };
+				                           target: path };
 				std::mem::swap(self, &mut new);
 			},
 			Match::Pair { target, .. } => {
-				let _ = std::mem::replace(target, path.into());
+				let _ = std::mem::replace(target, path);
 			},
 		}
 	}

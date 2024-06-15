@@ -52,7 +52,7 @@ impl Rustflags {
 			if config.no_gcc {
 				// export LINK MAP:
 				let target_dir = config.workspace
-				                       .config()
+				                       .gctx()
 				                       .target_dir()
 				                       .unwrap_or_default()
 				                       .unwrap_or_else(|| Filesystem::new("target".into()))
@@ -103,7 +103,7 @@ impl Rustflags {
 		let existing = [&device_target, &config.host_target].into_iter()
 		                                                    .filter_map(|ck| {
 			                                                    config.workspace
-			                                                          .config()
+			                                                          .gctx()
 			                                                          .target_cfg_triple(ck.short_name())
 			                                                          .ok()
 			                                                          .and_then(|tcfg| tcfg.rustflags)

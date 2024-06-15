@@ -6,8 +6,8 @@ use cargo::core::compiler::CompileTarget;
 use cargo::core::compiler::CrateType;
 use cargo::core::PackageId;
 use cargo::core::SourceId;
-use serde::{Serialize, Deserialize};
-use serde::{Serializer, Deserializer};
+pub use serde::{Serialize, Deserialize};
+pub use serde::{Serializer, Deserializer};
 
 
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -89,7 +89,7 @@ impl Serialize for TargetKind {
 }
 
 
-pub fn deserialize_package_ids<'de, D>(deserializer: D) -> Result<Vec<PackageId>, D::Error>
+pub fn de_package_id_or_specs<'de, D>(deserializer: D) -> Result<Vec<PackageId>, D::Error>
 	where D: Deserializer<'de> {
 	let items = Vec::<String>::deserialize(deserializer)?;
 	let mut ids = Vec::with_capacity(items.len());
@@ -99,7 +99,7 @@ pub fn deserialize_package_ids<'de, D>(deserializer: D) -> Result<Vec<PackageId>
 	Ok(ids)
 }
 
-pub fn deserialize_package_id<'de, D>(deserializer: D) -> Result<PackageId, D::Error>
+pub fn de_package_id_or_spec<'de, D>(deserializer: D) -> Result<PackageId, D::Error>
 	where D: Deserializer<'de> {
 	string_to_package_id(String::deserialize(deserializer)?)
 }
@@ -159,7 +159,7 @@ pub fn string_to_package_id<Error: serde::de::Error>(mut line: String) -> Result
 }
 
 
-pub fn deserialize_crate_types<'de, D>(deserializer: D) -> Result<Vec<CrateType>, D::Error>
+pub fn de_crate_types<'de, D>(deserializer: D) -> Result<Vec<CrateType>, D::Error>
 	where D: Deserializer<'de> {
 	let kinds = Vec::<&str>::deserialize(deserializer)?;
 	let kinds = kinds.into_iter()
@@ -169,7 +169,7 @@ pub fn deserialize_crate_types<'de, D>(deserializer: D) -> Result<Vec<CrateType>
 }
 
 
-pub fn deserialize_compile_kind<'de, D>(deserializer: D) -> Result<CompileKind, D::Error>
+pub fn de_compile_kind<'de, D>(deserializer: D) -> Result<CompileKind, D::Error>
 	where D: Deserializer<'de> {
 	let res = if let Some(s) = Option::<&str>::deserialize(deserializer)? {
 		let target = CompileTarget::new(s).map_err(serde::de::Error::custom)?;
@@ -188,7 +188,7 @@ mod tests {
 
 	#[derive(Debug, Serialize, Deserialize)]
 	pub struct PackageIdWrapped {
-		#[serde(deserialize_with = "super::deserialize_package_id")]
+		#[serde(deserialize_with = "super::de_package_id_or_spec")]
 		pub package_id: PackageId,
 	}
 

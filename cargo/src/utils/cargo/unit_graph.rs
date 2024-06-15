@@ -33,7 +33,7 @@ impl format::UnitTarget {
 		use cargo::core::compiler::CrateType as CT;
 
 		match self.kind {
-			format::TargetKind::Lib(ref ct) => TK::Lib(ct.clone()),
+			format::TargetKind::Lib(ref ct) => TK::Lib(ct.to_owned()),
 			format::TargetKind::Bin => TK::Bin,
 			format::TargetKind::Test => TK::Test,
 			format::TargetKind::Bench => TK::Bench,
@@ -41,7 +41,7 @@ impl format::UnitTarget {
 				if &self.crate_types == &[CT::Bin] {
 					TK::ExampleBin
 				} else {
-					TK::ExampleLib(self.crate_types.clone())
+					TK::ExampleLib(self.crate_types.to_owned())
 				}
 			},
 			format::TargetKind::CustomBuild => TK::CustomBuild,
@@ -67,22 +67,61 @@ impl format::UnitTarget {
 			format::TargetKind::CustomBuild => TargetKindWild::CustomBuild,
 		}
 	}
+
+
+	pub fn cargo_target(&self) -> cargo::core::manifest::Target {
+		use cargo::core::manifest::Target;
+
+		match self.kind {
+			format::TargetKind::Lib(_) => {
+				Target::lib_target(
+				                   &self.name,
+				                   self.crate_types.to_owned(),
+				                   self.src_path.as_str().into(),
+				                   self.edition,
+				)
+			},
+			format::TargetKind::Bin => {
+				Target::bin_target(
+				                   &self.name,
+				                   None,
+				                   self.src_path.as_str().into(),
+				                   None,
+				                   self.edition,
+				)
+			},
+			format::TargetKind::Example => {
+				Target::example_target(
+				                       &self.name,
+				                       self.crate_types.to_owned(),
+				                       self.src_path.as_str().into(),
+				                       None,
+				                       self.edition,
+				)
+			},
+			format::TargetKind::Test => unimplemented!("test cargo-target"),
+			format::TargetKind::Bench => unimplemented!("bench cargo-target"),
+			format::TargetKind::CustomBuild => unimplemented!("custom-build cargo-target"),
+		}
+	}
 }
 
 
 pub mod format {
-	#![allow(dead_code)]
+	use std::str::FromStr;
+
+	use cargo::core::Edition;
 	use cargo::core::PackageId;
 	use cargo::util::command_prelude::CompileMode;
 	use cargo::core::compiler::CompileKind;
 	use cargo::core::compiler::CrateType;
-	use serde::Deserialize;
 
 	pub use super::super::format::*;
 
 
 	#[derive(Debug, Deserialize)]
 	pub struct UnitGraph {
+		#[allow(dead_code)]
 		pub version: usize,
 		pub units: Vec<Unit>,
 		pub roots: Vec<usize>,
@@ -90,11 +129,11 @@ pub mod format {
 
 	#[derive(Debug, Deserialize, Eq, Hash, PartialEq, PartialOrd, Ord)]
 	pub struct Unit {
-		#[serde(deserialize_with = "deserialize_package_id", alias = "pkg_id")]
+		#[serde(deserialize_with = "de_package_id_or_spec", alias = "pkg_id")]
 		pub package_id: PackageId,
 		pub target: UnitTarget,
 		#[serde(serialize_with = "CompileKind::serialize")]
-		#[serde(deserialize_with = "deserialize_compile_kind")]
+		#[serde(deserialize_with = "de_compile_kind")]
 		pub platform: CompileKind,
 		#[serde(serialize_with = "CompileMode::serialize")]
 		#[serde(deserialize_with = "CompileModeProxy::deserialize")]
@@ -108,11 +147,13 @@ pub mod format {
 	#[derive(Debug, Deserialize, Eq, Hash, PartialEq, PartialOrd, Ord)]
 	pub struct UnitTarget {
 		pub(crate) kind: TargetKind,
-		#[serde(deserialize_with = "deserialize_crate_types")]
+		#[serde(deserialize_with = "de_crate_types")]
 		pub crate_types: Vec<CrateType>,
 		pub name: String,
 		pub src_path: String,
-		// ...
+		#[serde(deserialize_with = "de_edition")]
+		pub edition: Edition,
+		// ... doc, doctest, test
 	}
 
 	#[derive(Debug, Deserialize, Eq, Hash, PartialEq, PartialOrd, Ord)]
@@ -122,5 +163,12 @@ pub mod format {
 		pub public: bool,
 		#[serde(alias = "noprelude")]
 		pub no_prelude: bool,
+	}
+
+
+	pub fn de_edition<'de, D>(deserializer: D) -> Result<Edition, D::Error>
+		where D: Deserializer<'de> {
+		let s = <&str>::deserialize(deserializer)?;
+		Edition::from_str(s).map_err(serde::de::Error::custom)
 	}
 }

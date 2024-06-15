@@ -1,5 +1,6 @@
-#![feature(extract_if)]
 #![feature(never_type)]
+#![feature(extract_if)]
+#![feature(iter_intersperse)]
 #![feature(exit_status_error)]
 #![feature(btree_extract_if)]
 #![feature(const_trait_impl)]
@@ -13,7 +14,7 @@ use std::borrow::Cow;
 use anyhow::bail;
 use cargo::core::Verbosity;
 use cargo::core::compiler::{CrateType, CompileKind};
-use cargo::util::{CargoResult, Config as CargoConfig};
+use cargo::util::{CargoResult, GlobalContext as CargoConfig};
 use config::Config;
 use anstyle::AnsiColor as Color;
 
@@ -42,7 +43,7 @@ fn main() -> CargoResult<()> {
 	                             |err| {
 		                             #[cfg(debug_assertions)]
 		                             eprintln!("Error: {err:?}");
-		                             let config = config.workspace.config();
+		                             let config = config.workspace.gctx();
 		                             config.shell().set_verbosity(Verbosity::Normal);
 		                             config.shell().error(err).ok();
 		                             std::process::exit(1);
@@ -64,7 +65,8 @@ fn main() -> CargoResult<()> {
 fn execute(config: &Config) -> CargoResult<()> {
 	match config.cmd {
 		cli::cmd::Cmd::Assets => {
-			let _result = assets::build(config)?;
+			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
+			assets::build_all(config, &deps_tree)?;
 		},
 
 		cli::cmd::Cmd::Build => {
@@ -76,12 +78,14 @@ fn execute(config: &Config) -> CargoResult<()> {
 				return Err(anyhow::anyhow!("build-plan in not implemented yet"));
 			}
 
-			build::build(config)?;
+			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
+			build::build(config, &deps_tree)?;
 		},
 
 		cli::cmd::Cmd::Package => {
-			let assets = assets::build(config)?;
-			let products = build::build(config)?;
+			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
+			let assets = assets::build_all(config, &deps_tree)?;
+			let products = build::build(config, &deps_tree)?;
 
 			log::debug!("assets artifacts: {}", assets.len());
 			log::debug!("build  artifacts: {}", products.len());
@@ -144,19 +148,21 @@ fn execute(config: &Config) -> CargoResult<()> {
 				bail!("Nothing found to run");
 			}
 
+			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
+
 			// build requested package(s):
-			let assets = assets::build(config)?;
-			let mut products = build::build(config)?;
+			let assets = assets::build_all(config, &deps_tree)?;
+			let mut products = build::build(config, &deps_tree)?;
 
 			// filter products with expected:
 			products.extract_if(|product| {
 				        match product {
-					        build::BuildProduct::Success { package,
+					        build::BuildProduct::Success { package_id,
 				                                          name,
 				                                          src_ct,
 				                                          .. } => {
 					           !expected.iter().any(|(p, targets)| {
-						                           p == package &&
+						                           p.package_id() == *package_id &&
 						                           targets.iter().any(|t| {
 							                                         let crate_name = t.crate_name();
 							                                         (name == &crate_name ||
@@ -178,8 +184,7 @@ fn execute(config: &Config) -> CargoResult<()> {
 			}
 			let package = packages.first().unwrap();
 
-			config.log()
-			      .build_finished(true, Some(package.package.package_id()));
+			config.log().build_finished(true, Some(package.package_id));
 
 
 			{

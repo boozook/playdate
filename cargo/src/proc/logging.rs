@@ -68,14 +68,14 @@ pub fn cmd_logged(config: &Config, mut cmd: Command) -> CargoResult<Command> {
 		if let Ok(error) = std::str::from_utf8(stderr) {
 			config.log().status_err(format!("{tool} stderr:\n{error}"));
 		} else {
-			config.workspace.config().shell().status_header(&tool)?;
+			config.workspace.gctx().shell().status_header(&tool)?;
 			config.workspace
-			      .config()
+			      .gctx()
 			      .shell()
 			      .err()
 			      .write_all("stderr:\n".as_bytes())?;
-			config.workspace.config().shell().err().write_all(stderr)?;
-			config.workspace.config().shell().err().write_all(b"\n")?;
+			config.workspace.gctx().shell().err().write_all(stderr)?;
+			config.workspace.gctx().shell().err().write_all(b"\n")?;
 		}
 	}
 

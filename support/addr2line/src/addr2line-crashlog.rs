@@ -63,7 +63,7 @@ async fn main() -> anyhow::Result<()> {
 	}
 	debug!("Resolved addresses: {}", resolved_addrs.len());
 
-	os_db.close().await;
+	os_db.close().await?;
 
 	let docs: Vec<_> = docs.into_iter()
 	                       .map(|doc| {

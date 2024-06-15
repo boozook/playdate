@@ -5,7 +5,7 @@ mod cargo;
 mod playdate;
 
 use ::cargo::CargoResult;
-use ::cargo::Config;
+use ::cargo::GlobalContext as Config;
 use ::cargo::util::FileLock;
 use ::cargo::util::Filesystem;
 
