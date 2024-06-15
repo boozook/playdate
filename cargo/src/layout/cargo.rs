@@ -42,7 +42,7 @@ pub struct CargoLayout {
 }
 
 impl AsRef<CargoLayout> for &'_ CargoLayout {
-	fn as_ref(&self) -> &CargoLayout { *self }
+	fn as_ref(&self) -> &CargoLayout { self }
 }
 
 impl CargoLayout {
