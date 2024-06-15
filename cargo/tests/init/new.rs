@@ -1,3 +1,4 @@
+#![allow(unexpected_cfgs)]
 use std::ffi::OsStr;
 use std::ffi::OsString;
 use std::path::PathBuf;
