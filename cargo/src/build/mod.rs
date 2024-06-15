@@ -83,11 +83,10 @@ pub fn build(cfg: &Config, tree: &MetaDeps) -> CargoResult<Vec<BuildProduct>> {
 
 	// Prepare targets associated with roots:
 	let root_targets = cfg.possible_targets()?
-	                      .into_iter()
 	                      .flat_map(|(p, targets)| {
 		                      let package_id = p.package_id();
 		                      tree.roots()
-		                          .into_iter()
+		                          .iter()
 		                          .filter(move |r| r.node().unit().package_id == package_id)
 		                          .filter_map(move |r| {
 			                          let unit = r.node().unit();
@@ -336,7 +335,7 @@ pub fn build(cfg: &Config, tree: &MetaDeps) -> CargoResult<Vec<BuildProduct>> {
 			                        })
 			                        .collect::<BTreeSet<_>>();
 
-			         let ck_exact = ck_name.iter().map(|s| *s).find(|ck| {
+			         let ck_exact = ck_name.iter().copied().find(|ck| {
 				                                                  comps.iter()
 				                                                       .all(|(_num, first)| matches!(first, Some(s) if *s == *ck))
 			                                                  });
@@ -596,7 +595,7 @@ fn map_artifacts<'cargo, 'cfg, 't>(tree: &'t MetaDeps<'cfg>,
 	artifacts.filter(|art| matches!(art.target.kind, TK::Lib(_) | TK::Bin | TK::Example))
 	         .filter_map(move |art| {
 		         let findings = tree.roots()
-		                            .into_iter()
+		                            .iter()
 		                            .filter(|r| {
 			                            let unit = r.node().unit();
 			                            unit.package_id == art.package_id &&
