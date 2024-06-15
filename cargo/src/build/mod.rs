@@ -336,9 +336,9 @@ pub fn build(cfg: &Config, tree: &MetaDeps) -> CargoResult<Vec<BuildProduct>> {
 			                        .collect::<BTreeSet<_>>();
 
 			         let ck_exact = ck_name.iter().copied().find(|ck| {
-				                                                  comps.iter()
-				                                                       .all(|(_num, first)| matches!(first, Some(s) if *s == *ck))
-			                                                  });
+				                                               comps.iter()
+				                                                    .all(|(_num, first)| matches!(first, Some(s) if *s == *ck))
+			                                               });
 
 			         let removed = if let Some(ck) = ck_exact {
 				         roots.extract_if(|root| {
