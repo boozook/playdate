@@ -50,6 +50,11 @@ required-features = ["sys/entry-point", "sys/lang-items"]
 name = "set-serial-message-callback"
 crate-type = ["dylib", "staticlib"]
 path = "examples/set-serial-message-callback.rs"
+
+[[example]]
+name = "update-state-in-serial-message-callback"
+crate-type = ["dylib", "staticlib"]
+path = "examples/update-state-in-serial-message-callback.rs"
 required-features = ["sys/entry-point", "sys/lang-items"]
 
 [package.metadata.playdate]
