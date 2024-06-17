@@ -1,6 +1,6 @@
 [package]
 name = "playdate-tool"
-version = "0.3.5"
+version = "0.3.6"
 readme = "README.md"
 description = "Tool for interaction with Playdate device and sim."
 keywords = ["playdate", "usb", "utility"]
@@ -36,7 +36,7 @@ miette = { version = "7.2", features = ["fancy"] }
 # tracing:
 tracing = { version = "0.1", optional = true }
 tracing-subscriber = { version = "0.3", optional = true }
-console-subscriber = { version = "0.2", features = [
+console-subscriber = { version = "0.3", features = [
 	"env-filter",
 ], optional = true }
 

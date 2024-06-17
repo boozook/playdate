@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use std::env;
 use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::str::FromStr;
 
 use clap::error::{ErrorKind, ContextKind, ContextValue};
@@ -149,22 +150,26 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 			// So, lets create virtual one.
 			let cwd = env::current_dir()?;
 			let fake = cwd.join("Cargo.toml");
-			let fake_manifest =
-				VirtualManifest::new(
-				                     Default::default(),
-				                     Default::default(),
-				                     WorkspaceConfig::Root(WorkspaceRootConfig::new(
-					&cwd,
-					&Default::default(),
-					&Default::default(),
-					&Default::default(),
-					&Default::default(),
-					&Default::default(),
-				)),
-				                     Default::default(),
-				                     Default::default(),
-				                     Default::default(),
-				);
+			let ws_cfg = WorkspaceConfig::Root(WorkspaceRootConfig::new(
+				&cwd,
+				&Default::default(),
+				&Default::default(),
+				&Default::default(),
+				&Default::default(),
+				&Default::default(),
+			));
+			let fake_manifest = VirtualManifest::new(
+			                     Rc::default(),
+			                     Rc::new(toml_edit::ImDocument::parse("".to_owned()).expect("empty is valid TOML")),
+			                     Rc::default(),
+			                     Rc::default(),
+			                     Vec::new(),
+			                     Default::default(),
+			                     ws_cfg,
+			                     Default::default(),
+			                     Default::default(),
+			);
+
 			Workspace::new_virtual(cwd, fake, fake_manifest, config)?
 		};
 
