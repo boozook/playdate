@@ -485,13 +485,7 @@ jobs:
         if: steps.check.outcome == 'failure'
         run: cargo fmt --all
 
-      # - name: Suggestions
-      #   continue-on-error: true
-      #   uses: parkerbxyz/suggest-changes@v1.0.2
-      #   with: comment: Rustfmt suggested the formatting changes.
-
       - name: Suggestions
-        if: steps.check.outcome == 'failure'
         uses: reviewdog/action-suggester@v1
         with:
           filter_mode: diff_context
@@ -564,6 +558,10 @@ jobs:
           --bins --examples --all-targets
           -- -Aclippy::cargo
           || (echo "::error::Rust format error." && exit 1)
+
+      # needed after clippy fix
+      - name: fmt
+        run: cargo fmt --all
 
       - name: remove config
         run: rm -rf .cargo
