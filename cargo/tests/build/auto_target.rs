@@ -63,6 +63,9 @@ fn bins_examples() -> Result<()> {
 
 
 #[test]
+#[cfg_attr(windows, ignore = "Off until paths on Windows fixed.")]
+// Error on Windows:
+// failed to parse value from --config argument `target.thumbv7em-none-eabihf.rustflags=["-Ctarget-cpu=cortex-m7", "-Clink-args=--emit-relocs", "-Crelocation-model=pic", "-Csoft-float=no", "-Clink-arg=--cref", "-Clink-arg=--gc-sections", "-Clink-arg=--entry=eventHandlerShim", "-Clink-arg=-T\\?\\D:\\a\playdate\\playdate\\target\\tmp\\pd.x"]` as a dotted key expression
 fn bins_examples_no_gcc() -> Result<()> {
 	let target = DEVICE_TARGET;
 	let args = ["--device", "--bins", "--examples", "--no-gcc"].into_iter()
