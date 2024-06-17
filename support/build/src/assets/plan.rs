@@ -993,7 +993,7 @@ mod tests {
 					// left hand of rule:
 					let targets = ["trg", "/trg", "//trg"];
 					// right hand of rule:
-					let tests: HashSet<_> = vec!["Cargo.toml", "src/lib.rs"].into_iter().collect();
+					let tests = vec!["Cargo.toml", "src/lib.rs"];
 					// latest because there is no to files into one target, so "into" will be used
 
 					for trg in targets {
@@ -1014,13 +1014,45 @@ mod tests {
 							) = pair
 							{
 								assert_eq!(left, stripped_trg);
-								assert!(tests.contains(right.as_str()));
+								assert!(tests.contains(&right.as_str()));
 								assert_eq!(source, Path::new(right));
 								assert_eq!(target, Path::new(stripped_trg));
 							} else {
 								panic!("pair is not matching: {pair:#?}");
 							}
 						}
+					}
+				}
+
+				#[test]
+				fn local_exact_exclude() {
+					let env = Env::try_default().unwrap();
+					let opts = AssetsOptions::default();
+
+					let root = crate_root();
+					let root = Some(root.as_path().into());
+
+					// left hand of rule:
+					let tests = vec!["Cargo.toml", "src/lib.rs"];
+
+					let exprs = tests.iter()
+					                 .map(|s| (*s, RuleValue::Boolean(true)))
+					                 .chain([("*.toml", RuleValue::Boolean(false))])
+					                 .collect();
+
+					let assets = AssetsRules::Map(exprs);
+
+					let plan = build_plan(&env, &assets, &opts, root.clone()).unwrap();
+
+					let pairs = plan.as_inner();
+					assert_eq!(1, pairs.len());
+
+					let pair = pairs.first().unwrap();
+
+					if let Mapping::AsIs(_, (Expr::Original(left), _)) = pair {
+						assert_eq!(tests[1], left);
+					} else {
+						panic!("pair is not matching: {pair:#?}");
 					}
 				}
 			}
@@ -1088,7 +1120,7 @@ mod tests {
 					let targets = ["/trg/", "//trg/", "/trg", "trg"];
 					let targets_rel = ["trg/", "trg"]; // non-abs targets
 					// right hand of rule:
-					let tests: HashSet<_> = vec!["Cargo.tom*", "src/lib.*"].into_iter().collect();
+					let tests = vec!["Cargo.tom*", "src/lib.*"];
 					// latest because there is no to files into one target, so "into" will be used
 
 					for trg in targets {
@@ -1111,13 +1143,58 @@ mod tests {
 								assert_eq!(&target.to_string_lossy(), left);
 
 								assert_eq!(1, sources.len());
-								assert!(tests.contains(right.as_str()));
+								assert!(tests.contains(&right.as_str()));
 
 								#[cfg(feature = "assets-report")]
 								assert_eq!(0, excluded.len());
 							} else {
 								panic!("pair is not matching: {pair:#?}");
 							}
+						}
+					}
+				}
+
+
+				#[test]
+				#[cfg_attr(windows, should_panic)]
+				fn glob_local_exclude() {
+					let env = Env::try_default().unwrap();
+					let opts = AssetsOptions::default();
+
+					let root = crate_root();
+					let root = Some(root.as_path().into());
+
+					// exclude:
+					let exclude = "src/*";
+					// left hand of rule:
+					let trg = "/trg";
+					// right hand of rule:
+					let tests: HashMap<_, _> = vec![("Cargo.tom*", 1), ("src/lib.*", 0)].into_iter().collect();
+					// left + right:
+					let exprs = tests.iter()
+					                 .enumerate()
+					                 .map(|(i, (s, _))| (trg.to_string() + &"/".repeat(i), RuleValue::String(s.to_string())))
+					                 .chain([(exclude.to_string(), RuleValue::Boolean(false))])
+					                 .collect();
+
+					let assets = AssetsRules::Map(exprs);
+					let plan = build_plan(&env, &assets, &opts, root.clone()).unwrap();
+
+					let pairs = plan.as_inner();
+					assert_eq!(2, pairs.len());
+
+					for pair in pairs.iter() {
+						if let Mapping::ManyInto { sources,
+						                           target,
+						                           exprs: (Expr::Original(left), Expr::Original(right)),
+						                           .. } = pair
+						{
+							assert_eq!(&target.to_string_lossy(), left);
+
+							let sources_expected = tests[right.as_str()];
+							assert_eq!(sources_expected, sources.len());
+						} else {
+							panic!("pair is not matching: {pair:#?}");
 						}
 					}
 				}

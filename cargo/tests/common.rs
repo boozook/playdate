@@ -98,6 +98,12 @@ pub fn simple_crates() -> Result<impl Iterator<Item = PathBuf>> {
 	Ok(crates)
 }
 
+pub fn auto_target() -> Result<&'static Path> {
+	let root = Path::new("tests/crates/auto-target");
+	assert!(root.exists());
+	Ok(root)
+}
+
 pub fn workspace() -> Result<&'static Path> {
 	let root = Path::new("tests/crates/workspace");
 	assert!(root.exists());
@@ -153,4 +159,10 @@ pub fn target_triple() -> String {
 		        target::env()
 		)
 	}
+}
+
+
+// (issue: #315) Convert dir-name to package-name, then to crate_name
+pub fn to_cargo_package_crate_name(path: &Path) -> Option<String> {
+	Some(path.file_name()?.to_str()?.replace('-', "_"))
 }

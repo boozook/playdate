@@ -1,4 +1,3 @@
-#![no_std]
 use core::ffi::*;
 
 #[allow(unused_imports)]

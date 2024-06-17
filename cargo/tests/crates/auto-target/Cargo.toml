@@ -1,0 +1,21 @@
+[workspace]
+
+[package]
+name = "test-auto-target"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+autotests = false
+autobenches = false
+
+
+[dependencies.pd]
+package = "playdate-sys"
+path = "../../../../api/sys"
+features = ["lang-items"]
+
+
+[profile]
+dev.panic = "abort"
+release.panic = "abort"
