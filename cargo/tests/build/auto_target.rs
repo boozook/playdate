@@ -43,12 +43,12 @@ fn bins_examples() -> Result<()> {
 	let args = ["--device", "--bins", "--examples"].into_iter().map(OsStr::new);
 
 	let path = auto_target()?;
-	let (_, target_dir) = run_build(&path, args.clone())?;
+	let (_, target_dir) = run_build(path, args.clone())?;
 	let export_dir = export_dir(target_dir, target, "debug");
 
 	// check expectations:
 	let package_name = "test-auto-target";
-	let cargo_package_name = to_cargo_package_crate_name(&Path::new(package_name)).expect("package_crate_name");
+	let cargo_package_name = to_cargo_package_crate_name(Path::new(package_name)).expect("package_crate_name");
 	for trg in ["test-auto-target", "auto-bin", "example-bin"] {
 		let cargo_target_fullname = format!("{cargo_package_name}-{trg}");
 		let artifact = export_dir.join("playdate")
@@ -69,12 +69,12 @@ fn bins_examples_no_gcc() -> Result<()> {
 	                                                           .map(OsStr::new);
 
 	let path = auto_target()?;
-	let (_, target_dir) = run_build(&path, args.clone())?;
+	let (_, target_dir) = run_build(path, args.clone())?;
 	let export_dir = export_dir(target_dir, target, "debug");
 
 	// check expectations:
 	let package_name = "test-auto-target";
-	let cargo_package_name = to_cargo_package_crate_name(&Path::new(package_name)).expect("package_crate_name");
+	let cargo_package_name = to_cargo_package_crate_name(Path::new(package_name)).expect("package_crate_name");
 	for trg in ["test-auto-target", "auto-bin", "example-bin"] {
 		let cargo_target_fullname = format!("{cargo_package_name}-{trg}");
 		let artifact = export_dir.join("playdate")
