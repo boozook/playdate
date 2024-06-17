@@ -16,8 +16,8 @@ use serde::de::IntoDeserializer;
 use crate::config::Config;
 use crate::logger::LogErr;
 
-use super::build_plan::format::TargetKind;
-use super::build_plan::TargetKindWild;
+use super::format::TargetKind;
+use super::format::TargetKindWild;
 use super::metadata::format::{Package, CrateMetadata};
 use super::metadata::CargoMetadataPd;
 use super::unit_graph::format::{Unit, UnitTarget};

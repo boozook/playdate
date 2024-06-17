@@ -126,7 +126,7 @@ pub mod format {
 	use serde::Serialize;
 	use serde::Deserialize;
 	use cargo::core::PackageId;
-	use crate::utils::cargo::build_plan::format::de_crate_types;
+	use crate::utils::cargo::format::de_crate_types;
 	use crate::utils::cargo::format::de_package_id_or_spec;
 	pub use crate::utils::cargo::format::TargetKind;
 

@@ -6,7 +6,7 @@ It can build programs written in Rust, manage assets, build package for Playdate
 Usually it builds static or dynamic libraries for sim and hardware,
 but also it can build executable binaries for hardware and this method produces highly optimized output with dramatically minimized size (thanks to DCE & LTO)\*.
 
-\* _For executable binaries use `--no-gcc` argument._
+\* _For executable binaries use `--no-gcc` argument needed to set up alternative linking final binary._
 
 ### Platform specific pre-req install instructions
 
@@ -57,10 +57,7 @@ cargo +nightly playdate --version
 
 Or install to use bleeding edge bits from a local git clone:
 ```bash
-mkdir ~/code
-cd ~/code
-git clone https://github.com/boozook/playdate.git
-cargo +nightly install --path="$HOME/code/playdate/cargo" cargo-playdate
+cargo +nightly install cargo-playdate --git=https://github.com/boozook/playdate.git
 ```
 
 ## Hello World
@@ -109,22 +106,19 @@ Execute `cargo playdate -h` for more details, or with `--help` for further more.
 
 ### Limitations
 
-1. Global crate-level attributes like `crate_type` and `crate_name` doesn't supported, e.g:
-```rust
-#![crate_name = "Game"]
-#![crate_type = "lib"]
-```
+* The `cargo-playdate` supports [cargo's auto-targets][target-auto-discovery] such as `bin` and `example`, but only for binary executable targets ignoring `#![crate_type = "lib"]` attribute. So if you want to build `example`-target as `lib`, that needed for run in simulator, you could declare it in the package manifest like this:
+  ```toml
+  [[example]]
+  name = "demo"
+  crate-type = ["dylib", "staticlib"]
+  path = "examples/demo.rs"
+  ```
+  Otherwise `example` will be built as `bin` and runnable on device only.
+  In future versions it may be fixed with adding support of `rustc` command like it does `cargo rustc` to set `--crate-type`.
 
-2. Cargo-targets such as `bin` and `example` should be in the cargo manifest. Autodetect isn't yet tested and may not work. Example:
-```toml
-[[example]]
-name = "demo"
-crate-type = ["dylib", "staticlib"]
-path = "examples/demo.rs"
-```
+[target-auto-discovery]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#target-auto-discovery
 
-
-3. Assets especially for `example` cargo-targets inherits from package assets. Currently there's no way to set assets for single cargo-target, but only for entire package __or for dev-targets__ - [there is `dev-assets` extra table][dev-assets-doc] inherited by main.
+* Assets especially for `example` cargo-targets inherits from package assets. Currently there's no way to set assets for single cargo-target, but only for entire package __and for dev-targets__ - [there is `dev-assets` extra table][dev-assets-doc] inherited by package assets.
 
 
 [dev-assets-doc]: https://github.com/boozook/playdate/tree/main/support/build#dev-assets
@@ -132,7 +126,7 @@ path = "examples/demo.rs"
 
 ## Troubleshooting
 
-* On windows in some cases hardware cannot be ejected because of no permissions. Try to give rights and/or build `cargo-playdate` with feature `eject`.
+* On any OS in case of a restricted environment hardware cannot be ejected because of no permissions. Try to give rights and/or build `cargo-playdate` with feature `eject`.
 
 * Welcome to [discussions](https://github.com/boozook/playdate/discussions) and [issues](https://github.com/boozook/playdate/issues).
 

@@ -9,7 +9,6 @@ use anyhow::anyhow;
 use anyhow::bail;
 use cargo::core::PackageId;
 use cargo::CargoResult;
-use cargo::core::Package;
 use cargo::core::compiler::CompileKind;
 use cargo::core::compiler::CrateType;
 use cargo::core::profiles::DebugInfo;

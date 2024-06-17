@@ -59,7 +59,6 @@ const EXAMPLE_PREFIX: &str = "example";
 fn dev_lib_release() -> Result<()> {
 	let target = DEVICE_TARGET;
 	let args = ["--device", "--lib", "--release"].into_iter().map(OsStr::new);
-	// let args = ["--device", "--no-sdk", "--no-gcc", "--release"].into_iter().map(OsStr::new);
 
 	for path in simple_crates()? {
 		let (_, target_dir) = run_build(&path, args.clone())?;
@@ -197,12 +196,6 @@ fn dev_sim_release_exp() -> Result<()> {
 	}
 
 	Ok(())
-}
-
-
-// (issue: #315) Convert dir-name to package-name, then to crate_name
-fn to_cargo_package_crate_name(path: &Path) -> Option<String> {
-	Some(path.file_name()?.to_str()?.replace('-', "_"))
 }
 
 

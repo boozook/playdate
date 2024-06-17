@@ -61,7 +61,6 @@ pub struct Config<'cfg> {
 	sdk: Lazy<Sdk>,
 	gcc: Lazy<ArmToolchain>,
 	rustflags: Lazy<Rustflags>,
-	build_plan: Lazy<crate::utils::cargo::build_plan::format::BuildPlan>,
 	unit_graph: Lazy<crate::utils::cargo::unit_graph::format::UnitGraph>,
 	ws_metadata: Lazy<crate::utils::cargo::metadata::CargoMetadataPd>,
 	target_infos: Lazy<HashMap<CompileKind, Lazy<TargetInfo>>>,
@@ -130,7 +129,6 @@ impl<'cfg> Config<'cfg> {
 		       sdk: Lazy::new(),
 		       gcc: Lazy::new(),
 		       rustflags: Lazy::new(),
-		       build_plan: Lazy::new(),
 		       unit_graph: Lazy::new(),
 		       ws_metadata: Lazy::new(),
 		       target_infos: Lazy::new(),
@@ -166,11 +164,6 @@ impl<'cfg> Config<'cfg> {
 		        })
 	}
 
-	#[deprecated = "corrupts cargo build cache"]
-	pub fn build_plan(&self) -> CargoResult<&crate::utils::cargo::build_plan::format::BuildPlan> {
-		self.build_plan
-		    .try_get_or_create(|| crate::utils::cargo::build_plan::build_plan(self))
-	}
 
 	pub fn unit_graph(&self) -> CargoResult<&crate::utils::cargo::unit_graph::format::UnitGraph> {
 		self.unit_graph

@@ -4,9 +4,8 @@ use crate::cli::cmd::Cmd;
 use crate::config::Config;
 use crate::proc::cargo_proxy_cmd;
 use crate::proc::read_cargo_json;
+use super::format::TargetKindWild;
 use self::format::UnitGraph;
-
-use super::build_plan::TargetKindWild;
 
 
 pub fn unit_graph(cfg: &Config) -> CargoResult<UnitGraph> {
