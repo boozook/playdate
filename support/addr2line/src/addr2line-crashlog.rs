@@ -9,9 +9,10 @@ use futures_util::StreamExt;
 use futures_util::TryStreamExt;
 
 use pd::elf::map_result_fallback_os;
-use pd::fmt::crashlog::CrashLog;
-use pd::fmt::report::WriteReport as _;
 use pd::*;
+
+
+const ADDR_REG: &[&str] = &["lr", "pc", "mmfar", "bfar", "r0", "r1", "r2", "r3", "r12"];
 
 
 #[tokio::main]
@@ -31,11 +32,11 @@ async fn main() -> anyhow::Result<()> {
 	let docs: Vec<_> = {
 		let addrs = &mut addrs;
 		stream.map(move |doc| -> Result<_, anyhow::Error> {
-			      let count = doc.ptrs
-			                     .values()
-			                     .filter(|v| addrs.insert(**v))
-			                     .map_while(|v| tx.send(*v).map_err(|err| error!("{err}")).ok())
-			                     .count();
+			      let count = ADDR_REG.into_iter()
+			                          .flat_map(|v| doc.ptrs.get(*v))
+			                          .filter(|v| addrs.insert(**v))
+			                          .map_while(|v| tx.send(*v).map_err(|err| error!("{err}")).ok())
+			                          .count();
 			      let date = doc.date.as_deref().unwrap_or("n/a");
 			      debug!("sent to resolve {count} addrs for doc by {date}");
 			      Ok(doc)
@@ -65,36 +66,17 @@ async fn main() -> anyhow::Result<()> {
 
 	os_db.close().await?;
 
-	let docs: Vec<_> = docs.into_iter()
-	                       .map(|doc| {
-		                       let CrashLog { date,
-		                                      build,
-		                                      heap,
-		                                      ptrs, } = doc;
-		                       let ptrs = ptrs.into_iter()
-		                                      .map(|(k, v)| {
-			                                      match resolved_addrs.get(&v) {
-				                                      Some(rep) => (k, rep),
-			                                         None => unreachable!("Key not found: {v:#08x?}"),
-			                                      }
-		                                      })
-		                                      .collect();
-		                       CrashLog { date,
-		                                  build,
-		                                  heap,
-		                                  ptrs }
-	                       })
-	                       .collect();
 
-	for doc in docs {
-		doc.default_print(
-		                  std::io::stdout(),
-		                  true,
-		                  0,
-		                  cfg.base.flags.functions,
-		                  cfg.base.flags.basenames,
-		                  cfg.base.flags.ranges,
-		                  cfg.base.flags.demangle,
+	for doc in &docs {
+		doc.pretty_print(
+		                 std::io::stdout(),
+		                 &resolved_addrs,
+		                 true,
+		                 0,
+		                 cfg.base.flags.functions,
+		                 cfg.base.flags.basenames,
+		                 cfg.base.flags.ranges,
+		                 cfg.base.flags.demangle,
 		)?;
 	}
 

@@ -1,3 +1,6 @@
+#![feature(let_chains)]
+
+pub mod ef;
 pub mod fmt;
 pub mod trace;
 pub mod elf;
