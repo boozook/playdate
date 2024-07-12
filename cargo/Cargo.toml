@@ -31,7 +31,7 @@ clap_lex = "0.7"
 dirs.workspace = true
 fs_extra.workspace = true
 
-cargo = "0.80"
+cargo = "0.80.0"
 cargo-util = "0.2.11"
 cargo-platform = "0.1.8"
 cargo-util-schemas = "0.3.0"
@@ -89,7 +89,7 @@ features = [
 
 
 [dev-dependencies]
-target = "2.0.1"
+target = "2.1"
 rand = "0.8"
 
 [target.'cfg(unix)'.dev-dependencies]
