@@ -1,6 +1,6 @@
 [package]
 name = "playdate-device"
-version = "0.2.11"
+version = "0.2.13"
 readme = "README.md"
 description = "Cross-platform interface Playdate device, async & blocking."
 keywords = ["playdate", "usb", "serial"]
@@ -80,7 +80,7 @@ version = "0.1"
 optional = true
 
 [target.'cfg(target_os = "windows")'.dependencies.windows]
-version = "0.57"
+version = "0.58"
 features = [
 	"Win32_Foundation",
 	"Win32_Storage",

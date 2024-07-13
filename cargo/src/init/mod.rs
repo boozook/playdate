@@ -337,9 +337,10 @@ fn cargo_config<P: AsRef<Path>>(config: &Config, path: P) -> CargoResult<()> {
 	// default
 	if !config.create_full_config {
 		// target[].rustflags:
-		let rustflags: Vec<toml::Value> = Rustflags::rustflags_bin_playdate().iter()
-		                                                                     .map(|s| toml::Value::String(s.to_string()))
-		                                                                     .collect();
+		let rustflags: Vec<toml::Value> =
+			Rustflags::rustflags_bin_playdate().iter()
+			                                   .map(|s| toml::Value::String(s.to_string()))
+			                                   .collect();
 
 		let mut target_table = toml::Table::new();
 		target_table.insert("rustflags".into(), rustflags.into());

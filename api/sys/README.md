@@ -23,6 +23,8 @@ _I've experimented enough with wrapping the entire API with results at every ste
 
 ## Prerequisites
 
+<abbr title="Minimal Nightly Rust Version">MNRV</abbr> is [`1.81.0` from 2024-06-30][rust-toolchain.toml]
+
 1. Rust __nightly__ toolchain (rustup is optional)
 1. [Playdate SDK][sdk]
    - Ensure that env var `PLAYDATE_SDK_PATH` points to the SDK root
@@ -31,6 +33,7 @@ _I've experimented enough with wrapping the entire API with results at every ste
 
 [sdk]: https://play.date/dev/#cardSDK
 [doc-prerequisites]: https://sdk.play.date/Inside%20Playdate%20with%20C.html#_prerequisites
+[rust-toolchain.toml]: https://github.com/boozook/playdate/blob/main/rust-toolchain.toml#L2
 
 
 ## Usage

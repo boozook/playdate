@@ -56,8 +56,8 @@ pub mod unmount {
 		fn unmount_blocking(&self) -> Result<(), Error> {
 			#[cfg(feature = "eject")]
 			let res = unmount_eject(&self).or_else(|err| {
-				                     winapi::unmount(self.letter).map_err(|err2| Error::chain(err2, [err]))
-			                     });
+				                        winapi::unmount(self.letter).map_err(|err2| Error::chain(err2, [err]))
+			                        });
 			#[cfg(not(feature = "eject"))]
 			let res = winapi::unmount(self.letter);
 
@@ -92,12 +92,12 @@ pub mod unmount {
 
 			#[cfg(feature = "eject")]
 			let fut = lazy(|_| unmount_eject(&self)).or_else(|err| {
-				                               lazy(|_| {
-					                               winapi::unmount(self.letter).map_err(|err2| {
-						                                                           Error::chain(err2, [err])
-					                                                           })
-				                               })
-			                               });
+				                                  lazy(|_| {
+					                                  winapi::unmount(self.letter).map_err(|err2| {
+						                                                              Error::chain(err2, [err])
+					                                                              })
+				                                  })
+			                                  });
 			#[cfg(not(feature = "eject"))]
 			let fut = lazy(|_| winapi::unmount(self.letter));
 

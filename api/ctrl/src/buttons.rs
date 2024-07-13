@@ -58,7 +58,7 @@ pub trait PDButtonsExt: Sized + BitAnd<Self> {
 }
 
 
-impl const PDButtonsExt for PDButtons {
+impl PDButtonsExt for PDButtons {
 	#![allow(non_snake_case)]
 
 	#[inline(always)]
