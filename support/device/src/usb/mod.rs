@@ -294,10 +294,11 @@ impl Interface {
 			                                            // TODO: attach data to the pool
 			                                            let written = comp.data.actual_length();
 			                                            let data = comp.data.reuse();
-			                                            let s = std::str::from_utf8(&data).map(Cow::Borrowed)
-			                                                                              .unwrap_or_else(|_| {
-				                                                                              Cow::Owned(hex::encode_upper(&data))
-			                                                                              });
+			                                            let s =
+				                                            std::str::from_utf8(&data).map(Cow::Borrowed)
+				                                                                      .unwrap_or_else(|_| {
+					                                                                      Cow::Owned(hex::encode_upper(&data))
+				                                                                      });
 			                                            trace!("sent, resp: ({written}) '{s}'");
 			                                            comp.status.map(|_| written)
 		                                            })

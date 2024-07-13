@@ -1,6 +1,6 @@
 [package]
 name = "playdate-fs"
-version = "0.2.8"
+version = "0.2.9"
 readme = "README.md"
 description = "High-level file-system API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]

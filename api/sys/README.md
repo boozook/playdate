@@ -23,7 +23,7 @@ _I've experimented enough with wrapping the entire API with results at every ste
 
 ## Prerequisites
 
-<abbr title="Minimal Nightly Rust Version">MNRV</abbr> is [`1.81.0` from 2024-06-29][rust-toolchain.toml]
+<abbr title="Minimal Nightly Rust Version">MNRV</abbr> is [`1.81.0` from 2024-06-30][rust-toolchain.toml]
 
 1. Rust __nightly__ toolchain (rustup is optional)
 1. [Playdate SDK][sdk]

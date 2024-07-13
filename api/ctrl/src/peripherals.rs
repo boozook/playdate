@@ -86,7 +86,7 @@ impl Peripherals<api::Default> {
 }
 
 
-#[const_trait]
+// TODO: SystemExt should be const_trait
 pub trait SystemExt<Api: api::Api + Copy> {
 	fn peripherals(&self) -> Peripherals<Api>;
 	fn accelerometer(&self) -> Accelerometer<Api>;
@@ -94,7 +94,7 @@ pub trait SystemExt<Api: api::Api + Copy> {
 	fn crank(&self) -> Crank<Api>;
 }
 
-impl<Api: system::api::Api + api::Api + Copy> const SystemExt<Api> for system::System<Api> {
+impl<Api: system::api::Api + api::Api + Copy> SystemExt<Api> for system::System<Api> {
 	fn peripherals(&self) -> Peripherals<Api> { Peripherals::new_with(self.inner()) }
 	fn accelerometer(&self) -> Accelerometer<Api> { Accelerometer::new_with(self.inner()) }
 	fn buttons(&self) -> Buttons<Api> { Buttons::new_with(self.inner()) }

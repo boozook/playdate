@@ -4,7 +4,6 @@
 //! [Official documentation](https://help.play.date/catalog-developer/scoreboard-api/#c-api-reference).
 
 #![cfg_attr(not(test), no_std)]
-#![feature(error_in_core)]
 
 #[macro_use]
 extern crate sys;

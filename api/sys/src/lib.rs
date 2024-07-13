@@ -11,7 +11,6 @@
 #![cfg_attr(feature = "allocator", feature(allocator_api))]
 #![cfg_attr(feature = "allocator", feature(alloc_layout_extra))]
 // error
-#![feature(error_in_core)]
 #![cfg_attr(feature = "try-trait-v2", feature(try_trait_v2))]
 // experimental features
 #![cfg_attr(feature = "bindings-derive-constparamty",

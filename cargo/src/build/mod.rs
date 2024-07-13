@@ -210,53 +210,53 @@ pub fn build(cfg: &Config, tree: &MetaDeps) -> CargoResult<Vec<BuildProduct>> {
 			         let mut crate_types_cache = BTreeMap::new();
 
 			         let removed = roots.extract_if(|root| {
-				                            let tk = root.node().target().kind();
-				                            let ck = root.node().unit().platform;
+				                       let tk = root.node().target().kind();
+				                       let ck = root.node().unit().platform;
 
-				                            log::trace!("  check {} {}", tk.description(), match ck {
-					                            CompileKind::Host => "host",
-				                               CompileKind::Target(ref kind) => kind.short_name(),
-				                            });
+				                       log::trace!("  check {} {}", tk.description(), match ck {
+					                       CompileKind::Host => "host",
+				                          CompileKind::Target(ref kind) => kind.short_name(),
+				                       });
 
-				                            if reserved_roots.contains(root) {
-					                            log::trace!("    excluding, reserved root");
-					                            return true;
-				                            }
+				                       if reserved_roots.contains(root) {
+					                       log::trace!("    excluding, reserved root");
+					                       return true;
+				                       }
 
-				                            {
-					                            use cargo::core::TargetKind as Tk;
-					                            if executable && !matches!(tk, Tk::Bin | Tk::ExampleBin) {
-						                            log::trace!("    excluding, is not executable");
-						                            return true;
-					                            }
-				                            }
+				                       {
+					                       use cargo::core::TargetKind as Tk;
+					                       if executable && !matches!(tk, Tk::Bin | Tk::ExampleBin) {
+						                       log::trace!("    excluding, is not executable");
+						                       return true;
+					                       }
+				                       }
 
-				                            let target = targets_cache.entry(*root)
-				                                                      .or_insert_with(|| target_for_root(root));
+				                       let target = targets_cache.entry(*root)
+				                                                 .or_insert_with(|| target_for_root(root));
 
-				                            let ct = determine_crate_types(cfg, art, target, tk.clone(), ck).collect::<Vec<_>>();
+				                       let ct =
+					                       determine_crate_types(cfg, art, target, tk.clone(), ck).collect::<Vec<_>>();
 
-				                            let is_good = art.filenames.len() == ct.len() &&
-				                                          !ct.iter().any(|(_, ct)| ct.is_none());
-				                            if is_good {
-					                            // save resolved crate-types:
-					                            let ct = ct.into_iter()
-					                                       .filter_map(|(p, ct)| ct.map(|ct| (p.to_owned(), ct)));
-					                            crate_types_cache.extend(ct);
-				                            }
+				                       let is_good =
+					                       art.filenames.len() == ct.len() && !ct.iter().any(|(_, ct)| ct.is_none());
+				                       if is_good {
+					                       // save resolved crate-types:
+					                       let ct = ct.into_iter()
+					                                  .filter_map(|(p, ct)| ct.map(|ct| (p.to_owned(), ct)));
+					                       crate_types_cache.extend(ct);
+				                       }
 
-				                            need_remove_roots && !is_good
-			                            })
-			                            .inspect(|r| {
-				                            let p = r.package_id().name();
-				                            let t = r.node().target().name.as_str();
-				                            log::trace!("    excluded: {p}::{t} {:?}", match r.node().unit().platform
-				                            {
-					                            CompileKind::Host => "host",
-				                               CompileKind::Target(ref kind) => kind.short_name(),
-				                            })
-			                            })
-			                            .count();
+				                       need_remove_roots && !is_good
+			                       })
+			                       .inspect(|r| {
+				                       let p = r.package_id().name();
+				                       let t = r.node().target().name.as_str();
+				                       log::trace!("    excluded: {p}::{t} {:?}", match r.node().unit().platform {
+					                       CompileKind::Host => "host",
+				                          CompileKind::Target(ref kind) => kind.short_name(),
+				                       })
+			                       })
+			                       .count();
 
 			         if removed > 0 {
 				         log::trace!("  excluded: {removed}, now roots: {}", roots.len());
@@ -337,7 +337,7 @@ pub fn build(cfg: &Config, tree: &MetaDeps) -> CargoResult<Vec<BuildProduct>> {
 
 			         let ck_exact = ck_name.iter().copied().find(|ck| {
 				                                               comps.iter()
-				                                                    .all(|(_num, first)| matches!(first, Some(s) if *s == *ck))
+					                                     .all(|(_num, first)| matches!(first, Some(s) if *s == *ck))
 			                                               });
 
 			         let removed = if let Some(ck) = ck_exact {
@@ -594,18 +594,19 @@ fn map_artifacts<'cargo, 'cfg, 't>(tree: &'t MetaDeps<'cfg>,
 
 	artifacts.filter(|art| matches!(art.target.kind, TK::Lib(_) | TK::Bin | TK::Example))
 	         .filter_map(move |art| {
-		         let findings = tree.roots()
-		                            .iter()
-		                            .filter(|r| {
-			                            let unit = r.node().unit();
-			                            unit.package_id == art.package_id &&
-			                            unit.target.name.as_str() == art.target.name.as_str() &&
-			                            unit.target.kind() == art.target.kind() &&
-			                            unit.target.crate_types == art.target.crate_types &&
-			                            Some(unit.target.src_path.as_str().into()) == art.target.src_path
-		                            })
-		                            .inspect(|r| log::trace!("root for artifact found: {:?} {r}", art.target.crate_types))
-		                            .collect::<Vec<_>>();
+		         let findings =
+			         tree.roots()
+			             .iter()
+			             .filter(|r| {
+				             let unit = r.node().unit();
+				             unit.package_id == art.package_id &&
+				             unit.target.name.as_str() == art.target.name.as_str() &&
+				             unit.target.kind() == art.target.kind() &&
+				             unit.target.crate_types == art.target.crate_types &&
+				             Some(unit.target.src_path.as_str().into()) == art.target.src_path
+			             })
+			             .inspect(|r| log::trace!("root for artifact found: {:?} {r}", art.target.crate_types))
+			             .collect::<Vec<_>>();
 		         (!findings.is_empty()).then_some((art, findings))
 	         })
 	         .filter(|(_, roots)| !roots.is_empty())

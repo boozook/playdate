@@ -87,7 +87,7 @@ pub fn build_all(config: &'_ Config,
 			                            unit.platform == products[0].ck &&
 			                            unit.target.crate_types.contains(&products[0].src_ct) &&
 			                            unit.target.name == products[0].name)
-			                                                        .then_some((r, Some(arts)))
+			                                                           .then_some((r, Some(arts)))
 		                           })
 		                           .or_else(|| {
 			                           assets.tree

@@ -729,7 +729,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-playdate"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "anstyle",
  "anyhow",
@@ -805,9 +805,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.1.1"
+version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "907d8581360765417f8f2e0e7d602733bbed60156b4465b7617243689ef9b83d"
+checksum = "47de7e88bbbd467951ae7f5a6f34f70d1b4d9cfce53d5fd70f74ebe118b3db56"
 dependencies = [
  "jobserver",
  "libc",
@@ -4020,7 +4020,7 @@ checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 
 [[package]]
 name = "playdate"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "playdate-controls",
  "playdate-display",
@@ -4090,14 +4090,14 @@ dependencies = [
 
 [[package]]
 name = "playdate-color"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "playdate-sys",
 ]
 
 [[package]]
 name = "playdate-controls"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "playdate-display",
  "playdate-graphics",
@@ -4107,7 +4107,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-device"
-version = "0.2.12"
+version = "0.2.13"
 dependencies = [
  "async-std",
  "clap",
@@ -4144,7 +4144,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-fs"
-version = "0.2.8"
+version = "0.2.9"
 dependencies = [
  "playdate-sys",
  "playdate-system",
@@ -4152,7 +4152,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-graphics"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "playdate-color",
  "playdate-display",
@@ -4163,7 +4163,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-lua"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "playdate-sys",
  "playdate-system",
@@ -4171,7 +4171,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-menu"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "playdate-graphics",
  "playdate-sys",
@@ -4180,7 +4180,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-scoreboards"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "erased_set",
  "playdate-sys",
@@ -4201,7 +4201,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-sound"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "playdate-fs",
  "playdate-graphics",

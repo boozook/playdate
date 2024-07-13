@@ -1,5 +1,4 @@
 #![cfg_attr(not(test), no_std)]
-#![feature(error_in_core)]
 #![feature(const_trait_impl)]
 
 use core::ffi::c_int;

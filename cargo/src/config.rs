@@ -154,12 +154,13 @@ impl<'cfg> Config<'cfg> {
 
 	pub fn gcc(&self) -> CargoResult<&ArmToolchain> {
 		self.gcc.try_get_or_create(|| {
-			        let res = (!self.no_gcc).then(|| {
-				                                self.gcc_path.as_ref().map_or_else(ArmToolchain::try_new, |p| {
-					                                        Gcc::try_new_exact_path(p).and_then(ArmToolchain::try_new_with)
-				                                        })
-			                                })
-			                                .ok_or_else(|| anyhow::anyhow!("Attempt to get arm-gcc but 'no-gcc' is set"))??;
+			        let res =
+				        (!self.no_gcc).then(|| {
+					                      self.gcc_path.as_ref().map_or_else(ArmToolchain::try_new, |p| {
+						                                            Gcc::try_new_exact_path(p).and_then(ArmToolchain::try_new_with)
+					                                            })
+				                      })
+				                      .ok_or_else(|| anyhow::anyhow!("Attempt to get arm-gcc but 'no-gcc' is set"))??;
 			        Ok(res)
 		        })
 	}

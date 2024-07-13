@@ -1,6 +1,6 @@
 [package]
 name = "playdate-menu"
-version = "0.2.4"
+version = "0.2.5"
 readme = "README.md"
 description = "High-level system menu API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]

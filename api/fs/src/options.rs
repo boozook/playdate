@@ -7,7 +7,7 @@ use crate::error::ApiError;
 
 
 /// Extension for [`sys::ffi::FileOptions`] make it looks like [`std::fs::OpenOptions`].
-#[const_trait]
+// TODO: FileOptionsExt should be const_trait
 pub trait FileOptionsExt: Into<FileOptions> {
 	/// Creates new empty file options.
 	fn new() -> Self;
@@ -55,7 +55,7 @@ impl OpenOptions for FileOptions {
 }
 
 
-impl const FileOptionsExt for FileOptions {
+impl FileOptionsExt for FileOptions {
 	fn new() -> Self { FileOptions(0) }
 
 	/// Read access to Game’s package (bundle) directory.
