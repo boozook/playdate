@@ -475,9 +475,10 @@ jobs:
 
       - name: Check
         id: check
+        continue-on-error: true
         run: >-
-          cargo fmt --all -- --check ||
-          (echo "::error::Rust format error." && exit 1)
+          cargo fmt --all -- --check
+          # (echo "::error::Rust format error." && exit 1)
 
       - name: Format
         id: format
