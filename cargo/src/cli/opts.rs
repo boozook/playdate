@@ -131,8 +131,9 @@ fn build() -> Command {
 	)
 	                     .arg_future_incompat_report()
 	                     .arg_timings()
-								// Issue: https://github.com/clap-rs/clap/issues/5081
-								._arg(flag("keep-going", "Do not abort the build as soon as there is an error"))
+	                     .arg_dry_run("Enable dry-run mode")
+	                     // Issue: https://github.com/clap-rs/clap/issues/5081
+	                     ._arg(flag("keep-going", "Do not abort the build as soon as there is an error"))
 	                     // hide currently not supported targets:
 	                     .mut_arg("test", |arg| arg.hide(true))
 	                     .mut_arg("tests", |arg| arg.hide(true))
@@ -140,7 +141,7 @@ fn build() -> Command {
 	                     .mut_arg("benches", |arg| arg.hide(true))
 	                     // add exclusive shorthands:
 	                     .args(special_args_for(&Cmd::Build))
-								.arg(extra_arg())
+	                     .arg(extra_arg())
 }
 
 
@@ -166,11 +167,12 @@ fn run() -> Command {
 	)
 	                               .arg_future_incompat_report()
 	                               .arg_timings()
+	                               .arg_dry_run("Enable dry-run mode")
 	                               // Issue: https://github.com/clap-rs/clap/issues/5081
 	                               ._arg(flag("keep-going", "Do not abort the build as soon as there is an error"))
 	                               // add exclusive shorthands:
 	                               .args(special_args_for(&Cmd::Run))
-											 .arg(extra_arg())
+	                               .arg(extra_arg())
 }
 
 fn package() -> Command {
@@ -198,6 +200,7 @@ fn publish() -> Command {
 fn assets() -> Command {
 	Command::new(Cmd::Assets.as_ref()).ignore_errors(true)
 	                                  .about("Collect assets for a local package and all of its dependencies")
+	                                  .arg_dry_run("Enable dry-run mode")
 	                                  .arg_build_plan()
 	                                  .arg_unit_graph()
 	                                  .arg_package_spec(
@@ -459,7 +462,7 @@ pub fn globals() -> Command { add_globals(Command::new("")) }
 
 fn add_globals(cmd: Command) -> Command {
 	let cmd =
-		cmd.arg_dry_run("Enable dry-run mode")
+		cmd
 			.arg(flag("quiet", "Do not print cargo log messages").short('q').global(true))
 			.arg_silent_suggestion()
 		   .arg(opt("verbose", "Use verbose output (-vv extra verbose output)").short('v')
@@ -493,7 +496,6 @@ fn add_globals(cmd: Command) -> Command {
 		   .arg_message_format();
 
 	let cmd = cmd.mut_arg("quiet", |arg| arg.global(true).env("CARGO_TERM_QUIET"))
-	             .mut_arg("dry-run", |arg| arg.global(true))
 	             .mut_arg("target-dir", |arg| arg.global(true))
 	             .mut_arg("features", |arg| arg.global(true))
 	             .mut_arg("all-features", |arg| arg.global(true))
