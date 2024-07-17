@@ -159,16 +159,14 @@ fn add_min_metadata(_config: &Config<'_>, manifest: &mut toml_edit::DocumentMut)
 	let name = manifest["package"]["name"].as_str()
 	                                      .unwrap_or("hello-world")
 	                                      .to_owned();
-	let bundle_id = name.replace(['_', '-'], ".")
-	                    .replace("..", ".")
-	                    .replace("..", ".");
+	let bundle_id = bundle_id_from_crate_name(&name);
 	let has_description = manifest["package"].as_table()
 	                                         .map(|t| t.contains_key("description"))
 	                                         .unwrap_or(false);
 
 	let meta = &mut manifest["package"]["metadata"][METADATA_FIELD];
 
-	meta["bundle-id"] = value(format!("com.{}", bundle_id.strip_prefix('.').unwrap_or(&bundle_id)));
+	meta["bundle-id"] = value(bundle_id);
 	if !has_description {
 		meta["description"] = value(format!("Description of {name} program."));
 	}
@@ -186,7 +184,7 @@ fn add_full_metadata(_config: &Config<'_>, manifest: &mut toml_edit::DocumentMut
 	let name = manifest["package"]["name"].as_str()
 	                                      .unwrap_or("hello-world")
 	                                      .to_owned();
-	let bundle_id = name.replace(['_', '-'], ".");
+	let bundle_id = bundle_id_from_crate_name(&name);
 	let version = manifest["package"]["version"].as_str().unwrap_or("0.0");
 
 	let author_default = "You, Inc";
@@ -231,6 +229,18 @@ fn add_full_metadata(_config: &Config<'_>, manifest: &mut toml_edit::DocumentMut
 	manifest.set_trailing(raw_metadata);
 
 	Ok(())
+}
+
+
+fn bundle_id_from_crate_name(name: &str) -> String {
+	let bundle_id = name.replace(['_', '-'], ".")
+	                    .replace("..", ".")
+	                    .replace("..", ".");
+
+	format!(
+	        "com.yourcompany.{}",
+	        bundle_id.strip_prefix('.').unwrap_or(&bundle_id)
+	)
 }
 
 

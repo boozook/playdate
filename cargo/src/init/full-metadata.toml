@@ -5,7 +5,7 @@
 name = "{name}"
 author = "{author}"
 version = "{version}"
-bundle-id = "com.yourcompany.{bundle_id}"
+bundle-id = "{bundle_id}"
 description = "{description}"
 
 content-warning = "This game contains mild realistic, violence and bloodshed."
