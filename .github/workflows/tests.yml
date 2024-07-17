@@ -475,7 +475,25 @@ jobs:
 
       - name: Check
         id: check
-        run: cargo fmt --all -- --check
+        run: >-
+          cargo fmt --all -- --check ||
+          (echo "::error::Rust format error." && exit 1)
+
+      - name: Format
+        id: format
+        if: steps.check.outcome == 'failure'
+        run: |
+          cargo fmt --all
+          cargo fmt --all
+          # second time is for anti-flickering, because using nightly rustfmt
+
+      - name: Suggestions
+        uses: reviewdog/action-suggester@v1
+        with:
+          filter_mode: diff_context
+          fail_on_error: false
+          tool_name: Rustfmt
+          cleanup: false
 
   clippy:
     name: Clippy + fmt suggestions
@@ -539,7 +557,9 @@ jobs:
 
       # needed after clippy fix
       - name: fmt
-        run: cargo fmt --all
+        run: |
+          cargo fmt --all
+          cargo fmt --all
 
       - name: remove config
         run: rm -rf .cargo
