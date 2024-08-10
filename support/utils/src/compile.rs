@@ -21,6 +21,7 @@ pub const GCC_ARGS_LIB: &[&str] = &["-nostartfiles",
 
 pub const RUSTFLAGS_LIB_HOST: &[&str] = &["-Ctarget-cpu=native"];
 pub const RUSTFLAGS_LIB_PLAYDATE: &[&str] = &["-Ctarget-cpu=cortex-m7",
+                                              "-Ctarget-feature=-fp64",
                                               "-Clink-args=--emit-relocs",
                                               "-Crelocation-model=pic",
                                               "-Csoft-float=no",
@@ -32,6 +33,7 @@ pub const RUSTFLAGS_LIB_PLAYDATE: &[&str] = &["-Ctarget-cpu=cortex-m7",
 /// - `-Clink-arg=-T...link_map.ld`
 /// - `-L{libs-search-paths}`
 pub const RUSTFLAGS_BIN_PLAYDATE: &[&str] = &["-Ctarget-cpu=cortex-m7",
+                                              "-Ctarget-feature=-fp64",
                                               "-Clink-args=--emit-relocs",
                                               "-Crelocation-model=pic",
                                               "-Csoft-float=no",

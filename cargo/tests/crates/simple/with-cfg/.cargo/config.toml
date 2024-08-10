@@ -6,6 +6,7 @@ rustflags = ["-C", "target-cpu=native"]
 [target.thumbv7em-none-eabihf]
 rustflags = [
 	"-Ctarget-cpu=cortex-m7",
+	"-Ctarget-feature=-fp64",
 	"-Clink-args=--emit-relocs",
 	"-Crelocation-model=pic",
 	"-Csoft-float=no",
