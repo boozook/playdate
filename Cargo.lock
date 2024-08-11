@@ -729,7 +729,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-playdate"
-version = "0.5.3"
+version = "0.5.4"
 dependencies = [
  "anstyle",
  "anyhow",
@@ -1612,6 +1612,21 @@ name = "fs_extra"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42703706b716c37f96a77aea830392ad231f44c9e9a67872fa5548707e11b11c"
+
+[[package]]
+name = "function_name"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1ab577a896d09940b5fe12ec5ae71f9d8211fff62c919c03a3750a9901e98a7"
+dependencies = [
+ "function_name-proc-macro",
+]
+
+[[package]]
+name = "function_name-proc-macro"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "673464e1e314dd67a0fd9544abc99e8eb28d0c7e3b69b033bcff9b2d00b87333"
 
 [[package]]
 name = "futf"
@@ -4612,6 +4627,18 @@ checksum = "f8dd2a808d456c4a54e300a23e9f5a67e122c3024119acbfd73e3bf664491cb2"
 dependencies = [
  "hmac",
  "subtle",
+]
+
+[[package]]
+name = "rt-target-test"
+version = "0.0.0"
+dependencies = [
+ "function_name",
+ "libm",
+ "num-traits",
+ "playdate-display",
+ "playdate-sys",
+ "playdate-system",
 ]
 
 [[package]]

@@ -1,0 +1,43 @@
+[package]
+name = "rt-target-test"
+version = "0.0.0"
+publish = false
+description = "Runtime test target features - FPU/VFP, SIMD, etc.."
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+
+[lib]
+crate-type = ["dylib", "staticlib"]
+
+
+[dependencies]
+libm = "0.2"
+function_name = "0.3"
+
+[dependencies.num-traits]
+version = "0.2"
+features = ["libm"]
+default-features = false
+
+
+[dependencies.display]
+workspace = true
+default-features = false
+
+[dependencies.system]
+workspace = true
+features = ["try-trait-v2"]
+default-features = false
+
+[dependencies.sys]
+workspace = true
+features = ["lang-items", "entry-point"]
+default-features = false
+
+
+[package.metadata.playdate]
+bundle-id = "rs.playdate.rt-target-test"
