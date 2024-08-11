@@ -114,6 +114,7 @@ unsafe extern "C" fn on_update(_: *mut c_void) -> i32 { 1 /* `1` means "OK, cont
 [target.thumbv7em-none-eabihf]
 rustflags = [
 	"-Ctarget-cpu=cortex-m7",
+	"-Ctarget-feature=-fp64",
 	"-Clink-args=--emit-relocs",
 	"-Crelocation-model=pic",
 	"-Csoft-float=no",
