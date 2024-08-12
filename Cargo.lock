@@ -597,9 +597,9 @@ dependencies = [
 
 [[package]]
 name = "cargo"
-version = "0.80.0"
+version = "0.81.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8967aca23ff1827ae659451d066dcfbce4a762d5d423f01a8170b02458ff309f"
+checksum = "f24c9dcadcdad2f6fa2553b63d5e9c9700fa6932b75d53f3b11b8aea35ebab99"
 dependencies = [
  "annotate-snippets",
  "anstream",
@@ -729,7 +729,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-playdate"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "anstyle",
  "anyhow",
@@ -789,9 +789,9 @@ dependencies = [
 
 [[package]]
 name = "cargo-util-schemas"
-version = "0.3.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "161d4f7828830c7893180528e121e701bb8070b80c0f97f793a930d285b315a6"
+checksum = "34ddc7fc157e3dbbd88f05ef8be7c3ed3ecb05925a3f51f716d6103a607fb7c4"
 dependencies = [
  "semver",
  "serde",
@@ -3473,9 +3473,9 @@ dependencies = [
 
 [[package]]
 name = "mio"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4569e456d394deccd22ce1c1913e6ea0e54519f577285001215d33557431afe4"
+checksum = "80e04d1dcff3aae0704555fe5fee3bcfaf3d1fdf8a7e521d5b9d2b42acb52cec"
 dependencies = [
  "hermit-abi 0.3.9",
  "libc",
@@ -4862,9 +4862,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.123"
+version = "1.0.124"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a11b3b6ce5cfd25b9759a24c3ed4bf24e23893866863547de4655518c951bcd4"
+checksum = "66ad62847a56b3dba58cc891acd13884b9c61138d330c0d7b6181713d4fce38d"
 dependencies = [
  "itoa",
  "memchr",
@@ -5406,7 +5406,7 @@ dependencies = [
  "backtrace",
  "bytes",
  "libc",
- "mio 1.0.1",
+ "mio 1.0.2",
  "parking_lot 0.12.3",
  "pin-project-lite",
  "signal-hook-registry",
