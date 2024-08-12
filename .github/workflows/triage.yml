@@ -1,4 +1,4 @@
-name: "Labels"
+name: "Triage"
 on:
   pull_request_target:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         required: false
 
 jobs:
-  triage:
+  labels:
     runs-on: ubuntu-latest
     permissions:
       contents: read
