@@ -34,7 +34,7 @@ unsafe impl GlobalAlloc for PlaydateAllocator {
 	#[inline]
 	unsafe fn alloc(&self, layout: Layout) -> *mut u8 { realloc(core::ptr::null_mut(), layout.size()) as *mut u8 }
 	#[inline]
-	unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) { realloc(ptr as *mut c_void, 0); }
+	unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) { dealloc(ptr as *mut c_void); }
 	#[inline]
 	unsafe fn realloc(&self, ptr: *mut u8, _layout: Layout, new_size: usize) -> *mut u8 {
 		realloc(ptr as *mut c_void, new_size) as *mut u8
@@ -56,3 +56,8 @@ unsafe fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void {
 	               });
 	f(ptr, size)
 }
+
+
+#[track_caller]
+#[inline(always)]
+pub unsafe fn dealloc(ptr: *mut c_void) { realloc(ptr, 0); }
