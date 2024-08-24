@@ -1,5 +1,15 @@
 //! Sprite implementations.
 
+/*
+TODO: Cover api-methods:
+	- [] querySpritesInRect
+	- [] querySpritesAlongLine
+	- [] querySpriteInfoAlongLine
+	- [] overlappingSprites
+	- [] allOverlappingSprites
+*/
+
+
 use core::ffi::c_int;
 use core::ffi::c_void;
 use core::ffi::c_float;
@@ -18,6 +28,7 @@ use gfx::bitmap::BitmapRef;
 use gfx::bitmap::BitmapDrawMode;
 use gfx::bitmap::BitmapFlip;
 
+use crate::utils;
 use crate::AnySprite;
 use crate::SpriteApi;
 use crate::TypedSprite;
@@ -699,36 +710,6 @@ impl<Userdata, Api: api::Api, const FOD: bool> Sprite<Userdata, Api, FOD> {
 			let ud = unsafe { Box::from_raw(ptr as *mut Userdata) };
 			Some(ud)
 		}
-	}
-}
-
-
-pub mod utils {
-	use core::ops::Deref;
-
-	/// C array syzed at runtime.
-	#[repr(transparent)]
-	#[must_use]
-	pub struct Arr<'t, T>(pub(super) &'t [T]);
-
-	impl<T> Drop for Arr<'_, T> {
-		fn drop(&mut self) {
-			let p = self.0.as_ptr() as _;
-			unsafe {
-				// May be here to use SYSTEM allocator? Needed if custom user's alocator used.
-				// let l = core::alloc::Layout::new::<T>();
-				// or alloc::alloc::dealloc(p, l);
-				sys::allocator::dealloc(p);
-			};
-		}
-	}
-
-	impl<T> Deref for Arr<'_, T> {
-		type Target = [T];
-		fn deref(&self) -> &Self::Target { self.0 }
-	}
-	impl<T> AsRef<[T]> for Arr<'_, T> {
-		fn as_ref(&self) -> &[T] { self.0 }
 	}
 }
 

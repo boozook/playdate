@@ -1,4 +1,5 @@
 #![cfg_attr(not(test), no_std)]
+#![feature(const_alloc_layout)]
 
 extern crate sys;
 extern crate alloc;
@@ -292,4 +293,46 @@ impl<T: TypedSprite> SpriteType for T {
 	type Api = <T as SpriteApi>::Api;
 	type Userdata = <T as TypedSprite>::Userdata;
 	const FREE_ON_DROP: bool = <T as TypedSprite>::FREE_ON_DROP;
+}
+
+
+pub mod utils {
+	use core::ops::Deref;
+
+	/// C array syzed at runtime.
+	#[must_use]
+	#[repr(transparent)]
+	pub struct Arr<'t, T>(pub(super) &'t [T]);
+
+	impl<T> Drop for Arr<'_, T> {
+		fn drop(&mut self) {
+			let p = self.0.as_ptr() as _;
+
+			#[inline]
+			const fn inner<T>(len: usize) -> core::alloc::Layout {
+				if let Ok(l) = core::alloc::Layout::array::<T>(len) {
+					l
+				} else {
+					use core::mem::{size_of, align_of};
+					let (size, align) = (size_of::<T>(), align_of::<T>());
+					unsafe { core::alloc::Layout::from_size_align_unchecked(size.unchecked_mul(len), align) }
+				}
+			}
+
+			let l = inner::<T>(self.0.len());
+			unsafe {
+				// We could simply `sys::allocator::dealloc(p)`, but we have to use SYSTEM GLOBAL allocator,
+				// which can be a user's custom allocator, not that one in `playdate-sys`.
+				alloc::alloc::dealloc(p, l);
+			};
+		}
+	}
+
+	impl<T> Deref for Arr<'_, T> {
+		type Target = [T];
+		fn deref(&self) -> &Self::Target { self.0 }
+	}
+	impl<T> AsRef<[T]> for Arr<'_, T> {
+		fn as_ref(&self) -> &[T] { self.0 }
+	}
 }
