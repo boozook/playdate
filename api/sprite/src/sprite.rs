@@ -1,5 +1,15 @@
 //! Sprite implementations.
 
+/*
+TODO: Cover api-methods:
+	- [] querySpritesInRect
+	- [] querySpritesAlongLine
+	- [] querySpriteInfoAlongLine
+	- [] overlappingSprites
+	- [] allOverlappingSprites
+*/
+
+
 use core::ffi::c_int;
 use core::ffi::c_void;
 use core::ffi::c_float;
@@ -18,6 +28,7 @@ use gfx::bitmap::BitmapRef;
 use gfx::bitmap::BitmapDrawMode;
 use gfx::bitmap::BitmapFlip;
 
+use crate::utils;
 use crate::AnySprite;
 use crate::SpriteApi;
 use crate::TypedSprite;
@@ -524,22 +535,22 @@ impl<Userdata, Api: api::Api, const FOD: bool> Sprite<Userdata, Api, FOD> {
 	///
 	/// Equivalent to [`sys::ffi::playdate_sprite::checkCollisions`]
 	#[doc(alias = "sys::ffi::playdate_sprite::check_collisions")]
-	#[must_use = "Result is borrowed by C-API"]
+	#[must_use = "Expensive op, allocated array by C-API"]
 	pub fn check_collisions(&self,
 	                        goal_x: c_float,
 	                        goal_y: c_float,
 	                        actual_x: &mut c_float,
 	                        actual_y: &mut c_float)
-	                        -> &[SpriteCollisionInfo] {
+	                        -> Option<utils::Arr<SpriteCollisionInfo>> {
 		let f = self.1.check_collisions();
 		let mut len: c_int = 0;
 		let ptr = unsafe { f(self.0, goal_x, goal_y, actual_x, actual_y, &mut len) };
 
 		if ptr.is_null() || len == 0 {
-			&[]
+			None
 		} else {
 			let slice = unsafe { core::slice::from_raw_parts(ptr, len as _) };
-			slice
+			Some(utils::Arr(slice))
 		}
 	}
 
@@ -553,22 +564,22 @@ impl<Userdata, Api: api::Api, const FOD: bool> Sprite<Userdata, Api, FOD> {
 	///
 	/// Equivalent to [`sys::ffi::playdate_sprite::moveWithCollisions`]
 	#[doc(alias = "sys::ffi::playdate_sprite::moveWithCollisions")]
-	#[must_use = "Result is borrowed by C-API"]
+	#[must_use = "Expensive op, allocated array by C-API"]
 	pub fn move_with_collisions<'t>(&'t self,
 	                                goal_x: c_float,
 	                                goal_y: c_float,
 	                                actual_x: &mut c_float,
 	                                actual_y: &mut c_float)
-	                                -> &'t [SpriteCollisionInfo] {
+	                                -> Option<utils::Arr<'t, SpriteCollisionInfo>> {
 		let f = self.1.move_with_collisions();
 		let mut len: c_int = 0;
 		let ptr = unsafe { f(self.0, goal_x, goal_y, actual_x, actual_y, &mut len) };
 
 		if ptr.is_null() || len == 0 {
-			&[]
+			None
 		} else {
 			let slice = unsafe { core::slice::from_raw_parts(ptr, len as _) };
-			slice
+			Some(utils::Arr(slice))
 		}
 	}
 
@@ -578,13 +589,18 @@ impl<Userdata, Api: api::Api, const FOD: bool> Sprite<Userdata, Api, FOD> {
 	///
 	/// Equivalent to [`sys::ffi::playdate_sprite::overlappingSprites`]
 	#[doc(alias = "sys::ffi::playdate_sprite::overlapping_sprites")]
-	#[must_use = "Result is borrowed by C-API"]
-	pub fn overlapping_sprites(&self) -> &[SpriteRef] {
+	#[must_use = "Expensive op, allocated array by C-API"]
+	pub fn overlapping_sprites(&self) -> Option<utils::Arr<SpriteRef>> {
 		let f = self.1.overlapping_sprites();
 		let mut len: c_int = 0;
 		let ptr = unsafe { f(self.0, &mut len) };
-		let slice = unsafe { core::slice::from_raw_parts(ptr, len as _) };
-		unsafe { core::mem::transmute(slice) }
+		if ptr.is_null() || len == 0 {
+			None
+		} else {
+			let slice = unsafe { core::slice::from_raw_parts(ptr, len as _) };
+			let res = unsafe { core::mem::transmute(slice) };
+			Some(utils::Arr(res))
+		}
 	}
 
 
