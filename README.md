@@ -41,14 +41,14 @@ Follow the instructions for:
 
 Run example:
 ```bash
-cargo run -p=cargo-playdate -- run -p=playdate-controls --example=buttons
+cargo run -p=cargo-playdate -- run -p=playdate-controls --example=buttons --features="sys/lang-items sys/entry-point"
 ```
 
 Install `cargo-playdate` and build & run another example:
 ```bash
 cargo install cargo-playdate
-cargo playdate run -p=playdate-sound --example=sp
-cargo playdate run -p=playdate-sound --example=sp --device
+cargo playdate run -p=playdate-sound --example=sp --features="sys/lang-items sys/entry-point"
+cargo playdate run -p=playdate-sound --example=sp --features="sys/lang-items sys/entry-point" --device
 ```
 
 ### Demo
