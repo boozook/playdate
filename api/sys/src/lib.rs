@@ -4,8 +4,6 @@
 #![allow(internal_features)]
 #![feature(lang_items)]
 #![feature(core_intrinsics)]
-// panic
-#![cfg_attr(feature = "panic-handler", feature(panic_info_message))]
 // allocator
 #![cfg_attr(feature = "allocator", feature(alloc_error_handler))]
 #![cfg_attr(feature = "allocator", feature(allocator_api))]
@@ -122,13 +120,10 @@ mod entry_point_ctrl {
 		impl<E: Display> FromResidual<Result<Infallible, E>> for EventLoopCtrl {
 			#[track_caller]
 			fn from_residual(residual: Result<Infallible, E>) -> Self {
-				if let Err(err) = residual {
-					crate::println!("Error: {err}");
-					// panic!("{err}");
-					Self::Stop
-				} else {
-					Self::Continue
-				}
+				let Err(err) = residual;
+				crate::println!("Error: {err}");
+				// panic!("{err}");
+				Self::Stop
 			}
 		}
 	}
