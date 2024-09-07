@@ -99,10 +99,11 @@ jobs:
       counter: ${{ steps.counter.outputs.value }}
       message: ${{ steps.message.outputs.value }}
 
-  post:
-    needs: crates-io
-    if: join(fromJSON(needs.crates-io.outputs.published).*.name, '-') && (github.event.inputs.dry-run == 'true' || (github.head_ref && 'true') || 'false') == 'false'
-    uses: ./.github/workflows/post.yml
-    secrets: inherit
-    with:
-      message: ${{ needs.crates-io.outputs.message }}
+  # Temporarily disabled until new account configured properly
+  # post:
+  #   needs: crates-io
+  #   if: join(fromJSON(needs.crates-io.outputs.published).*.name, '-') && (github.event.inputs.dry-run == 'true' || (github.head_ref && 'true') || 'false') == 'false'
+  #   uses: ./.github/workflows/post.yml
+  #   secrets: inherit
+  #   with:
+  #     message: ${{ needs.crates-io.outputs.message }}
