@@ -116,7 +116,7 @@ pub fn build_plan<'l, 'r, S>(env: &Env,
 				debug!("Possible ManyInto, resolved: {}", resolved.len());
 
 				// filter resolved includes:
-				let _excluded: Vec<_> = resolved.extract_if(|inc| {
+				let _excluded: Vec<_> = resolved.extract_if(.., |inc| {
 					                                let path = key.join(inc.target());
 					                                glob_matches_any(&path, &exclude_globs)
 				                                })
@@ -169,7 +169,7 @@ pub fn build_plan<'l, 'r, S>(env: &Env,
 
 			// filter resolved includes:
 			let is_not_empty = |inc: &Match| !inc.target().as_os_str().is_empty();
-			let excluded: Vec<_> = resolved.extract_if(|inc| {
+			let excluded: Vec<_> = resolved.extract_if(.., |inc| {
 				                               let target = target.join(inc.target());
 				                               !is_not_empty(inc) ||
 				                               glob_matches_any(&inc.source(), &exclude_globs) ||
