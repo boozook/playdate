@@ -265,7 +265,7 @@ impl<'t> MetaDeps<'t> {
 				// - units without pd-meta
 				// - units without assets in the pd-meta
 				// - remove units with id eq root's
-				let removed = deps.extract_if(|n| {
+				let removed = deps.extract_if(.., |n| {
 					                  n.package_id() == root.package_id() ||
 					                  n.meta
 					                   .and_then(|m| m.metadata.as_ref())
@@ -282,7 +282,7 @@ impl<'t> MetaDeps<'t> {
 					                          acc.entry(n.package_id()).and_modify(|v| *v += 1).or_insert(0);
 					                          acc
 				                          });
-				let removed = deps.extract_if(move |n| {
+				let removed = deps.extract_if(.., move |n| {
 					                  let v = dups[n.package_id()];
 					                  if v > 0 {
 						                  dups.insert(n.package_id(), v - 1);
