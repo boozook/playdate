@@ -17,7 +17,7 @@ env:
   CARGO_TERM_COLOR: always
   CARGO_TERM_PROGRESS_WHEN: never
   # logging:
-  RUST_LOG: trace
+  # RUST_LOG: trace
   CARGO_PLAYDATE_LOG: trace
   # crates lists:
   API_CRATES: >-
@@ -455,6 +455,104 @@ jobs:
           cargo playdate package --features=lang-items,entry-point --examples --device --simulator -p=playdate
 
       # TODO: build crankstart with examples for compatibility test
+
+
+  # TODO: determine whats changed, so test that crate(s) only, maybe with deps.
+  # Probably use tj-actions/changed-files for it.
+  clippy:
+    name: Clippy
+    if: github.event_name == 'pull_request'
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      contents: read
+      pull-requests: write
+      security-events: write
+      actions: read
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        # with: fetch-depth: 2
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v2.6.2
+        with:
+          shared-key: "clippy"
+
+      - name: Install Clippy
+        run: rustup component add clippy
+
+      - name: Install Playdate SDK
+        id: sdk
+        uses: pd-rs/get-playdate-sdk@main
+        with:
+          version: latest
+
+      - name: SDK ${{ steps.sdk.outputs.version }} installed
+        run: which pdc && pdc --version
+
+      # this one for review-lints
+      - name: API
+        continue-on-error: true
+        uses: clechasseur/rs-clippy-check@v3
+        with:
+          toolchain: nightly
+          args: >-
+            -p=playdate-sys
+            -p=playdate-fs
+            -p=playdate-controls
+            -p=playdate-color
+            -p=playdate-sound
+            -p=playdate-menu
+            -p=playdate-graphics
+            --no-deps
+            --no-default-features
+            --features=bindgen-runtime,bindings-derive-debug
+            --lib
+            --
+            -Wclippy::correctness
+            -Wclippy::suspicious
+            -Wclippy::complexity
+            -Wclippy::nursery
+            -Wclippy::perf
+            -Wclippy::cargo
+            -Aclippy::style
+            -Aclippy::restriction
+
+      # this one for suggestions
+      - name: API (fix)
+        run: >-
+          cargo clippy
+          -p=playdate-sys
+          -p=playdate-fs
+          -p=playdate-controls
+          -p=playdate-color
+          -p=playdate-sound
+          -p=playdate-menu
+          -p=playdate-graphics
+          --no-default-features
+          --features=bindgen-runtime,bindings-derive-debug
+          --lib
+          --fix
+          --
+          -Wclippy::correctness
+          -Wclippy::suspicious
+          -Wclippy::complexity
+          -Wclippy::nursery
+          -Wclippy::perf
+          -Wclippy::cargo
+          -Aclippy::style
+          -Aclippy::restriction
+
+      - name: Suggestions
+        uses: reviewdog/action-suggester@v1
+        with:
+          filter_mode: diff_context
+          fail_on_error: false
+          tool_name: Clippy
+          cleanup: false
 
   format:
     name: Format
