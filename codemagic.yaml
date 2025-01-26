@@ -16,7 +16,12 @@ scripts:
       unzip sdk.zip
       sudo installer -store -pkg "PlaydateSDK.pkg" -target /
 
-      ls -R ~/.config || true # XXX: rem this
+      echo "ROOT:"
+      ls ~/ || true # XXX: rem this
+      echo "HOME:"
+      ls / || true # XXX: rem this
+      echo "CFG:"
+      ls ~/.config || true # XXX: rem this
       echo "CFG: $(cat ~/.Playdate/config)"
       # export PLAYDATE_SDK_PATH="$(grep -E '^\s*SDKRoot' ~/.Playdate/config | head -n 1 | awk '{print $2}')"
       export PLAYDATE_SDK_PATH="/tmp/PlaydateSDK" # XXX: HARDCODE FIX
