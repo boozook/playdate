@@ -64,9 +64,9 @@ fn build_in(config: &Config, package_id: &PackageId, src: &Path, build: &Path, r
 
 	// remove temp files before possible failure:
 	fs_extra::remove_items(&[
-		src.join("pdex.bin"),
-		build.join("pdex.bin"),
-		build.join("pdxinfo"),
+	                         src.join("pdex.bin"),
+	                         build.join("pdex.bin"),
+	                         build.join("pdxinfo"),
 	])?;
 	status.exit_ok()?;
 	Ok(())
