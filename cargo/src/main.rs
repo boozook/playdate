@@ -109,7 +109,7 @@ fn execute(config: &Config) -> CargoResult<()> {
 			let mut expected = config.possible_targets_ext()?;
 			expected.iter_mut().for_each(|(_, targets)| {
 				                   let dropped =
-					                   targets.extract_if(|target| {
+					                   targets.extract_if(.., |target| {
 						                          let cts = target.rustc_crate_types();
 						                          !if ck.is_playdate() {
 							                          cts.contains(&CrateType::Bin) ||
@@ -143,7 +143,7 @@ fn execute(config: &Config) -> CargoResult<()> {
 				                   }
 			                   });
 
-			expected.extract_if(|(_, targets)| targets.is_empty()).count();
+			expected.extract_if(.., |(_, targets)| targets.is_empty()).count();
 			if expected.is_empty() {
 				bail!("Nothing found to run");
 			}
@@ -155,7 +155,7 @@ fn execute(config: &Config) -> CargoResult<()> {
 			let mut products = build::build(config, &deps_tree)?;
 
 			// filter products with expected:
-			products.extract_if(|product| {
+			products.extract_if(.., |product| {
 				        match product {
 					        build::BuildProduct::Success { package_id,
 				                                          name,

@@ -189,7 +189,7 @@ pub fn build(cfg: &Config, tree: &MetaDeps) -> CargoResult<Vec<BuildProduct>> {
 
 		let mut targets_cache = HashMap::new();
 
-		artifacts.extract_if(|(art, roots)| {
+		artifacts.extract_if(.., |(art, roots)| {
 			         let executable = art.executable.is_some();
 			         let need_remove_roots = roots.len() > 1;
 
@@ -209,7 +209,7 @@ pub fn build(cfg: &Config, tree: &MetaDeps) -> CargoResult<Vec<BuildProduct>> {
 
 			         let mut crate_types_cache = BTreeMap::new();
 
-			         let removed = roots.extract_if(|root| {
+			         let removed = roots.extract_if(.., |root| {
 				                       let tk = root.node().target().kind();
 				                       let ck = root.node().unit().platform;
 
@@ -292,7 +292,7 @@ pub fn build(cfg: &Config, tree: &MetaDeps) -> CargoResult<Vec<BuildProduct>> {
 		                    .export_dir
 		                    .clone()
 		                    .unwrap_or_else(|| cfg.workspace.target_dir().into_path_unlocked());
-		artifacts.extract_if(|(art, roots)| {
+		artifacts.extract_if(.., |(art, roots)| {
 			         let various_ck: Vec<_> = {
 				         let mut ck: Vec<_> = roots.iter().map(|r| &r.node().unit().platform).collect();
 				         ck.sort();
@@ -341,7 +341,7 @@ pub fn build(cfg: &Config, tree: &MetaDeps) -> CargoResult<Vec<BuildProduct>> {
 			                                               });
 
 			         let removed = if let Some(ck) = ck_exact {
-				         roots.extract_if(|root| {
+				         roots.extract_if(.., |root| {
 					              match root.node().unit().platform {
 						              CompileKind::Host => false,
 					                 CompileKind::Target(ct) => ct.short_name() != ck,
@@ -349,7 +349,9 @@ pub fn build(cfg: &Config, tree: &MetaDeps) -> CargoResult<Vec<BuildProduct>> {
 				              })
 				              .count()
 			         } else if has_host {
-				         roots.extract_if(|root| !matches!(root.node().unit().platform, CompileKind::Host))
+				         roots.extract_if(.., |root| {
+					              !matches!(root.node().unit().platform, CompileKind::Host)
+				              })
 				              .count()
 			         } else {
 				         0
@@ -798,16 +800,16 @@ fn build_library<Layout, S>(config: &Config,
 		// TODO: #feature=compat & --with-setup => gcc.arg(setup.c) and -l artifact.path
 		// TODO: use const `GCC_ARGS_LIB` from support::compile
 		gcc.args([
-			"-nostartfiles",
-			"-mthumb",
-			"-mcpu=cortex-m7",
-			"-mfloat-abi=hard",
-			"-mfpu=fpv5-sp-d16",
-			"-D__FPU_USED=1",
-			"-Wl,--cref,--gc-sections,--no-warn-mismatch,--emit-relocs",
-			"-fno-exceptions",
-			"-mword-relocations",
-			"-fno-common",
+		          "-nostartfiles",
+		          "-mthumb",
+		          "-mcpu=cortex-m7",
+		          "-mfloat-abi=hard",
+		          "-mfpu=fpv5-sp-d16",
+		          "-D__FPU_USED=1",
+		          "-Wl,--cref,--gc-sections,--no-warn-mismatch,--emit-relocs",
+		          "-fno-exceptions",
+		          "-mword-relocations",
+		          "-fno-common",
 		]);
 		gcc.arg(&link_map);
 		if let Some(d) = d {

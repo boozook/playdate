@@ -115,14 +115,14 @@ impl Rustflags {
 		for target in [&device_target, &config.host_target] {
 			if let Some(existing) = existing.get(&target) {
 				if let Some(flags) = flags.get_mut(&CompileKind::Target(*target)) {
-					drained.extend(flags.extract_if(|flag| {
+					drained.extend(flags.extract_if(.., |flag| {
 						                    existing.val
 						                            .as_slice()
 						                            .iter()
 						                            .any(|f| f.as_str() == flag.as_ref())
 					                    }));
 					if existing.val.as_slice().iter().any(|f| f.contains("target-cpu")) {
-						drained.extend(flags.extract_if(|flag| flag.starts_with("-Ctarget-cpu=")));
+						drained.extend(flags.extract_if(.., |flag| flag.starts_with("-Ctarget-cpu=")));
 					}
 				}
 			}

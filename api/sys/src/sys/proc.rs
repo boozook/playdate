@@ -32,14 +32,15 @@ pub fn error<S: AsRef<str>>(text: S) -> ! {
 	if let Some(f) = unsafe { (*(*crate::sys::API).system).error } {
 		// Casting fn->void to fn->!
 		// This ugly cast is safe because of `!` is a magic compile-time marker, not a type.
-		let f: unsafe extern "C" fn(*const i8, ...) = f;
-		let p = core::ptr::addr_of!(f) as *const _ as *const unsafe extern "C" fn(*const i8, ...) -> !;
+		let f: unsafe extern "C" fn(*const core::ffi::c_char, ...) = f;
+		let p =
+			core::ptr::addr_of!(f) as *const _ as *const unsafe extern "C" fn(*const core::ffi::c_char, ...) -> !;
 		let f = unsafe { p.as_ref() }.unwrap();
 
 		if let Ok(s) = alloc::ffi::CString::new(text.as_ref()) {
-			unsafe { f(s.as_ptr() as *mut core::ffi::c_char) }
+			unsafe { f(s.as_ptr() as _) }
 		} else {
-			unsafe { f(text.as_ref().as_ptr() as *mut core::ffi::c_char) }
+			unsafe { f(text.as_ref().as_ptr() as _) }
 		}
 	} else {
 		// In case of `crate::sys::API` is missed (doesn't set) just abort the process.
