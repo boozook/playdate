@@ -1,6 +1,6 @@
 [package]
 name = "playdate-bindgen"
-version = "0.1.11"
+version = "0.1.12"
 readme = "README.md"
 description = "Bindgen configuration for Playdate API and utils."
 keywords = ["playdate", "bindings", "ffi", "code-generation"]
@@ -16,9 +16,9 @@ repository.workspace = true
 semver.workspace = true
 
 # parser:
-html2md = { version = "0.2.14", optional = true }
-html5ever = { version = "0.26.0", optional = true }
-markup5ever_rcdom = { version = "0.2.0", optional = true }
+html2md = { version = "0.2.15", optional = true }
+html5ever = { version = "0.27.0", optional = true }
+markup5ever_rcdom = { version = "0.3.0", optional = true }
 # doc-gen:
 proc-macro2 = { version = "1.0", optional = true }
 syn = { version = "2.0", optional = true }            # +full, extra-traits, visit-mut
