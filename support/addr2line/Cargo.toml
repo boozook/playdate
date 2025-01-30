@@ -1,6 +1,6 @@
 [package]
 name = "playdate-symbolize"
-version = "0.2.0"
+version = "0.2.1"
 readme = "README.md"
 description = "Tools for symbolise addresses from bin (pdex.elf) and Playdate's trace or crashlog."
 keywords = ["playdate", "bin", "elf", "addr2line", "utility"]
@@ -35,7 +35,7 @@ env_logger = { workspace = true, optional = true }
 symbolic = { version = "12.8", features = ["demangle"] }
 
 regex.workspace = true
-const-str = { version = "0.5", default-features = false, optional = true }
+const-str = { version = "0.6", default-features = false, optional = true }
 paste = "1.0"
 
 tokio = { workspace = true, features = ["full", "rt-multi-thread"] }

@@ -174,7 +174,7 @@ pub fn env_cargo_feature(feature: &str) -> bool { env::var(format!("CARGO_FEATUR
 fn create_builder(_target: &str, capi: &Path, header: &Path, derive: &cfg::Derive) -> Builder {
 	let mut builder = bindgen::builder()
 	.header(format!("{}", header.display()))
-	.rust_target(RustTarget::Nightly)
+	.rust_target(RustTarget::nightly())
 
 	// allow types:
 	.allowlist_recursively(true)
