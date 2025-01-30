@@ -11,13 +11,7 @@ repository.workspace = true
 
 
 [features]
-default = [
-	"sys/default",
-	"gfx/default",
-	"display/default",
-	"sprite/default",
-	"system/default",
-]
+default = ["sys/default", "gfx/default", "display/default", "sprite/default", "system/default"]
 
 # playdate-sys features, should be shared because it's build configuration:
 
@@ -62,12 +56,7 @@ menu = { workspace = true, default-features = false }
 name = "example"
 crate-type = ["dylib", "staticlib"]
 path = "examples/example.rs"
-required-features = [
-	"sys/lang-items",
-	"sys/entry-point",
-	"sys/try-trait-v2",
-	"system/try-trait-v2",
-]
+required-features = ["sys/lang-items", "sys/entry-point", "sys/try-trait-v2", "system/try-trait-v2"]
 
 
 [package.metadata.playdate]
@@ -91,8 +80,4 @@ features = [
 ]
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
-cargo-args = [
-	"-Zunstable-options",
-	"-Zrustdoc-scrape-examples",
-	"-Zbuild-std=core,alloc",
-]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]

@@ -20,10 +20,7 @@ default = ["sys/default", "fs/default"]
 bindgen-runtime = ["sys/bindgen-runtime", "fs/bindgen-runtime"]
 bindgen-static = ["sys/bindgen-static", "fs/bindgen-static"]
 
-bindings-derive-debug = [
-	"sys/bindings-derive-debug",
-	"fs/bindings-derive-debug",
-]
+bindings-derive-debug = ["sys/bindings-derive-debug", "fs/bindings-derive-debug"]
 
 
 [dependencies]
@@ -32,7 +29,7 @@ fs = { workspace = true, default-features = false }
 
 [dev-dependencies]
 gfx = { workspace = true, default-features = false }
-system = { workspace = true, default-features = false, features = [ "try-trait-v2" ] }
+system = { workspace = true, default-features = false, features = ["try-trait-v2"] }
 
 [[example]]
 name = "sp"
@@ -68,8 +65,4 @@ features = [
 ]
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
-cargo-args = [
-	"-Zunstable-options",
-	"-Zrustdoc-scrape-examples",
-	"-Zbuild-std=core,alloc",
-]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]

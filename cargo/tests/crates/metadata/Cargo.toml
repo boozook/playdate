@@ -21,7 +21,6 @@ dependencies = true
 overwrite = true
 
 
-
 [lib]
 path = "../simple/lib.rs"
 crate-type = ["dylib", "staticlib"]
