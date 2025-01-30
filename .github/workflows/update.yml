@@ -242,7 +242,7 @@ jobs:
       - name: Changes
         id: changes
         continue-on-error: true
-        uses: tj-actions/changed-files@v44
+        uses: tj-actions/changed-files@v45
         with:
           skip_initial_fetch: "false"
           sha: ${{ needs.new-branch.outputs.working }}
