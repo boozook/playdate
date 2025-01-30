@@ -1,7 +1,7 @@
 name: Auto-merge
 on:
   pull_request_target:
-    types: ready_for_review
+    types: [ready_for_review]
   workflow_call:
     inputs:
       pr:
@@ -60,7 +60,6 @@ jobs:
             echo "have=true" >> "$GITHUB_OUTPUT"
           fi
       # better criteria is "is this PR have only one issue and it authored by author of this PR?"
-
       - name: Approve
         # if there is no requested reviewers specified  and  PR don't have any linked issue's:
         if: success() && steps.reviewers.outputs.value == '0'
