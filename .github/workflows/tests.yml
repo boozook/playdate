@@ -467,6 +467,12 @@ jobs:
       contents: read
       pull-requests: write
 
+    # TODO:
+    # 1. check and/or fix
+    # 2. if we have rights - commit-push
+    # 3. otherwise:
+    #    - suggestions (can failt too)
+    #    - fail with error
     steps:
       - uses: actions/checkout@v4
         with:
@@ -479,7 +485,7 @@ jobs:
           cargo fmt --all -- --check
           # (echo "::error::Rust format error." && exit 1)
 
-      - name: Format
+      - name: Format (rs)
         id: format
         if: steps.check.outcome == 'failure'
         run: |
@@ -487,16 +493,23 @@ jobs:
           cargo fmt --all
           # second time is for anti-flickering, because using nightly rustfmt
 
+      - name: Install Taplo
+        uses: uncenter/setup-taplo@v1.0.8
+        with:
+          version: "0.9.3"
+      - name: Format (toml)
+        run: taplo fmt "**/*.toml"
+
       - name: Suggestions
         uses: reviewdog/action-suggester@v1
         with:
           filter_mode: diff_context
           fail_level: none
-          tool_name: Rustfmt
+          tool_name: Format
           cleanup: false
 
   clippy:
-    name: Clippy # with fmt suggestions
+    name: Clippy # with fmt suggestions needed after clippy fix.
     if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
     defaults:
       run:
