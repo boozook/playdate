@@ -469,7 +469,7 @@ jobs:
 
     # TODO:
     # 1. check and/or fix
-    # 2. if we have rights - commit-push
+    # 2. if we have rights (edit PR) - commit-push
     # 3. otherwise:
     #    - suggestions (can failt too)
     #    - fail with error
