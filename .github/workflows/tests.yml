@@ -491,7 +491,7 @@ jobs:
         uses: reviewdog/action-suggester@v1
         with:
           filter_mode: diff_context
-          fail_on_error: false
+          fail_level: none
           tool_name: Rustfmt
           cleanup: false
 
@@ -569,7 +569,7 @@ jobs:
         continue-on-error: ${{ runner.os == 'Windows' }} # sometimes reviewdog fails on windows
         with:
           filter_mode: diff_context
-          fail_on_error: false
+          fail_level: none
           tool_name: Clippy & fmt
           cleanup: false
 
