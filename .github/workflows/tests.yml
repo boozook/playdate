@@ -496,7 +496,7 @@ jobs:
           cleanup: false
 
   clippy:
-    name: Clippy + fmt suggestions
+    name: Clippy # with fmt suggestions
     if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
     defaults:
       run:
