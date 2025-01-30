@@ -314,7 +314,7 @@ jobs:
 
   tool-execution:
     # This tests are flickering on GH CI 🤷🏻‍♂️
-    if: contains(github.event.head_commit.message, 'test execution')
+    if: ${{ contains(github.event.head_commit.message, 'test execution') }}
     name: "Tool: Run"
     defaults:
       run:
