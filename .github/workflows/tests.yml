@@ -575,7 +575,7 @@ jobs:
 
   semver:
     name: Semver
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     steps:
       - name: Checkout
         uses: actions/checkout@v4
