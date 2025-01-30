@@ -47,6 +47,6 @@ jobs:
           model: "gemini-1.5-pro-latest"
           pull_request_diff: |-
             ${{ steps.get_diff.outputs.pull_request_diff }}
-          pull_request_chunk_size: "5000"
+          pull_request_chunk_size: 3500
           extra_prompt: You are an expert software engineer and understand algorithms, math and logic. You are also an expert in system design. Your job is to analyze changes and briefly point out potential bugs and issues, as well as API ambiguities. All code is in Rust programming language. Provide short explanation for each case you have found. Otherwise, if there is no problem, just say "LGTM".
           log_level: INFO
