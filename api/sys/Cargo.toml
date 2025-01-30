@@ -1,16 +1,11 @@
 [package]
 name = "playdate-sys"
-version = "0.4.9"
+version = "0.4.10"
 build = "src/build.rs"
 readme = "README.md"
 description = "Low-level Playdate API bindings"
 keywords = ["playdate", "bindings", "ffi", "gamedev"]
-categories = [
-	"external-ffi-bindings",
-	"development-tools::ffi",
-	"game-development",
-	"no-std",
-]
+categories = ["external-ffi-bindings", "development-tools::ffi", "game-development", "no-std"]
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
@@ -86,11 +81,7 @@ features = [
 # rustc-args = ["--cfg", "docsrs"]
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
-cargo-args = [
-	"-Zunstable-options",
-	"-Zrustdoc-scrape-examples",
-	"-Zbuild-std=core,alloc",
-]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]
 
 
 [[example]]

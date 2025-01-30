@@ -17,7 +17,6 @@ use core::alloc::{GlobalAlloc, Layout};
 use core::ffi::c_void;
 
 
-// #[cfg_attr(feature = "allocator-global", global_allocator)]
 #[global_allocator]
 #[cfg(feature = "allocator")]
 pub static GLOBAL: PlaydateAllocator = PlaydateAllocator;
@@ -43,6 +42,7 @@ unsafe impl GlobalAlloc for PlaydateAllocator {
 
 
 #[track_caller]
+#[allow(static_mut_refs)]
 unsafe fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void {
 	// Cached pointer to the OS's realloc function.
 	static mut REALLOC: Option<unsafe extern "C" fn(ptr: *mut c_void, size: usize) -> *mut c_void> = None;

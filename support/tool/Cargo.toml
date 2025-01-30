@@ -36,9 +36,7 @@ miette = { version = "7.2", features = ["fancy"] }
 # tracing:
 tracing = { version = "0.1", optional = true }
 tracing-subscriber = { version = "0.3", optional = true }
-console-subscriber = { version = "0.3", features = [
-	"env-filter",
-], optional = true }
+console-subscriber = { version = "0.3", features = ["env-filter"], optional = true }
 
 [dependencies.clap]
 features = ["std", "env", "derive", "help", "usage", "color"]
@@ -57,12 +55,7 @@ workspace = true
 [features]
 eject = ["device/eject"] # windows only, enable one more unmount method
 
-tracing = [
-	"dep:tracing",
-	"tracing-subscriber",
-	"device/tracing",
-	"simulator/tracing",
-]
+tracing = ["dep:tracing", "tracing-subscriber", "device/tracing", "simulator/tracing"]
 
 # Useful with `RUSTFLAGS="--cfg tokio_unstable"` &
 # [tokio-console](https://tokio.rs/tokio/topics/tracing-next-steps)

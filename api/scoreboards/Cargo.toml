@@ -28,7 +28,7 @@ erased_set = "0.8"
 
 
 [dev-dependencies]
-system = { workspace = true, default-features = false, features = [ "try-trait-v2" ] }
+system = { workspace = true, default-features = false, features = ["try-trait-v2"] }
 
 
 [[example]]
@@ -55,8 +55,4 @@ features = [
 ]
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
-cargo-args = [
-	"-Zunstable-options",
-	"-Zrustdoc-scrape-examples",
-	"-Zbuild-std=core,alloc",
-]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]

@@ -21,7 +21,7 @@ html5ever = { version = "0.27.0", optional = true }
 markup5ever_rcdom = { version = "0.3.0", optional = true }
 # doc-gen:
 proc-macro2 = { version = "1.0", optional = true }
-syn = { version = "2.0", optional = true }            # +full, extra-traits, visit-mut
+syn = { version = "2.0", optional = true }         # +full, extra-traits, visit-mut
 quote = { version = "1.0", optional = true }
 
 log = { workspace = true, optional = true }
@@ -59,13 +59,7 @@ logging = ["bindgen/logging", "utils/log"]
 pretty-please = ["bindgen/prettyplease", "prettyplease"]
 which-rustfmt = ["bindgen/which-rustfmt", "which"]
 
-cli = [
-	"clap",
-	"documentation",
-	"extra-codegen",
-	"pretty-please",
-	"which-rustfmt",
-]
+cli = ["clap", "documentation", "extra-codegen", "pretty-please", "which-rustfmt"]
 
 
 [package.metadata.docs.rs]
