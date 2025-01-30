@@ -1,6 +1,6 @@
 [package]
 name = "playdate-device"
-version = "0.2.13"
+version = "0.2.14"
 readme = "README.md"
 description = "Cross-platform interface Playdate device, async & blocking."
 keywords = ["playdate", "usb", "serial"]
@@ -13,16 +13,16 @@ repository.workspace = true
 
 
 [dependencies]
-object-pool = "0.5"
+object-pool = "0.6"
 
 regex.workspace = true
 log.workspace = true
-miette = "7.2"
+miette = "7.4"
 thiserror.workspace = true
 
 nusb = "0.1"
-usb-ids = { version = "1.2024.2" }
-serialport = { version = "4.3", features = ["usbportinfo-interface"] }
+usb-ids = { version = "1.2025.1" }
+serialport = { version = "4.7", features = ["usbportinfo-interface"] }
 tokio-serial = { version = "5.4", optional = true }
 
 tracing = { version = "0.1", optional = true }
@@ -45,7 +45,7 @@ workspace = true
 optional = true
 
 [dependencies.futures-lite]
-version = "2.3"
+version = "2.6"
 
 [dependencies.futures]
 version = "0.3"
@@ -59,12 +59,12 @@ optional = true
 
 
 [target.'cfg(target_os = "macos")'.dependencies]
-plist = "1.6"
-const-hex = "1.11"
+plist = "1.7"
+const-hex = "1.14"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-udev = "0.8"
-lfs-core = "0.11"
+udev = "0.9"
+lfs-core = "0.12"
 eject = "0.1"
 
 [target.'cfg(target_os = "windows")'.dependencies.eject]
@@ -72,7 +72,7 @@ version = "0.1"
 optional = true
 
 [target.'cfg(target_os = "windows")'.dependencies.windows]
-version = "0.58"
+version = "0.59"
 features = [
 	"Win32_Foundation",
 	"Win32_Storage",

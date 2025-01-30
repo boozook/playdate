@@ -87,7 +87,7 @@ fn run(crate_name: &str, crate_path: &Path, args: impl IntoIterator<Item = impl 
 fn test_value() -> String {
 	use rand::RngCore;
 	let mut values = [0u8; 8];
-	rand::thread_rng().fill_bytes(&mut values);
+	rand::rng().fill_bytes(&mut values);
 
 	values.into_iter().fold(String::new(), |mut acc, n| {
 		                  acc.push_str(&n.to_string());

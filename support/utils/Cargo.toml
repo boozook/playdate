@@ -1,6 +1,6 @@
 [package]
 name = "playdate-build-utils"
-version = "0.3.6"
+version = "0.3.7"
 readme = "README.md"
 description = "Utils that help to build program with Rust and Playdate API"
 keywords = ["playdate", "utility"]
@@ -17,7 +17,7 @@ dirs.workspace = true
 log = { workspace = true, optional = true }
 
 [target.'cfg(target_os = "windows")'.dependencies.windows-registry]
-version = "0.2"
+version = "0.4"
 
 [features]
 default = ["log", "cargo-message"]

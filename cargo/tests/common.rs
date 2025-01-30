@@ -138,7 +138,7 @@ pub fn target_dir_rand() -> PathBuf {
 
 	// add random:
 	let mut values = [0u8; 4];
-	rand::thread_rng().fill_bytes(&mut values);
+	rand::rng().fill_bytes(&mut values);
 	let rand = values.into_iter()
 	                 .map(|v| v.to_string())
 	                 .collect::<Vec<_>>()

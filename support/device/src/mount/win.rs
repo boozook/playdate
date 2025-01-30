@@ -470,7 +470,7 @@ mod winapi {
 			            None,
 			            OPEN_EXISTING,
 			            FILE_FLAGS_AND_ATTRIBUTES(0),
-			            HANDLE::default(),
+			            Some(HANDLE::default()),
 			)
 		}?;
 		trace!("opened: {letter} handle, valid: {}", !h.is_invalid());

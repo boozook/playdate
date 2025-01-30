@@ -12,7 +12,8 @@ runs:
       shell: bash
       run: |
         sudo apt install pkg-config -y
-        sudo apt install libudev-dev -y
+        sudo apt install libudev-dev -y || \
+        (sudo apt-get update && sudo apt install libudev-dev -y)
 
     - name: Cache LLVM
       id: cache-llvm
