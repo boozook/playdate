@@ -87,7 +87,6 @@ jobs:
           version: ${{ matrix.sdk }}
           custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
 
-
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
 
@@ -256,7 +255,7 @@ jobs:
         run: rm -rf ./target/tmp
 
   tool-init:
-    name: 'Tool: Init'
+    name: "Tool: Init"
     defaults:
       run:
         shell: bash
@@ -316,7 +315,7 @@ jobs:
   tool-execution:
     # This tests are flickering on GH CI 🤷🏻‍♂️
     if: contains(github.event.head_commit.message, 'test execution')
-    name: 'Tool: Run'
+    name: "Tool: Run"
     defaults:
       run:
         shell: bash
@@ -381,7 +380,7 @@ jobs:
           rm -rf ./target/tmp
 
   tool-package:
-    name: 'Tool: Package'
+    name: "Tool: Package"
     defaults:
       run:
         shell: bash
@@ -492,7 +491,7 @@ jobs:
         uses: reviewdog/action-suggester@v1
         with:
           filter_mode: diff_context
-          fail_on_error: false
+          fail_level: none
           tool_name: Rustfmt
           cleanup: false
 
@@ -570,7 +569,22 @@ jobs:
         continue-on-error: ${{ runner.os == 'Windows' }} # sometimes reviewdog fails on windows
         with:
           filter_mode: diff_context
-          fail_on_error: false
+          fail_level: none
           tool_name: Clippy & fmt
           cleanup: false
 
+  semver:
+    name: Semver
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check
+        env:
+          DOCS_RS: 1
+          PLAYDATE_SDK_PATH: 0
+          IGNORE_EXISTING_PLAYDATE_SDK: 1
+        uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          feature-group: default-features
+          rust-toolchain: manual
