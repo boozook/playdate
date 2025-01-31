@@ -81,7 +81,7 @@ jobs:
       # if not created => rebase to master
       - name: ReSync Branch
         if: ${{ steps.branch.outputs.created == 'false' }}
-        uses: Joao208/resync-branch@1.5.0
+        uses: Joao208/resync-branch@1.5.1
         with:
           PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH_NAME: ${{ steps.work_branch.outputs.value }}
