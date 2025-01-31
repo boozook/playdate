@@ -4,7 +4,8 @@ on:
     inputs:
       sdk:
         description: "Version of Playdate SDK"
-        default: latest
+        # default: latest
+        default: beta
         type: string
         required: true
       source:
