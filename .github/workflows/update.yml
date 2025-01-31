@@ -99,7 +99,7 @@ jobs:
     needs: new-branch
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
+      fail-fast: ${{ github.event.inputs.sdk != 'beta' }}
       matrix:
         os:
           - macos-14
@@ -149,6 +149,7 @@ jobs:
         uses: ./.github/actions/tools-deps
 
       - name: Install Playdate SDK ${{ matrix.sdk }}
+        continue-on-error: ${{ github.event.inputs.sdk == 'beta' }}
         id: sdk
         uses: pd-rs/get-playdate-sdk@main
         with:
@@ -156,16 +157,17 @@ jobs:
           custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
 
       - name: SDK ${{ steps.sdk.outputs.version }} installed
+        if: steps.sdk.outcome == 'success'
         run: which pdc && pdc --version
 
       - name: Install targets (mac)
-        if: runner.os == 'macOS'
+        if: runner.os == 'macOS' && steps.sdk.outcome == 'success'
         run: |
           rustup target add aarch64-apple-darwin
           rustup target add x86_64-apple-darwin
 
       - name: Install targets (win)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && steps.sdk.outcome == 'success'
         run: |
           rustup target add x86_64-pc-windows-msvc
           rustup target add aarch64-pc-windows-msvc
@@ -174,19 +176,21 @@ jobs:
         run: git pull
 
       - name: Host
+        if: steps.sdk.outcome == 'success'
         run: >-
           cargo build -p=playdate-sys --features="${{ matrix.features.v }}"
           ${{ runner.os == 'macOS' && '--target=aarch64-apple-darwin --target=x86_64-apple-darwin' || '' }}
           ${{ runner.os == 'Windows' && '--target=x86_64-pc-windows-msvc --target=aarch64-pc-windows-msvc' || '' }}
 
       - name: Device
-        if: ${{ matrix.os == 'ubuntu-latest' }}
+        if: matrix.os == 'ubuntu-latest' && steps.sdk.outcome == 'success'
         run: cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --target=thumbv7em-none-eabihf
 
       - name: Format
         run: rustfmt api/sys/gen/*.rs
 
       - name: Test (host)
+        if: steps.sdk.outcome == 'success'
         # env: # uncomment when all bindings for min-supported-SDK will be there
         #   IGNORE_EXISTING_PLAYDATE_SDK: 1
         #   PLAYDATE_USE_PREBUILT_VERSION: ${{ steps.sdk.outputs.version }}
@@ -195,7 +199,7 @@ jobs:
           cargo test -p=playdate-sys --features="lang-items ${{ matrix.features.v }}" --release
 
       - name: Test (device)
-        if: ${{ matrix.os == 'ubuntu-latest' }}
+        if: matrix.os == 'ubuntu-latest' && steps.sdk.outcome == 'success'
         # env: # uncomment when all bindings for min-supported-SDK will be there
         #   IGNORE_EXISTING_PLAYDATE_SDK: 1
         #   PLAYDATE_USE_PREBUILT_VERSION: ${{ steps.sdk.outputs.version }}
@@ -206,6 +210,7 @@ jobs:
       - name: Commit
         continue-on-error: true
         id: commit
+        if: steps.sdk.outcome == 'success'
         uses: EndBug/add-and-commit@v9
         with:
           add: ./api/sys/gen/*.rs
