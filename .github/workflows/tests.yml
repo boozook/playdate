@@ -601,3 +601,20 @@ jobs:
         with:
           feature-group: default-features
           rust-toolchain: manual
+
+  bumped:
+    name: Consistency
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check
+        id: crates
+        uses: katyo/publish-crates@v2
+        with:
+          dry-run: true
+      - name: output
+        if: fromJSON(steps.crates.outputs.published).*
+        run: |
+          LIST="${{ join(fromJSON(steps.crates.outputs.published).*.name, ', ') }}"
+          echo "crates: $LIST"
