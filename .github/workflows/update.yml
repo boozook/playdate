@@ -340,7 +340,7 @@ jobs:
           # - [${{ needs.tests.result == 'success' && 'x' || ' ' }}] Tests passed
           PULL_REQUEST_IS_DRAFT: false
           CONTENT_COMPARISON: true
-          REVIEWERS: '["boozook"]'
+          # REVIEWERS: '["boozook"]'
     outputs:
       number: ${{ steps.pr.outputs.PULL_REQUEST_NUMBER }}
       url: ${{ steps.pr.outputs.PULL_REQUEST_URL }}
