@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: TODO to Issues
-        uses: "alstr/todo-to-issue-action@v4"
+        uses: "alstr/todo-to-issue-action@v5"
         env:
           MANUAL_COMMIT_REF: ${{ inputs.commit_ref }}
           MANUAL_BASE_REF: ${{ inputs.base_ref }}
