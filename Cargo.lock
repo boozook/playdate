@@ -4379,7 +4379,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-ui-crank-indicator"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "playdate-controls",
  "playdate-display",
