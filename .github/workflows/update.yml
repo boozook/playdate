@@ -373,7 +373,7 @@ jobs:
 
       - name: Approve
         if: needs.pr.outputs.url
-        run: gh pr review --approve "${{ needs.pr.outputs.url || needs.pr.outputs.number }}"
+        run: gh pr review --approve "${{ needs.pr.outputs.number || needs.pr.outputs.url }}"
 
       - name: Auto-merge
         if: success()
@@ -381,7 +381,7 @@ jobs:
           GITHUB_TOKEN: ${{secrets.PR_GITHUB_TOKEN}}
         run: >-
           gh pr merge --auto --squash
-          "${{ needs.pr.outputs.url || needs.pr.outputs.number }}"
+          "${{ needs.pr.outputs.number || needs.pr.outputs.url }}"
 
   # tests:
   #   name: Tests
