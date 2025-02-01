@@ -4,8 +4,7 @@ on:
     inputs:
       sdk:
         description: "Version of Playdate SDK"
-        # default: latest
-        default: "2.6.1"
+        default: latest
         type: string
         required: true
       source:
@@ -107,7 +106,7 @@ jobs:
           - windows-latest
         sdk:
           # - ${{ github.event.inputs.sdk || 'latest' }}
-          - ${{ github.event.inputs.sdk }}
+          - ${{ github.event.inputs.sdk || '2.6.1' }}
         features:
           - v: >-
               bindings-documentation
