@@ -4,7 +4,8 @@ on:
     inputs:
       sdk:
         description: "Version of Playdate SDK"
-        default: latest
+        # default: latest
+        default: "2.6.1"
         type: string
         required: true
       source:
@@ -13,7 +14,8 @@ on:
       sha:
         description: "Source SHA used to build bindings. Uses `github.sha`` by default."
         required: false
-  # push:
+  push:
+    branches: [ci-update-impr]
   #   branches: [main, master]
 
   schedule:
@@ -104,7 +106,8 @@ jobs:
           - ubuntu-latest
           - windows-latest
         sdk:
-          - ${{ github.event.inputs.sdk || 'latest' }}
+          # - ${{ github.event.inputs.sdk || 'latest' }}
+          - ${{ github.event.inputs.sdk }}
         features:
           - v: >-
               bindings-documentation
@@ -346,6 +349,38 @@ jobs:
     outputs:
       number: ${{ steps.pr.outputs.PULL_REQUEST_NUMBER }}
       url: ${{ steps.pr.outputs.PULL_REQUEST_URL }}
+
+  accept:
+    name: Accept
+    needs: pr
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      pull-requests: write
+      contents: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: PR
+        run: |
+          echo "URL: ${{ needs.pr.outputs.PULL_REQUEST_URL }}"
+          echo "ID: ${{ needs.pr.outputs.PULL_REQUEST_NUMBER }}"
+          echo "Any: ${{ needs.pr.outputs.PULL_REQUEST_URL || needs.pr.outputs.PULL_REQUEST_NUMBER }}"
+
+      - name: Approve
+        if: needs.pr.outputs.PULL_REQUEST_URL
+        run: gh pr review --approve "${{ needs.pr.outputs.PULL_REQUEST_URL || needs.pr.outputs.PULL_REQUEST_NUMBER }}"
+
+      - name: Auto-merge
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{secrets.PR_GITHUB_TOKEN}}
+        run: >-
+          gh pr merge --auto --squash
+          "${{ needs.pr.outputs.PULL_REQUEST_URL || needs.pr.outputs.PULL_REQUEST_NUMBER }}"
 
   # tests:
   #   name: Tests
