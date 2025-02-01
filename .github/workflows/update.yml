@@ -353,7 +353,7 @@ jobs:
 
   accept:
     name: Accept
-    needs: pr
+    needs: [new-branch, pr]
     runs-on: ubuntu-latest
     continue-on-error: true
     defaults:
@@ -370,6 +370,11 @@ jobs:
           echo "URL: ${{ needs.pr.outputs.url }}"
           echo "ID: ${{ needs.pr.outputs.number }}"
           echo "Any: ${{ needs.pr.outputs.url || needs.pr.outputs.number }}"
+
+      # needed when using PR-number instead of url
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.new-branch.outputs.working }}
 
       - name: Approve
         if: needs.pr.outputs.url
