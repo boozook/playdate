@@ -332,7 +332,8 @@ jobs:
 
       - name: Create PR
         id: pr
-        uses: TreTuna/sync-branches@1.4.0
+        # uses: TreTuna/sync-branches@1.4.0
+        uses: TreTuna/sync-branches@main
         with:
           GITHUB_TOKEN: ${{secrets.PR_GITHUB_TOKEN}}
           FROM_BRANCH: refs/heads/${{ needs.new-branch.outputs.working }}
@@ -345,6 +346,7 @@ jobs:
           PULL_REQUEST_IS_DRAFT: false
           CONTENT_COMPARISON: true
           # REVIEWERS: '["boozook"]'
+          PULL_REQUEST_AUTO_MERGE_METHOD: squash
     outputs:
       number: ${{ steps.pr.outputs.PULL_REQUEST_NUMBER }}
       url: ${{ steps.pr.outputs.PULL_REQUEST_URL }}
