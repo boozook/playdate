@@ -55,7 +55,7 @@ jobs:
           - windows-latest
         sdk:
           - latest
-          - 2.5.0
+          # - 2.6.2
           # - beta
 
     steps:
@@ -193,11 +193,11 @@ jobs:
 
       - name: Test
         run: |
-          cargo test -p=playdate-build-utils --all-features
-          cargo test -p=playdate-build --no-default-features -- --nocapture
-          cargo test -p=playdate-build --all-features -- --nocapture
-          cargo test -p=playdate-device
-          cargo test -p=playdate-tool --all-features
+          cargo test --locked -p=playdate-build-utils --all-features
+          cargo test --locked -p=playdate-build --no-default-features -- --nocapture
+          cargo test --locked -p=playdate-build --all-features -- --nocapture
+          cargo test --locked -p=playdate-device
+          cargo test --locked -p=playdate-tool --all-features
 
   tool:
     name: Tool
@@ -214,7 +214,7 @@ jobs:
           - windows-latest
         sdk:
           - latest
-          - 2.5.0
+          # - 2.6.2
           # - beta
 
     steps:
@@ -249,7 +249,7 @@ jobs:
         run: which pdc && pdc --version
 
       - name: Test
-        run: cargo test -p=cargo-playdate -- --nocapture
+        run: cargo test --locked -p=cargo-playdate -- --nocapture
 
       - name: Clean tmp
         run: rm -rf ./target/tmp
@@ -269,7 +269,7 @@ jobs:
           - windows-latest
         sdk:
           - latest
-          - 2.5.0
+          # - 2.6.2
           # - beta
 
     steps:
@@ -307,7 +307,7 @@ jobs:
         env:
           RUSTFLAGS: --cfg init_tests
         run: |
-          cargo test -p=cargo-playdate init:: -- --nocapture ${{ runner.os == 'Windows' && '--test-threads=1' || '' }}
+          cargo test --locked -p=cargo-playdate init:: -- --nocapture ${{ runner.os == 'Windows' && '--test-threads=1' || '' }}
 
       - name: Clean tmp
         run: rm -rf ./target/tmp
@@ -327,7 +327,7 @@ jobs:
           - macos-14
         sdk:
           - latest
-          - 2.5.0
+          # - 2.6.2
           # - beta
 
     steps:
@@ -375,7 +375,7 @@ jobs:
         env:
           RUSTFLAGS: --cfg exec_tests
         run: |
-          cargo test -p=cargo-playdate run:: -- --nocapture --test-threads=1
+          cargo test --locked -p=cargo-playdate run:: -- --nocapture --test-threads=1
           sudo killall "Playdate Simulator" || true
           rm -rf ./target/tmp
 
@@ -394,7 +394,7 @@ jobs:
           - windows-latest
         sdk:
           - latest
-          - 2.5.0
+          # - 2.6.2
           # - beta
 
     steps:
@@ -433,25 +433,31 @@ jobs:
       - name: SDK ${{ steps.sdk.outputs.version }} installed
         run: which pdc && pdc --version
 
-      - name: Install
-        run: cargo install --path=./cargo --debug
+      - name: Install cargo-playdate
+        run: cargo install --path=./cargo --debug --locked
+      # - name: Install playdate-bindgen
+      #   run: cargo install playdate-bindgen --path ./support/bindgen --features=cli --debug --locked
 
+      # Rus `cargo playdate package` without bindgen- features and without the tool:
       - name: Examples
+        env:
+          IGNORE_EXISTING_PLAYDATE_SDK: 1
+          FEATURES: lang-items,entry-point,bindings-derive-debug
+          FEATURES_DEP: sys/lang-items,sys/entry-point,sys/bindings-derive-debug
         run: |
-          FEATURES=sys/lang-items,sys/entry-point
-          cargo playdate package --features=lang-items --examples --device --simulator -p=playdate-sys
-          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-color
-          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-controls
-          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-display
-          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-fs
-          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-graphics
-          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-menu
-          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-scoreboards
-          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-sound
-          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-sprite
-          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-system
-          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate-lua
-          cargo playdate package --features=lang-items,entry-point --examples --device --simulator -p=playdate
+          cargo playdate package --features=lang-items,bindings-derive-debug --examples --device --simulator -p=playdate-sys --no-default-features
+          cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-color --no-default-features
+          cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-controls --no-default-features
+          cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-display --no-default-features
+          cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-fs --no-default-features
+          cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-graphics --no-default-features
+          cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-menu --no-default-features
+          cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-scoreboards --no-default-features
+          cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-sound --no-default-features
+          cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-sprite --no-default-features
+          cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-system --no-default-features
+          cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-lua --no-default-features
+          cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate --no-default-features
 
       # TODO: build crankstart with examples for compatibility test
 
