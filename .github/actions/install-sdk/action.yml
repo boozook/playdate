@@ -1,0 +1,35 @@
+name: Install Playdate SDK
+description: Install Playdate SDK with custom-url
+author: Alex Koz
+branding:
+  icon: package
+  color: yellow
+inputs:
+  version:
+    default: latest
+    description: Version of the SDK
+  mac:
+    default: ''
+    required: false
+    description: URL for Mac (uni)
+  win:
+    default: ''
+    required: false
+    description: URL for Windows (uni)
+  linux:
+    default: ''
+    required: false
+    description: URL for Linux (x64)
+runs:
+  using: "composite"
+  steps:
+    - name: Install Playdate SDK ${{ inputs.version }}
+      id: sdk
+      uses: pd-rs/get-playdate-sdk@main
+      with:
+        version: ${{ inputs.version }}
+        custom-url: ${{ inputs.version == 'beta' && ((runner.os == 'macOS' && inputs.mac) || (runner.os == 'Linux' && inputs.linux) || (runner.os == 'Windows' && inputs.win)) || '' }}
+
+    - name: SDK ${{ steps.sdk.outputs.version }} installed
+      shell: bash
+      run: which pdc && pdc --version

@@ -21,7 +21,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: ${{ runner.temp }}/llvm
-        key: llvm-14.0
+        key: llvm-14.0-${{ runner.os }}
 
     # See:
     # https://github.com/rust-lang/rust-bindgen/issues/1797

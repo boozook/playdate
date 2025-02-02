@@ -1,0 +1,144 @@
+name: Tests
+on:
+  workflow_call:
+    inputs:
+      sdk:
+        description: "Version of Playdate SDK"
+        default: latest
+        type: string
+        required: true
+      ref:
+        description: git branch, tag or SHA to checkout.
+        type: string
+        required: true
+  pull_request:
+  push:
+    branches: [main, master]
+
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  RUSTUP_MAX_RETRIES: 10
+  CARGO_TERM_COLOR: always
+  CARGO_TERM_PROGRESS_WHEN: never
+  # logging:
+  RUST_LOG: trace
+  CARGO_PLAYDATE_LOG: trace
+  # crates lists:
+  API_CRATES: >-
+    -p=playdate-color
+    -p=playdate-controls
+    -p=playdate-display
+    -p=playdate-fs
+    -p=playdate-graphics
+    -p=playdate-menu
+    -p=playdate-scoreboards
+    -p=playdate-sound
+    -p=playdate-sprite
+    -p=playdate-system
+    -p=playdate
+  PD_BUILD_BINDINGS_ONCE: 1
+
+jobs:
+  sys:
+    name: >-
+      Sys (${{ matrix.os.name }}${{ matrix.bindgen.install && ' +bindgen' || '' }})
+      ${{ matrix.bindgen.features }}
+    env:
+      FEATURES_1: bindgen-runtime
+      FEATURES_2: bindgen-runtime,bindings-derive-debug
+      FEATURES_3: bindgen-runtime,bindings-derive-debug,sys/bindings-documentation,sys/error-ctx
+      BUILD_STD_ARGS: -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
+    defaults:
+      run:
+        shell: bash
+    runs-on: ${{ matrix.os.key }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - { name: mac, key: macos-14 }
+          - { name: win, key: windows-latest }
+          - { name: linux, key: ubuntu-latest }
+        sdk:
+          - ${{ inputs.sdk || latest }}
+        bindgen:
+          - install: false
+          - install: false
+            features: bindings-derive-debug
+          - install: false
+            features: bindgen-runtime
+          - install: false
+            features: bindgen-runtime,bindings-derive-debug
+          - install: true
+          - install: true
+            features: bindings-derive-debug
+          - install: true
+            features: bindgen-runtime
+          - install: true
+            features: bindgen-runtime,bindings-derive-debug
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Config
+        uses: ./.github/actions/init-cfg
+
+      - name: Install bindgen
+        if: matrix.bindgen.install
+        uses: ./.github/actions/install-bindgen
+
+      - name: Install SDK (${{ matrix.sdk }})
+        uses: ./.github/actions/install-sdk
+        with:
+          version: ${{ matrix.sdk }}
+          mac: ${{ secrets.SDK_BETA_MACOS }}
+          win: ${{ secrets.SDK_BETA_WINDOWS }}
+          linux: ${{ secrets.SDK_BETA_LINUX }}
+
+      - name: SDK ${{ steps.sdk.outputs.version }} installed
+        run: which pdc && pdc --version
+
+      - name: Test (host)
+        run: cargo test -p=playdate-sys --features=${{ matrix.bindgen.features }} -- --nocapture
+
+      - name: Build (host)
+        run: cargo build -p=playdate-sys --features=${{ matrix.bindgen.features }} --examples
+
+      - name: Build (device)
+        run: cargo build -p=playdate-sys --features=${{ matrix.bindgen.features }} ${{ env.BUILD_STD_ARGS }} --examples
+
+  api-docs:
+    name: API (docs.rs)
+    runs-on: ubuntu-latest
+    env:
+      FEATURES: >-
+        bindings-documentation
+        bindings-derive-default
+        bindings-derive-eq
+        bindings-derive-copy
+        bindings-derive-debug
+        bindings-derive-hash
+        bindings-derive-ord
+        bindings-derive-partialeq
+        bindings-derive-partialord
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Config
+        run: |
+          mkdir -p .cargo
+          cp -rf .github/config.toml .cargo/config.toml
+
+      # Imitate docs.rs environment
+      - name: Test in no-sdk environment
+        env:
+          DOCS_RS: 1
+          PLAYDATE_SDK_PATH: 0
+          IGNORE_EXISTING_PLAYDATE_SDK: 1
+        run: |
+          cargo doc -p=playdate-sys --target=thumbv7em-none-eabihf --features="$FEATURES"

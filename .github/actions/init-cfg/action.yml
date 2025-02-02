@@ -1,0 +1,14 @@
+name: Prepare Cargo Config
+description: --
+author: Alex Koz
+branding:
+  icon: package
+  color: yellow
+runs:
+  using: "composite"
+  steps:
+    - name: Config
+      shell: bash
+      run: |
+        mkdir -p .cargo
+        cp -rf .github/config.toml .cargo/config.toml

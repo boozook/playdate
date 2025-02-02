@@ -1,0 +1,50 @@
+name: Install playdate-bindgen
+description: Install playdate-bindgen with caching
+author: Alex Koz
+branding:
+  icon: package
+  color: yellow
+runs:
+  using: "composite"
+  steps:
+    - name: Cache (LLVM)
+      id: cache-llvm
+      if: runner.os == 'Windows'
+      uses: actions/cache@v4
+      with:
+        path: ${{ runner.temp }}/llvm
+        key: llvm-14.0-${{ runner.os }}-${{ runner.arch }}
+
+    # See:
+    # https://github.com/rust-lang/rust-bindgen/issues/1797
+    # https://rust-lang.github.io/rust-bindgen/requirements.html#windows
+    - name: Install LLVM
+      if: runner.os == 'Windows'
+      uses: KyleMayes/install-llvm-action@v2
+      with:
+        version: "14.0"
+        directory: ${{ runner.temp }}/llvm
+        cached: ${{ steps.cache-llvm.outputs.cache-hit }}
+
+    - name: Cache (bindgen)
+      uses: actions/cache/restore@v4
+      id: cache
+      with:
+        path: ~/.cargo/bin/pdbindgen
+        key: bindgen-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('./support/bindgen/Cargo.toml') }}
+
+    - name: Install playdate-bindgen
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        cargo install playdate-bindgen --path ./support/bindgen --debug --locked --features=cli --features=runtime
+
+    - name: Installed
+      shell: bash
+      run: pdbindgen -V
+
+    - uses: actions/cache/save@v4
+      if: steps.cache.outputs.cache-hit != 'true'
+      with:
+        path: ~/.cargo/bin/pdbindgen
+        key: bindgen-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('./support/bindgen/Cargo.toml') }}
