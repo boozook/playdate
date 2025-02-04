@@ -1,4 +1,4 @@
-name: Tests
+name: Tests / API
 on:
   workflow_call:
     inputs:
@@ -21,27 +21,9 @@ env:
   RUSTUP_MAX_RETRIES: 10
   CARGO_TERM_COLOR: always
   CARGO_TERM_PROGRESS_WHEN: never
-  # logging:
-  RUST_LOG: trace
-  # CARGO_PLAYDATE_LOG: trace
-  # crates lists:
-  # API_CRATES: >-
-  #   -p=playdate-color
-  #   -p=playdate-controls
-  #   -p=playdate-display
-  #   -p=playdate-fs
-  #   -p=playdate-graphics
-  #   -p=playdate-menu
-  #   -p=playdate-scoreboards
-  #   -p=playdate-sound
-  #   -p=playdate-sprite
-  #   -p=playdate-system
-  #   -p=playdate
-  # PD_IGNORE_BINDINGS_CACHE: 1
 
 jobs:
   sys:
-    if: false
     name: >-
       Sys (${{ matrix.os.name }}${{ matrix.bindgen.install && ' +bindgen' || '' }})
       ${{ matrix.bindgen.features }}
@@ -114,143 +96,3 @@ jobs:
         run: |
           cargo build -p=playdate-sys --features=${{ matrix.bindgen.features }} ${{ env.BUILD_STD_ARGS }} --example=hello-world --features=lang-items
           cargo build -p=playdate-sys --features=${{ matrix.bindgen.features }} ${{ env.BUILD_STD_ARGS }} --example=handler --features=lang-items,entry-point
-
-  workspace:
-    name: Workspace
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref || github.ref }}
-
-      - name: Toolchain
-        run: rm ./rust-toolchain.toml
-
-      - name: debug
-        run: cat ./api/sys/Cargo.toml
-
-      - name: Metadata
-        id: metadata
-        run: |
-          META="$(cargo +stable metadata --format-version=1 -q --color=never)"
-              # echo $META | jq '.workspace_members[]'
-          # echo "workspace<<EOF" >> $GITHUB_OUTPUT
-          # echo $META >> $GITHUB_OUTPUT
-          # echo "EOF" >> $GITHUB_OUTPUT
-
-          MEMBERS="$(jq '(.workspace_members) as $wm | { packages: [.packages[] | select(.id as $id | $wm | index($id))] } | {"crate":.packages}' <<< "$META")"
-          echo "members<<EOF" >> $GITHUB_OUTPUT
-          echo $MEMBERS >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-    outputs:
-      # crate: ${{ fromJson(steps.metadata.outputs.value).members }}
-      # metadata: ${{ steps.metadata.outputs.workspace }}
-      # matrix: ${{ fromJson(steps.metadata.outputs.value).members }}
-      members: ${{ steps.metadata.outputs.members }}
-
-  workspace-members-test:
-    name: Workspace Test
-    needs: workspace
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.workspace.outputs.members) }}
-    steps:
-      # - name: Test
-      #   env:
-      #     MATRIX: ${{ matrix.crate }}
-      #   run: |
-      #     echo "$MATRIX"
-      #     # echo "${{ matrix.crate }}" || true
-      #     # echo "-----------------------------------"
-      #     # echo "${{ toJson(matrix) }}" || true
-      - name: publish value
-        run: echo "${{ matrix.crate.publish }}"
-
-      - name: is null
-        if: matrix.crate.publish == null
-        run: ""
-      - name: is true
-        if: matrix.crate.publish && matrix.crate.publish == true
-        run: ""
-      - name: is false
-        if: matrix.crate.publish && matrix.crate.publish == false
-        run: ""
-      - name: is empty arr
-        if: matrix.crate.publish && matrix.crate.publish == fromJSON('[ ]')
-        run: ""
-      - name: is empty arr
-        if: matrix.crate.publish && matrix.crate.publish == fromJSON('[]')
-        run: ""
-      - name: is arr with true
-        if: matrix.crate.publish && contains(matrix.crate.publish, true)
-        run: ""
-
-      - name: debug
-        run: |
-          echo ". is null: ${{ matrix.crate.publish == null }}"
-          echo ". is false: ${{ matrix.crate.publish == false }}"
-          echo ". is true: ${{ matrix.crate.publish == true }}"
-          echo ". not null: ${{ matrix.crate.publish != null }}"
-          echo ". not false: ${{ matrix.crate.publish != false }}"
-
-      - name: publish?
-        # if: fromJson(matrix.crate.publish) != fromJson('[]')
-        if: matrix.crate.publish != fromJson('[]')
-        run: echo "${{ matrix.crate.publish }}"
-
-  api-docs:
-    if: false
-    name: API (${{ matrix.crate }} in docs.rs)
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        crate:
-          - playdate-sys
-          - playdate-color
-          - playdate-controls
-          - playdate-display
-          - playdate-fs
-          - playdate-graphics
-          - playdate-menu
-          - playdate-scoreboards
-          - playdate-sound
-          - playdate-sprite
-          - playdate-system
-          - playdate
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref || github.ref }}
-
-      - name: Metadata
-        id: metadata
-        run: |
-          JSON="$(cargo metadata --format-version=1 -q --color=never | jq '.packages[] | select(.name=="${{ matrix.crate }}") | .metadata')"
-          echo "value<<EOF" >> $GITHUB_OUTPUT
-          echo $JSON >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Metadata test
-        run: echo "${{ join(fromJson(steps.metadata.outputs.value).docs.rs.features.*, ',') }}"
-
-      # Imitate docs.rs environment
-      - name: Test in no-sdk environment
-        env:
-          DOCS_RS: 1
-          PLAYDATE_SDK_PATH: 0
-          IGNORE_EXISTING_PLAYDATE_SDK: 1
-
-          FEATURES: ${{ join(fromJson(steps.metadata.outputs.value).docs.rs.features.*, ',') }}
-          DEFAULT_FEATURES: ${{ fromJson(fromJson(steps.metadata.outputs.value).docs.rs.all-features) && '--no-default-features' || '' }}
-          TARGET: ${{ fromJson(steps.metadata.outputs.value).docs.rs.default-target || 'thumbv7em-none-eabihf' }}
-          CARGO_ARGS: ${{ join(fromJson(steps.metadata.outputs.value).docs.rs.cargo-args.*, ' ') }}
-          # TODO: rustdoc-args
-        run: >-
-          echo "FEATURES: $FEATURES"
-          echo "DEFAULT_FEATURES: $DEFAULT_FEATURES"
-          echo "TARGET: $TARGET"
-          echo "CARGO_ARGS: $CARGO_ARGS"
-
-          cargo doc ${{ env.CARGO_ARGS }} ${{ env.DEFAULT_FEATURES }} -p=${{ matrix.crate }} --target=thumbv7em-none-eabihf --features="${{ env.FEATURES }}"
