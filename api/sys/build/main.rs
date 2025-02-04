@@ -21,8 +21,6 @@ const DOCS_RS: &str = "DOCS_RS";
 /// If set and bindings with same filename are exists in OUT_DIR, it will not be generated again.
 const IGNORE_BINDINGS_CACHE: &str = "PD_IGNORE_BINDINGS_CACHE";
 
-// TODO: PD_BUILD_BINDINGS_ONCE -> PD_IGNORE_BINDINGS_CACHE to changelog!
-
 
 mod cfg;
 mod lint;
