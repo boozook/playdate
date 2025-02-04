@@ -30,7 +30,7 @@ runs:
       uses: actions/cache/restore@v4
       id: cache
       with:
-        path: ~/.cargo/bin/pdbindgen
+        path: ~/.cargo/bin/pdbindgen${{ runner.os == 'Windows' && '.exe' || '' }}
         key: bindgen-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('./support/bindgen/Cargo.toml') }}
 
     - name: Install playdate-bindgen
@@ -46,5 +46,9 @@ runs:
     - uses: actions/cache/save@v4
       if: steps.cache.outputs.cache-hit != 'true'
       with:
-        path: ~/.cargo/bin/pdbindgen
+        path: ~/.cargo/bin/pdbindgen${{ runner.os == 'Windows' && '.exe' || '' }}
         key: bindgen-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('./support/bindgen/Cargo.toml') }}
+
+    - name: debug
+      shell: bash
+      run: ls ~/.cargo/bin/

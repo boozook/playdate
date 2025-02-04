@@ -1,5 +1,10 @@
+#![feature(slice_split_once)]
+
+use core::str;
+use std::borrow::Cow;
 use std::convert::Infallible;
 use std::env::VarError;
+use std::ffi::OsString;
 use std::io::stderr;
 use std::path::Path;
 use std::path::PathBuf;
@@ -7,10 +12,24 @@ use std::process::Command;
 use std::process::Stdio;
 use std::str::FromStr;
 
+
 /// Executable name of the `playdate-bindgen`.
 pub const BIN_NAME: &str = "pdbindgen";
 pub const FIND_SDK_VERSION_CMD: &str = "find-sdk-version";
-pub const SDK_PATH_ENV_VAR: &str = "PLAYDATE_SDK_PATH";
+
+
+mod mask;
+pub use mask::DerivesMask;
+
+
+/// Playdate-bindgen executable path.
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "clap", derive(clap::Parser))]
+pub struct Bin {
+	/// Path to the playdate-bindgen (pdbindgen) executable.
+	#[cfg_attr(feature = "clap", arg(skip))]
+	pub path: PathBuf,
+}
 
 
 /// Playdate-bindgen configuration.
@@ -19,15 +38,15 @@ pub const SDK_PATH_ENV_VAR: &str = "PLAYDATE_SDK_PATH";
 #[cfg_attr(feature = "clap", command(author, version, about, name = BIN_NAME, verbatim_doc_comment))]
 pub struct Cfg {
 	/// Path to the playdate-bindgen (pdbindgen) executable.
-	#[cfg_attr(feature = "clap", arg(skip))]
-	pub bin: PathBuf,
+	#[cfg_attr(feature = "clap", clap(flatten))]
+	pub bin: Bin,
 
 	/// Path to the Playdate SDK.
-	#[cfg_attr(feature = "clap", arg(long, value_name = "SDK", env = SDK_PATH_ENV_VAR))]
+	#[cfg_attr(feature = "clap", arg(long, value_name = "SDK", env = Cfg::ENV_SDK_PATH))]
 	pub sdk: Option<PathBuf>,
 
 	/// Path to gnu-arm-gcc executable, usually 'arm-none-eabi-gcc' or 'gcc-arm-none-eabi'.
-	#[cfg_attr(feature = "clap", arg(long, value_name = "GCC", env = "ARM_GCC_PATH"))]
+	#[cfg_attr(feature = "clap", arg(long, value_name = "GCC", env = Cfg::ENV_ARM_GCC_PATH))]
 	pub gcc: Option<PathBuf>,
 
 	/// Comma separated list of types to derive. Possible values: debug, default, eq, copy, hash, ord, partialeq, partialord, constparamty.
@@ -48,31 +67,31 @@ pub struct Runner;
 
 impl Runner {
 	/// Returns path and version of the `pdbindgen` executable if found.
-	pub fn find_tool(cfg: &Cfg) -> Option<(&Path, String)> {
-		Command::new(&cfg.bin).arg("-V")
-		                      .stdout(Stdio::piped())
-		                      .stderr(Stdio::inherit())
-		                      .output()
-		                      .ok()
-		                      .and_then(|out| {
-			                      out.status
-			                         .success()
-			                         .then(|| {
-				                         std::str::from_utf8(&out.stdout).ok()?
-				                                                         .strip_prefix(BIN_NAME)
-				                                                         .map(|s| s.trim().to_owned())
-				                                                         .filter(|s| !s.is_empty())
-			                         })
-			                         .flatten()
-		                      })
-		                      .map(|ver| (cfg.bin.as_path(), ver))
+	pub fn find_tool(bin: &Bin) -> Option<(&Path, String)> {
+		Command::new(&bin.path).arg("-V")
+		                       .stdout(Stdio::piped())
+		                       .stderr(Stdio::inherit())
+		                       .output()
+		                       .ok()
+		                       .and_then(|out| {
+			                       out.status
+			                          .success()
+			                          .then(|| {
+				                          std::str::from_utf8(&out.stdout).ok()?
+				                                                          .strip_prefix(BIN_NAME)
+				                                                          .map(|s| s.trim().to_owned())
+				                                                          .filter(|s| !s.is_empty())
+			                          })
+			                          .flatten()
+		                       })
+		                       .map(|ver| (bin.path.as_path(), ver))
 	}
 
 
 	/// Prepare `Command` to run `pdbindgen`,
 	/// but without content of the `cfg`.
-	pub fn cmd(cfg: &Cfg) -> Option<Command> {
-		Self::find_tool(cfg).and_then(|(path, _)| {
+	pub fn cmd(bin: &Bin) -> Option<Command> {
+		Self::find_tool(bin).and_then(|(path, _)| {
 			                    let mut proc = Command::new(path);
 			                    std::env::current_dir().map(|pwd| proc.current_dir(pwd)).ok();
 			                    proc.envs(std::env::vars());
@@ -83,10 +102,10 @@ impl Runner {
 
 
 	pub fn gen_cmd(cfg: &Cfg) -> Option<Command> {
-		Self::cmd(cfg).and_then(|mut proc| {
-			              proc.args(cfg.to_cli_args());
-			              proc.into()
-		              })
+		Self::cmd(&cfg.bin).and_then(|mut proc| {
+			                   proc.args(cfg.to_cli_args());
+			                   proc.into()
+		                   })
 	}
 
 
@@ -94,12 +113,12 @@ impl Runner {
 		// Path of the SDK:
 		let path =
 			cfg.sdk.clone().or_else(|| {
-				               std::env::var(SDK_PATH_ENV_VAR).ok()
-				                                              .filter(|s| !s.trim().is_empty())
-				                                              .filter(|s| {
-					                                              Path::new(s).try_exists().ok().unwrap_or(false)
-				                                              })
-				                                              .map(PathBuf::from)
+				               std::env::var(Cfg::ENV_SDK_PATH).ok()
+				                                               .filter(|s| !s.trim().is_empty())
+				                                               .filter(|s| {
+					                                               Path::new(s).try_exists().ok().unwrap_or(false)
+				                                               })
+				                                               .map(PathBuf::from)
 			               });
 
 		// Easiest way to get existing SDK version:
@@ -111,19 +130,21 @@ impl Runner {
 
 		// Alternative way is to execute the tool:
 		if sdk_version.is_none() {
-			Self::cmd(cfg)?.arg(FIND_SDK_VERSION_CMD)
-			               .args(cfg.to_cli_args())
-			               .stdout(Stdio::piped())
-			               .output()
-			               .ok()
-			               .and_then(|out| {
-				               out.status.success().then(|| {
-					                                   std::str::from_utf8(&out.stdout).ok()
-					                                                                   .map(|s| s.trim().to_owned())
-					                                                                   .filter(|s| !s.is_empty())
-				                                   })
-			               })
-			               .flatten()
+			Self::cmd(&cfg.bin)?.arg(FIND_SDK_VERSION_CMD)
+			                    .args(cfg.to_cli_args())
+			                    .stdout(Stdio::piped())
+			                    .output()
+			                    .ok()
+			                    .and_then(|out| {
+				                    out.status.success().then(|| {
+					                                        std::str::from_utf8(&out.stdout).ok()
+					                                                                        .map(|s| {
+						                                                                        s.trim().to_owned()
+					                                                                        })
+					                                                                        .filter(|s| !s.is_empty())
+				                                        })
+			                    })
+			                    .flatten()
 		} else {
 			sdk_version
 		}
@@ -131,15 +152,24 @@ impl Runner {
 }
 
 
+impl Cfg {
+	/// Path of the `playdate-bindgen` executable.
+	pub const ENV_BIN_PATH: &'static str = "PDBINDGEN_PATH";
+	pub const ENV_ARM_GCC_PATH: &'static str = "ARM_GCC_PATH";
+	pub const ENV_SDK_PATH: &'static str = "PLAYDATE_SDK_PATH";
+}
+
+
 impl Default for Cfg {
 	fn default() -> Self {
+		let tool = std::env::var_os(Self::ENV_BIN_PATH).map(PathBuf::from)
+		                                               .unwrap_or_else(|| PathBuf::from(BIN_NAME));
 		Self { sdk: Default::default(),
 		       gcc: Default::default(),
 		       derive: Default::default(),
 		       features: Default::default(),
 		       output: None,
-		       bin: std::env::var_os("PDBINDGEN_PATH").map(PathBuf::from)
-		                                              .unwrap_or_else(|| PathBuf::from(BIN_NAME)) }
+		       bin: Bin { path: tool } }
 	}
 }
 
@@ -357,6 +387,56 @@ impl Filename {
 		       target,
 		       mask: derives.into() }
 	}
+
+	/// Returns formatted prefix+mid part of the filename,
+	/// excluding derives mask and ext.
+	pub fn trim_suffix(&self) -> String {
+		let target = &self.target;
+		let sdk = &self.sdk;
+		format!("pd{sdk}-{target}-")
+	}
+
+	/// Extract SDK version from rendered filename.
+	/// If `target` is set, able to extract full version with suffix (e.g. "-beta.1").
+	/// Otherwise without suffix.
+	///
+	/// Usefull for multiple usage with single `target` instead of [`get_sdk_version_from_filename`].
+	pub fn get_sdk_version_from_filename_with_target<'t>(s: &'t std::ffi::OsStr,
+	                                                     target: Option<&'_ str>)
+	                                                     -> Option<Cow<'t, std::ffi::OsStr>> {
+		let s = s.as_encoded_bytes();
+		if !s.starts_with(Self::PREFIX.as_bytes()) || !s.ends_with(Self::DOT_EXT.as_bytes()) {
+			None
+		} else {
+			let from_encoded_bytes = std::ffi::OsStr::from_encoded_bytes_unchecked;
+
+			if let Some(target) = target {
+				let s = unsafe { from_encoded_bytes(&s[Self::PREFIX.as_bytes().len()..]) };
+				s.to_string_lossy()
+				 .split_once(target)
+				 .map(|(version, _)| version.get(..(version.len() - 1)))
+				 .flatten()
+				 .map(OsString::from)
+				 .map(Cow::Owned)
+			} else if let Some((prefix, _)) = &s[Self::PREFIX.as_bytes().len()..].split_once(|c| *c == b'-') {
+				let os = unsafe { from_encoded_bytes(prefix) };
+				Some(os.into())
+			} else {
+				None
+			}
+		}
+	}
+
+	pub fn get_sdk_version_from_filename<'t>(s: &'t std::ffi::OsStr,
+	                                         target: Option<&Target>)
+	                                         -> Option<Cow<'t, std::ffi::OsStr>> {
+		let target = target.map(ToString::to_string);
+		Self::get_sdk_version_from_filename_with_target(s, target.as_deref())
+	}
+
+
+	pub const PREFIX: &str = "pd";
+	pub const DOT_EXT: &str = ".rs";
 }
 
 
@@ -365,7 +445,7 @@ impl std::fmt::Display for Filename {
 		let derives = &self.mask;
 		let target = &self.target;
 		let sdk = &self.sdk;
-		write!(f, "pd{sdk}-{target}-{derives}.rs")
+		write!(f, "pd{sdk}-{target}-{derives}{}", Self::DOT_EXT)
 	}
 }
 
@@ -397,7 +477,12 @@ impl Target {
 	/// Retrieve by cargo env vars.
 	pub fn from_env_target() -> Result<Self, VarError> {
 		use std::env::var;
-		if var("TARGET")? == "thumbv7em-none-eabihf" {
+
+		let target = var("TARGET")?;
+
+		// XXX: "sim" may conflict with "simd" for example.
+		// TODO: use CARGO_CFG_TARGET_OS && CARGO_CFG_TARGET_VENDOR to ensure.
+		if target == "thumbv7em-none-eabihf" || (target.contains("playdate") && !target.contains("sim")) {
 			Ok(Self::Playdate)
 		} else {
 			use core::ffi::c_int;
@@ -418,44 +503,5 @@ impl std::fmt::Display for Target {
 			Target::Playdate => write!(f, "pd"),
 			Target::Other { os, ptr, arch, c_int } => write!(f, "{os}-{arch}-{ptr}-i{c_int}"),
 		}
-	}
-}
-
-
-#[derive(Debug, Clone)]
-pub struct DerivesMask {
-	inner: Vec<bool>,
-}
-
-impl DerivesMask {
-	pub fn push(&mut self, value: bool) { self.inner.push(value) }
-}
-
-
-impl From<Derive> for DerivesMask {
-	fn from(values: Derive) -> Self {
-		// Caution: do not change the order of items!
-		Self { inner: vec![
-		                   values.default,
-		                   values.eq,
-		                   values.copy,
-		                   values.debug,
-		                   values.hash,
-		                   values.ord,
-		                   values.partialeq,
-		                   values.partialord,
-		                   values.constparamty,
-		] }
-	}
-}
-
-impl From<&'_ Derive> for DerivesMask {
-	fn from(value: &'_ Derive) -> Self { (*value).into() }
-}
-
-impl std::fmt::Display for DerivesMask {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		let iter = self.inner.iter().map(|v| if *v { "1" } else { "0" });
-		write!(f, "{}", iter.collect::<String>())
 	}
 }

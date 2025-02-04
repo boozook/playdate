@@ -1,7 +1,7 @@
 [package]
 name = "playdate-sys"
 version = "0.4.12"
-build = "src/build.rs"
+build = "build/main.rs"
 readme = "README.md"
 description = "Low-level Playdate API bindings"
 keywords = ["playdate", "bindings", "ffi", "gamedev"]
@@ -11,6 +11,7 @@ license.workspace = true
 authors.workspace = true
 homepage.workspace = true
 repository.workspace = true
+publish = true
 
 
 [features]
@@ -26,8 +27,8 @@ try-trait-v2 = [] # impl `FromResidual` for `EventLoopCtrl`
 error-ctx = []    # errors with context (incomplete feature)
 
 
-bindgen-runtime = ["bindgen", "bindgen/runtime"]   # runtime linking (dlopen)
-bindgen-static = ["bindgen", "bindgen/static"]     # static linking to clang
+bindgen-runtime = ["bindgen", "bindgen?/runtime"]  # runtime linking (dlopen)
+bindgen-static = ["bindgen", "bindgen?/static"]    # static linking to clang
 bindgen-logging = ["bindgen?/logging"]
 bindgen-pretty-please = ["bindgen?/pretty-please"] # TODO: remove formatting at all
 bindgen-which-rustfmt = ["bindgen?/which-rustfmt"]
