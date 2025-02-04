@@ -12,7 +12,7 @@ impl DerivesMask {
 
 	pub fn from_ascii(mask: &[u8]) -> Result<Self, ParseMaskError> {
 		let mut values = vec![false; mask.len()];
-		for (i, v) in mask.into_iter().enumerate() {
+		for (i, v) in mask.iter().enumerate() {
 			match v {
 				b'0' => { /* already false-filled */ },
 				b'1' => values[i] = true,
@@ -85,11 +85,7 @@ impl PartialOrd for DerivesMask {
 			} else {
 				std::cmp::Ordering::Equal
 			}
-		} else if b.into_iter()
-		           .enumerate()
-		           .filter(|(_, v)| **v)
-		           .all(|(i, v)| &a[i] == v)
-		{
+		} else if b.iter().enumerate().filter(|(_, v)| **v).all(|(i, v)| &a[i] == v) {
 			std::cmp::Ordering::Greater
 		} else {
 			std::cmp::Ordering::Less
@@ -126,14 +122,14 @@ impl DerivesMask {
 				let len = self.inner.len().min(other.inner.len());
 				let a = &self.inner[..len];
 				let b = &other.inner[..len];
-				a.into_iter().zip(b.into_iter()).fold(0, |acc, (a, b)| {
-					                                acc +
-					                                match (a, b) {
-						                                (true, false) => -1,
-					                                   (false, true) => 1,
-					                                   _ => 0,
-					                                }
-				                                })
+				a.iter().zip(b).fold(0, |acc, (a, b)| {
+					               acc +
+					               match (a, b) {
+						               (true, false) => -1,
+					                  (false, true) => 1,
+					                  _ => 0,
+					               }
+				               })
 			};
 
 			prefix +
