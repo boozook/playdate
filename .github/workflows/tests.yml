@@ -485,6 +485,7 @@ jobs:
         run: taplo fmt "**/*.toml"
 
       - name: Suggestions
+        continue-on-error: true
         uses: reviewdog/action-suggester@v1
         with:
           filter_mode: diff_context
@@ -562,8 +563,8 @@ jobs:
         run: rm -rf .cargo
 
       - name: Suggestions
+        continue-on-error: true
         uses: reviewdog/action-suggester@v1
-        continue-on-error: ${{ runner.os == 'Windows' }} # sometimes reviewdog fails on windows
         with:
           filter_mode: diff_context
           fail_level: none
