@@ -411,14 +411,13 @@ impl Filename {
 			let from_encoded_bytes = std::ffi::OsStr::from_encoded_bytes_unchecked;
 
 			if let Some(target) = target {
-				let s = unsafe { from_encoded_bytes(&s[Self::PREFIX.as_bytes().len()..]) };
+				let s = unsafe { from_encoded_bytes(&s[Self::PREFIX.len()..]) };
 				s.to_string_lossy()
 				 .split_once(target)
-				 .map(|(version, _)| version.get(..(version.len() - 1)))
-				 .flatten()
+				 .and_then(|(version, _)| version.get(..(version.len() - 1)))
 				 .map(OsString::from)
 				 .map(Cow::Owned)
-			} else if let Some((prefix, _)) = &s[Self::PREFIX.as_bytes().len()..].split_once(|c| *c == b'-') {
+			} else if let Some((prefix, _)) = &s[Self::PREFIX.len()..].split_once(|c| *c == b'-') {
 				let os = unsafe { from_encoded_bytes(prefix) };
 				Some(os.into())
 			} else {
