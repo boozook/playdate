@@ -26,7 +26,7 @@ env:
 
 jobs:
   api-sys:
-    name: Sys
+    name: Api
     uses: ./.github/workflows/tests-api.yml
     secrets: inherit
     with:
@@ -437,6 +437,13 @@ jobs:
         # ^ second run needed as anti-flickering workaround for rustfmt issue:
         #   https://github.com/rust-lang/rustfmt/issues/6240
 
+      # Needed as anti-flicker, see above.
+      # In any normal case should not fail because everything formatted properly at prev step.
+      - name: Check (rs again)
+        id: check-rs-success
+        continue-on-error: true
+        run: cargo fmt --all -- --check
+
       - name: Install Taplo
         uses: uncenter/setup-taplo@v1.0.8
         with:
@@ -461,7 +468,7 @@ jobs:
           cleanup: false
 
       - name: Fail (rs)
-        if: steps.check-rs.outcome == 'failure'
+        if: steps.check-rs.outcome == 'failure' && steps.check-rs-success.outcome != 'failure'
         run: echo "::error::Rust format error." && exit 1
       - name: Fail (toml)
         if: steps.check-toml.outcome == 'failure'
