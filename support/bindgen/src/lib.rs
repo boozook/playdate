@@ -19,8 +19,7 @@ pub mod gen;
 type Result<T, E = error::Error> = std::result::Result<T, E>;
 
 
-// TODO: We have to min-max bounds instead of just one semver-req.
-pub const SDK_VER_SUPPORTED: &str = "^2.0.0"; // used for version validation.
+pub const SDK_VER_SUPPORTED: &str = ">=2.0.0, <=3.0.0";
 
 
 /// Generated Rust bindings.
@@ -154,13 +153,21 @@ fn create_generator(cfg: cfg::Cfg) -> Result<Generator, error::Error> {
 
 
 fn check_sdk_version(version: &str) -> Result<semver::Version, error::Error> {
+	is_version_matches(version)
+	.map(|(ver, res, req)| {
+		if res {
+			println!("cargo:warning=Playdate SDK version not tested. Supported version '{req}' does not matches current '{ver}'.")
+		}
+		ver
+	})
+}
+
+fn is_version_matches(version: &str) -> Result<(semver::Version, bool, semver::VersionReq), error::Error> {
 	let requirement =
 		semver::VersionReq::parse(SDK_VER_SUPPORTED).expect("Builtin supported version requirement is invalid.");
 	let version = semver::Version::parse(version.trim())?;
-	if !requirement.matches(&version) {
-		println!("cargo:warning=Playdate SDK version not tested. Supported version '{requirement}' does not matches current '{version}'.");
-	}
-	Ok(version)
+	let matches = requirement.matches(&version);
+	Ok((version, matches, requirement))
 }
 
 
@@ -435,5 +442,30 @@ pub fn rustfmt<'out>(mut rustfmt_path: Option<PathBuf>,
 			}
 		},
 		_ => Ok(source),
+	}
+}
+
+
+#[cfg(test)]
+mod tests {
+	#[test]
+	fn same_env_var() {
+		assert_eq!(utils::consts::SDK_ENV_VAR, bindgen_cfg::Cfg::ENV_SDK_PATH);
+	}
+
+	#[test]
+	fn is_version_matches() {
+		use super::is_version_matches as check;
+
+		let map = |(_, res, _)| res;
+
+		assert!(check("0.0").map(map).is_err());
+		assert!(!check("0.0.0").map(map).unwrap());
+		assert!(check("2.0.0").map(map).unwrap());
+		assert!(check("2.6.0").map(map).unwrap());
+		assert!(check("2.7.0").map(map).unwrap());
+		assert!(!check("2.7.0-beta.3").map(map).unwrap());
+		assert!(check("3.0.0").map(map).unwrap());
+		assert!(!check("3.1.0").map(map).unwrap());
 	}
 }
