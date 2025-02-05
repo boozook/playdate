@@ -23,18 +23,6 @@ env:
   CARGO_TERM_PROGRESS_WHEN: never
   # RUST_LOG: trace
   # CARGO_PLAYDATE_LOG: trace
-  API_CRATES: >-
-    -p=playdate-color
-    -p=playdate-controls
-    -p=playdate-display
-    -p=playdate-fs
-    -p=playdate-graphics
-    -p=playdate-menu
-    -p=playdate-scoreboards
-    -p=playdate-sound
-    -p=playdate-sprite
-    -p=playdate-system
-    -p=playdate
 
 jobs:
   api-sys:
@@ -42,8 +30,8 @@ jobs:
     uses: ./.github/workflows/tests-api.yml
     secrets: inherit
     with:
-      ref: ${{ inputs.ref || github.ref }}
       sdk: ${{ inputs.sdk || 'latest' }}
+      ref: ${{ inputs.ref || github.ref }}
   docs:
     name: Docs
     uses: ./.github/workflows/tests-docs.yml
@@ -52,23 +40,35 @@ jobs:
       ref: ${{ inputs.ref || github.ref }}
 
   api:
-    name: API
+    name: Api (${{ matrix.os.name }})
     env:
-      FEATURES_1: ''
+      FEATURES_1: ""
       FEATURES_2: bindings-derive-debug
       FEATURES_3: bindings-derive-debug,sys/bindings-documentation,sys/error-ctx
       BUILD_STD_ARGS: -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
+      CRATES: >-
+        -p=playdate-color
+        -p=playdate-controls
+        -p=playdate-display
+        -p=playdate-fs
+        -p=playdate-graphics
+        -p=playdate-menu
+        -p=playdate-scoreboards
+        -p=playdate-sound
+        -p=playdate-sprite
+        -p=playdate-system
+        -p=playdate
     defaults:
       run:
         shell: bash
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.key }}
     strategy:
       fail-fast: false
       matrix:
         os:
-          - macos-14
-          - ubuntu-latest
-          - windows-latest
+          - { name: mac, key: macos-14 }
+          - { name: win, key: windows-latest }
+          - { name: linux, key: ubuntu-latest }
         sdk:
           - ${{ inputs.sdk || 'latest' }}
           # - 2.6.2
@@ -103,32 +103,32 @@ jobs:
 
       - name: Test Crates (host)
         run: |
-          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=$FEATURES_1 -- --nocapture
-          cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=$FEATURES_2
-          # cargo test ${{ env.API_CRATES }} --lib --no-default-features --features=$FEATURES_3
+          cargo test ${{ env.CRATES }} --lib --no-default-features --features=$FEATURES_1
+          cargo test ${{ env.CRATES }} --lib --no-default-features --features=$FEATURES_2
+          # cargo test ${{ env.CRATES }} --lib --no-default-features --features=$FEATURES_3
 
       - name: Check Crates (device)
-        run: cargo check ${{ env.API_CRATES }} --target=thumbv7em-none-eabihf
+        run: cargo check ${{ env.CRATES }} --target=thumbv7em-none-eabihf
 
       - name: Build Crates (device)
         run: |
-          cargo build ${{ env.API_CRATES }} --features=sys/lang-items,$FEATURES_1 ${{ env.BUILD_STD_ARGS }} --examples --lib
-          cargo build ${{ env.API_CRATES }} --features=sys/lang-items,$FEATURES_2 ${{ env.BUILD_STD_ARGS }} --examples --lib
-          cargo build ${{ env.API_CRATES }} --features=sys/lang-items,$FEATURES_3 ${{ env.BUILD_STD_ARGS }} --examples --lib
+          cargo build ${{ env.CRATES }} --features=sys/lang-items,$FEATURES_1 ${{ env.BUILD_STD_ARGS }} --examples --lib
+          cargo build ${{ env.CRATES }} --features=sys/lang-items,$FEATURES_2 ${{ env.BUILD_STD_ARGS }} --examples --lib
+          cargo build ${{ env.CRATES }} --features=sys/lang-items,$FEATURES_3 ${{ env.BUILD_STD_ARGS }} --examples --lib
 
   utils:
-    name: Utils
+    name: Utils (${{ matrix.os.name }})
     defaults:
       run:
         shell: bash
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.key }}
     strategy:
       fail-fast: false
       matrix:
         os:
-          - macos-14
-          - ubuntu-latest
-          - windows-latest
+          - { name: mac, key: macos-14 }
+          - { name: win, key: windows-latest }
+          - { name: linux, key: ubuntu-latest }
         sdk:
           - ${{ inputs.sdk || 'latest' }}
 
@@ -145,22 +145,12 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
-      # - name: Config
-      #   run: |
-      #     mkdir -p .cargo
-      #     cp -rf .github/config.toml .cargo/config.toml
       - name: Config
         uses: ./.github/actions/init-cfg
 
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
-      # - name: Install Playdate SDK ${{ matrix.sdk }}
-      #   id: sdk
-      #   uses: pd-rs/get-playdate-sdk@main
-      #   with:
-      #     version: ${{ matrix.sdk }}
-      #     custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
       - name: Install SDK (${{ matrix.sdk }})
         uses: ./.github/actions/install-sdk
         with:
@@ -172,24 +162,26 @@ jobs:
       - name: Test
         run: |
           cargo test --locked -p=playdate-build-utils --all-features
-          cargo test --locked -p=playdate-build --no-default-features -- --nocapture
-          cargo test --locked -p=playdate-build --all-features -- --nocapture
+          cargo test --locked -p=playdate-build --no-default-features
+          cargo test --locked -p=playdate-build --all-features
           cargo test --locked -p=playdate-device
           cargo test --locked -p=playdate-tool --all-features
+          cargo test -p=playdate-bindgen-cfg --all-features
+          cargo test -p=playdate-bindgen --features=cli,runtime
 
   tool:
-    name: Tool
+    name: Tool (${{ matrix.os.name }})
     defaults:
       run:
         shell: bash
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.key }}
     strategy:
       fail-fast: false
       matrix:
         os:
-          - macos-14
-          - ubuntu-latest
-          - windows-latest
+          - { name: mac, key: macos-14 }
+          - { name: win, key: windows-latest }
+          - { name: linux, key: ubuntu-latest }
         sdk:
           - ${{ inputs.sdk || 'latest' }}
           # - 2.6.2
@@ -208,25 +200,12 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
-      # - name: Config
-      #   run: |
-      #     mkdir -p .cargo
-      #     cp -rf .github/config.toml .cargo/config.toml
       - name: Config
         uses: ./.github/actions/init-cfg
 
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
-      # - name: Install Playdate SDK ${{ matrix.sdk }}
-      #   id: sdk
-      #   uses: pd-rs/get-playdate-sdk@main
-      #   with:
-      #     version: ${{ matrix.sdk }}
-      #     custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
-
-      # - name: SDK ${{ steps.sdk.outputs.version }} installed
-      #   run: which pdc && pdc --version
       - name: Install SDK (${{ matrix.sdk }})
         uses: ./.github/actions/install-sdk
         with:
@@ -236,24 +215,24 @@ jobs:
           linux: ${{ secrets.SDK_BETA_LINUX }}
 
       - name: Test
-        run: cargo test --locked -p=cargo-playdate -- --nocapture
+        run: cargo test --locked -p=cargo-playdate
 
       - name: Clean tmp
         run: rm -rf ./target/tmp
 
   tool-init:
-    name: "Tool: Init"
+    name: "Tool: Init (${{ matrix.os.name }})"
     defaults:
       run:
         shell: bash
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.key }}
     strategy:
       fail-fast: false
       matrix:
         os:
-          - macos-14
-          - ubuntu-latest
-          - windows-latest
+          - { name: mac, key: macos-14 }
+          - { name: win, key: windows-latest }
+          - { name: linux, key: ubuntu-latest }
         sdk:
           - ${{ inputs.sdk || 'latest' }}
           # - 2.6.2
@@ -272,25 +251,12 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
-      # - name: Config
-      #   run: |
-      #     mkdir -p .cargo
-      #     cp -rf .github/config.toml .cargo/config.toml
       - name: Config
         uses: ./.github/actions/init-cfg
 
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
-      # - name: Install Playdate SDK ${{ matrix.sdk }}
-      #   id: sdk
-      #   uses: pd-rs/get-playdate-sdk@main
-      #   with:
-      #     version: ${{ matrix.sdk }}
-      #     custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
-
-      # - name: SDK ${{ steps.sdk.outputs.version }} installed
-      #   run: which pdc && pdc --version
       - name: Install SDK (${{ matrix.sdk }})
         uses: ./.github/actions/install-sdk
         with:
@@ -303,24 +269,24 @@ jobs:
         env:
           RUSTFLAGS: --cfg init_tests
         run: |
-          cargo test --locked -p=cargo-playdate init:: -- --nocapture ${{ runner.os == 'Windows' && '--test-threads=1' || '' }}
+          cargo test --locked -p=cargo-playdate init:: -- ${{ runner.os == 'Windows' && '--test-threads=1' || '' }}
 
       - name: Clean tmp
         run: rm -rf ./target/tmp
 
   tool-execution:
-    # This tests are flickering on GH CI 🤷🏻‍♂️
-    # if: ${{ contains(github.event.head_commit.message, 'test execution') }}
-    name: "Tool: Run"
+    name: "Tool: Run (${{ matrix.os.name }})"
     defaults:
       run:
         shell: bash
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.key }}
     strategy:
       fail-fast: false
       matrix:
         os:
-          - macos-14
+          - { name: mac, key: macos-14 }
+          # - { name: win, key: windows-latest }  # sim doesn't work
+          # - { name: linux, key: ubuntu-latest } # sim doesn't work
         sdk:
           - ${{ inputs.sdk || 'latest' }}
           # - 2.6.2
@@ -339,25 +305,12 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
-      # - name: Config
-      #   run: |
-      #     mkdir -p .cargo
-      #     cp -rf .github/config.toml .cargo/config.toml
       - name: Config
         uses: ./.github/actions/init-cfg
 
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
-      # - name: Install Playdate SDK ${{ matrix.sdk }}
-      #   id: sdk
-      #   uses: pd-rs/get-playdate-sdk@main
-      #   with:
-      #     version: ${{ matrix.sdk }}
-      #     custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
-
-      # - name: SDK ${{ steps.sdk.outputs.version }} installed
-      #   run: which pdc && pdc --version
       - name: Install SDK (${{ matrix.sdk }})
         uses: ./.github/actions/install-sdk
         with:
@@ -378,18 +331,18 @@ jobs:
           rm -rf ./target/tmp
 
   tool-package:
-    name: "Tool: Package"
+    name: "Tool: Package (${{ matrix.os.name }})"
     defaults:
       run:
         shell: bash
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.key }}
     strategy:
       fail-fast: false
       matrix:
         os:
-          - macos-14
-          - ubuntu-latest
-          - windows-latest
+          - { name: mac, key: macos-14 }
+          - { name: win, key: windows-latest }
+          - { name: linux, key: ubuntu-latest }
         sdk:
           - ${{ inputs.sdk || 'latest' }}
           # - 2.6.2
@@ -410,13 +363,6 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-cargo-examples-${{ hashFiles('Cargo.lock') }}
             ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
-      # - name: Config
-      #   run: |
-      #     rm -rf ./target/tmp || true
-      #     rm -rf ./target/playdate || true
-      #     mkdir -p .cargo
-      #     cp -rf .github/config.toml .cargo/config.toml
-      #     cargo clean
       - name: Config
         uses: ./.github/actions/init-cfg
       - name: Clean
@@ -428,15 +374,6 @@ jobs:
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
-      # - name: Install Playdate SDK ${{ matrix.sdk }}
-      #   id: sdk
-      #   uses: pd-rs/get-playdate-sdk@main
-      #   with:
-      #     version: ${{ matrix.sdk }}
-      #     custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
-
-      # - name: SDK ${{ steps.sdk.outputs.version }} installed
-      #   run: which pdc && pdc --version
       - name: Install SDK (${{ matrix.sdk }})
         uses: ./.github/actions/install-sdk
         with:
@@ -447,10 +384,8 @@ jobs:
 
       - name: Install cargo-playdate
         run: cargo install --path=./cargo --debug --locked
-      # - name: Install playdate-bindgen
-      #   run: cargo install playdate-bindgen --path ./support/bindgen --features=cli --debug --locked
 
-      # Rus `cargo playdate package` without bindgen- features and without the tool:
+      # Run `cargo playdate package` without bindgen-features and without the tool:
       - name: Examples
         env:
           IGNORE_EXISTING_PLAYDATE_SDK: 1
@@ -471,8 +406,6 @@ jobs:
           cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-lua --no-default-features
           cargo playdate package --features=$FEATURES --examples --device --simulator -p=playdate --no-default-features
 
-      # TODO: build crankstart with examples for compatibility test
-
   format:
     name: Format
     defaults:
@@ -485,37 +418,37 @@ jobs:
       contents: read
       pull-requests: write
 
-    # TODO:
-    # 1. check and/or fix
-    # 2. if we have rights (edit PR) - commit-push
-    # 3. otherwise:
-    #    - suggestions (can failt too)
-    #    - fail with error
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
 
       - name: Check
-        id: check
-        continue-on-error: true
-        run: >-
-          cargo fmt --all -- --check
-          # (echo "::error::Rust format error." && exit 1)
+        id: check-rs
+        continue-on-error: true # do not failt before suggestions
+        run: cargo fmt --all -- --check
 
       - name: Format (rs)
         id: format
-        if: steps.check.outcome == 'failure'
+        if: steps.check-rs.outcome == 'failure'
         run: |
           cargo fmt --all
           cargo fmt --all
-          # second time is for anti-flickering, because using nightly rustfmt
+        # ^ second run needed as anti-flickering workaround for rustfmt issue:
+        #   https://github.com/rust-lang/rustfmt/issues/6240
 
       - name: Install Taplo
         uses: uncenter/setup-taplo@v1.0.8
         with:
           version: "0.9.3"
+
       - name: Format (toml)
+        id: check-toml
+        continue-on-error: true # do not failt before suggestions
+        run: taplo fmt "**/*.toml" --check
+
+      - name: Format (toml)
+        if: steps.check-toml.outcome == 'failure'
         run: taplo fmt "**/*.toml"
 
       - name: Suggestions
@@ -527,8 +460,15 @@ jobs:
           tool_name: Format
           cleanup: false
 
-  clippy:
-    name: Clippy # with fmt suggestions needed after clippy fix.
+      - name: Fail (rs)
+        if: steps.check-rs.outcome == 'failure'
+        run: echo "::error::Rust format error." && exit 1
+      - name: Fail (toml)
+        if: steps.check-toml.outcome == 'failure'
+        run: echo "::error::Toml format error." && exit 1
+
+  clippy: # with fmt suggestions needed after clippy fix.
+    name: Clippy (${{ matrix.os.name }})
     if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
     defaults:
       run:
@@ -538,15 +478,14 @@ jobs:
       checks: write
       issues: write
       pull-requests: write
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.key }}
     strategy:
       fail-fast: false
       matrix:
         os:
-          - macos-14
-          - ubuntu-latest
-          - windows-latest
-    continue-on-error: true
+          - { name: mac, key: macos-14 }
+          - { name: win, key: windows-latest }
+          - { name: linux, key: ubuntu-latest }
     steps:
       - uses: actions/checkout@v4
         with:
@@ -563,10 +502,6 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
-      # - name: Config
-      #   run: |
-      #     mkdir -p .cargo
-      #     cp -rf .github/config.toml .cargo/config.toml
       - name: Config
         uses: ./.github/actions/init-cfg
 
@@ -594,6 +529,8 @@ jobs:
         run: |
           cargo fmt --all
           cargo fmt --all
+        # ^ second run needed as anti-flickering workaround for rustfmt issue:
+        #   https://github.com/rust-lang/rustfmt/issues/6240
 
       - name: remove config
         run: rm -rf .cargo
@@ -634,7 +571,7 @@ jobs:
         uses: katyo/publish-crates@v2
         with:
           dry-run: true
-      - name: output
+      - name: Output
         if: fromJSON(steps.crates.outputs.published).*
         run: |
           LIST="${{ join(fromJSON(steps.crates.outputs.published).*.name, ', ') }}"

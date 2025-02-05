@@ -6,9 +6,6 @@ on:
         description: git branch, tag or SHA to checkout.
         type: string
         required: true
-  # pull_request:
-  # push:
-  #   branches: [main, master]
 
 env:
   CARGO_INCREMENTAL: 0
