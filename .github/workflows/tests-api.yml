@@ -20,6 +20,15 @@ env:
   CARGO_TERM_PROGRESS_WHEN: never
 
 jobs:
+  # Final no-op job as result of all deps-jobs, needed as finalisation step of complex/dynamic matrix.
+  success:
+    needs: sys
+    name: Done
+    runs-on: ubuntu-latest
+    steps:
+      - name: success
+        run: "true"
+
   sys:
     name: >-
       Sys (${{ matrix.os.name }}${{ matrix.bindgen.install && ' +bindgen' || '' }})
