@@ -37,12 +37,24 @@ env:
     -p=playdate
 
 jobs:
+  api-sys:
+    name: Sys
+    uses: ./.github/workflows/tests-api.yml
+    secrets: inherit
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      sdk: ${{ inputs.sdk || 'latest' }}
+  docs:
+    name: Docs
+    uses: ./.github/workflows/tests-api.yml
+    secrets: inherit
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      sdk: ${{ inputs.sdk || 'latest' }}
+
   api:
     name: API
     env:
-      # FEATURES_1: bindgen-runtime
-      # FEATURES_2: bindgen-runtime,bindings-derive-debug
-      # FEATURES_3: bindgen-runtime,bindings-derive-debug,sys/bindings-documentation,sys/error-ctx
       FEATURES_1: ''
       FEATURES_2: bindings-derive-debug
       FEATURES_3: bindings-derive-debug,sys/bindings-documentation,sys/error-ctx
@@ -61,22 +73,6 @@ jobs:
         sdk:
           - ${{ inputs.sdk || 'latest' }}
           # - 2.6.2
-        # bindgen:
-        #   - install: false
-        #   - install: false
-        #     features: bindings-derive-debug
-        #   - install: false
-        #     features: bindgen-runtime
-        #   - install: false
-        #     features: bindgen-runtime,bindings-derive-debug
-        #   - install: true
-        #   - install: true
-        #     features: bindings-derive-debug
-        #   - install: true
-        #     features: bindgen-runtime
-        #   - install: true
-        #     features: bindgen-runtime,bindings-derive-debug
-
     steps:
       - run: arch
       - uses: actions/checkout@v4
@@ -135,8 +131,7 @@ jobs:
           - ubuntu-latest
           - windows-latest
         sdk:
-          - latest
-          # - beta
+          - ${{ inputs.sdk || 'latest' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -151,23 +146,29 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
+      # - name: Config
+      #   run: |
+      #     mkdir -p .cargo
+      #     cp -rf .github/config.toml .cargo/config.toml
       - name: Config
-        run: |
-          mkdir -p .cargo
-          cp -rf .github/config.toml .cargo/config.toml
+        uses: ./.github/actions/init-cfg
 
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
-      - name: Install Playdate SDK ${{ matrix.sdk }}
-        id: sdk
-        uses: pd-rs/get-playdate-sdk@main
+      # - name: Install Playdate SDK ${{ matrix.sdk }}
+      #   id: sdk
+      #   uses: pd-rs/get-playdate-sdk@main
+      #   with:
+      #     version: ${{ matrix.sdk }}
+      #     custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
+      - name: Install SDK (${{ matrix.sdk }})
+        uses: ./.github/actions/install-sdk
         with:
           version: ${{ matrix.sdk }}
-          custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
-
-      - name: SDK ${{ steps.sdk.outputs.version }} installed
-        run: which pdc && pdc --version
+          mac: ${{ secrets.SDK_BETA_MACOS }}
+          win: ${{ secrets.SDK_BETA_WINDOWS }}
+          linux: ${{ secrets.SDK_BETA_LINUX }}
 
       - name: Test
         run: |
@@ -191,7 +192,7 @@ jobs:
           - ubuntu-latest
           - windows-latest
         sdk:
-          - latest
+          - ${{ inputs.sdk || 'latest' }}
           # - 2.6.2
           # - beta
 
@@ -208,23 +209,32 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
+      # - name: Config
+      #   run: |
+      #     mkdir -p .cargo
+      #     cp -rf .github/config.toml .cargo/config.toml
       - name: Config
-        run: |
-          mkdir -p .cargo
-          cp -rf .github/config.toml .cargo/config.toml
+        uses: ./.github/actions/init-cfg
 
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
-      - name: Install Playdate SDK ${{ matrix.sdk }}
-        id: sdk
-        uses: pd-rs/get-playdate-sdk@main
+      # - name: Install Playdate SDK ${{ matrix.sdk }}
+      #   id: sdk
+      #   uses: pd-rs/get-playdate-sdk@main
+      #   with:
+      #     version: ${{ matrix.sdk }}
+      #     custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
+
+      # - name: SDK ${{ steps.sdk.outputs.version }} installed
+      #   run: which pdc && pdc --version
+      - name: Install SDK (${{ matrix.sdk }})
+        uses: ./.github/actions/install-sdk
         with:
           version: ${{ matrix.sdk }}
-          custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
-
-      - name: SDK ${{ steps.sdk.outputs.version }} installed
-        run: which pdc && pdc --version
+          mac: ${{ secrets.SDK_BETA_MACOS }}
+          win: ${{ secrets.SDK_BETA_WINDOWS }}
+          linux: ${{ secrets.SDK_BETA_LINUX }}
 
       - name: Test
         run: cargo test --locked -p=cargo-playdate -- --nocapture
@@ -246,7 +256,7 @@ jobs:
           - ubuntu-latest
           - windows-latest
         sdk:
-          - latest
+          - ${{ inputs.sdk || 'latest' }}
           # - 2.6.2
           # - beta
 
@@ -263,23 +273,32 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
+      # - name: Config
+      #   run: |
+      #     mkdir -p .cargo
+      #     cp -rf .github/config.toml .cargo/config.toml
       - name: Config
-        run: |
-          mkdir -p .cargo
-          cp -rf .github/config.toml .cargo/config.toml
+        uses: ./.github/actions/init-cfg
 
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
-      - name: Install Playdate SDK ${{ matrix.sdk }}
-        id: sdk
-        uses: pd-rs/get-playdate-sdk@main
+      # - name: Install Playdate SDK ${{ matrix.sdk }}
+      #   id: sdk
+      #   uses: pd-rs/get-playdate-sdk@main
+      #   with:
+      #     version: ${{ matrix.sdk }}
+      #     custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
+
+      # - name: SDK ${{ steps.sdk.outputs.version }} installed
+      #   run: which pdc && pdc --version
+      - name: Install SDK (${{ matrix.sdk }})
+        uses: ./.github/actions/install-sdk
         with:
           version: ${{ matrix.sdk }}
-          custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
-
-      - name: SDK ${{ steps.sdk.outputs.version }} installed
-        run: which pdc && pdc --version
+          mac: ${{ secrets.SDK_BETA_MACOS }}
+          win: ${{ secrets.SDK_BETA_WINDOWS }}
+          linux: ${{ secrets.SDK_BETA_LINUX }}
 
       - name: Test
         env:
@@ -304,7 +323,7 @@ jobs:
         os:
           - macos-14
         sdk:
-          - latest
+          - ${{ inputs.sdk || 'latest' }}
           # - 2.6.2
           # - beta
 
@@ -321,30 +340,32 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
+      # - name: Config
+      #   run: |
+      #     mkdir -p .cargo
+      #     cp -rf .github/config.toml .cargo/config.toml
       - name: Config
-        run: |
-          mkdir -p .cargo
-          cp -rf .github/config.toml .cargo/config.toml
+        uses: ./.github/actions/init-cfg
 
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
-      - name: Install Playdate SDK ${{ matrix.sdk }}
-        id: sdk
-        uses: pd-rs/get-playdate-sdk@main
+      # - name: Install Playdate SDK ${{ matrix.sdk }}
+      #   id: sdk
+      #   uses: pd-rs/get-playdate-sdk@main
+      #   with:
+      #     version: ${{ matrix.sdk }}
+      #     custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
+
+      # - name: SDK ${{ steps.sdk.outputs.version }} installed
+      #   run: which pdc && pdc --version
+      - name: Install SDK (${{ matrix.sdk }})
+        uses: ./.github/actions/install-sdk
         with:
           version: ${{ matrix.sdk }}
-          custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
-
-      - name: SDK ${{ steps.sdk.outputs.version }} installed
-        run: which pdc && pdc --version
-
-      # Simulator doesn't works in headless mode
-      # - name: Install Sim Deps
-      #   if: ${{ runner.os == 'Linux' }}
-      #   run: |
-      #     sudo apt update
-      #     sudo apt -y install libwebkit2gtk-4.0-dev
+          mac: ${{ secrets.SDK_BETA_MACOS }}
+          win: ${{ secrets.SDK_BETA_WINDOWS }}
+          linux: ${{ secrets.SDK_BETA_LINUX }}
 
       - name: Clean tmp
         run: rm -rf ./target/tmp
@@ -371,7 +392,7 @@ jobs:
           - ubuntu-latest
           - windows-latest
         sdk:
-          - latest
+          - ${{ inputs.sdk || 'latest' }}
           # - 2.6.2
           # - beta
 
@@ -390,26 +411,40 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-cargo-examples-${{ hashFiles('Cargo.lock') }}
             ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
+      # - name: Config
+      #   run: |
+      #     rm -rf ./target/tmp || true
+      #     rm -rf ./target/playdate || true
+      #     mkdir -p .cargo
+      #     cp -rf .github/config.toml .cargo/config.toml
+      #     cargo clean
       - name: Config
+        uses: ./.github/actions/init-cfg
+      - name: Clean
         run: |
           rm -rf ./target/tmp || true
           rm -rf ./target/playdate || true
-          mkdir -p .cargo
-          cp -rf .github/config.toml .cargo/config.toml
           cargo clean
 
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
-      - name: Install Playdate SDK ${{ matrix.sdk }}
-        id: sdk
-        uses: pd-rs/get-playdate-sdk@main
+      # - name: Install Playdate SDK ${{ matrix.sdk }}
+      #   id: sdk
+      #   uses: pd-rs/get-playdate-sdk@main
+      #   with:
+      #     version: ${{ matrix.sdk }}
+      #     custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
+
+      # - name: SDK ${{ steps.sdk.outputs.version }} installed
+      #   run: which pdc && pdc --version
+      - name: Install SDK (${{ matrix.sdk }})
+        uses: ./.github/actions/install-sdk
         with:
           version: ${{ matrix.sdk }}
-          custom-url: ${{ matrix.sdk == 'beta' && ((runner.os == 'macOS' && secrets.SDK_BETA_MACOS) || (runner.os == 'Linux' && secrets.SDK_BETA_LINUX) || (runner.os == 'Windows' && secrets.SDK_BETA_WINDOWS)) || '' }}
-
-      - name: SDK ${{ steps.sdk.outputs.version }} installed
-        run: which pdc && pdc --version
+          mac: ${{ secrets.SDK_BETA_MACOS }}
+          win: ${{ secrets.SDK_BETA_WINDOWS }}
+          linux: ${{ secrets.SDK_BETA_LINUX }}
 
       - name: Install cargo-playdate
         run: cargo install --path=./cargo --debug --locked
@@ -529,10 +564,12 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
+      # - name: Config
+      #   run: |
+      #     mkdir -p .cargo
+      #     cp -rf .github/config.toml .cargo/config.toml
       - name: Config
-        run: |
-          mkdir -p .cargo
-          cp -rf .github/config.toml .cargo/config.toml
+        uses: ./.github/actions/init-cfg
 
       - name: Install Deps
         uses: ./.github/actions/tools-deps

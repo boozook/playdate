@@ -1,4 +1,4 @@
-name: Tests / API
+name: 'API: Sys'
 on:
   workflow_call:
     inputs:
@@ -11,9 +11,9 @@ on:
         description: git branch, tag or SHA to checkout.
         type: string
         required: true
-  pull_request:
-  push:
-    branches: [main, master]
+  # pull_request:
+  # push:
+  #   branches: [main, master]
 
 env:
   CARGO_INCREMENTAL: 0
