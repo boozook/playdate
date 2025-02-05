@@ -1,6 +1,6 @@
 [package]
 name = "playdate-build-utils"
-version = "0.3.7"
+version = "0.3.8"
 readme = "README.md"
 description = "Utils that help to build program with Rust and Playdate API"
 keywords = ["playdate", "utility"]
@@ -26,7 +26,6 @@ cargo-message = []                 # cargo notifications & warnings and logging
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--show-type-layout"]
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
 
 [badges.maintenance]

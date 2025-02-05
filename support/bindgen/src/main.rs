@@ -84,6 +84,6 @@ mod tests {
 
 	#[test]
 	fn same_env_var() {
-		assert_eq!(utils::consts::SDK_ENV_VAR, bindgen_cfg::SDK_PATH_ENV_VAR);
+		assert_eq!(utils::consts::SDK_ENV_VAR, bindgen_cfg::Cfg::ENV_SDK_PATH);
 	}
 }

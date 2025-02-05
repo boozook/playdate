@@ -1,6 +1,6 @@
 [package]
 name = "playdate-scoreboards"
-version = "0.1.4"
+version = "0.1.5"
 readme = "README.md"
 description = "High-level Scoreboards API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -43,16 +43,7 @@ bundle-id = "rs.playdate.scoreboards"
 
 [package.metadata.docs.rs]
 all-features = false
-features = [
-	"bindings-derive-default",
-	"bindings-derive-eq",
-	"bindings-derive-copy",
-	"bindings-derive-debug",
-	"bindings-derive-hash",
-	"bindings-derive-ord",
-	"bindings-derive-partialeq",
-	"bindings-derive-partialord",
-]
+features = ["bindings-derive-debug"]
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]

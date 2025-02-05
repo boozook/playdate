@@ -1,0 +1,104 @@
+name: Api
+on:
+  workflow_call:
+    inputs:
+      sdk:
+        description: "Version of Playdate SDK"
+        default: latest
+        type: string
+        required: true
+      ref:
+        description: git branch, tag or SHA to checkout.
+        type: string
+        required: true
+
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  RUSTUP_MAX_RETRIES: 10
+  CARGO_TERM_COLOR: always
+  CARGO_TERM_PROGRESS_WHEN: never
+
+jobs:
+  # Final no-op job as result of all deps-jobs, needed as finalisation step of complex/dynamic matrix.
+  success:
+    needs: sys
+    name: Done
+    runs-on: ubuntu-latest
+    steps:
+      - name: success
+        run: "true"
+
+  sys:
+    name: >-
+      Sys (${{ matrix.os.name }}${{ matrix.bindgen.install && ' +bindgen' || '' }})
+      ${{ matrix.bindgen.features }}
+    env:
+      FEATURES_1: bindgen-runtime
+      FEATURES_2: bindgen-runtime,bindings-derive-debug
+      FEATURES_3: bindgen-runtime,bindings-derive-debug,sys/bindings-documentation,sys/error-ctx
+      BUILD_STD_ARGS: -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
+    defaults:
+      run:
+        shell: bash
+    runs-on: ${{ matrix.os.key }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - { name: mac, key: macos-14 }
+          - { name: win, key: windows-latest }
+          - { name: linux, key: ubuntu-latest }
+        sdk:
+          - ${{ inputs.sdk || 'latest' }}
+        bindgen:
+          - install: false
+          - install: false
+            features: bindings-derive-debug
+          - install: false
+            features: bindgen-runtime
+          - install: false
+            features: bindgen-runtime,bindings-derive-debug
+          - install: true
+          - install: true
+            features: bindings-derive-debug
+          - install: true
+            features: bindgen-runtime
+          - install: true
+            features: bindgen-runtime,bindings-derive-debug
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Config
+        uses: ./.github/actions/init-cfg
+
+      - name: Install bindgen
+        if: matrix.bindgen.install
+        uses: ./.github/actions/install-bindgen
+
+      - name: Install SDK (${{ matrix.sdk }})
+        uses: ./.github/actions/install-sdk
+        with:
+          version: ${{ matrix.sdk }}
+          mac: ${{ secrets.SDK_BETA_MACOS }}
+          win: ${{ secrets.SDK_BETA_WINDOWS }}
+          linux: ${{ secrets.SDK_BETA_LINUX }}
+
+      - name: SDK ${{ steps.sdk.outputs.version }} installed
+        run: which pdc && pdc --version
+
+      - name: Test (host)
+        run: cargo test -p=playdate-sys --features=${{ matrix.bindgen.features }} -- --nocapture
+
+      - name: Build (host)
+        run: |
+          cargo build -p=playdate-sys --features=${{ matrix.bindgen.features }} --example=hello-world --features=lang-items
+          cargo build -p=playdate-sys --features=${{ matrix.bindgen.features }} --example=handler --features=lang-items,entry-point
+
+      - name: Build (device)
+        run: |
+          cargo build -p=playdate-sys --features=${{ matrix.bindgen.features }} ${{ env.BUILD_STD_ARGS }} --example=hello-world --features=lang-items
+          cargo build -p=playdate-sys --features=${{ matrix.bindgen.features }} ${{ env.BUILD_STD_ARGS }} --example=handler --features=lang-items,entry-point

@@ -1,6 +1,6 @@
 [package]
 name = "playdate-build"
-version = "0.4.2"
+version = "0.4.3"
 readme = "README.md"
 description = "Utils that help to build package for Playdate"
 keywords = ["playdate", "package", "encoding", "manifest", "assets"]
@@ -45,7 +45,6 @@ assets-report = []
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--show-type-layout"]
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
 
 [badges.maintenance]

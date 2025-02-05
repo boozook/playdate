@@ -1,0 +1,97 @@
+name: Docs
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: git branch, tag or SHA to checkout.
+        type: string
+        required: true
+
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  RUSTUP_MAX_RETRIES: 10
+  CARGO_TERM_COLOR: always
+  CARGO_TERM_PROGRESS_WHEN: never
+
+jobs:
+  # Final no-op job as result of all deps-jobs, needed as finalisation step of complex/dynamic matrix.
+  success:
+    needs: docs
+    name: Done
+    runs-on: ubuntu-latest
+    steps:
+      - name: success
+        run: "true"
+
+  # Gets all workspace members, all and filtered by `package.publish`
+  metadata:
+    name: Preparation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      # To get cargo metadata in the specified stable format we need just any stable cargo,
+      # so delete toolchain cfg here to prevent rustup install required one. Existing is often.
+      - name: Toolchain
+        run: rm ./rust-toolchain.toml
+
+      - name: Metadata
+        id: metadata
+        run: |
+          META="$(cargo +stable metadata --format-version=1 -q --color=never)"
+
+          MEMBERS="$(jq '(.workspace_members) as $wm | { packages: [.packages[] | select(.id as $id | $wm | index($id))] } | { crate:.packages }' <<< "$META")"
+          echo "members<<EOF" >> $GITHUB_OUTPUT
+          echo $MEMBERS >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          PUBLIC="$(jq '{ crate: [.crate[] | select(.publish == null or .publish == true)] }' <<< "$MEMBERS")"
+          echo "public<<EOF" >> $GITHUB_OUTPUT
+          echo $PUBLIC >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+    outputs:
+      members: ${{ steps.metadata.outputs.members }}
+      public: ${{ steps.metadata.outputs.public }}
+
+  # Imitate docs.rs, no-sdk environment
+  docs:
+    name: ${{ matrix.crate.name }}
+    needs: metadata
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.metadata.outputs.public) }}
+    env:
+      LIBUDEV_DEPENDENTS: >-
+        cargo-playdate
+        playdate-device
+        playdate-tool
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Install Deps
+        if: ${{ contains(env.LIBUDEV_DEPENDENTS, matrix.crate.name) }}
+        uses: ./.github/actions/tools-deps
+
+      - name: Test
+        env:
+          DOCS_RS: 1
+          PLAYDATE_SDK_PATH: 0
+          IGNORE_EXISTING_PLAYDATE_SDK: 1
+          FEATURES: ${{ join(matrix.crate.metadata.docs.rs.features.*, ',') }}
+          ALL_FEATURES: ${{ matrix.crate.metadata.docs.rs.all-features && '--all-features' || '' }}
+          NO_DEFAULT_FEATURES: ${{ matrix.crate.metadata.docs.rs.no-default-features && '--no-default-features' || '' }}
+          DEFAULT_TARGET: ${{ matrix.crate.metadata.docs.rs.default-target && '--target=' || '' }}${{ matrix.crate.metadata.docs.rs.default-target || '' }}
+          TARGETS: ${{ matrix.crate.metadata.docs.rs.targets && '--target=' || '' }}${{ join(matrix.crate.metadata.docs.rs.targets.*, ' --target=') }}
+          CARGO_ARGS: ${{ join(matrix.crate.metadata.docs.rs.cargo-args.*, ' ') }}
+          RUSTFLAGS: ${{ join(matrix.crate.metadata.docs.rs.rustc-args.*, ' ') }}
+          RUSTDOCFLAGS: ${{ join(matrix.crate.metadata.docs.rs.rustdoc-args.*, ' ') }}
+          # docs:
+          # https://docs.rs/about/metadata
+          # https://doc.rust-lang.org/cargo/reference/environment-variables.html
+        run: cargo doc ${{ env.CARGO_ARGS }} ${{ env.NO_DEFAULT_FEATURES }} ${{ env.ALL_FEATURES }} -p=${{ matrix.crate.name }} ${{ env.DEFAULT_TARGET }} ${{ env.TARGETS }} --features="${{ env.FEATURES }}"

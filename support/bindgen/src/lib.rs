@@ -19,8 +19,8 @@ pub mod gen;
 type Result<T, E = error::Error> = std::result::Result<T, E>;
 
 
+// TODO: We have to min-max bounds instead of just one semver-req.
 pub const SDK_VER_SUPPORTED: &str = "^2.0.0"; // used for version validation.
-pub const SDK_PATH_ENV_VAR: &str = SDK_ENV_VAR;
 
 
 /// Generated Rust bindings.
