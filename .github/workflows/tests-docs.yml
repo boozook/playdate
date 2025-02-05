@@ -27,6 +27,8 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.ref }}
 
+      # To get cargo metadata in the specified stable format we need just any stable cargo,
+      # so delete toolchain cfg here to prevent rustup install required one. Existing is often.
       - name: Toolchain
         run: rm ./rust-toolchain.toml
 
@@ -77,16 +79,13 @@ jobs:
           IGNORE_EXISTING_PLAYDATE_SDK: 1
           FEATURES: ${{ join(matrix.crate.metadata.docs.rs.features.*, ',') }}
           ALL_FEATURES: ${{ matrix.crate.metadata.docs.rs.all-features && '--all-features' || '' }}
-          DEFAULT_FEATURES: ${{ matrix.crate.metadata.docs.rs.no-default-features && '--no-default-features' || '' }}
+          NO_DEFAULT_FEATURES: ${{ matrix.crate.metadata.docs.rs.no-default-features && '--no-default-features' || '' }}
           DEFAULT_TARGET: ${{ matrix.crate.metadata.docs.rs.default-target && '--target=' || '' }}${{ matrix.crate.metadata.docs.rs.default-target || '' }}
           TARGETS: ${{ matrix.crate.metadata.docs.rs.targets && '--target=' || '' }}${{ join(matrix.crate.metadata.docs.rs.targets.*, ' --target=') }}
           CARGO_ARGS: ${{ join(matrix.crate.metadata.docs.rs.cargo-args.*, ' ') }}
-          # TODO: rustdoc-args (RUSTDOCFLAGS), rustc-args (RUSTFLAGS)
+          RUSTFLAGS: ${{ join(matrix.crate.metadata.docs.rs.rustc-args.*, ' ') }}
+          RUSTDOCFLAGS: ${{ join(matrix.crate.metadata.docs.rs.rustdoc-args.*, ' ') }}
+          # docs:
           # https://docs.rs/about/metadata
-        run: >-
-          echo "FEATURES: $FEATURES"
-          echo "DEFAULT_FEATURES: $DEFAULT_FEATURES"
-          echo "TARGET: $TARGET"
-          echo "CARGO_ARGS: $CARGO_ARGS"
-
-          cargo doc ${{ env.CARGO_ARGS }} ${{ env.DEFAULT_FEATURES }} ${{ env.ALL_FEATURES }} -p=${{ matrix.crate.name }} ${{ env.DEFAULT_TARGET }} ${{ env.TARGETS }} --features="${{ env.FEATURES }}"
+          # https://doc.rust-lang.org/cargo/reference/environment-variables.html
+        run: cargo doc ${{ env.CARGO_ARGS }} ${{ env.NO_DEFAULT_FEATURES }} ${{ env.ALL_FEATURES }} -p=${{ matrix.crate.name }} ${{ env.DEFAULT_TARGET }} ${{ env.TARGETS }} --features="${{ env.FEATURES }}"
