@@ -46,11 +46,10 @@ jobs:
       sdk: ${{ inputs.sdk || 'latest' }}
   docs:
     name: Docs
-    uses: ./.github/workflows/tests-api.yml
+    uses: ./.github/workflows/tests-docs.yml
     secrets: inherit
     with:
       ref: ${{ inputs.ref || github.ref }}
-      sdk: ${{ inputs.sdk || 'latest' }}
 
   api:
     name: API
