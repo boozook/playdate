@@ -16,8 +16,8 @@ env:
 
 jobs:
   # Gets all workspace members, all and filtered by `package.publish`
-  workspace:
-    name: Workspace
+  metadata:
+    name: Preparation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,11 +50,11 @@ jobs:
   # Imitate docs.rs, no-sdk environment
   docs:
     name: ${{ matrix.crate.name }}
-    needs: workspace
+    needs: metadata
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.workspace.outputs.public) }}
+      matrix: ${{ fromJson(needs.metadata.outputs.public) }}
     env:
       LIBUDEV_DEPENDENTS: >-
         cargo-playdate
