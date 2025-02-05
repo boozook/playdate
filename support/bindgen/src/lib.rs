@@ -437,3 +437,12 @@ pub fn rustfmt<'out>(mut rustfmt_path: Option<PathBuf>,
 		_ => Ok(source),
 	}
 }
+
+
+#[cfg(test)]
+mod tests {
+	#[test]
+	fn same_env_var() {
+		assert_eq!(utils::consts::SDK_ENV_VAR, bindgen_cfg::Cfg::ENV_SDK_PATH);
+	}
+}

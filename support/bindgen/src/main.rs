@@ -81,9 +81,4 @@ mod tests {
 	fn same_bin_name() {
 		assert_eq!(env!("CARGO_BIN_NAME"), bindgen_cfg::BIN_NAME);
 	}
-
-	#[test]
-	fn same_env_var() {
-		assert_eq!(utils::consts::SDK_ENV_VAR, bindgen_cfg::Cfg::ENV_SDK_PATH);
-	}
 }
