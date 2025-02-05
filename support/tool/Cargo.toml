@@ -1,6 +1,6 @@
 [package]
 name = "playdate-tool"
-version = "0.3.7"
+version = "0.3.8"
 readme = "README.md"
 description = "Tool for interaction with Playdate device and sim."
 keywords = ["playdate", "usb", "utility"]
@@ -63,8 +63,6 @@ tokio-tracing = ["tracing", "tokio/tracing", "console-subscriber", "tracing"]
 
 
 [package.metadata.docs.rs]
-rustdoc-args = ["--show-type-layout"]
-cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
 all-features = false
 
 [badges.maintenance]

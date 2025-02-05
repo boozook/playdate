@@ -4165,7 +4165,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-build"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "dirs",
  "fs_extra",
@@ -4182,7 +4182,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-build-utils"
-version = "0.3.7"
+version = "0.3.8"
 dependencies = [
  "dirs",
  "log",
@@ -4208,7 +4208,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-device"
-version = "0.2.14"
+version = "0.2.15"
 dependencies = [
  "async-std",
  "clap",
@@ -4290,7 +4290,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-simulator-utils"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "async-std",
  "log",
@@ -4358,7 +4358,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-tool"
-version = "0.3.7"
+version = "0.3.8"
 dependencies = [
  "clap",
  "console-subscriber",

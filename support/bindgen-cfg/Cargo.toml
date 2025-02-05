@@ -24,7 +24,6 @@ default = []
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--show-type-layout"]
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
 
 [badges.maintenance]

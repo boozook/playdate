@@ -1,6 +1,6 @@
 [package]
 name = "playdate-device"
-version = "0.2.14"
+version = "0.2.15"
 readme = "README.md"
 description = "Cross-platform interface Playdate device, async & blocking."
 keywords = ["playdate", "usb", "serial"]
@@ -93,7 +93,6 @@ async-std = ["futures", "dep:async-std"]                                      # 
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--show-type-layout"]
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
 
 [badges.maintenance]
