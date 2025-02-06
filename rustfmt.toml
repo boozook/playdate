@@ -60,3 +60,5 @@ blank_lines_lower_bound = 0            # Minimum number of blank lines which mus
 merge_derives = true              # Merge multiple `#[derive(...)]` into a single one
 use_try_shorthand = true          # Replace uses of the try! macro by the ? shorthand
 condense_wildcard_suffixes = true # Replace strings of _ wildcards by a single .. in tuple patterns
+
+force_explicit_abi = true
