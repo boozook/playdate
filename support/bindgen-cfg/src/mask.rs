@@ -138,7 +138,7 @@ impl DerivesMask {
 			}
 			// We do not take into account the remainder of `a` because we do not consider the net (real) distance,
 			// but the difference, meaning “by how much `a` covers `b`”.
-			// Otherwise it will be like that:
+			// Otherwise it could be like that:
 			// else if a[b.len()..].contains(&true) { -Self::REST_DISTANCE }
 			else {
 				0
@@ -159,6 +159,37 @@ impl std::fmt::Display for ParseMaskError {
 #[cfg(test)]
 mod tests {
 	use super::*;
+
+
+	#[test]
+	fn fmt() {
+		let mut mask = DerivesMask::default();
+		assert!(!mask.to_string().contains('1'));
+
+		mask.inner[0] = true;
+		assert_eq!("100000000", &mask.to_string());
+
+		mask.inner.fill(true);
+		assert_eq!("111111111", &mask.to_string());
+	}
+
+	#[test]
+	fn from_str() {
+		let empty = DerivesMask::default();
+		let full = DerivesMask::from_str("111111111").unwrap();
+		assert_ne!(empty, full);
+		assert_eq!(empty, DerivesMask::from_str("000000000").unwrap());
+		assert!(DerivesMask::from_str("001000000").unwrap().inner[2]);
+	}
+
+	#[test]
+	fn from_ascii() {
+		let empty = DerivesMask::default();
+		let full = DerivesMask::from_ascii(b"111111111").unwrap();
+		assert_ne!(empty, full);
+		assert_eq!(empty, DerivesMask::from_ascii(b"000000000").unwrap());
+		assert!(DerivesMask::from_ascii(b"001000000").unwrap().inner[2]);
+	}
 
 
 	#[test]

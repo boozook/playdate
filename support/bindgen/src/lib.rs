@@ -5,7 +5,6 @@ use std::env;
 use std::path::{Path, PathBuf};
 use bindgen::callbacks::DeriveInfo;
 use bindgen::{EnumVariation, RustTarget, Builder, MacroTypeVariation};
-use cfg::Filename;
 use utils::consts::*;
 use utils::toolchain::gcc::{ArmToolchain, Gcc};
 use utils::toolchain::sdk::Sdk;
@@ -19,7 +18,7 @@ pub mod gen;
 type Result<T, E = error::Error> = std::result::Result<T, E>;
 
 
-pub const SDK_VER_SUPPORTED: &str = ">=2.0.0, <=3.0.0";
+pub const SDK_VER_SUPPORTED: &str = ">=2.1.0, <3.0.0";
 
 
 /// Generated Rust bindings.
@@ -74,7 +73,7 @@ pub struct Generator {
 	pub gcc: ArmToolchain,
 
 	/// Suggested filename for export bindings.
-	pub filename: Filename,
+	pub filename: cfg::Filename,
 	/// Configured [`bindgen::Builder`].
 	pub builder: Builder,
 
@@ -140,7 +139,7 @@ fn create_generator(cfg: cfg::Cfg) -> Result<Generator, error::Error> {
 	builder = apply_target(builder, &cargo_target_triple, &gcc);
 
 
-	let filename = Filename::new(version.to_owned(), cfg.derive)?;
+	let filename = cfg::Filename::new(version.to_owned(), cfg.derive)?;
 
 	Ok(Generator { sdk,
 	               gcc,
@@ -156,7 +155,9 @@ fn check_sdk_version(version: &str) -> Result<semver::Version, error::Error> {
 	is_version_matches(version)
 	.map(|(ver, res, req)| {
 		if res {
-			println!("cargo:warning=Playdate SDK version not tested. Supported version '{req}' does not matches current '{ver}'.")
+			const PKG: &str = env!("CARGO_PKG_NAME");
+			const VER: &str = env!("CARGO_PKG_VERSION");
+			println!("cargo:warning=Playdate SDK v{ver} may not be compatible with {PKG} v{VER} which hasn't been tested with it. Supported '{req}' does not matches current '{ver}'.")
 		}
 		ver
 	})
@@ -454,18 +455,16 @@ mod tests {
 	}
 
 	#[test]
-	fn is_version_matches() {
+	fn version_matches() {
 		use super::is_version_matches as check;
 
 		let map = |(_, res, _)| res;
 
 		assert!(check("0.0").map(map).is_err());
 		assert!(!check("0.0.0").map(map).unwrap());
-		assert!(check("2.0.0").map(map).unwrap());
-		assert!(check("2.6.0").map(map).unwrap());
+		assert!(check("2.1.0").map(map).unwrap());
 		assert!(check("2.7.0").map(map).unwrap());
 		assert!(!check("2.7.0-beta.3").map(map).unwrap());
-		assert!(check("3.0.0").map(map).unwrap());
 		assert!(!check("3.1.0").map(map).unwrap());
 	}
 }
