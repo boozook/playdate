@@ -3,11 +3,11 @@ use crate::Derive;
 
 #[derive(Debug, Clone)]
 pub struct DerivesMask {
-	inner: Vec<bool>,
+	values: Vec<bool>,
 }
 
 impl DerivesMask {
-	pub fn push(&mut self, value: bool) { self.inner.push(value) }
+	pub fn push(&mut self, value: bool) { self.values.push(value) }
 
 
 	pub fn from_ascii(mask: &[u8]) -> Result<Self, ParseMaskError> {
@@ -19,7 +19,7 @@ impl DerivesMask {
 				_ => return Err(ParseMaskError),
 			}
 		}
-		Ok(Self { inner: values })
+		Ok(Self { values })
 	}
 
 	pub fn from_str(mask: &str) -> Result<Self, ParseMaskError> {
@@ -39,16 +39,16 @@ impl Default for DerivesMask {
 impl From<Derive> for DerivesMask {
 	fn from(values: Derive) -> Self {
 		// Caution: do not change the order of items!
-		Self { inner: vec![
-		                   values.default,
-		                   values.eq,
-		                   values.copy,
-		                   values.debug,
-		                   values.hash,
-		                   values.ord,
-		                   values.partialeq,
-		                   values.partialord,
-		                   values.constparamty,
+		Self { values: vec![
+		                    values.default,
+		                    values.eq,
+		                    values.copy,
+		                    values.debug,
+		                    values.hash,
+		                    values.ord,
+		                    values.partialeq,
+		                    values.partialord,
+		                    values.constparamty,
 		] }
 	}
 }
@@ -59,28 +59,28 @@ impl From<&'_ Derive> for DerivesMask {
 
 impl std::fmt::Display for DerivesMask {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		let iter = self.inner.iter().map(|v| if *v { "1" } else { "0" });
+		let iter = self.values.iter().map(|v| if *v { "1" } else { "0" });
 		write!(f, "{}", iter.collect::<String>())
 	}
 }
 
 
 impl PartialEq for DerivesMask {
-	fn eq(&self, other: &Self) -> bool { self.inner == other.inner }
+	fn eq(&self, other: &Self) -> bool { self.values == other.values }
 }
 
 impl PartialOrd for DerivesMask {
 	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-		if other.inner.len() > self.inner.len() && other.inner[self.inner.len()..].contains(&true) {
+		if other.values.len() > self.values.len() && other.values[self.values.len()..].contains(&true) {
 			return Some(std::cmp::Ordering::Less);
 		}
 
-		let len = self.inner.len().min(other.inner.len());
-		let a = &self.inner[..len];
-		let b = &other.inner[..len];
+		let len = self.values.len().min(other.values.len());
+		let a = &self.values[..len];
+		let b = &other.values[..len];
 
 		let res = if a == b {
-			if self.inner.len() > other.inner.len() && self.inner[other.inner.len()..].contains(&true) {
+			if self.values.len() > other.values.len() && self.values[other.values.len()..].contains(&true) {
 				std::cmp::Ordering::Greater
 			} else {
 				std::cmp::Ordering::Equal
@@ -100,9 +100,14 @@ impl DerivesMask {
 	/// The cost of positive remainder of `other`.
 	const REST_DISTANCE: isize = 100;
 
-	/// Calc distance between two masks.
+	/// Calc "distance" between two masks.
 	///
 	/// __Non-commutative function.__
+	///
+	/// The name "distance" means mesure of "a (not) covers b".
+	/// Result is signed, so if "covers" result is `0 - n` where `n = a - b`.
+	/// Actually it's almost like xor (`a ^ b`), e.g. `0b1000 ^ 0b1010 = 0b10` and this "distance" eq `1` which means
+	/// "`b` has one feature uncovered by `a`".
 	///
 	/// If distance between `a` & `b` is gt then `0`, that means `a` doesn't covers `b`.
 	///
@@ -111,17 +116,22 @@ impl DerivesMask {
 	/// - `100 d 111 = 2`
 	/// - `100 d 1111 = >2`
 	/// - `1001 d 111 = >2`
+	///
+	/// Various len:
+	/// - if `a = 10010` and `b = 100`, the remainder of `a` (10) is not contributes to the distance because b doesn't extend that far
+	///   and "`a` covers `b`",
+	/// - if `a = 100` and `b = 10010`, the remainder of `b` (10) __is__ contributes to the distance significantly.
 	pub fn distance(&self, other: &Self) -> isize {
 		if self == other {
 			0
 		} else {
-			let a = self.inner.as_slice();
-			let b = other.inner.as_slice();
+			let a = self.values.as_slice();
+			let b = other.values.as_slice();
 
 			let prefix = {
-				let len = self.inner.len().min(other.inner.len());
-				let a = &self.inner[..len];
-				let b = &other.inner[..len];
+				let len = self.values.len().min(other.values.len());
+				let a = &self.values[..len];
+				let b = &other.values[..len];
 				a.iter().zip(b).fold(0, |acc, (a, b)| {
 					               acc +
 					               match (a, b) {
@@ -166,11 +176,19 @@ mod tests {
 		let mut mask = DerivesMask::default();
 		assert!(!mask.to_string().contains('1'));
 
-		mask.inner[0] = true;
+		mask.values[0] = true;
 		assert_eq!("100000000", &mask.to_string());
 
-		mask.inner.fill(true);
+		mask.values.fill(true);
 		assert_eq!("111111111", &mask.to_string());
+	}
+
+
+	#[test]
+	fn err() {
+		assert!(DerivesMask::from_str("123456789").is_err());
+		assert!(DerivesMask::from_str("-").is_err());
+		assert!(DerivesMask::from_str("xyz").is_err());
 	}
 
 	#[test]
@@ -179,7 +197,10 @@ mod tests {
 		let full = DerivesMask::from_str("111111111").unwrap();
 		assert_ne!(empty, full);
 		assert_eq!(empty, DerivesMask::from_str("000000000").unwrap());
-		assert!(DerivesMask::from_str("001000000").unwrap().inner[2]);
+		assert!(DerivesMask::from_str("001000000").unwrap().values[2]);
+
+		assert!(DerivesMask::from_str("").unwrap().values.is_empty());
+		assert_eq!(3, DerivesMask::from_str("111").unwrap().values.len());
 	}
 
 	#[test]
@@ -188,7 +209,10 @@ mod tests {
 		let full = DerivesMask::from_ascii(b"111111111").unwrap();
 		assert_ne!(empty, full);
 		assert_eq!(empty, DerivesMask::from_ascii(b"000000000").unwrap());
-		assert!(DerivesMask::from_ascii(b"001000000").unwrap().inner[2]);
+		assert!(DerivesMask::from_ascii(b"001000000").unwrap().values[2]);
+
+		assert!(DerivesMask::from_ascii(b"").unwrap().values.is_empty());
+		assert_eq!(3, DerivesMask::from_ascii(b"111").unwrap().values.len());
 	}
 
 
@@ -198,14 +222,14 @@ mod tests {
 		let mut b = DerivesMask::default();
 		assert_eq!(a, b);
 
-		a.inner[0] = true;
+		a.values[0] = true;
 		assert_ne!(a, b);
 
-		b.inner[0] = true;
+		b.values[0] = true;
 		assert_eq!(a, b);
 
-		let last = b.inner.len() - 1;
-		b.inner[last] = true;
+		let last = b.values.len() - 1;
+		b.values[last] = true;
 		assert_ne!(a, b);
 	}
 
@@ -217,7 +241,7 @@ mod tests {
 		assert!(a >= b, "{a} >= {b}");
 		assert!(a <= b, "{a} <= {b}");
 
-		a.inner[0] = true;
+		a.values[0] = true;
 		assert!(a != b, "{a} != {b}");
 		assert!(a > b, "{a} > {b}");
 		assert!(a >= b, "{a} >= {b}");
@@ -225,18 +249,18 @@ mod tests {
 		assert!(b <= a, "{b} <= {a}");
 		assert!(b < a, "{b} < {a}");
 
-		b.inner[0] = true;
+		b.values[0] = true;
 		assert!(a == b, "{a} == {b}");
 		assert!(a >= b, "{a} >= {b}");
 		assert!(a <= b, "{a} <= {b}");
 
-		let last = b.inner.len() - 1;
-		b.inner[last] = true;
+		let last = b.values.len() - 1;
+		b.values[last] = true;
 		assert!(a != b, "{a} != {b}");
 		assert!(a < b, "{a} < {b}");
 		assert!(a <= b, "{a} <= {b}");
 
-		a.inner.fill(true);
+		a.values.fill(true);
 		assert!(a != b, "{a} != {b}");
 		assert!(a > b, "{a} > {b}");
 		assert!(a >= b, "{a} >= {b}");
@@ -274,32 +298,32 @@ mod tests {
 		assert_eq!(0, a.distance(&b));
 		assert_eq!(0, b.distance(&a));
 
-		a.inner[0] = true;
+		a.values[0] = true;
 		assert_eq!(-1, a.distance(&b));
 
-		b.inner[0] = true;
+		b.values[0] = true;
 		assert_eq!(0, a.distance(&b));
 
-		let last = b.inner.len() - 1;
-		b.inner[last] = true;
+		let last = b.values.len() - 1;
+		b.values[last] = true;
 		assert_eq!(1, a.distance(&b));
 		assert_eq!(-1, b.distance(&a));
 
 		b.push(true);
 		assert_eq!(TAIL + 1, a.distance(&b));
 
-		b.inner[0] = false;
+		b.values[0] = false;
 		assert_eq!(TAIL, a.distance(&b));
 
-		a.inner[last] = true;
+		a.values[last] = true;
 		assert_eq!(TAIL - 1, a.distance(&b));
-		a.inner[1] = true;
+		a.values[1] = true;
 		assert_eq!(TAIL - 2, a.distance(&b));
 
 
 		// 1001 d 111:
-		let a = DerivesMask { inner: vec![true, false, false, true] };
-		let b = DerivesMask { inner: vec![true, true, true] };
+		let a = DerivesMask { values: vec![true, false, false, true] };
+		let b = DerivesMask { values: vec![true, true, true] };
 		assert_eq!(2, a.distance(&b));
 		assert_eq!(TAIL - 2, b.distance(&a));
 	}
