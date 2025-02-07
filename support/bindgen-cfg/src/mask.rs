@@ -104,18 +104,20 @@ impl DerivesMask {
 	///
 	/// __Non-commutative function.__
 	///
-	/// The name "distance" means mesure of "a (not) covers b".
-	/// Result is signed, so if "covers" result is `0 - n` where `n = a - b`.
-	/// Actually it's almost like xor (`a ^ b`), e.g. `0b1000 ^ 0b1010 = 0b10` and this "distance" eq `1` which means
+	/// Here the name "distance" means mesure of "how enough `a` (not) covers `b`".
+	///
+	/// Result is signed, so if "`a` covers `b`" result is `0 - n` where `n = a - b`.
+	/// If distance between `a` & `b` is gt then `0`, that means `a` doesn't covers `b`, so if `a > b` => `d < 0`.
+	///
+	/// Actually it's almost same as `xor` (`a ^ b`),
+	/// e.g. `0b1000 ^ 0b1010 = 0b10` and the "distance" is `1` which means
 	/// "`b` has one feature uncovered by `a`".
 	///
-	/// If distance between `a` & `b` is gt then `0`, that means `a` doesn't covers `b`.
 	///
-	/// e.g. if `a > b` => `d < 0`, so
 	/// - `100 d 000 = -1`
 	/// - `100 d 111 = 2`
 	/// - `100 d 1111 = >2`
-	/// - `1001 d 111 = >2`
+	/// - `1001 d 111 = 2`
 	///
 	/// Various len:
 	/// - if `a = 10010` and `b = 100`, the remainder of `a` (10) is not contributes to the distance because b doesn't extend that far
