@@ -408,17 +408,17 @@ impl Filename {
 		if !s.starts_with(Self::PREFIX.as_bytes()) || !s.ends_with(Self::DOT_EXT.as_bytes()) {
 			None
 		} else {
-			let from_encoded_bytes = std::ffi::OsStr::from_encoded_bytes_unchecked;
+			use std::ffi::OsStr;
 
 			if let Some(target) = target {
-				let s = unsafe { from_encoded_bytes(&s[Self::PREFIX.len()..]) };
+				let s = unsafe { OsStr::from_encoded_bytes_unchecked(&s[Self::PREFIX.len()..]) };
 				s.to_string_lossy()
 				 .split_once(target)
 				 .and_then(|(version, _)| version.get(..(version.len() - 1)))
 				 .map(OsString::from)
 				 .map(Cow::Owned)
 			} else if let Some((prefix, _)) = &s[Self::PREFIX.len()..].split_once(|c| *c == b'-') {
-				let os = unsafe { from_encoded_bytes(prefix) };
+				let os = unsafe { OsStr::from_encoded_bytes_unchecked(prefix) };
 				Some(os.into())
 			} else {
 				None
