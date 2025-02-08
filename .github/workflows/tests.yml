@@ -148,6 +148,9 @@ jobs:
       - name: Config
         uses: ./.github/actions/init-cfg
 
+      - name: Rustup warmup
+        run: rustup show &
+
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
@@ -203,6 +206,9 @@ jobs:
       - name: Config
         uses: ./.github/actions/init-cfg
 
+      - name: Rustup warmup
+        run: rustup show &
+
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
@@ -254,6 +260,9 @@ jobs:
       - name: Config
         uses: ./.github/actions/init-cfg
 
+      - name: Rustup warmup
+        run: rustup show &
+
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
@@ -285,7 +294,7 @@ jobs:
       matrix:
         os:
           - { name: mac, key: macos-14 }
-          - { name: win, key: windows-latest }  # sim doesn't work
+          - { name: win, key: windows-latest } # sim doesn't work
           # - { name: linux, key: ubuntu-latest } # sim doesn't work
         sdk:
           - ${{ inputs.sdk || 'latest' }}
@@ -308,6 +317,9 @@ jobs:
       - name: Config
         uses: ./.github/actions/init-cfg
 
+      - name: Rustup warmup
+        run: rustup show &
+
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
@@ -324,6 +336,8 @@ jobs:
 
       - name: Test Execution
         env:
+          # RUST_LOG: trace
+          # CARGO_PLAYDATE_LOG: trace
           RUSTFLAGS: --cfg exec_tests
         run: |
           cargo test --locked -p=cargo-playdate run:: -- --nocapture --test-threads=1
@@ -391,6 +405,9 @@ jobs:
           rm -rf ./target/tmp || true
           rm -rf ./target/playdate || true
           cargo clean
+
+      - name: Rustup warmup
+        run: rustup show &
 
       - name: Install Deps
         uses: ./.github/actions/tools-deps
