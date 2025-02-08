@@ -285,7 +285,7 @@ jobs:
       matrix:
         os:
           - { name: mac, key: macos-14 }
-          # - { name: win, key: windows-latest }  # sim doesn't work
+          - { name: win, key: windows-latest }  # sim doesn't work
           # - { name: linux, key: ubuntu-latest } # sim doesn't work
         sdk:
           - ${{ inputs.sdk || 'latest' }}
@@ -329,6 +329,27 @@ jobs:
           cargo test --locked -p=cargo-playdate run:: -- --nocapture --test-threads=1
           sudo killall "Playdate Simulator" || true
           rm -rf ./target/tmp
+
+      - name: kill proc
+        shell: powershell
+        if: runner.os == 'Windows'
+        run: |
+          $sim = Get-Process "PlaydateSimulator" -ErrorAction SilentlyContinue
+          if ($sim)
+          {
+              $sim | Stop-Process
+              $count = 0
+              while (!$sim.HasExited)
+              {
+                  Start-Sleep -Milliseconds 10
+                  $count += 1
+
+                  if ($count -ge 5)
+                  {
+                      $sim | Stop-Process -Force
+                  }
+              }
+          }
 
   tool-package:
     name: "Tool: Package (${{ matrix.os.name }})"
