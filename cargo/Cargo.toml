@@ -1,6 +1,6 @@
 [package]
 name = "cargo-playdate"
-version = "0.5.7"
+version = "0.5.8"
 readme = "README.md"
 description = "Build tool for neat yellow console."
 keywords = ["playdate", "build", "cargo", "plugin", "cargo-subcommand"]
