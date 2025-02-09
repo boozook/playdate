@@ -702,7 +702,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-playdate"
-version = "0.5.8"
+version = "0.5.7"
 dependencies = [
  "anstyle",
  "anyhow",

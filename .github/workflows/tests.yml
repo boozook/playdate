@@ -294,7 +294,7 @@ jobs:
       matrix:
         os:
           - { name: mac, key: macos-14 }
-          - { name: win, key: windows-latest } # sim doesn't work
+          # - { name: win, key: windows-latest } # issue #487
           # - { name: linux, key: ubuntu-latest } # sim doesn't work
         sdk:
           - ${{ inputs.sdk || 'latest' }}
