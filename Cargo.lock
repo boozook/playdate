@@ -4290,7 +4290,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-simulator-utils"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "async-std",
  "log",
