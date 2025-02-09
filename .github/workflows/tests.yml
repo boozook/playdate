@@ -294,7 +294,7 @@ jobs:
       matrix:
         os:
           - { name: mac, key: macos-14 }
-          # - { name: win, key: windows-latest } # issue #487
+          # - { name: win, key: windows-latest } # Disabled due to issue #487
           # - { name: linux, key: ubuntu-latest } # sim doesn't work
         sdk:
           - ${{ inputs.sdk || 'latest' }}
@@ -347,23 +347,7 @@ jobs:
       - name: kill proc
         shell: powershell
         if: runner.os == 'Windows'
-        run: |
-          $sim = Get-Process "PlaydateSimulator" -ErrorAction SilentlyContinue
-          if ($sim)
-          {
-              $sim | Stop-Process
-              $count = 0
-              while (!$sim.HasExited)
-              {
-                  Start-Sleep -Milliseconds 10
-                  $count += 1
-
-                  if ($count -ge 5)
-                  {
-                      $sim | Stop-Process -Force
-                  }
-              }
-          }
+        run: Stop-Process -Name "PlaydateSimulator" -Force -ErrorAction SilentlyContinue
 
   tool-package:
     name: "Tool: Package (${{ matrix.os.name }})"
