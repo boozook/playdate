@@ -19,6 +19,12 @@ echo "0x8053c75\n0x80bf518" | pd-addr2line --exe pdex.elf -Cfri
 The `pd-symbolize-trace` can operate with stdin or file.
 Parameter `--exe` is optional and usually not needed for traces, but 🤷🏻‍♂️.
 ```bash
+# Preparation:
+# 1. connect to device
+# 2. send command "trace", dump it to ./trace-dump.txt
+# 3. send "stoptrace"
+# then following:
+
 export RUST_LOG="info" # prevent unnecessary logs from appearing in the output
 pd-symbolize-trace -Cfri trace-dump.txt # parse file, without elf
 pd-symbolize-trace --exe pdex.elf -Cfri trace-dump.txt # with elf
@@ -31,3 +37,48 @@ pd-symbolize-crashlog --exe pdex.elf -Cfr /Volumes/PLAYDATE/crashlog.txt
 ```
 
 All tools have `--help` parameter.
+
+
+### Usage with `pdtool`
+
+The [`pdtool`][] is a util for ease interaction with a device via USB.
+
+
+### Trace
+
+```bash
+pdtool send ! "trace 10" && pdtool read | pd-symbolize-trace --exe pdex.elf -Cfri | ./symbolized-trace.log
+# ...
+pdtool send ! stoptrace
+```
+
+### Crashlog
+
+```bash
+pdtool mount --wait && pd-symbolize-crashlog --exe pdex.elf -Cfri /Volumes/PLAYDATE/crashlog.txt;
+pdtool unmount
+```
+
+
+## Install
+
+You can grab the latest [release][] or you can build your own.
+
+
+
+### Build
+
+To build tools you need Rust __nightly__ toolchain. Recomended version is [there][rust-toolchain].
+
+
+
+## Prerequisites
+
+To symbolize pointers (or offsets) outside of your program you need [Playdate SDK][sdk].
+Ensure that env var `PLAYDATE_SDK_PATH` points to the SDK root. _This is optional, but good move to help the tool to find SDK, and also useful if you have more then one version of SDK._
+
+
+[pdtool]: https://crates.io/crates/playdate-tool
+[release]: https://github.com/boozook/playdate/releases
+[sdk]: https://play.date/dev/#cardSDK
+[rust-toolchain]: https://github.com/boozook/playdate/blob/main/rust-toolchain.toml
