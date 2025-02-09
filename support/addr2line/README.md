@@ -44,7 +44,7 @@ All tools have `--help` parameter.
 The [`pdtool`][] is a util for ease interaction with a device via USB.
 
 
-### Trace
+#### Trace
 
 ```bash
 pdtool send ! "trace 10" && pdtool read | pd-symbolize-trace --exe pdex.elf -Cfri | ./symbolized-trace.log
@@ -52,7 +52,7 @@ pdtool send ! "trace 10" && pdtool read | pd-symbolize-trace --exe pdex.elf -Cfr
 pdtool send ! stoptrace
 ```
 
-### Crashlog
+#### Crashlog
 
 ```bash
 pdtool mount --wait && pd-symbolize-crashlog --exe pdex.elf -Cfri /Volumes/PLAYDATE/crashlog.txt;
@@ -65,20 +65,39 @@ pdtool unmount
 You can grab the latest [release][] or you can build your own.
 
 
-
 ### Build
 
 To build tools you need Rust __nightly__ toolchain. Recomended version is [there][rust-toolchain].
 
+#### From crates.io:
+
+```bash
+cargo install playdate-symbolize
+```
+
+#### From the repo:
+
+```bash
+cargo install playdate-symbolize --git=https://github.com/boozook/playdate.git
+```
 
 
-## Prerequisites
+### Prerequisites
 
 To symbolize pointers (or offsets) outside of your program you need [Playdate SDK][sdk].
 Ensure that env var `PLAYDATE_SDK_PATH` points to the SDK root. _This is optional, but good move to help the tool to find SDK, and also useful if you have more then one version of SDK._
+
+Also you need your program - `elf` saved before packing into pdx.
+
 
 
 [pdtool]: https://crates.io/crates/playdate-tool
 [release]: https://github.com/boozook/playdate/releases
 [sdk]: https://play.date/dev/#cardSDK
 [rust-toolchain]: https://github.com/boozook/playdate/blob/main/rust-toolchain.toml
+
+
+
+- - -
+
+This software is not sponsored or supported by Panic.
