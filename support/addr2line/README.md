@@ -35,18 +35,19 @@ cat trace-dump.txt | pd-symbolize-trace --exe pdex.elf -Cfri # pipe
 ```
 
 <details><summary>
-The above ☝🏻 snippet assumes that you have prepared a trace-dump.
+The above ☝🏻 snippet assumes that you have prepared a trace-dump...
 </summary>
 
 ⚠️
 If you don't know what it is, you probably don't need it. Be careful and perform all actions at your own risk.
 
-The above ☝🏻 snippet assumes that you have prepared a trace-dump.
-You can do this by following the following steps.
-I recomend to use `pdtool` for it.
+### How to retrieve cpu-trace
+
+I recomend to use [`pdtool`][pdtool] for it.
+
 1. connect to device
-2. send command "trace", dump it to `./trace-dump.txt`
-3. send "stoptrace"
+2. send command `"trace"`, dump it to `./trace-dump.txt`
+3. send `"stoptrace"`
 
 </details>
 
@@ -57,7 +58,7 @@ All tools have `--help` parameter.
 
 ### Usage with `pdtool`
 
-The [`pdtool`][] is a util for ease interaction with a device via USB.
+The [`pdtool`][pdtool] is a util for ease interaction with a device via USB.
 
 
 #### Trace
