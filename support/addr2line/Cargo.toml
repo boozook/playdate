@@ -1,6 +1,6 @@
 [package]
 name = "playdate-symbolize"
-version = "0.2.1"
+version = "0.2.2"
 readme = "README.md"
 description = "Tools for symbolise addresses from bin (pdex.elf) and Playdate's trace or crashlog."
 keywords = ["playdate", "bin", "elf", "addr2line", "utility"]
