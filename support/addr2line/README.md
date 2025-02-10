@@ -43,11 +43,11 @@ If you don't know what it is, you probably don't need it. Be careful and perform
 
 ### How to retrieve cpu-trace
 
-I recomend to use [`pdtool`][pdtool] for it.
-
 1. connect to device
 2. send command `"trace"`, dump it to `./trace-dump.txt`
 3. send `"stoptrace"`
+
+How to do it using [`pdtool`][pdtool] - see [Usage with `pdtool` / Trace](#trace) below.
 
 </details>
 
