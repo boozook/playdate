@@ -52,9 +52,6 @@ jobs:
         with:
           version: ${{ github.event.inputs.sdk || 'latest' }}
 
-      - name: SDK ${{ steps.sdk.outputs.version }} installed
-        run: which pdc && pdc --version
-
       - name: Publish
         id: publisher
         uses: katyo/publish-crates@v2
