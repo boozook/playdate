@@ -1,6 +1,6 @@
 [package]
 name = "playdate-menu"
-version = "0.2.6"
+version = "0.2.7"
 readme = "README.md"
 description = "High-level system menu API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -22,23 +22,19 @@ bindgen-static = ["sys/bindgen-static"]
 bindings-derive-debug = ["sys/bindings-derive-debug"]
 
 
-[dependencies.sys]
-workspace = true
-default-features = false
-
 [dependencies]
+sys = { workspace = true, default-features = false }
 system = { workspace = true, default-features = false }
 
 [dev-dependencies]
 gfx = { workspace = true, default-features = false }
-system = { workspace = true, default-features = false, features = ["try-trait-v2"] }
 
 
 [[example]]
 name = "menu"
 crate-type = ["dylib", "staticlib"]
 path = "examples/menu.rs"
-required-features = ["sys/lang-items", "sys/entry-point"]
+required-features = ["sys/lang-items", "sys/entry-point", "system/try-trait-v2"]
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.menu"
