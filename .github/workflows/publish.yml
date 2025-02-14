@@ -44,7 +44,6 @@ jobs:
         uses: ./.github/actions/tools-deps
 
       - name: Install bindgen
-        if: matrix.bindgen.install
         uses: ./.github/actions/install-bindgen
 
       - name: Install Playdate SDK
