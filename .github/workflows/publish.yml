@@ -43,6 +43,10 @@ jobs:
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
+      - name: Install bindgen
+        if: matrix.bindgen.install
+        uses: ./.github/actions/install-bindgen
+
       - name: Install Playdate SDK
         id: sdk
         uses: pd-rs/get-playdate-sdk@main
