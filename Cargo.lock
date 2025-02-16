@@ -4188,7 +4188,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-controls"
-version = "0.3.8"
+version = "0.3.9"
 dependencies = [
  "playdate-display",
  "playdate-graphics",
