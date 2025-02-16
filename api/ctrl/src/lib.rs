@@ -12,9 +12,9 @@ pub mod buttons;
 pub mod peripherals;
 
 pub mod accelerometer {
-  pub use crate::peripherals::accelerometer_shorthands::*;
+	pub use crate::peripherals::accelerometer_shorthands::*;
 }
 
 pub mod crank {
-  pub use crate::peripherals::crank_shorthands::*;
+	pub use crate::peripherals::crank_shorthands::*;
 }
