@@ -3,6 +3,50 @@ use sys::ffi::PDButtons;
 use sys::ffi::PDPeripherals;
 use crate::api;
 
+/// Enables specified peripheral.
+///
+/// This function is shorthand for [`Peripherals::enable`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::setPeripheralsEnabled`]
+#[doc(alias = "sys::ffi::playdate_sys::setPeripheralsEnabled")]
+#[inline(always)]
+pub fn enable(value: PDPeripherals) { Peripherals::Default().enable(value) }
+
+/// By default, the accelerometer is disabled to save (a small amount of) power.
+///
+/// To use a peripheral, it must first be enabled via this function.
+///
+/// Accelerometer data is not available until the next update cycle after it’s enabled.
+///
+/// This function is shorthand for [`Peripherals::enable_accelerometer`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::setPeripheralsEnabled`]
+#[doc(alias = "sys::ffi::playdate_sys::setPeripheralsEnabled")]
+#[inline(always)]
+pub fn enable_accelerometer() { Peripherals::Default().enable_accelerometer() }
+
+/// Enables all peripherals.
+///
+/// This function is shorthand for [`Peripherals::enable_all`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::setPeripheralsEnabled`]
+#[doc(alias = "sys::ffi::playdate_sys::setPeripheralsEnabled")]
+#[inline(always)]
+pub fn enable_all() { Peripherals::Default().enable_all() }
+
+/// Disables all peripherals.
+///
+/// This function is shorthand for [`Peripherals::disable_all`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::setPeripheralsEnabled`]
+#[doc(alias = "sys::ffi::playdate_sys::setPeripheralsEnabled")]
+#[inline(always)]
+pub fn disable_all() {  Peripherals::Default().disable_all() }
+
 
 /// Peripherals
 #[derive(Debug, Clone, Copy)]

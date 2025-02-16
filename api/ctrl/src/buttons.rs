@@ -3,6 +3,71 @@ use core::fmt::Display;
 use core::ops::BitAnd;
 use sys::ffi::PDButtons;
 
+use crate::peripherals::{State, Buttons};
+
+
+/// Returns the current buttons [`State`].
+///
+/// This function is shorthand for [`Buttons::get`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getButtonState`].
+#[doc(alias = "sys::ffi::playdate_sys::getButtonState")]
+#[inline(always)]
+pub fn get() -> State { Buttons::Default().get() }
+
+/// Writes the current buttons state to given [`State`].
+///
+/// Updates all (current, pushed and released).
+///
+/// This function is shorthand for [`Buttons::get_to`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getButtonState`].
+#[doc(alias = "sys::ffi::playdate_sys::getButtonState")]
+#[inline(always)]
+pub fn get_to(state: &mut State) { Buttons::Default().get_to(state) }
+
+/// Writes the current buttons state to given references.
+///
+/// This function is shorthand for [`Buttons::get_to_raw`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getButtonState`].
+#[doc(alias = "sys::ffi::playdate_sys::getButtonState")]
+#[inline(always)]
+pub fn get_to_raw(current: &mut PDButtons, pushed: &mut PDButtons, released: &mut PDButtons) { Buttons::Default().get_to_raw(current, pushed, released) }
+
+/// Requests & returns only `current` part of state, see [Self::current]
+///
+/// This function is shorthand for [`Buttons::current`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getButtonState`].
+#[doc(alias = "sys::ffi::playdate_sys::getButtonState")]
+#[inline(always)]
+pub fn current() -> PDButtons { Buttons::Default().current() }
+
+/// Requests & returns only `current` part of state, see [Self::pushed]
+///
+/// This function is shorthand for [`Buttons::pushed`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getButtonState`].
+#[doc(alias = "sys::ffi::playdate_sys::getButtonState")]
+#[inline(always)]
+pub fn pushed() -> PDButtons { Buttons::Default().pushed() }
+
+/// Requests & returns only `current` part of state, see [Self::released]
+///
+/// This function is shorthand for [`Buttons::released`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getButtonState`].
+#[doc(alias = "sys::ffi::playdate_sys::getButtonState")]
+#[inline(always)]
+pub fn released() -> PDButtons { Buttons::Default().released() }
+
 
 pub trait PDButtonsExt: Sized + BitAnd<Self> {
 	#![allow(non_snake_case)]

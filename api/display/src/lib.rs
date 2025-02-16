@@ -6,6 +6,125 @@ use core::ffi::c_int;
 use core::ffi::c_uint;
 
 
+/// Returns the width of the display, taking the current scale into account;
+///
+/// e.g., if the scale is `2`, this function returns `200` instead of `400`.
+///
+/// See also [`Display::COLUMNS`].
+///
+/// This function is shorthand for [`Display::width`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_display::getWidth`]
+#[doc(alias = "sys::ffi::playdate_display::getWidth")]
+#[inline(always)]
+pub fn width() -> c_int { Display::Default().width() }
+
+/// Returns the height of the display, taking the current scale into account;
+///
+/// e.g., if the scale is `2`, this function returns `120` instead of `240`.
+///
+/// See also [`Display::ROWS`] and [`Display::ROW_SIZE`].
+///
+/// This function is shorthand for [`Display::height`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_display::getHeight`]
+#[doc(alias = "sys::ffi::playdate_display::getHeight")]
+#[inline(always)]
+pub fn height() -> c_int { Display::Default().height() }
+
+/// Sets the nominal refresh rate in frames per second.
+///
+/// Default is 20 fps, the maximum rate supported by the hardware for full-frame updates.
+///
+/// This function is shorthand for [`Display::set_refresh_rate`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_display::setRefreshRate`]
+#[doc(alias = "sys::ffi::playdate_display::setRefreshRate")]
+#[inline(always)]
+pub fn set_refresh_rate(rate: c_float) { Display::Default().set_refresh_rate(rate) }
+
+/// If `value` is `true`, the frame buffer is drawn inverted—black instead of white, and vice versa.
+///
+/// This function is shorthand for [`Display::set_inverted`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_display::setInverted`]
+#[doc(alias = "sys::ffi::playdate_display::setInverted")]
+#[inline(always)]
+pub fn set_inverted(value: bool) { Display::Default().set_inverted(value) }
+
+/// Sets the display scale factor.
+///
+/// The top-left corner of the frame buffer is scaled up to fill the display;
+///
+/// e.g., if the scale is set to [`DisplayScale::Quad`],
+/// the pixels in rectangle `[0, 100] x [0, 60]` are drawn on the screen as `4 x 4` squares.
+///
+/// This function is shorthand for [`Display::set_scale`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_display::setScale`]
+#[doc(alias = "sys::ffi::playdate_display::setScale")]
+#[inline(always)]
+pub fn set_scale(scale: DisplayScale) { Display::Default().set_scale(scale) }
+
+/// Sets the display scale factor.
+///
+/// Valid values for `scale` are `1`, `2`, `4`, and `8`.
+///
+/// The top-left corner of the frame buffer is scaled up to fill the display;
+/// e.g., if the scale is set to `4`, the pixels in rectangle `[0, 100] x [0, 60]` are drawn on the screen as `4 x 4` squares.
+///
+/// See also [`Display::set_scale`].
+///
+/// This function is shorthand for [`Display::set_scale_raw`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_display::setScale`]
+#[doc(alias = "sys::ffi::playdate_display::setScale")]
+#[inline(always)]
+pub fn set_scale_raw(scale: c_uint) { Display::Default().set_scale_raw(scale) }
+
+/// Adds a mosaic effect to the display.
+///
+/// Valid `x` and `y` values are between `0` and `3`, inclusive.
+///
+/// This function is shorthand for [`Display::set_mosaic`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_display::setMosaic`]
+#[doc(alias = "sys::ffi::playdate_display::setMosaic")]
+#[inline(always)]
+pub fn set_mosaic(x: c_uint, y: c_uint) { Display::Default().set_mosaic(x, y) }
+
+/// Flips the display on the `x` or `y` axis, or both.
+///
+/// This function is shorthand for [`Display::set_flipped`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_display::setFlipped`]
+#[doc(alias = "sys::ffi::playdate_display::setFlipped")]
+#[inline(always)]
+pub fn set_flipped(x: bool, y: bool) { Display::Default().set_flipped(x, y) }
+
+/// Offsets the display by the given amount.
+///
+/// Areas outside of the displayed area are filled with the current background color.
+///
+/// See also [`playdate-graphics::set_background_color`].
+///
+/// This function is shorthand for [`Display::set_offset`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_display::setOffset`]
+#[doc(alias = "sys::ffi::playdate_display::setOffset")]
+#[inline(always)]
+pub fn set_offset(x: c_int, y: c_int) { Display::Default().set_offset(x, y) }
+
+
 #[derive(Debug, Clone, Copy)]
 pub struct Display<Api = api::Default>(Api);
 

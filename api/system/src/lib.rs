@@ -28,6 +28,186 @@ use time::*;
 use lang::*;
 
 
+/// This function is shorthand for [`System::Default().language()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getLanguage`]
+#[doc(alias = "sys::ffi::playdate_sys::getLanguage")]
+#[inline(always)]
+pub fn language() -> PDLanguage { System::Default().language() }
+
+/// This function is shorthand for [`System::Default().current_time()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getCurrentTimeMilliseconds`]
+#[doc(alias = "sys::ffi::playdate_sys::getCurrentTimeMilliseconds")]
+#[inline(always)]
+pub fn current_time() -> Duration { System::Default().current_time() }
+
+/// This function is shorthand for [`System::Default().current_time_ms()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getCurrentTimeMilliseconds`]
+#[doc(alias = "sys::ffi::playdate_sys::getCurrentTimeMilliseconds")]
+#[inline(always)]
+pub fn current_time_ms() -> c_uint { System::Default().current_time_ms() }
+
+/// Returns the number of seconds elapsed since midnight (hour 0), January 1, 2000.
+///
+/// See also [`System::seconds_since_epoch_with_ms`].
+///
+/// This function is shorthand for [`System::Default().seconds_since_epoch()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getSecondsSinceEpoch`]
+#[doc(alias = "sys::ffi::playdate_sys::getSecondsSinceEpoch")]
+#[inline(always)]
+pub fn seconds_since_epoch() -> c_uint { System::Default().seconds_since_epoch() }
+
+/// Returns current time as `(seconds, milliseconds)`,
+/// elapsed since midnight (hour 0), January 1, 2000.
+///
+/// This function is shorthand for [`System::Default().seconds_since_epoch_with_ms()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getSecondsSinceEpoch`]
+#[doc(alias = "sys::ffi::playdate_sys::getSecondsSinceEpoch")]
+#[inline(always)]
+pub fn seconds_since_epoch_with_ms() -> (c_uint, c_uint) { System::Default().seconds_since_epoch_with_ms() }
+
+/// This function is shorthand for [`System::Default().time_since_epoch()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getSecondsSinceEpoch`]
+#[doc(alias = "sys::ffi::playdate_sys::getSecondsSinceEpoch")]
+#[inline(always)]
+pub fn time_since_epoch() -> Duration { System::Default().time_since_epoch() }
+
+/// This function is shorthand for [`System::Default().draw_fps()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::drawFPS`]
+#[doc(alias = "sys::ffi::playdate_sys::drawFPS")]
+#[inline(always)]
+pub fn draw_fps(x: c_int, y: c_int) { System::Default().draw_fps(x, y) }
+
+/// This function is shorthand for [`System::Default().flipped()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getFlipped`]
+#[doc(alias = "sys::ffi::playdate_sys::getFlipped")]
+#[inline(always)]
+pub fn flipped() -> bool { System::Default().flipped() }
+
+/// This function is shorthand for [`System::Default().set_auto_lock_disabled()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::setAutoLockDisabled`]
+#[doc(alias = "sys::ffi::playdate_sys::setAutoLockDisabled")]
+#[inline(always)]
+pub fn set_auto_lock_disabled(disable: bool) { System::Default().set_auto_lock_disabled(disable) }
+
+/// This function is shorthand for [`System::Default().reduce_flashing()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getReduceFlashing`]
+#[doc(alias = "sys::ffi::playdate_sys::getReduceFlashing")]
+#[inline(always)]
+pub fn reduce_flashing() -> bool { System::Default().reduce_flashing() }
+
+/// Returns the number of __seconds__ since [`reset_elapsed_time`] was called.
+///
+/// The value is a floating-point number with microsecond accuracy.
+///
+/// This function is shorthand for [`System::Default().elapsed_time_secs()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getElapsedTime`]
+#[doc(alias = "sys::ffi::playdate_sys::getElapsedTime")]
+#[inline(always)]
+pub fn elapsed_time_secs() -> c_float { System::Default().elapsed_time_secs() }
+
+/// This function is shorthand for [`System::Default().elapsed_time()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getElapsedTime`]
+#[doc(alias = "sys::ffi::playdate_sys::getElapsedTime")]
+#[inline(always)]
+pub fn elapsed_time() -> Duration { System::Default().elapsed_time() }
+
+/// This function is shorthand for [`System::Default().reset_elapsed_time()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::resetElapsedTime`]
+#[doc(alias = "sys::ffi::playdate_sys::resetElapsedTime")]
+#[inline(always)]
+pub fn reset_elapsed_time() { System::Default().reset_elapsed_time() }
+
+/// This function is shorthand for [`System::Default().battery_percentage()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getBatteryPercentage`]
+#[doc(alias = "sys::ffi::playdate_sys::getBatteryPercentage")]
+#[inline(always)]
+pub fn battery_percentage() -> c_float { System::Default().battery_percentage() }
+
+/// This function is shorthand for [`System::Default().battery_voltage()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getBatteryVoltage`]
+#[doc(alias = "sys::ffi::playdate_sys::getBatteryVoltage")]
+#[inline(always)]
+pub fn battery_voltage() -> c_float { System::Default().battery_voltage() }
+
+/// This function is shorthand for [`System::Default().timezone_offset()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::getTimezoneOffset`]
+#[doc(alias = "sys::ffi::playdate_sys::getTimezoneOffset")]
+#[inline(always)]
+pub fn timezone_offset() -> i32 { System::Default().timezone_offset() }
+
+/// This function is shorthand for [`System::Default().should_display_24_hour_time()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::shouldDisplay24HourTime`]
+#[doc(alias = "sys::ffi::playdate_sys::shouldDisplay24HourTime")]
+#[inline(always)]
+pub fn should_display_24_hour_time() -> bool { System::Default().should_display_24_hour_time() }
+
+/// This function is shorthand for [`System::Default().convert_epoch_to_date_time()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::convertEpochToDateTime`]
+#[doc(alias = "sys::ffi::playdate_sys::convertEpochToDateTime")]
+#[inline(always)]
+pub fn convert_epoch_to_date_time(epoch: u32) -> PDDateTime { System::Default().convert_epoch_to_date_time(epoch) }
+
+/// This function is shorthand for [`System::Default().convert_epoch_to_date_time_to()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::convertEpochToDateTime`]
+#[doc(alias = "sys::ffi::playdate_sys::convertEpochToDateTime")]
+#[inline(always)]
+pub fn convert_epoch_to_date_time_to(epoch: u32, dt: &mut PDDateTime) { System::Default().convert_epoch_to_date_time_to(epoch, dt) }
+
+/// This function is shorthand for [`System::Default().convert_date_time_to_epoch()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::convertDateTimeToEpoch`]
+#[doc(alias = "sys::ffi::playdate_sys::convertDateTimeToEpoch")]
+#[inline(always)]
+pub fn convert_date_time_to_epoch(dt: &PDDateTime) -> u32 { System::Default().convert_date_time_to_epoch(dt) }
+
+/// This function is shorthand for [`System::Default().set_serial_message_callback()`].,
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::setSerialMessageCallback`]
+#[doc(alias = "sys::ffi::playdate_sys::setSerialMessageCallback")]
+#[inline(always)]
+pub fn set_serial_message_callback<F>(callback: Option<F>) where F: 'static + FnMut(String) + Sized { System::Default().set_serial_message_callback(callback) }
+
+
 #[derive(Debug, Clone, Copy)]
 pub struct System<Api = api::Default>(Api);
 

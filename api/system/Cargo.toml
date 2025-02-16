@@ -1,6 +1,6 @@
 [package]
 name = "playdate-system"
-version = "0.3.15"
+version = "0.3.16"
 readme = "README.md"
 description = "High-level System API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
