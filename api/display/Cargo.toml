@@ -1,6 +1,6 @@
 [package]
 name = "playdate-display"
-version = "0.3.8"
+version = "0.3.9"
 readme = "README.md"
 description = "High-level Display API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -21,11 +21,9 @@ bindgen-runtime = ["sys/bindgen-runtime"]
 bindgen-static = ["sys/bindgen-static"]
 bindings-derive-debug = ["sys/bindings-derive-debug"]
 
-
-[dependencies.sys]
-workspace = true
-default-features = false
-
+[dependencies]
+gen-api-shorthands.workspace = true
+sys = { workspace = true, default-features = false }
 
 [package.metadata.docs.rs]
 all-features = false
