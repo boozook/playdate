@@ -24,6 +24,7 @@ bindings-derive-debug = ["sys/bindings-derive-debug", "color/bindings-derive-deb
 
 
 [dependencies]
+gen-api-shorthands.workspace = true
 sys = { workspace = true, default-features = false }
 fs = { workspace = true, default-features = false }
 color = { workspace = true, default-features = false }

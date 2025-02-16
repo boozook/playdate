@@ -4271,6 +4271,7 @@ dependencies = [
  "playdate-color",
  "playdate-display",
  "playdate-fs",
+ "playdate-gen-api-shorthands",
  "playdate-sys",
  "playdate-system",
 ]
