@@ -4329,7 +4329,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-sprite"
-version = "0.3.3"
+version = "0.3.2"
 dependencies = [
  "playdate-display",
  "playdate-graphics",
