@@ -5,7 +5,6 @@ use core::ffi::c_float;
 use core::ffi::c_int;
 use core::ffi::c_uint;
 
-
 #[derive(Debug, Clone, Copy)]
 pub struct Display<Api = api::Default>(Api);
 
@@ -48,7 +47,8 @@ impl Display<api::Default> {
 	                                                               bottom: Self::ROWS as _ };
 }
 
-
+pub use shorthands::*;
+#[gen_api_shorthands::gen_shorthands_mod(mod shorthands)]
 impl<Api: api::Api> Display<Api> {
 	/// Returns the width of the display, taking the current scale into account;
 	///
