@@ -1,0 +1,19 @@
+[package]
+name = "playdate-gen-api-shorthands"
+version = "0.1.0"
+keywords = ["playdate", "bindings", "code-generation"]
+categories = ["development-tools::ffi", "development-tools::build-utils"]
+edition.workspace = true
+license.workspace = true
+authors.workspace = ["kana <kana-github@qnet.li>"]
+homepage.workspace = true
+repository.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+derive-syn-parse = "0.2.0"
+proc-macro2.workspace = true
+quote.workspace = true
+syn.workspace = true

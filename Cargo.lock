@@ -1244,6 +1244,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive-syn-parse"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d65d7ce8132b7c0e54497a4d9a55a1c2a0912a0d786cf894472ba818fba45762"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.98",
+]
+
+[[package]]
 name = "derive_arbitrary"
 version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4191,6 +4202,7 @@ name = "playdate-controls"
 version = "0.3.8"
 dependencies = [
  "playdate-display",
+ "playdate-gen-api-shorthands",
  "playdate-graphics",
  "playdate-sys",
  "playdate-system",
@@ -4230,6 +4242,7 @@ dependencies = [
 name = "playdate-display"
 version = "0.3.8"
 dependencies = [
+ "playdate-gen-api-shorthands",
  "playdate-sys",
 ]
 
@@ -4239,6 +4252,16 @@ version = "0.2.11"
 dependencies = [
  "playdate-sys",
  "playdate-system",
+]
+
+[[package]]
+name = "playdate-gen-api-shorthands"
+version = "0.1.0"
+dependencies = [
+ "derive-syn-parse",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.98",
 ]
 
 [[package]]
@@ -4343,6 +4366,7 @@ dependencies = [
 name = "playdate-system"
 version = "0.3.15"
 dependencies = [
+ "playdate-gen-api-shorthands",
  "playdate-sys",
 ]
 
