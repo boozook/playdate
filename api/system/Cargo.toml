@@ -22,11 +22,9 @@ bindgen-runtime = ["sys/bindgen-runtime"]
 bindgen-static = ["sys/bindgen-static"]
 bindings-derive-debug = ["sys/bindings-derive-debug"]
 
-
-[dependencies.sys]
-workspace = true
-default-features = false
-
+[dependencies]
+gen-api-shorthands.workspace = true
+sys = { workspace = true, default-features = false }
 
 [[example]]
 name = "handler-boxed"
