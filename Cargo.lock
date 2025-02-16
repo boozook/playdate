@@ -4280,6 +4280,7 @@ dependencies = [
 name = "playdate-lua"
 version = "0.1.4"
 dependencies = [
+ "playdate-gen-api-shorthands",
  "playdate-sys",
  "playdate-system",
 ]
