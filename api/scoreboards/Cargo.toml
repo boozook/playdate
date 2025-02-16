@@ -23,6 +23,7 @@ bindings-derive-debug = ["sys/bindings-derive-debug"]
 
 
 [dependencies]
+gen-api-shorthands.workspace = true
 sys = { workspace = true, default-features = false }
 erased_set = "0.8"
 

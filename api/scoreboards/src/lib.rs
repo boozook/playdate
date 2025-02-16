@@ -63,6 +63,7 @@ impl<Api: api::Api> Scoreboards<Api> {
 }
 
 
+#[gen_api_shorthands::gen_shorthands]
 impl<Api: api::Api> Scoreboards<Api> {
 	/// Requests to add score `value` to the board with given `board_id`.
 	///
