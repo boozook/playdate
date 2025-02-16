@@ -58,6 +58,7 @@ impl<Api: api::Api> Sound<Api> {
 	pub fn new_with(api: Api) -> Self { Self(api) }
 }
 
+#[gen_api_shorthands::gen_shorthands]
 impl<Api: api::Api> Sound<Api> {
 	/// Returns the sound engine’s current time value, in units of sample frames, `44100` per second.
 	///

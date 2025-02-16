@@ -4299,6 +4299,7 @@ name = "playdate-scoreboards"
 version = "0.1.6"
 dependencies = [
  "erased_set",
+ "playdate-gen-api-shorthands",
  "playdate-sys",
  "playdate-system",
 ]
@@ -4320,6 +4321,7 @@ name = "playdate-sound"
 version = "0.4.4"
 dependencies = [
  "playdate-fs",
+ "playdate-gen-api-shorthands",
  "playdate-graphics",
  "playdate-sys",
  "playdate-system",
