@@ -10,3 +10,11 @@ extern crate sys;
 pub mod api;
 pub mod buttons;
 pub mod peripherals;
+
+pub mod accelerometer {
+  pub use crate::peripherals::accelerometer_shorthands::*;
+}
+
+pub mod crank {
+  pub use crate::peripherals::crank_shorthands::*;
+}
