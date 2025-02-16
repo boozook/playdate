@@ -47,8 +47,7 @@ impl Display<api::Default> {
 	                                                               bottom: Self::ROWS as _ };
 }
 
-pub use shorthands::*;
-#[gen_api_shorthands::gen_shorthands_mod(mod shorthands)]
+#[gen_api_shorthands::gen_shorthands]
 impl<Api: api::Api> Display<Api> {
 	/// Returns the width of the display, taking the current scale into account;
 	///

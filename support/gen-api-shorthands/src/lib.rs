@@ -16,10 +16,8 @@ struct AttrValue {
 }
 
 #[proc_macro_attribute]
-pub fn gen_shorthands_mod(attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn gen_shorthands(attr: TokenStream, item: TokenStream) -> TokenStream {
 	let source_impl: proc_macro2::TokenStream = item.clone().into();
-
-	let AttrValue { mod_vis, mod_token, mod_name } = parse_macro_input!(attr as AttrValue);
 	let ItemImpl { trait_, items, self_ty, .. } = parse_macro_input!(item as ItemImpl);
 
 	let self_ty = match *self_ty {
@@ -73,13 +71,22 @@ pub fn gen_shorthands_mod(attr: TokenStream, item: TokenStream) -> TokenStream {
 		}
 	}).collect::<Vec<_>>();
 
+	let mut shorthands = quote! { #(#shorthands)* };
+
+	if !attr.is_empty() {
+		let AttrValue { mod_vis, mod_token, mod_name } = parse_macro_input!(attr as AttrValue);
+
+		shorthands = quote! {
+			#mod_vis #mod_token #mod_name {
+				use super::*;
+
+				#shorthands
+			}
+		};
+	}
+
 	TokenStream::from(quote! {
 		#source_impl
-
-		#mod_vis #mod_token #mod_name {
-			use super::*;
-
-			#(#shorthands)*
-		}
+		#shorthands
 	})
 }

@@ -65,8 +65,7 @@ impl<Api: api::Api> System<Api> {
 	}
 }
 
-pub use shorthands::*;
-#[gen_api_shorthands::gen_shorthands_mod(mod shorthands)]
+#[gen_api_shorthands::gen_shorthands]
 impl<Api: api::Api> System<Api> {
 	/// Equivalent to [`sys::ffi::playdate_sys::getLanguage`]
 	#[doc(alias = "sys::ffi::playdate_sys::getLanguage")]

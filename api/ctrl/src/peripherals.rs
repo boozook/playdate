@@ -42,8 +42,7 @@ impl<Api: api::Api> Peripherals<Api> where Api: Copy {
 	pub const fn crank(&self) -> Crank<Api> { Crank(self.0) }
 }
 
-pub use shorthands::*;
-#[gen_api_shorthands::gen_shorthands_mod(mod shorthands)]
+#[gen_api_shorthands::gen_shorthands]
 impl<Api: api::Api> Peripherals<Api> {
 	/// Enables specified peripheral.
 	///
@@ -136,7 +135,7 @@ impl<Api: api::Api> Accelerometer<Api> {
 	pub const fn new_with(api: Api) -> Self { Self(api) }
 }
 
-#[gen_api_shorthands::gen_shorthands_mod(pub(crate) mod accelerometer_shorthands)]
+#[gen_api_shorthands::gen_shorthands(pub(crate) mod accelerometer_shorthands)]
 impl<Api: api::Api> Accelerometer<Api> {
 	/// Enables accelerometer only.
 	///
@@ -221,7 +220,7 @@ impl<Api: api::Api> Buttons<Api> {
 	pub const fn new_with(api: Api) -> Self { Self(api) }
 }
 
-#[gen_api_shorthands::gen_shorthands_mod(pub(crate) mod buttons_shorthands)]
+#[gen_api_shorthands::gen_shorthands(pub(crate) mod buttons_shorthands)]
 impl<Api: api::Api> Buttons<Api> {
 	/// Returns the current buttons [`State`].
 	///
@@ -367,7 +366,7 @@ impl<Api: api::Api> Crank<Api> {
 	pub const fn new_with(api: Api) -> Self { Self(api) }
 }
 
-#[gen_api_shorthands::gen_shorthands_mod(pub(crate) mod crank_shorthands)]
+#[gen_api_shorthands::gen_shorthands(pub(crate) mod crank_shorthands)]
 impl<Api: api::Api> Crank<Api> {
 	/// Returns boolean indicating whether or not the crank is folded into the unit.
 	///
