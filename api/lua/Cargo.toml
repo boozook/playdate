@@ -1,6 +1,6 @@
 [package]
 name = "playdate-lua"
-version = "0.1.4"
+version = "0.1.5"
 readme = "README.md"
 description = "High-level Lua API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]

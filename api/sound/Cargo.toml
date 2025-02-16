@@ -1,6 +1,6 @@
 [package]
 name = "playdate-sound"
-version = "0.4.4"
+version = "0.4.5"
 readme = "README.md"
 description = "High-level sound API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
