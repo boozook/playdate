@@ -1244,17 +1244,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "derive-syn-parse"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d65d7ce8132b7c0e54497a4d9a55a1c2a0912a0d786cf894472ba818fba45762"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.98",
-]
-
-[[package]]
 name = "derive_arbitrary"
 version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4258,7 +4247,6 @@ dependencies = [
 name = "playdate-gen-api-shorthands"
 version = "0.1.0"
 dependencies = [
- "derive-syn-parse",
  "proc-macro2",
  "quote",
  "syn 2.0.98",

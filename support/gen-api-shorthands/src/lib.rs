@@ -1,46 +1,63 @@
-#![feature(assert_matches)]
-#![feature(proc_macro_expand)]
-
-use std::assert_matches::assert_matches;
-
-use derive_syn_parse::Parse;
-use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, spanned::Spanned, FnArg, Ident, ImplItem, ImplItemFn, ItemImpl, Token, Visibility};
-
-#[derive(Parse)]
-struct AttrValue {
-	mod_vis: Visibility,
-	mod_token: Token![mod],
-	mod_name: Ident,
-}
+use syn::{parse::Parse, parse_macro_input, spanned::Spanned, FnArg, Ident, ImplItem, ImplItemFn, ItemImpl, Token, Visibility};
 
 #[proc_macro_attribute]
-pub fn gen_shorthands(attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn gen_shorthands(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
 	let source_impl: proc_macro2::TokenStream = item.clone().into();
+
+	let target_options = parse_macro_input!(attr as GenTargetOptions);
 	let (api, impl_items) = parse_api_impl(parse_macro_input!(item as ItemImpl));
 
 	let shorthands = impl_items.into_iter()
-		.map(parse_method)
-		.map(|method| into_shorthand(&api, method))
+		.map(parse_api_method)
+		.map(|method| api_method_into_shorthand(&api, method))
 		.collect::<Vec<_>>();
 
-	let shorthands = if attr.is_empty() {
-		quote! { #(#shorthands)* }
-	} else {
-		let AttrValue { mod_vis, mod_token, mod_name } = parse_macro_input!(attr as AttrValue);
-		quote! {
-			#mod_vis #mod_token #mod_name {
-				use super::*;
-				#(#shorthands)*
-			}
-		}
-	};
+	let shorthands = target_options.apply(quote! { #(#shorthands)* });
 
-	TokenStream::from(quote! {
+	proc_macro::TokenStream::from(quote! {
 		#source_impl
 		#shorthands
 	})
+}
+
+enum GenTargetOptions {
+	InPlace,
+	GenMod {
+		mod_vis: Visibility,
+		mod_token: Token![mod],
+		mod_name: Ident,
+	}
+}
+
+impl Parse for GenTargetOptions {
+	fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+		if input.is_empty() {
+			return Ok(GenTargetOptions::InPlace);
+		}
+
+		Ok(GenTargetOptions::GenMod {
+			mod_vis: input.parse()?,
+			mod_token: input.parse()?,
+			mod_name: input.parse()?,
+		})
+	}
+}
+
+impl GenTargetOptions {
+	fn apply(self, item: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+		match self {
+			GenTargetOptions::InPlace => item,
+			GenTargetOptions::GenMod { mod_vis, mod_token, mod_name } => {
+				quote! {
+					#mod_vis #mod_token #mod_name {
+						use super::*;
+						#item
+					}
+				}
+			}
+		}
+	}
 }
 
 fn parse_api_impl(impl_: ItemImpl) -> (Ident, Vec<ImplItem>) {
@@ -56,7 +73,7 @@ fn parse_api_impl(impl_: ItemImpl) -> (Ident, Vec<ImplItem>) {
 	return (api, impl_.items);
 }
 
-fn parse_method(item: ImplItem) -> ImplItemFn {
+fn parse_api_method(item: ImplItem) -> ImplItemFn {
 	let ImplItem::Fn(method) = item else { panic!("only methods are supported"); };
 
 	assert!(method.defaultness.is_none(), "default methods are not supported");
@@ -65,12 +82,12 @@ fn parse_method(item: ImplItem) -> ImplItemFn {
 	assert!(method.sig.unsafety.is_none(), "unsafe methods are not supported");
 	assert!(method.sig.abi.is_none(), "extern methods are not supported");
 	assert!(method.sig.variadic.is_none(), "variadic methods are not supported");
-	assert_matches!(method.sig.inputs.first(), Some(FnArg::Receiver(_)), "only methods are supported");
+	assert!(matches!(method.sig.inputs.first(), Some(FnArg::Receiver(_))), "only methods are supported");
 
 	return method;
 }
 
-fn into_shorthand(api: &Ident, mut method: ImplItemFn) -> ImplItemFn {
+fn api_method_into_shorthand(api: &Ident, mut method: ImplItemFn) -> ImplItemFn {
 	let method_name = method.sig.ident.clone();
 
 	// Remove the receiver from the method signature
@@ -83,8 +100,7 @@ fn into_shorthand(api: &Ident, mut method: ImplItemFn) -> ImplItemFn {
 
 	// All shorthand functions should inline
 	method.attrs.append({
-		let shorthand_doc_msg = quote! { concat!(" This function is shorthand for [`", stringify!(#api), "::", stringify!(#method_name), "`], using default ZST end-point.") };
-		let shorthand_doc_msg: proc_macro2::TokenStream = TokenStream::from(shorthand_doc_msg).expand_expr().unwrap().into();
+		let shorthand_doc_msg = format!("This function is shorthand for [`{}::{}`], using default ZST end-point.", api, method_name);
 
 		&mut vec![
 			syn::parse_quote! { #[doc = ""] },
