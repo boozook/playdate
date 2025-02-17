@@ -34,6 +34,7 @@ device = { version = "0.2", path = "support/device", package = "playdate-device"
 simulator = { version = "0.1", path = "support/sim-ctrl", package = "playdate-simulator-utils", default-features = false }
 bindgen = { version = "0.2", path = "support/bindgen", package = "playdate-bindgen", default-features = false }
 bindgen-cfg = { version = "0.2", path = "support/bindgen-cfg", package = "playdate-bindgen-cfg", default-features = false }
+gen-api-shorthands = { version = "0.1", path = "support/gen-api-shorthands", package = "playdate-gen-api-shorthands" }
 
 # Deps that used multiple times,
 # This is to prevent various versions in the deps-tree for faster compilation time
@@ -51,6 +52,10 @@ futures-lite = "2.6"
 thiserror = "2.0"
 tokio = { version = "1.43", default-features = false }
 async-std = { version = "1.13", default-features = false }
+
+proc-macro2 = { version = "1.0" }
+quote = { version = "1.0" }
+syn = { version = "2.0", features = ["extra-traits", "full", "parsing"] }
 
 
 [workspace.metadata.playdate.options.assets]
