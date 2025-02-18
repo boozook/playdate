@@ -9,6 +9,8 @@ use sys::ffi::{CString, CStr, LCDFont, LCDFontGlyph, LCDFontPage, LCDBitmap};
 use sys::traits::AsRaw;
 
 pub use sys::ffi::PDStringEncoding as StringEncoding;
+pub use sys::ffi::PDTextWrappingMode as TextWrappingMode;
+pub use sys::ffi::PDTextAlignment as TextAlignment;
 
 use crate::Graphics;
 use crate::bitmap::BitmapRef;
@@ -51,6 +53,24 @@ pub fn draw_text_cstr(text: &CStr, encoding: StringEncoding, x: c_int, y: c_int)
 	Graphics::Default().draw_text_cstr(text, encoding, x, y)
 }
 
+/// Draws the `text` in the given rectangle using the provided options.
+///
+/// If no `font` has been set with [`set_font`],
+/// the default system font `Asheville Sans 14 Light`` is used.
+///
+/// This function is shorthand for [`Graphics::draw_text_in_rect`],
+/// using default ZST end-point.
+///
+/// Equivalent to [`sys::ffi::playdate_graphics::drawTextInRect`].
+#[doc(alias = "sys::ffi::playdate_graphics::drawText")]
+#[inline(always)]
+pub fn draw_text_in_rect<S: AsRef<str>>(text: S,
+                                        x: c_int, y: c_int,
+                                        width: c_int, height: c_int,
+                                        wrap: TextWrappingMode,
+                                        align: TextAlignment) -> Result<(), NulError> {
+	Graphics::Default().draw_text_in_rect(text, x, y, width, height, wrap, align)
+}
 
 /// Returns the width of the given `text` in the given `font`.
 ///
@@ -262,6 +282,26 @@ impl<Api: crate::api::Api> Graphics<Api> {
 		unsafe { f(text.as_ptr().cast(), len, encoding, x, y) }
 	}
 
+	/// Draws the `text` in the given rectangle using the provided options.
+	///
+	/// If no `font` has been set with [`set_font`],
+	/// the default system font `Asheville Sans 14 Light`` is used.
+	///
+	/// Equivalent to [`sys::ffi::playdate_graphics::drawTextInRect`].
+	#[doc(alias = "sys::ffi::playdate_graphics::drawTextInRect")]
+	pub fn draw_text_in_rect<S: AsRef<str>>(&self,
+	                                        text: S,
+	                                        x: c_int,
+	                                        y: c_int,
+	                                        width: c_int,
+	                                        height: c_int,
+	                                        wrap: TextWrappingMode,
+	                                        align: TextAlignment) -> Result<(), NulError> {
+		let s = CString::new(text.as_ref())?;
+		let f = self.0.draw_text_in_rect();
+		let res = unsafe { f(s.as_ptr().cast(), text.as_ref().len(), StringEncoding::UTF8, x, y, width, height, wrap, align) };
+		Ok(res)
+	}
 
 	/// Returns the width of the given `text` in the given `font`.
 	///
@@ -520,6 +560,22 @@ pub trait StringEncodingExt {
 }
 impl StringEncodingExt for StringEncoding {}
 
+pub trait TextWrappingModeExt {
+	#![allow(non_upper_case_globals)]
+	const Clip: TextWrappingMode = TextWrappingMode::kWrapClip;
+	const Character: TextWrappingMode = TextWrappingMode::kWrapCharacter;
+	const Word: TextWrappingMode = TextWrappingMode::kWrapWord;
+}
+impl TextWrappingModeExt for TextWrappingMode {}
+
+pub trait TextAlignmentExt {
+	#![allow(non_upper_case_globals)]
+	const Left: TextAlignment = TextAlignment::kAlignTextLeft;
+	const Center: TextAlignment = TextAlignment::kAlignTextCenter;
+	const Right: TextAlignment = TextAlignment::kAlignTextRight;
+}
+impl TextAlignmentExt for TextAlignment {}
+
 
 pub mod api {
 	use core::ffi::c_char;
@@ -532,6 +588,8 @@ pub mod api {
 	use sys::ffi::LCDFontGlyph;
 	use sys::ffi::LCDFontPage;
 	use sys::ffi::PDStringEncoding;
+  use sys::ffi::PDTextWrappingMode;
+  use sys::ffi::PDTextAlignment;
 
 
 	/// Default graphics text api end-point, ZST.
@@ -560,6 +618,22 @@ pub mod api {
 			                        x: c_int,
 			                        y: c_int) -> c_int {
 			*sys::api!(graphics.drawText)
+		}
+
+		/// Equivalent to [`sys::ffi::playdate_graphics::drawTextInRect`]
+		#[doc(alias = "sys::ffi::playdate_graphics::drawTextInRect")]
+		#[inline(always)]
+		fn draw_text_in_rect(&self)
+			-> unsafe extern "C" fn(text: *const c_void,
+			                        len: usize,
+			                        encoding: PDStringEncoding,
+			                        x: c_int,
+			                        y: c_int,
+			                        width: c_int,
+			                        height: c_int,
+			                        wrap: PDTextWrappingMode,
+			                        align: PDTextAlignment) {
+			*sys::api!(graphics.drawTextInRect)
 		}
 
 		/// Equivalent to [`sys::ffi::playdate_graphics::getTextWidth`]
