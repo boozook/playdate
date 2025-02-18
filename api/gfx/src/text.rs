@@ -560,6 +560,22 @@ pub trait StringEncodingExt {
 }
 impl StringEncodingExt for StringEncoding {}
 
+pub trait TextWrappingModeExt {
+	#![allow(non_upper_case_globals)]
+	const Clip: TextWrappingMode = TextWrappingMode::kWrapClip;
+	const Character: TextWrappingMode = TextWrappingMode::kWrapCharacter;
+	const Word: TextWrappingMode = TextWrappingMode::kWrapWord;
+}
+impl TextWrappingModeExt for TextWrappingMode {}
+
+pub trait TextAlignmentExt {
+	#![allow(non_upper_case_globals)]
+	const Left: TextAlignment = TextAlignment::kAlignTextLeft;
+	const Center: TextAlignment = TextAlignment::kAlignTextCenter;
+	const Right: TextAlignment = TextAlignment::kAlignTextRight;
+}
+impl TextAlignmentExt for TextAlignment {}
+
 
 pub mod api {
 	use core::ffi::c_char;
