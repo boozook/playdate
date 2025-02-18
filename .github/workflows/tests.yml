@@ -149,6 +149,7 @@ jobs:
         uses: ./.github/actions/init-cfg
 
       - name: Rustup warmup
+        if: runner.os == 'Windows'
         run: rustup show &
 
       - name: Install Deps
@@ -207,6 +208,7 @@ jobs:
         uses: ./.github/actions/init-cfg
 
       - name: Rustup warmup
+        if: runner.os == 'Windows'
         run: rustup show &
 
       - name: Install Deps
@@ -261,6 +263,7 @@ jobs:
         uses: ./.github/actions/init-cfg
 
       - name: Rustup warmup
+        if: runner.os == 'Windows'
         run: rustup show &
 
       - name: Install Deps
@@ -318,6 +321,7 @@ jobs:
         uses: ./.github/actions/init-cfg
 
       - name: Rustup warmup
+        if: runner.os == 'Windows'
         run: rustup show &
 
       - name: Install Deps
@@ -391,6 +395,7 @@ jobs:
           cargo clean
 
       - name: Rustup warmup
+        if: runner.os == 'Windows'
         run: rustup show &
 
       - name: Install Deps
