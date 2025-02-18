@@ -3,6 +3,7 @@ use core::fmt::Display;
 use core::ops::BitAnd;
 use sys::ffi::PDButtons;
 
+pub use crate::peripherals::buttons_shorthands::*;
 
 pub trait PDButtonsExt: Sized + BitAnd<Self> {
 	#![allow(non_snake_case)]

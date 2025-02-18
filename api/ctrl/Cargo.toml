@@ -1,6 +1,6 @@
 [package]
 name = "playdate-controls"
-version = "0.3.8"
+version = "0.3.9"
 readme = "README.md"
 description = "High-level controls API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -23,6 +23,7 @@ bindings-derive-debug = ["sys/bindings-derive-debug"]
 
 
 [dependencies]
+gen-api-shorthands.workspace = true
 sys = { workspace = true, default-features = false }
 system = { workspace = true, default-features = false }
 
