@@ -4243,7 +4243,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-graphics"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "playdate-color",
  "playdate-display",
