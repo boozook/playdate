@@ -18,6 +18,7 @@ use sys::ffi::PDMenuItemCallbackFunction;
 use sys::ffi::PDMenuItem;
 use sys::ffi::CStr;
 use sys::ffi::CString;
+use gfx::bitmap::AnyBitmap;
 
 use error::{Error, ApiError};
 
@@ -343,6 +344,46 @@ pub fn remove_all_menu_items_with<Api: api::Api>(api: Api) {
 	unsafe { f() };
 }
 
+/// A game can optionally provide an image to be displayed alongside the system menu.
+/// bitmap must be a 400x240 LCDBitmap. All important content should be in the
+/// left half of the image in an area 200 pixels wide, as the menu will obscure the rest.
+/// The right side of the image will be visible briefly as the menu animates in and out.
+///
+/// Optionally, a non-zero xoffset, can be provided. This must be a number between 0 and 200
+/// and will cause the menu image to animate to a position offset left by xoffset pixels
+/// as the menu is animated in.
+///
+/// This function could be called in response to the kEventPause event in your implementation
+/// of `event_handler()`.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::setMenuImage`]
+#[doc(alias = "sys::ffi::playdate_sys::setMenuImage")]
+#[inline(always)]
+pub fn set_menu_image(bitmap: impl AnyBitmap, x_offset: c_int) {
+	set_menu_image_with(api::Default::default(), bitmap, x_offset);
+}
+
+
+/// A game can optionally provide an image to be displayed alongside the system menu.
+/// bitmap must be a 400x240 LCDBitmap. All important content should be in the
+/// left half of the image in an area 200 pixels wide, as the menu will obscure the rest.
+/// The right side of the image will be visible briefly as the menu animates in and out.
+///
+/// Optionally, a non-zero xoffset, can be provided. This must be a number between 0 and 200
+/// and will cause the menu image to animate to a position offset left by xoffset pixels
+/// as the menu is animated in.
+///
+/// This function could be called in response to the kEventPause event in your implementation
+/// of `event_handler()`.
+///
+/// Use given `api`.
+///
+/// Equivalent to [`sys::ffi::playdate_sys::setMenuImage`]
+#[doc(alias = "sys::ffi::playdate_sys::setMenuImage")]
+pub fn set_menu_image_with<Api: api::Api>(api: Api, bitmap: impl AnyBitmap, x_offset: c_int) {
+	let f = api.set_menu_image();
+	unsafe { f(bitmap.as_raw(), x_offset) };
+}
 
 pub trait SystemMenu<Api: api::Api + Copy> {
 	/// Removes all custom menu items from the system menu.
@@ -350,11 +391,34 @@ pub trait SystemMenu<Api: api::Api + Copy> {
 	/// Equivalent to [`sys::ffi::playdate_sys::removeAllMenuItems`]
 	#[doc(alias = "sys::ffi::playdate_sys::removeAllMenuItems")]
 	fn remove_all_menu_items(&self);
+
+	/// A game can optionally provide an image to be displayed alongside the system menu.
+	/// bitmap must be a 400x240 LCDBitmap. All important content should be in the
+	/// left half of the image in an area 200 pixels wide, as the menu will obscure the rest.
+	/// The right side of the image will be visible briefly as the menu animates in and out.
+	///
+	/// Optionally, a non-zero xoffset, can be provided. This must be a number between 0 and 200
+	/// and will cause the menu image to animate to a position offset left by xoffset pixels
+	/// as the menu is animated in.
+	///
+	/// This function could be called in response to the kEventPause event in your implementation
+	/// of `event_handler()`.
+	///
+	/// Equivalent to [`sys::ffi::playdate_sys::setMenuImage`]
+	#[doc(alias = "sys::ffi::playdate_sys::setMenuImage")]
+	fn set_menu_image(&self, bitmap: impl AnyBitmap, x_offset: c_int);
 }
 
 impl<Api: system::api::Api + api::Api + Copy> SystemMenu<Api> for system::System<Api> {
 	#[inline(always)]
-	fn remove_all_menu_items(&self) { remove_all_menu_items_with(self.inner()) }
+	fn remove_all_menu_items(&self) {
+		remove_all_menu_items_with(self.inner())
+	}
+
+	#[inline(always)]
+	fn set_menu_image(&self, bitmap: impl AnyBitmap, x_offset: c_int) {
+		set_menu_image_with(self.inner(), bitmap, x_offset)
+	}
 }
 
 
@@ -386,6 +450,7 @@ pub mod api {
 	use core::ffi::c_int;
 	use core::ffi::c_void;
 	use core::ptr::NonNull;
+	use sys::ffi::LCDBitmap;
 	use sys::ffi::PDMenuItem;
 	use sys::ffi::PDMenuItemCallbackFunction;
 	use sys::ffi::playdate_sys;
@@ -505,6 +570,11 @@ pub mod api {
 		#[inline(always)]
 		fn remove_all_menu_items(&self) -> unsafe extern "C" fn() {
 			self.as_inner().removeAllMenuItems.expect("removeAllMenuItems")
+		}
+
+		#[inline(always)]
+		fn set_menu_image(&self) -> unsafe extern "C" fn(*mut LCDBitmap, i32) {
+			self.as_inner().setMenuImage.expect("setMenuImage")
 		}
 	}
 
@@ -650,5 +720,9 @@ pub mod api {
 		/// Returns [`sys::ffi::playdate_sys::removeAllMenuItems`]
 		#[doc(alias = "sys::ffi::playdate_sys::removeAllMenuItems")]
 		fn remove_all_menu_items(&self) -> unsafe extern "C" fn() { *sys::api!(system.removeAllMenuItems) }
+
+		/// Returns [`sys::ffi::playdate_sys::setMenuImage`]
+		#[doc(alias = "sys::ffi::playdate_sys::setMenuImage")]
+		fn set_menu_image(&self) -> unsafe extern "C" fn(*mut LCDBitmap, i32) { *sys::api!(system.setMenuImage)}
 	}
 }
