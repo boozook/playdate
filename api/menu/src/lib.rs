@@ -406,7 +406,7 @@ pub trait SystemMenu<Api: api::Api + Copy> {
 	///
 	/// Equivalent to [`sys::ffi::playdate_sys::setMenuImage`]
 	#[doc(alias = "sys::ffi::playdate_sys::setMenuImage")]
-	pub fn set_menu_image(&self, bitmap: impl AnyBitmap, x_offset: c_int);
+	fn set_menu_image(&self, bitmap: impl AnyBitmap, x_offset: c_int);
 }
 
 impl<Api: system::api::Api + api::Api + Copy> SystemMenu<Api> for system::System<Api> {
