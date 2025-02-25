@@ -1,6 +1,6 @@
 [package]
 name = "playdate-bindgen"
-version = "0.2.2"
+version = "0.2.3"
 readme = "README.md"
 description = "Preconfigured Bindgen with extra codegen for Playdate C-API."
 keywords = ["playdate", "bindings", "ffi", "code-generation"]
@@ -21,9 +21,9 @@ html5ever = { version = "0.27.0", optional = true }
 markup5ever_rcdom = { version = "0.3.0", optional = true }
 
 # doc-gen:
-proc-macro2 = { version = "1.0", optional = true }
-syn = { version = "2.0", optional = true }         # +full, extra-traits, visit-mut
-quote = { version = "1.0", optional = true }
+proc-macro2 = { workspace = true, optional = true }
+quote = { workspace = true, optional = true }
+syn = { workspace = true, optional = true }
 
 log = { workspace = true, optional = true }
 prettyplease = { version = "0.2", optional = true, features = ["verbatim"] }
