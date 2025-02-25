@@ -7,6 +7,8 @@ use core::fmt::Write;
 use core::marker::PhantomData;
 use alloc::boxed::Box;
 
+use sys::error::NullPtrError;
+use sys::error::OkMutOrNullErr;
 use sys::error::OkOrNullFnErr;
 use sys::ffi::LCDPattern;
 use sys::ffi::LCDSolidColor;
@@ -113,13 +115,17 @@ impl From<*mut LCDBitmap> for BitmapRef<'_> {
 }
 
 impl<'owner> BitmapRef<'owner> {
-	pub fn into_bitmap(self) -> Bitmap<<Self as BitmapApi>::Api, false> {
-		Bitmap(unsafe { self.as_raw() }, self.api())
+	pub fn into_bitmap(self) -> Result<Bitmap<<Self as BitmapApi>::Api, false>, NullPtrError> {
+		let ptr = unsafe { self.as_raw() }.ok_or_null()?;
+		Ok(Bitmap(ptr, self.api()))
 	}
 
-	pub fn into_bitmap_with<Api: api::Api>(self, api: Api) -> Bitmap<Api, false> {
-		Bitmap(unsafe { self.as_raw() }, api)
+	pub fn into_bitmap_with<Api: api::Api>(self, api: Api) -> Result<Bitmap<Api, false>, NullPtrError> {
+		let ptr = unsafe { self.as_raw() }.ok_or_null()?;
+		Ok(Bitmap(ptr, api))
 	}
+
+	pub fn null() -> Self { Self::from(core::ptr::null_mut()) }
 }
 
 
@@ -689,10 +695,9 @@ impl<Api: crate::api::Api> Graphics<Api> {
 
 	/// Push a new drawing context for drawing into the given bitmap.
 	///
-	/// If underlying ptr in the `target` is `null`, the drawing functions will use the display framebuffer.
-	/// This mostly should not happen, just for note.
+	/// If `target` is [`BitmapRef::null()`], the drawing functions will use the display framebuffer.
 	///
-	/// To clear entire context use [`clear_context`].
+	/// To push framebuffer to context use [`Graphics::push_framebuffer_to_context`].
 	///
 	/// Equivalent to [`sys::ffi::playdate_graphics::pushContext`].
 	#[doc(alias = "sys::ffi::playdate_graphics::pushContext")]
@@ -701,13 +706,11 @@ impl<Api: crate::api::Api> Graphics<Api> {
 		unsafe { f(target.as_raw()) };
 	}
 
-	/// Resets drawing context for drawing into the system display framebuffer.
-	///
-	/// So drawing functions will use the display framebuffer.
+	/// Push a new drawing context for drawing into the display framebuffer.
 	///
 	/// Equivalent to [`sys::ffi::playdate_graphics::pushContext`].
 	#[doc(alias = "sys::ffi::playdate_graphics::pushContext")]
-	pub fn clear_context(&self) {
+	pub fn push_framebuffer_to_context(&self) {
 		let f = self.0.push_context();
 		unsafe { f(core::ptr::null_mut()) };
 	}
