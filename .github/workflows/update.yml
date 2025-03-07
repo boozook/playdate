@@ -146,6 +146,10 @@ jobs:
       - name: Install Deps
         uses: ./.github/actions/tools-deps
 
+      - name: Install bindgen
+        if: matrix.bindgen.install
+        uses: ./.github/actions/install-bindgen
+
       - name: Install Playdate SDK ${{ matrix.sdk }}
         continue-on-error: ${{ github.event.inputs.sdk == 'beta' }}
         id: sdk
