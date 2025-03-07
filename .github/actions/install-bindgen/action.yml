@@ -48,7 +48,3 @@ runs:
       with:
         path: ~/.cargo/bin/pdbindgen${{ runner.os == 'Windows' && '.exe' || '' }}
         key: bindgen-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('./support/bindgen/Cargo.toml') }}
-
-    - name: debug
-      shell: bash
-      run: ls ~/.cargo/bin/
