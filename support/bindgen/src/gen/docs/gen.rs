@@ -76,10 +76,10 @@ fn walk_struct(items: &[Cell<Item>],
 			},
 
 			ty => {
-				unimplemented!(
-				               "unknown: {prefix}{}: {}",
-				               field.ident.as_ref().expect("field.ident"),
-				               quote::quote!(#ty)
+				println!(
+				         "unknown: {prefix}{}: {}",
+				         field.ident.as_ref().expect("field.ident"),
+				         quote::quote!(#ty)
 				);
 			},
 		}

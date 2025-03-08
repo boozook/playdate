@@ -11,6 +11,18 @@ on:
         default: latest
         type: string
         required: true
+  workflow_dispatch:
+    inputs:
+      ref:
+        default: ""
+        description: git branch, tag or SHA to checkout.
+        type: string
+        required: false
+      sdk:
+        description: "Version of Playdate SDK"
+        default: latest
+        type: string
+        required: true
   pull_request:
   push:
     branches: [main, master]
@@ -172,6 +184,18 @@ jobs:
           cargo test --locked -p=playdate-tool --all-features
           cargo test -p=playdate-bindgen-cfg --all-features
           cargo test -p=playdate-bindgen --features=cli,runtime
+
+      - name: Test Bindgen
+        if: runner.os == 'macOS'
+        env:
+          PROFILE: dev
+          TARGET: aarch64-apple-darwin
+          CARGO_CFG_TARGET_ARCH: aarch64
+          CARGO_CFG_TARGET_POINTER_WIDTH: 64
+          CARGO_CFG_TARGET_OS: macos
+        run: |
+          cargo run -p=playdate-bindgen --features="cli,runtime" -- --features="" --output=target/out-test-bindings.rs
+          cargo run -p=playdate-bindgen --features="cli,runtime" -- --features="documentation" --output=target/out-test-bindings.rs
 
   tool:
     name: Tool (${{ matrix.os.name }})
