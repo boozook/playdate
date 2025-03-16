@@ -1,6 +1,6 @@
 [package]
 name = "playdate-system"
-version = "0.3.15"
+version = "0.3.16"
 readme = "README.md"
 description = "High-level System API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -22,11 +22,9 @@ bindgen-runtime = ["sys/bindgen-runtime"]
 bindgen-static = ["sys/bindgen-static"]
 bindings-derive-debug = ["sys/bindings-derive-debug"]
 
-
-[dependencies.sys]
-workspace = true
-default-features = false
-
+[dependencies]
+gen-api-shorthands.workspace = true
+sys = { workspace = true, default-features = false }
 
 [[example]]
 name = "handler-boxed"

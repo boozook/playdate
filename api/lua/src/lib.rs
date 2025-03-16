@@ -51,6 +51,7 @@ impl<Api: api::Api> Lua<Api> {
 impl Lua<api::Default> {}
 
 
+#[gen_api_shorthands::gen_shorthands]
 impl<Api: api::Api> Lua<Api> {
 	/// Adds the Lua function *f* to the Lua runtime, with name *name*. (*name*
 	/// can be a table path using dots, e.g. if name = “mycode.myDrawingFunction”

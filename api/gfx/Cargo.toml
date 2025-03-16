@@ -1,6 +1,6 @@
 [package]
 name = "playdate-graphics"
-version = "0.6.0"
+version = "0.6.1"
 readme = "README.md"
 description = "High-level graphics API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
@@ -24,6 +24,7 @@ bindings-derive-debug = ["sys/bindings-derive-debug", "color/bindings-derive-deb
 
 
 [dependencies]
+gen-api-shorthands.workspace = true
 sys = { workspace = true, default-features = false }
 fs = { workspace = true, default-features = false }
 color = { workspace = true, default-features = false }
