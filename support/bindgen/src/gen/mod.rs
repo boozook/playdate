@@ -1,4 +1,5 @@
 #![cfg(feature = "extra-codegen")]
+use std::borrow::Cow;
 use std::io::Write;
 use std::path::Path;
 use utils::toolchain::sdk::Sdk;
@@ -6,17 +7,35 @@ use quote::ToTokens;
 use proc_macro2::TokenStream;
 
 use crate::Result;
+use crate::error::Error;
+use crate::rustify::rename::{Kind, SharedRenamed};
 
 pub mod docs;
 
 
 #[allow(unused_variables)]
 pub fn engage(source: &bindgen::Bindings,
+              renamed: SharedRenamed,
               features: &crate::cfg::Features,
               sdk: &Sdk,
               root: Option<&str>)
               -> Result<Bindings> {
-	let root_struct_name = root.unwrap_or("PlaydateAPI");
+	let root_struct_name = {
+		let orig = root.as_ref().map(AsRef::as_ref).unwrap_or("PlaydateAPI");
+
+		// find the renamed root:
+		let key = Kind::Struct(orig.to_owned());
+		renamed.read()
+		       .map_err(|err| {
+			       let s = Box::leak(Box::new(format!("renamed set is locked: {err}"))).as_str();
+			       Error::Internal(s)
+		       })?
+		       .get(&key)
+		       .map(ToOwned::to_owned)
+		       .map(Cow::from)
+		       .unwrap_or_else(|| Cow::from(orig))
+	};
+
 
 	#[allow(unused_mut)]
 	let mut bindings = syn::parse_file(&source.to_string())?;
@@ -25,7 +44,7 @@ pub fn engage(source: &bindgen::Bindings,
 	#[cfg(feature = "documentation")]
 	let docset = if features.documentation {
 		let docset_new = docs::parser::parse(sdk)?;
-		docs::gen::engage(&mut bindings, root_struct_name, &docset_new)?;
+		docs::gen::engage(&mut bindings, &root_struct_name, &docset_new)?;
 		Some(docset_new)
 	} else {
 		None
