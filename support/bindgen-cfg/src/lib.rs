@@ -336,11 +336,11 @@ impl FromStr for Features {
 			return Ok(this);
 		}
 
-		for word in s.to_ascii_lowercase().split(',') {
+		for word in s.to_ascii_lowercase().split([',', ' ']).filter(|s| !s.is_empty()) {
 			match word {
 				"documentation" => this.documentation = true,
 				"rustify" => this.rustify = true,
-				_ => println!("cargo::warning=Unknown feature '{word}'."),
+				_ => println!("cargo::warning=Unknown feature '{word}' ({}).", word == "rustify"),
 			}
 		}
 
