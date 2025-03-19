@@ -15,7 +15,7 @@ publish = true
 
 
 [features]
-default = ["bindings-derive-debug"]
+default = ["bindings-derive-debug", "bindings-documentation"]
 
 lang-items = ["allocator", "panic-handler", "eh-personality"] # lang-items
 allocator = []                                                # global allocator
