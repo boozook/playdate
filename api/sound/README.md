@@ -18,7 +18,7 @@ Not covered things:
 - envelope
 - callbacks
 
-⚠️ Prior to the version `0.3` API is unstable and can be changed without deprecation period.
+⚠️ Prior to the version `1.0` API is unstable and can be changed without deprecation period.
 
 
 ## Prerequisites

@@ -7,6 +7,8 @@ Usage with [cargo-playdate][cargo-playdate] is strongly recommended.
 
 [playdate-website]: https://play.date/
 
+⚠️ Prior to the version `1.0` API is unstable and can be changed without deprecation period.
+
 
 ## What's inside
 

@@ -1,6 +1,6 @@
 [package]
 name = "playdate-scoreboards"
-version = "0.1.6"
+version = "0.1.7"
 readme = "README.md"
 description = "High-level Scoreboards API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
