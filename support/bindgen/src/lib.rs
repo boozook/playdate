@@ -9,10 +9,14 @@ use utils::consts::*;
 use utils::toolchain::gcc::{ArmToolchain, Gcc};
 use utils::toolchain::sdk::Sdk;
 pub use bindgen_cfg as cfg;
+use rustify::rename::SharedRenamed;
 
 
 pub mod error;
 pub mod gen;
+pub mod rustify {
+	pub mod rename;
+}
 
 
 type Result<T, E = error::Error> = std::result::Result<T, E>;
@@ -77,6 +81,9 @@ pub struct Generator {
 	/// Configured [`bindgen::Builder`].
 	pub builder: Builder,
 
+	/// Renamed symbols, if `rustify` is enabled.
+	renamed: SharedRenamed,
+
 	// configuration
 	pub derives: cfg::Derive,
 	pub features: cfg::Features,
@@ -98,8 +105,9 @@ impl Generator {
 		#[cfg(not(feature = "extra-codegen"))]
 		return Ok(Bindings::Bindgen(bindings));
 
+
 		#[cfg(feature = "extra-codegen")]
-		gen::engage(&bindings, &self.features, &self.sdk, None).map(Bindings::Engaged)
+		gen::engage(&bindings, self.renamed, &self.features, &self.sdk, None).map(Bindings::Engaged)
 	}
 }
 
@@ -134,7 +142,13 @@ fn create_generator(cfg: cfg::Cfg) -> Result<Generator, error::Error> {
 		                                  .or_else(|_| ArmToolchain::try_new())
 	             })
 	             .unwrap_or_else(ArmToolchain::try_new)?;
-	let mut builder = create_builder(&cargo_target_triple, &sdk_c_api, &main_header, &cfg.derive);
+	let (mut builder, renamed) = create_builder(
+	                                            &cargo_target_triple,
+	                                            &sdk_c_api,
+	                                            &main_header,
+	                                            &cfg.derive,
+	                                            &cfg.features,
+	);
 	builder = apply_profile(builder, is_debug);
 	builder = apply_target(builder, &cargo_target_triple, &gcc);
 
@@ -146,6 +160,7 @@ fn create_generator(cfg: cfg::Cfg) -> Result<Generator, error::Error> {
 	               version,
 	               filename,
 	               builder,
+	               renamed,
 	               derives: cfg.derive,
 	               features: cfg.features })
 }
@@ -179,7 +194,12 @@ pub fn env_var(name: &'static str) -> Result<String> {
 pub fn env_cargo_feature(feature: &str) -> bool { env::var(format!("CARGO_FEATURE_{feature}")).is_ok() }
 
 
-fn create_builder(_target: &str, capi: &Path, header: &Path, derive: &cfg::Derive) -> Builder {
+fn create_builder(_target: &str,
+                  capi: &Path,
+                  header: &Path,
+                  derive: &cfg::Derive,
+                  features: &cfg::Features)
+                  -> (Builder, SharedRenamed) {
 	let mut builder = bindgen::builder()
 	.header(format!("{}", header.display()))
 	.rust_target(RustTarget::nightly())
@@ -256,6 +276,15 @@ fn create_builder(_target: &str, capi: &Path, header: &Path, derive: &cfg::Deriv
 		builder = builder.parse_callbacks(Box::new(DeriveConstParamTy));
 	}
 
+	let renamed = if features.rustify {
+		let hook = rustify::rename::RenameMap::new();
+		let renamed = hook.renamed.clone();
+		builder = builder.parse_callbacks(Box::new(hook));
+		renamed
+	} else {
+		Default::default()
+	};
+
 
 	// explicitly set "do not derive":
 	if !derive.default {
@@ -274,7 +303,7 @@ fn create_builder(_target: &str, capi: &Path, header: &Path, derive: &cfg::Deriv
 		builder = builder.no_partialeq(".*");
 	}
 
-	builder
+	(builder, renamed)
 }
 
 

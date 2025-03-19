@@ -20,6 +20,8 @@ pub enum Error {
 
 	#[cfg(feature = "extra-codegen")]
 	Syn(syn::Error),
+
+	Internal(&'static str),
 }
 
 
@@ -62,6 +64,7 @@ impl std::fmt::Display for Error {
 			Error::Gcc(err) => err.fmt(f),
 			#[cfg(feature = "extra-codegen")]
 			Error::Syn(err) => err.fmt(f),
+			Error::Internal(s) => s.fmt(f),
 		}
 	}
 }
@@ -77,6 +80,7 @@ impl std::error::Error for Error {
 			Error::Gcc(err) => Some(err),
 			#[cfg(feature = "extra-codegen")]
 			Error::Syn(err) => Some(err),
+			Error::Internal(_) => None,
 		}
 	}
 }

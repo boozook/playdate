@@ -1,6 +1,6 @@
 [package]
 name = "playdate-bindgen-cfg"
-version = "0.2.1"
+version = "0.3.0"
 readme = "README.md"
 description = "Minimal configuration for playdate-bindgen."
 keywords = ["playdate", "bindings", "ffi", "code-generation"]
