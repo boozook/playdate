@@ -4155,7 +4155,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-build"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "dirs",
  "fs_extra",
@@ -4302,7 +4302,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-sprite"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "playdate-display",
  "playdate-graphics",
@@ -4332,7 +4332,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-sys"
-version = "0.5.1"
+version = "0.5.3"
 dependencies = [
  "arrayvec",
  "playdate-bindgen",
@@ -4341,14 +4341,14 @@ dependencies = [
 
 [[package]]
 name = "playdate-system"
-version = "0.3.15"
+version = "0.3.16"
 dependencies = [
  "playdate-sys",
 ]
 
 [[package]]
 name = "playdate-tool"
-version = "0.3.8"
+version = "0.3.9"
 dependencies = [
  "clap",
  "console-subscriber",

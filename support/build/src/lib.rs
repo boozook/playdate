@@ -1,4 +1,3 @@
-#![feature(extract_if)]
 #![feature(io_error_more)]
 #![feature(slice_concat_trait)]
 #![cfg_attr(test, feature(assert_matches))]

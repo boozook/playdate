@@ -190,13 +190,10 @@ mod impl_trait_v2 {
 	impl<E: Display> FromResidual<Result<Infallible, E>> for UpdateCtrl {
 		#[track_caller]
 		fn from_residual(residual: Result<Infallible, E>) -> Self {
-			if let Err(err) = residual {
-				sys::println!("Error: {err}");
-				// panic!("{err}");
-				Self::Stop
-			} else {
-				Self::Continue
-			}
+			let Err(err) = residual;
+			sys::println!("Error: {err}");
+			// panic!("{err}");
+			Self::Stop
 		}
 	}
 }

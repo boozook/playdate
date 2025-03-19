@@ -157,7 +157,7 @@ mod debug {
 			pddev::mount::volume::unmount::unmount_eject(&vol)?;
 		}
 
-		#[cfg(all(target_os = "windows", feature = "device/eject"))]
+		#[cfg(all(target_os = "windows", feature = "eject"))]
 		{
 			let vol = pddev::mount::volume::Volume::new(
 			                                            path.file_name()
