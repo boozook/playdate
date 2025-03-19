@@ -67,6 +67,7 @@ pub struct Args {
 	pub cfg: bindgen_cfg::Cfg,
 }
 
+
 #[derive(Debug, Clone, clap::ValueEnum)]
 pub enum Cmd {
 	/// Determine version for the Playdate SDK.

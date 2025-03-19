@@ -53,7 +53,7 @@ pub struct Cfg {
 	#[cfg_attr(feature = "clap", arg(long, value_name = "TY[,TY...]", default_value_t = Derive::default(), verbatim_doc_comment))]
 	pub derive: Derive,
 
-	/// Comma separated list of features to use. Possible values: documentation.
+	/// Comma separated list of features to use. Possible values: documentation, rustify.
 	#[cfg_attr(feature = "clap", arg(long, value_name = "FEATURE[,FEATURE...]", default_value_t = Features::default(), verbatim_doc_comment))]
 	pub features: Features,
 
@@ -306,10 +306,14 @@ impl Default for Derive {
 #[derive(Debug, Clone, Copy)]
 pub struct Features {
 	pub documentation: bool,
+	pub rustify: bool,
 }
 
 impl Features {
-	pub const fn empty() -> Self { Self { documentation: false } }
+	pub const fn empty() -> Self {
+		Self { documentation: false,
+		       rustify: false }
+	}
 
 	pub fn to_cli_args(&self) -> Vec<String> {
 		let words = self.to_feature_list();
@@ -335,6 +339,7 @@ impl FromStr for Features {
 		for word in s.to_ascii_lowercase().split(',') {
 			match word {
 				"documentation" => this.documentation = true,
+				"rustify" => this.rustify = true,
 				_ => println!("cargo::warning=Unknown feature '{word}'."),
 			}
 		}
@@ -348,6 +353,7 @@ impl Features {
 	fn to_feature_list(&self) -> String {
 		let mut out = Vec::new();
 		if self.documentation { out.push("documentation") }
+		if self.rustify { out.push("rustify") }
 		out.join(",")
 	}
 }
@@ -358,7 +364,10 @@ impl std::fmt::Display for Features {
 }
 
 impl Default for Features {
-	fn default() -> Self { Self { documentation: true } }
+	fn default() -> Self {
+		Self { documentation: true,
+		       rustify: false }
+	}
 }
 
 

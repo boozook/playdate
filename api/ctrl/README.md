@@ -4,6 +4,8 @@ High-level controls API built on-top of [playdate-sys][].
 
 Covered components: buttons, accelerometer and crank.
 
+⚠️ Prior to the version `1.0` API is unstable and can be changed without deprecation period.
+
 
 ## Prerequisites
 

@@ -1,6 +1,6 @@
 [package]
 name = "playdate-tool"
-version = "0.3.8"
+version = "0.3.9"
 readme = "README.md"
 description = "Tool for interaction with Playdate device and sim."
 keywords = ["playdate", "usb", "utility"]

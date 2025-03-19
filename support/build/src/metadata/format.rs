@@ -1030,8 +1030,11 @@ mod tests {
 		assert!(!AssetsOptions::default_dependencies());
 		let src = r#" [assets] "#;
 		let m = toml::from_str::<Options>(src).unwrap();
-		assert_matches!(m.assets, AssetsOptions { dependencies: None,
-		                                          .. });
+		assert_matches!(
+		                m.assets,
+		                AssetsOptions { dependencies: None,
+		                                .. }
+		);
 
 		// overrides default
 		let src = r#"
@@ -1039,8 +1042,11 @@ mod tests {
 		             dependencies = true
 		          "#;
 		let m = toml::from_str::<Options>(src).unwrap();
-		assert_matches!(m.assets, AssetsOptions { dependencies: Some(true),
-		                                          .. });
+		assert_matches!(
+		                m.assets,
+		                AssetsOptions { dependencies: Some(true),
+		                                .. }
+		);
 	}
 
 	#[test]
@@ -1151,8 +1157,11 @@ mod tests {
 		          "#;
 		let m = toml::from_str::<MetadataInner>(src).unwrap();
 		assert!(m.assets.is_empty());
-		assert_matches!(m.options.assets, AssetsOptions { dependencies: Some(true),
-		                                                  .. });
+		assert_matches!(
+		                m.options.assets,
+		                AssetsOptions { dependencies: Some(true),
+		                                .. }
+		);
 	}
 
 	#[test]

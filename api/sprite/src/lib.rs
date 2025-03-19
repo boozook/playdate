@@ -1,5 +1,4 @@
 #![cfg_attr(not(test), no_std)]
-#![feature(const_alloc_layout)]
 
 extern crate sys;
 extern crate alloc;

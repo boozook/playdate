@@ -315,6 +315,8 @@ To trigger changing _prebuilt_ bindings, you need set env var: `PD_BUILD_PREBUIL
 [crate-docs-example]: https://docs.rs/playdate-sys/0.1.3/playdate_sys/ffi/struct.playdate_sys.html
 
 
+⚠️ Prior to the version `1.0` API is unstable and can be changed without deprecation period.
+
 - - -
 
 This software is not sponsored or supported by Panic.

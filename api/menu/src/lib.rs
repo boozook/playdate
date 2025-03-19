@@ -411,9 +411,7 @@ pub trait SystemMenu<Api: api::Api + Copy> {
 
 impl<Api: system::api::Api + api::Api + Copy> SystemMenu<Api> for system::System<Api> {
 	#[inline(always)]
-	fn remove_all_menu_items(&self) {
-		remove_all_menu_items_with(self.inner())
-	}
+	fn remove_all_menu_items(&self) { remove_all_menu_items_with(self.inner()) }
 
 	#[inline(always)]
 	fn set_menu_image(&self, bitmap: impl AnyBitmap, x_offset: c_int) {
@@ -723,6 +721,6 @@ pub mod api {
 
 		/// Returns [`sys::ffi::playdate_sys::setMenuImage`]
 		#[doc(alias = "sys::ffi::playdate_sys::setMenuImage")]
-		fn set_menu_image(&self) -> unsafe extern "C" fn(*mut LCDBitmap, i32) { *sys::api!(system.setMenuImage)}
+		fn set_menu_image(&self) -> unsafe extern "C" fn(*mut LCDBitmap, i32) { *sys::api!(system.setMenuImage) }
 	}
 }

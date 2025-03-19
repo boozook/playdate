@@ -219,10 +219,10 @@ impl ArmToolchain {
 
 	pub fn lib_search_paths_for_playdate(&self) -> Result<Vec<PathBuf>, Error> {
 		self.lib_search_paths_for([
-		                           "-mthumb",
-		                           "-mcpu=cortex-m7",
-		                           "-mfloat-abi=hard",
-		                           "-mfpu=fpv5-sp-d16",
+			"-mthumb",
+			"-mcpu=cortex-m7",
+			"-mfloat-abi=hard",
+			"-mfpu=fpv5-sp-d16",
 		])
 	}
 

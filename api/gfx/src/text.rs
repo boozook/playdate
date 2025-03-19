@@ -65,10 +65,13 @@ pub fn draw_text_cstr(text: &CStr, encoding: StringEncoding, x: c_int, y: c_int)
 #[doc(alias = "sys::ffi::playdate_graphics::drawText")]
 #[inline(always)]
 pub fn draw_text_in_rect<S: AsRef<str>>(text: S,
-                                        x: c_int, y: c_int,
-                                        width: c_int, height: c_int,
+                                        x: c_int,
+                                        y: c_int,
+                                        width: c_int,
+                                        height: c_int,
                                         wrap: TextWrappingMode,
-                                        align: TextAlignment) -> Result<(), NulError> {
+                                        align: TextAlignment)
+                                        -> Result<(), NulError> {
 	Graphics::Default().draw_text_in_rect(text, x, y, width, height, wrap, align)
 }
 
@@ -296,10 +299,23 @@ impl<Api: crate::api::Api> Graphics<Api> {
 	                                        width: c_int,
 	                                        height: c_int,
 	                                        wrap: TextWrappingMode,
-	                                        align: TextAlignment) -> Result<(), NulError> {
+	                                        align: TextAlignment)
+	                                        -> Result<(), NulError> {
 		let s = CString::new(text.as_ref())?;
 		let f = self.0.draw_text_in_rect();
-		let res = unsafe { f(s.as_ptr().cast(), text.as_ref().len(), StringEncoding::UTF8, x, y, width, height, wrap, align) };
+		let res = unsafe {
+			f(
+			  s.as_ptr().cast(),
+			  text.as_ref().len(),
+			  StringEncoding::UTF8,
+			  x,
+			  y,
+			  width,
+			  height,
+			  wrap,
+			  align,
+			)
+		};
 		Ok(res)
 	}
 
@@ -588,8 +604,8 @@ pub mod api {
 	use sys::ffi::LCDFontGlyph;
 	use sys::ffi::LCDFontPage;
 	use sys::ffi::PDStringEncoding;
-  use sys::ffi::PDTextWrappingMode;
-  use sys::ffi::PDTextAlignment;
+	use sys::ffi::PDTextWrappingMode;
+	use sys::ffi::PDTextAlignment;
 
 
 	/// Default graphics text api end-point, ZST.
@@ -623,7 +639,8 @@ pub mod api {
 		/// Equivalent to [`sys::ffi::playdate_graphics::drawTextInRect`]
 		#[doc(alias = "sys::ffi::playdate_graphics::drawTextInRect")]
 		#[inline(always)]
-		fn draw_text_in_rect(&self)
+		fn draw_text_in_rect(
+			&self)
 			-> unsafe extern "C" fn(text: *const c_void,
 			                        len: usize,
 			                        encoding: PDStringEncoding,

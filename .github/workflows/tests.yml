@@ -604,6 +604,7 @@ jobs:
 
   semver:
     name: Semver
+    if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
     runs-on: macos-14
     steps:
       - name: Checkout
@@ -620,6 +621,7 @@ jobs:
 
   bumped:
     name: Consistency
+    if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
     runs-on: macos-14
     steps:
       - name: Checkout

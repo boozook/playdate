@@ -800,16 +800,16 @@ fn build_library<Layout, S>(config: &Config,
 		// TODO: #feature=compat & --with-setup => gcc.arg(setup.c) and -l artifact.path
 		// TODO: use const `GCC_ARGS_LIB` from support::compile
 		gcc.args([
-		          "-nostartfiles",
-		          "-mthumb",
-		          "-mcpu=cortex-m7",
-		          "-mfloat-abi=hard",
-		          "-mfpu=fpv5-sp-d16",
-		          "-D__FPU_USED=1",
-		          "-Wl,--cref,--gc-sections,--no-warn-mismatch,--emit-relocs",
-		          "-fno-exceptions",
-		          "-mword-relocations",
-		          "-fno-common",
+			"-nostartfiles",
+			"-mthumb",
+			"-mcpu=cortex-m7",
+			"-mfloat-abi=hard",
+			"-mfpu=fpv5-sp-d16",
+			"-D__FPU_USED=1",
+			"-Wl,--cref,--gc-sections,--no-warn-mismatch,--emit-relocs",
+			"-fno-exceptions",
+			"-mword-relocations",
+			"-fno-common",
 		]);
 		gcc.arg(&link_map);
 		if let Some(d) = d {
