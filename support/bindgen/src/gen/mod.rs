@@ -2,13 +2,14 @@
 use std::borrow::Cow;
 use std::io::Write;
 use std::path::Path;
+use std::sync::Arc;
 use utils::toolchain::sdk::Sdk;
 use quote::ToTokens;
 use proc_macro2::TokenStream;
 
 use crate::Result;
 use crate::error::Error;
-use crate::rustify::rename::{Kind, SharedRenamed};
+use crate::rustify::rename::{self, Kind, SharedRenamed};
 
 pub mod docs;
 
@@ -20,6 +21,10 @@ pub fn engage(source: &bindgen::Bindings,
               sdk: &Sdk,
               root: Option<&str>)
               -> Result<Bindings> {
+	if features.rustify {
+		rename::reduce(&mut Arc::clone(&renamed));
+	}
+
 	let root_struct_name = {
 		let orig = root.as_ref().map(AsRef::as_ref).unwrap_or("PlaydateAPI");
 

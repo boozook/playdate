@@ -106,11 +106,6 @@ impl Generator {
 		return Ok(Bindings::Bindgen(bindings));
 
 
-		if self.features.rustify {
-			rustify::rename::reduce(&mut self.renamed);
-		}
-
-
 		#[cfg(feature = "extra-codegen")]
 		gen::engage(&bindings, self.renamed, &self.features, &self.sdk, None).map(Bindings::Engaged)
 	}
