@@ -96,6 +96,8 @@ impl bindgen::callbacks::ParseCallbacks for RenameMap {
 		exact.insert("PlaydateAPI", "Playdate");
 		exact.insert("playdate_videostream", "PlaydateVideoStream");
 		exact.insert("l_valtype", "LuaValueType");
+		exact.insert("PDRect", "Rect");
+		exact.insert("LCDRect", "Aabb");
 
 		let mut ignore = BTreeSet::new();
 		ignore.extend([
