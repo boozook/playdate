@@ -702,7 +702,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-playdate"
-version = "0.5.7"
+version = "0.5.8"
 dependencies = [
  "anstyle",
  "anyhow",
@@ -4182,7 +4182,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-build-utils"
-version = "0.3.8"
+version = "0.3.10"
 dependencies = [
  "dirs",
  "log",

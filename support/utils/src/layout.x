@@ -8,7 +8,7 @@ MEMORY
 		Stack: 61800
 		Heap: 8388208
 	*/
-	ram (rwx) : ORIGIN = 0, LENGTH = 61800
+	ram (rwx) : ORIGIN = 0, LENGTH = 8388208
 }
 PROVIDE(_fstack = ORIGIN(ram) + LENGTH(ram) - 4);
 
