@@ -229,6 +229,7 @@ fn create_builder(_target: &str,
 	.allowlist_type("LCDMakePattern")
 	.allowlist_var("LCDOpaquePattern")
 	.allowlist_type("LCDOpaquePattern")
+	.allowlist_type("LCDFontLanguage")
 
 	.bitfield_enum("FileOptions")
 	.bitfield_enum("PDButtons")

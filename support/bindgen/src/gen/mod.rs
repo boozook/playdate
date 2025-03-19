@@ -22,7 +22,7 @@ pub fn engage(source: &bindgen::Bindings,
               root: Option<&str>)
               -> Result<Bindings> {
 	if features.rustify {
-		rename::reduce(&mut Arc::clone(&renamed));
+		rename::reduce(Arc::clone(&renamed));
 	}
 
 	let root_struct_name = {
@@ -40,6 +40,9 @@ pub fn engage(source: &bindgen::Bindings,
 		       .map(Cow::from)
 		       .unwrap_or_else(|| Cow::from(orig))
 	};
+
+
+	// rename::print_as_md_table(Arc::clone(&renamed));
 
 
 	#[allow(unused_mut)]
