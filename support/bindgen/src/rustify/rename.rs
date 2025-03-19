@@ -17,16 +17,13 @@ pub fn reduce(_changes: &mut SharedRenamed) {}
 
 
 /// Renames symbols in the bindings.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct RenameMap {
 	pub renamed: SharedRenamed,
 }
 
 impl RenameMap {
-	pub fn new() -> Self {
-		let renamed = SharedRenamed::default();
-		Self { renamed }
-	}
+	pub fn new() -> Self { Default::default() }
 
 	fn renamed(&self, was: Kind, now: String) {
 		self.renamed
