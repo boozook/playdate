@@ -1,0 +1,188 @@
+name: Update Toolchain
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Source ref used to build bindings. Uses `github.ref`` by default."
+        required: false
+      sha:
+        description: "Source SHA used to build bindings. Uses `github.sha`` by default."
+        required: false
+  push:
+    branches: [main, master, ci/update-rust-toolchain-workflow]
+
+  schedule:
+    - cron: "0 15 * * 1,3,5"
+
+env:
+  CARGO_INCREMENTAL: 1
+  CARGO_NET_RETRY: 10
+  RUSTUP_MAX_RETRIES: 10
+  CARGO_TERM_COLOR: always
+  CARGO_TERM_PROGRESS_WHEN: never
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    name: Update Toolchain
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.sha || github.event.inputs.source || github.ref || github.event.repository.default_branch }}
+          # ref: ${{ github.event.inputs.sha || github.event.inputs.source || github.sha || github.head_ref || github.ref }}
+          fetch-depth: 10
+
+      - name: Base branch name
+        id: base
+        if: ${{ github.ref_type == 'branch' }}
+        run: echo "value=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+
+      - name: Update Toolchain
+        uses: ./.github/actions/update-toolchain
+
+      - name: Verify Changed files
+        uses: tj-actions/verify-changed-files@v20
+        id: changes
+        with:
+          files: rust-toolchain.toml
+          files-separator: \n
+          separator: " "
+          fail-if-unchanged: "false"
+          # fail-message: Toolchain have not changed.
+
+      - name: Run step only when any of the above files change.
+        if: steps.changes.outputs.files_changed == 'true'
+        env:
+          CHANGED_FILES: ${{ steps.changes.outputs.changed_files }}
+        run: |
+          echo "Changed files: $CHANGED_FILES"
+        # Outputs: "Changed files: new.txt test_directory/new.txt"
+
+      - name: Commit
+        id: commit
+        uses: EndBug/add-and-commit@v9.1.4
+        with:
+          add: ./rust-toolchain.toml
+          author_name: dependabot[bot]
+          author_email: 49699333+dependabot[bot]@users.noreply.github.com
+          committer_name: GitHub
+          committer_email: noreply@github.com
+          default_author: github_actions
+          message: update rust toolchain
+          fetch: false
+          new_branch: update/rust-toolchain
+          pathspec_error_handling: ignore
+          pull: "" # "--rebase --autostash"
+          push: --force
+
+      - name: Committed
+        run: |
+          echo "Committed: ${{ steps.commit.outputs.committed }}"
+          echo "Pushed: ${{ steps.commit.outputs.pushed }}"
+          echo "SHA: ${{ steps.commit.outputs.commit_sha }}"
+          echo "SHAAAA: ${{ steps.commit.outputs.commit_long_sha }}"
+
+    outputs:
+      base: ${{ github.event.inputs.source || steps.base.outputs.value || github.event.repository.default_branch }}
+      committed: ${{ steps.commit.outputs.committed }}
+      pushed: ${{ steps.commit.outputs.pushed }}
+      sha: ${{ steps.commit.outputs.commit_long_sha }}
+      sha-short: ${{ steps.commit.outputs.commit_sha }}
+
+  tests:
+    name: Tests
+    needs: update
+    uses: ./.github/workflows/tests.yml
+    secrets: inherit
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+      checks: write
+      issues: write
+    with:
+      ref: ${{ needs.update.outputs.sha }}
+
+  pr:
+    name: PR
+    needs: [update, tests]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Inputs
+        run: |
+          echo "Work: ${{ needs.update.outputs.sha }}"
+          echo "Base: ${{ needs.update.outputs.base }}"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.update.outputs.sha }}
+
+      - name: Create PR
+        id: pr
+        uses: TreTuna/sync-branches@main # use @1.4.0+
+        with:
+          GITHUB_TOKEN: ${{secrets.PR_GITHUB_TOKEN}}
+          FROM_BRANCH: refs/heads/update/rust-toolchain
+          TO_BRANCH: ${{ needs.update.outputs.base }}
+          PULL_REQUEST_TITLE: Update rust toolchain
+          PULL_REQUEST_BODY: ""
+          PULL_REQUEST_IS_DRAFT: false
+          CONTENT_COMPARISON: true
+          # REVIEWERS: '["boozook"]'
+          PULL_REQUEST_AUTO_MERGE_METHOD: squash
+    outputs:
+      number: ${{ steps.pr.outputs.PULL_REQUEST_NUMBER }}
+      url: ${{ steps.pr.outputs.PULL_REQUEST_URL }}
+
+  # accept:
+  #   name: Accept
+  #   needs: [update, pr]
+  #   runs-on: ubuntu-latest
+  #   continue-on-error: true
+  #   defaults:
+  #     run:
+  #       shell: bash
+  #   permissions:
+  #     pull-requests: write
+  #     contents: write
+  #   env:
+  #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #   steps:
+  #     - name: PR
+  #       run: |
+  #         echo "URL: ${{ needs.pr.outputs.url }}"
+  #         echo "ID: ${{ needs.pr.outputs.number }}"
+  #         echo "Any: ${{ needs.pr.outputs.url || needs.pr.outputs.number }}"
+
+  #     # needed when using PR-number instead of url
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         ref: ${{ needs.update.outputs.sha }}
+
+  #     - name: Approve
+  #       if: needs.pr.outputs.url
+  #       run: gh pr review --approve "${{ needs.pr.outputs.number || needs.pr.outputs.url }}"
+
+  #     - name: Auto-merge
+  #       if: success()
+  #       env:
+  #         GITHUB_TOKEN: ${{secrets.PR_GITHUB_TOKEN}}
+  #       run: >-
+  #         gh pr merge --auto --squash
+  #         "${{ needs.pr.outputs.number || needs.pr.outputs.url }}"
