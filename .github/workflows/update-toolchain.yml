@@ -84,7 +84,7 @@ jobs:
           new_branch: update/rust-toolchain
           pathspec_error_handling: ignore
           pull: "" # "--rebase --autostash"
-          push: --force
+          push: --set-upstream --force
 
       - name: Committed
         run: |
