@@ -9,6 +9,13 @@ inputs:
     default: "true"
     description: Post-format with taplo
     required: false
+outputs:
+  previous:
+    description: Path of SDK root
+    value: ${{ steps.update.outputs.previous }}
+  actual:
+    description: Version of the installed SDK.
+    value: ${{ steps.update.outputs.actual }}
 runs:
   using: "composite"
   steps:
@@ -41,6 +48,9 @@ runs:
         echo "updating: $OLD_VERSION -> $NEW_VERSION"
 
         tomli set -f=./ed-rust-toolchain.toml toolchain.channel $NEW_VERSION > ./rust-toolchain.toml
+
+        echo "previous=$OLD_VERSION" >> $GITHUB_OUTPUT
+        echo "actual=$NEW_VERSION" >> $GITHUB_OUTPUT
 
     - name: Restore Backup
       if: steps.update.outcome == 'failure'
