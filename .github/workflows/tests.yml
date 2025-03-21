@@ -7,10 +7,15 @@ on:
         type: string
         required: true
       sdk:
-        description: "Version of Playdate SDK"
+        description: Version of Playdate SDK
         default: latest
         type: string
         required: true
+      semver:
+        description: Run semver-tests
+        default: true
+        type: boolean
+        required: false
   workflow_dispatch:
     inputs:
       ref:
@@ -23,6 +28,11 @@ on:
         default: latest
         type: string
         required: true
+      semver:
+        description: Run semver-tests
+        default: true
+        type: boolean
+        required: false
   pull_request:
   push:
     branches: [main, master]
@@ -604,7 +614,7 @@ jobs:
 
   semver:
     name: Semver
-    if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+    if: inputs.semver != 'false' && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
     runs-on: macos-14
     steps:
       - name: Checkout
