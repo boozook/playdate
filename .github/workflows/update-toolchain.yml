@@ -48,6 +48,7 @@ jobs:
         run: echo "value=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
 
       - name: Update Toolchain
+        id: toolchain
         uses: ./.github/actions/update-toolchain
 
       - name: Verify Changed files
@@ -78,7 +79,7 @@ jobs:
           committer_name: GitHub
           committer_email: noreply@github.com
           default_author: github_actions
-          message: update rust toolchain
+          message: update rust toolchain `${{ steps.toolchain.outputs.previous }}` -> `${{ steps.toolchain.outputs.actual }}`
           fetch: false
           new_branch: update/rust-toolchain
           pathspec_error_handling: ignore
@@ -98,6 +99,8 @@ jobs:
       pushed: ${{ steps.commit.outputs.pushed }}
       sha: ${{ steps.commit.outputs.commit_long_sha }}
       sha-short: ${{ steps.commit.outputs.commit_sha }}
+      previous: ${{ steps.toolchain.outputs.previous }}
+      actual: ${{ steps.toolchain.outputs.actual }}
 
   tests:
     name: Tests
@@ -141,8 +144,10 @@ jobs:
           GITHUB_TOKEN: ${{secrets.PR_GITHUB_TOKEN}}
           FROM_BRANCH: refs/heads/update/rust-toolchain
           TO_BRANCH: ${{ needs.update.outputs.base }}
-          PULL_REQUEST_TITLE: Update rust toolchain
-          PULL_REQUEST_BODY: ""
+          PULL_REQUEST_TITLE: Update rust toolchain to `${{ needs.update.outputs.previous }}`
+          PULL_REQUEST_BODY: |
+            Changed `toolchain.channel` in the rust-toolchain.toml
+            `${{ needs.update.outputs.previous }}` -> `${{ needs.update.outputs.actual }}`
           PULL_REQUEST_IS_DRAFT: false
           CONTENT_COMPARISON: true
           # REVIEWERS: '["boozook"]'
