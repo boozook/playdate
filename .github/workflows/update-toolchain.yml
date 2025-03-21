@@ -178,10 +178,11 @@ jobs:
         if: needs.pr.outputs.url
         run: gh pr review --approve "${{ needs.pr.outputs.number || needs.pr.outputs.url }}"
 
-      # - name: Auto-merge
-      #   if: success()
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.PR_GITHUB_TOKEN}}
-      #   run: >-
-      #     gh pr merge --auto --squash
-      #     "${{ needs.pr.outputs.number || needs.pr.outputs.url }}"
+      - name: Auto-merge
+        if: success()
+        # env:
+        #   GITHUB_TOKEN: ${{secrets.PR_GITHUB_TOKEN}}
+        run: echo "ok"
+        # run: >-
+        #   gh pr merge --auto --squash
+        #   "${{ needs.pr.outputs.number || needs.pr.outputs.url }}"
