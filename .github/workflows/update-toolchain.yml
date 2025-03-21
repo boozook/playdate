@@ -39,7 +39,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.sha || github.event.inputs.source || github.ref || github.event.repository.default_branch }}
-          # ref: ${{ github.event.inputs.sha || github.event.inputs.source || github.sha || github.head_ref || github.ref }}
           fetch-depth: 10
 
       - name: Base branch name
@@ -61,16 +60,9 @@ jobs:
           fail-if-unchanged: "false"
           # fail-message: Toolchain have not changed.
 
-      - name: Run step only when any of the above files change.
-        if: steps.changes.outputs.files_changed == 'true'
-        env:
-          CHANGED_FILES: ${{ steps.changes.outputs.changed_files }}
-        run: |
-          echo "Changed files: $CHANGED_FILES"
-        # Outputs: "Changed files: new.txt test_directory/new.txt"
-
       - name: Commit
         id: commit
+        if: steps.changes.outputs.files_changed == 'true'
         uses: EndBug/add-and-commit@v9.1.4
         with:
           add: ./rust-toolchain.toml
@@ -86,7 +78,7 @@ jobs:
           pull: "" # "--rebase --autostash"
           push: --set-upstream origin update/rust-toolchain --force
 
-      - name: Committed
+      - name: Results
         run: |
           echo "Committed: ${{ steps.commit.outputs.committed }}"
           echo "Pushed: ${{ steps.commit.outputs.pushed }}"
@@ -117,6 +109,7 @@ jobs:
       issues: write
     with:
       sdk: latest
+      semver: "false"
       ref: ${{ needs.update.outputs.sha }}
 
   pr:
@@ -131,11 +124,6 @@ jobs:
       pull-requests: write
       contents: write
     steps:
-      - name: Inputs
-        run: |
-          echo "Work: ${{ needs.update.outputs.work }}: ${{ needs.update.outputs.sha }}"
-          echo "Base: ${{ needs.update.outputs.base }}"
-
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.update.outputs.sha }}
@@ -159,39 +147,39 @@ jobs:
       number: ${{ steps.pr.outputs.PULL_REQUEST_NUMBER }}
       url: ${{ steps.pr.outputs.PULL_REQUEST_URL }}
 
-  # accept:
-  #   name: Accept
-  #   needs: [update, pr]
-  #   runs-on: ubuntu-latest
-  #   continue-on-error: true
-  #   defaults:
-  #     run:
-  #       shell: bash
-  #   permissions:
-  #     pull-requests: write
-  #     contents: write
-  #   env:
-  #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #   steps:
-  #     - name: PR
-  #       run: |
-  #         echo "URL: ${{ needs.pr.outputs.url }}"
-  #         echo "ID: ${{ needs.pr.outputs.number }}"
-  #         echo "Any: ${{ needs.pr.outputs.url || needs.pr.outputs.number }}"
+  accept:
+    name: Accept
+    needs: [update, pr]
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      pull-requests: write
+      contents: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: PR
+        run: |
+          echo "URL: ${{ needs.pr.outputs.url }}"
+          echo "ID: ${{ needs.pr.outputs.number }}"
+          echo "Any: ${{ needs.pr.outputs.url || needs.pr.outputs.number }}"
 
-  #     # needed when using PR-number instead of url
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         ref: ${{ needs.update.outputs.sha }}
+      # needed when using PR-number instead of url
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.update.outputs.sha }}
 
-  #     - name: Approve
-  #       if: needs.pr.outputs.url
-  #       run: gh pr review --approve "${{ needs.pr.outputs.number || needs.pr.outputs.url }}"
+      - name: Approve
+        if: needs.pr.outputs.url
+        run: gh pr review --approve "${{ needs.pr.outputs.number || needs.pr.outputs.url }}"
 
-  #     - name: Auto-merge
-  #       if: success()
-  #       env:
-  #         GITHUB_TOKEN: ${{secrets.PR_GITHUB_TOKEN}}
-  #       run: >-
-  #         gh pr merge --auto --squash
-  #         "${{ needs.pr.outputs.number || needs.pr.outputs.url }}"
+      # - name: Auto-merge
+      #   if: success()
+      #   env:
+      #     GITHUB_TOKEN: ${{secrets.PR_GITHUB_TOKEN}}
+      #   run: >-
+      #     gh pr merge --auto --squash
+      #     "${{ needs.pr.outputs.number || needs.pr.outputs.url }}"
