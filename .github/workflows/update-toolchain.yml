@@ -111,6 +111,7 @@ jobs:
       checks: write
       issues: write
     with:
+      sdk: latest
       ref: ${{ needs.update.outputs.sha }}
 
   pr:
