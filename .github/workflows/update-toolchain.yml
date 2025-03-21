@@ -84,7 +84,7 @@ jobs:
           new_branch: update/rust-toolchain
           pathspec_error_handling: ignore
           pull: "" # "--rebase --autostash"
-          push: --set-upstream --force
+          push: --set-upstream origin update/rust-toolchain --force
 
       - name: Committed
         run: |
@@ -94,6 +94,7 @@ jobs:
           echo "SHAAAA: ${{ steps.commit.outputs.commit_long_sha }}"
 
     outputs:
+      work: update/rust-toolchain
       base: ${{ github.event.inputs.source || steps.base.outputs.value || github.event.repository.default_branch }}
       committed: ${{ steps.commit.outputs.committed }}
       pushed: ${{ steps.commit.outputs.pushed }}
@@ -105,6 +106,7 @@ jobs:
   tests:
     name: Tests
     needs: update
+    if: needs.update.outputs.pushed == 'true'
     uses: ./.github/workflows/tests.yml
     secrets: inherit
     permissions:
@@ -120,6 +122,7 @@ jobs:
   pr:
     name: PR
     needs: [update, tests]
+    if: needs.update.outputs.pushed == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -130,7 +133,7 @@ jobs:
     steps:
       - name: Inputs
         run: |
-          echo "Work: ${{ needs.update.outputs.sha }}"
+          echo "Work: ${{ needs.update.outputs.work }}: ${{ needs.update.outputs.sha }}"
           echo "Base: ${{ needs.update.outputs.base }}"
 
       - uses: actions/checkout@v4
@@ -142,7 +145,7 @@ jobs:
         uses: TreTuna/sync-branches@main # use @1.4.0+
         with:
           GITHUB_TOKEN: ${{secrets.PR_GITHUB_TOKEN}}
-          FROM_BRANCH: refs/heads/update/rust-toolchain
+          FROM_BRANCH: refs/heads/${{ needs.update.outputs.work }}
           TO_BRANCH: ${{ needs.update.outputs.base }}
           PULL_REQUEST_TITLE: Update rust toolchain to `${{ needs.update.outputs.previous }}`
           PULL_REQUEST_BODY: |
