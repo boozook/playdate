@@ -1,0 +1,74 @@
+name: Update Rust Toolchain
+description: Updates rust-toolchain.toml preserving format & comments.
+author: Alex Koz
+branding:
+  icon: package
+  color: yellow
+inputs:
+  fmt:
+    default: "true"
+    description: Post-format with taplo
+    required: false
+outputs:
+  previous:
+    description: Path of SDK root
+    value: ${{ steps.update.outputs.previous }}
+  actual:
+    description: Version of the installed SDK.
+    value: ${{ steps.update.outputs.actual }}
+runs:
+  using: "composite"
+  steps:
+    - name: Install Taplo
+      if: inputs.fmt == 'true'
+      uses: uncenter/setup-taplo@v1.0.8
+      with:
+        version: "0.9.3"
+
+    - name: Install tools
+      shell: bash
+      run: |
+        cargo install --locked cargo-toolchainer
+        cargo install tomli
+
+    - name: SDK ${{ steps.sdk.outputs.version }} installed
+      id: update
+      continue-on-error: true
+      shell: bash
+      run: |
+        cp ./rust-toolchain.toml ./bu-rust-toolchain.toml
+        cp ./rust-toolchain.toml ./ed-rust-toolchain.toml
+
+        OLD_VERSION=$(tomli query -f=./rust-toolchain.toml toolchain.channel | tr -d '"')
+
+        cargo toolchainer update -c=nightly
+
+        NEW_VERSION=$(tomli query -f=./rust-toolchain.toml toolchain.channel | tr -d '"')
+
+        echo "updating: $OLD_VERSION -> $NEW_VERSION"
+
+        tomli set -f=./ed-rust-toolchain.toml toolchain.channel $NEW_VERSION > ./rust-toolchain.toml
+
+        echo "previous=$OLD_VERSION" >> $GITHUB_OUTPUT
+        echo "actual=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+    - name: Restore Backup
+      if: steps.update.outcome == 'failure'
+      shell: bash
+      run: cp -rf ./bu-rust-toolchain.toml ./rust-toolchain.toml
+
+    - name: Cleanup
+      shell: bash
+      run: |
+        rm ./bu-rust-toolchain.toml
+        rm ./ed-rust-toolchain.toml
+
+    - name: Fail
+      if: steps.update.outcome == 'failure'
+      shell: bash
+      run: exit 1
+
+    - name: Formatting
+      shell: bash
+      if: inputs.fmt == 'true'
+      run: taplo fmt ./rust-toolchain.toml

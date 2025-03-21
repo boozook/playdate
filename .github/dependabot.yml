@@ -1,6 +1,9 @@
 version: 2
 updates:
   - package-ecosystem: "github-actions"
-    directories: ["/", ".github/actions/*"]
+    # Unfortunately, dependabot doesn't support actions and seems to ignores it.
+    # https://docs.github.com/en/code-security/dependabot/ecosystems-supported-by-dependabot/supported-ecosystems-and-repositories#github-actions
+    # > Dependabot will ignore actions or reusable workflows referenced locally (for example, ./.github/actions/foo.yml).
+    directories: ["/", ".github/actions", ".github/actions/*"]
     schedule:
       interval: "weekly"

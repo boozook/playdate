@@ -1,4 +1,4 @@
-name: Update
+name: Update SDK
 on:
   workflow_dispatch:
     inputs:
@@ -15,7 +15,6 @@ on:
         required: false
   # push:
   #   branches: [main, master]
-
   schedule:
     - cron: "0 15 * * 1,3,5"
 
