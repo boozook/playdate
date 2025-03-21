@@ -1,4 +1,4 @@
-name: Update
+name: Update SDK
 on:
   workflow_dispatch:
     inputs:
