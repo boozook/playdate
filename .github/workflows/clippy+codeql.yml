@@ -61,7 +61,7 @@ jobs:
         uses: ./.github/actions/tools-deps
 
       - name: Install cargo-binstall
-        uses: cargo-bins/cargo-binstall@1
+        uses: cargo-bins/cargo-binstall@main
 
       - name: Install cargo-deduplicate-warnings
         run: cargo binstall cargo-deduplicate-warnings
