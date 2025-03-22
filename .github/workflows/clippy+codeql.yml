@@ -1,4 +1,4 @@
-name: Clippy Ql
+name: CodeQl
 on:
   workflow_call:
     inputs:
@@ -13,6 +13,8 @@ on:
         description: git branch, tag or SHA to checkout.
         type: string
         required: false
+  schedule:
+    - cron: "0 15 * * 1,3,5"
   pull_request:
     branches: [main, master]
   push:
@@ -25,8 +27,8 @@ env:
   CARGO_TERM_PROGRESS_WHEN: never
   # RUST_LOG: trace
 jobs:
-  clippy-codeql:
-    name: Tools (${{ matrix.os.name }})
+  clippy:
+    name: Clippy Tools (${{ matrix.os.name }})
     defaults:
       run:
         shell: bash
@@ -40,8 +42,8 @@ jobs:
       matrix:
         os:
           - { name: mac, key: macos-14 }
-          - { name: win, key: windows-latest }
           - { name: linux, key: ubuntu-latest }
+          # - { name: win, key: windows-latest }
     steps:
       - name: Checkout
         id: checkout
@@ -82,6 +84,13 @@ jobs:
           --bins --examples --all-targets
           --message-format=json | cargo deduplicate-warnings | clippy-sarif | tee results.sarif | sarif-fmt
 
+      - name: Fix PWD
+        if: runner.os == 'Windows'
+        run: >-
+          cat results.sarif
+          | jq --arg pwd "some_folder/my_crate" '.runs[].results[].locations[].physicalLocation.artifactLocation.uri |= $pwd + "/" + .'
+          > results.sarif
+
       - name: Upload CodeQl
         id: upload
         continue-on-error: true
@@ -91,10 +100,8 @@ jobs:
           ref: ${{ steps.checkout.outputs.ref || inputs.ref || github.ref }}
           sarif_file: results.sarif
           wait-for-processing: true
-          category: clippy
+          category: Clippy
 
       - name: Results
         run: |
           echo "sarif id: ${{ steps.upload.outputs.sarif-id }}"
-          echo "----------"
-          cat results.sarif
