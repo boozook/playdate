@@ -21,7 +21,7 @@ env:
   CARGO_INCREMENTAL: 0
   CARGO_NET_RETRY: 10
   RUSTUP_MAX_RETRIES: 10
-  CARGO_TERM_COLOR: never
+  CARGO_TERM_COLOR: always
   CARGO_TERM_PROGRESS_WHEN: never
   # RUST_LOG: trace
 jobs:
@@ -44,6 +44,7 @@ jobs:
           - { name: linux, key: ubuntu-latest }
     steps:
       - name: Checkout
+        id: checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
@@ -64,7 +65,6 @@ jobs:
         run: cargo binstall cargo-deduplicate-warnings
 
       - name: Install sarif
-        # run: cargo install clippy-sarif sarif-fmt
         run: cargo binstall clippy-sarif sarif-fmt
 
       - name: Clippy -> Sarif
@@ -83,8 +83,17 @@ jobs:
           --message-format=json | cargo deduplicate-warnings | clippy-sarif | tee results.sarif | sarif-fmt
 
       - name: Upload CodeQl
+        id: upload
         continue-on-error: true
         uses: github/codeql-action/upload-sarif@v3
         with:
+          sha: ${{ steps.checkout.outputs.commit }}
+          ref: ${{ steps.checkout.outputs.ref || inputs.ref || github.ref }}
           sarif_file: results.sarif
           wait-for-processing: true
+
+      - name: Results
+        run: |
+          echo "sarif id: ${{ steps.upload.outputs.sarif-id }}"
+          echo "----------"
+          cat results.sarif
