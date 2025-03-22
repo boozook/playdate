@@ -27,7 +27,6 @@ env:
 jobs:
   clippy-codeql:
     name: Clippy (${{ matrix.os.name }}) QL
-    if: branch == 'main'
     defaults:
       run:
         shell: bash
