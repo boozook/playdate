@@ -26,7 +26,7 @@ env:
   # RUST_LOG: trace
 jobs:
   clippy-codeql:
-    name: Clippy (${{ matrix.os.name }}) QL
+    name: Tools (${{ matrix.os.name }})
     defaults:
       run:
         shell: bash
@@ -91,6 +91,7 @@ jobs:
           ref: ${{ steps.checkout.outputs.ref || inputs.ref || github.ref }}
           sarif_file: results.sarif
           wait-for-processing: true
+          category: clippy
 
       - name: Results
         run: |
