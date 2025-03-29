@@ -56,3 +56,7 @@ async-std = { version = "1.13", default-features = false }
 [workspace.metadata.playdate.options.assets]
 dependencies = true
 overwrite = false
+
+
+[workspace.metadata.vet]
+store = { path = '.vet' }

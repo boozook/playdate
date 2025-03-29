@@ -1,0 +1,314 @@
+name: CodeQL
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: git branch, tag or SHA to checkout.
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      ref:
+        default: ""
+        description: git branch, tag or SHA to checkout.
+        type: string
+        required: false
+  schedule:
+    - cron: "0 15 * * 1,3,5"
+  # pull_request:
+  #   branches: [main, master]
+  push:
+    branches: [main, master]
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  RUSTUP_MAX_RETRIES: 10
+  CARGO_TERM_COLOR: always
+  CARGO_TERM_PROGRESS_WHEN: never
+jobs:
+  cargo-clippy:
+    name: Clippy Tools
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Install Clippy
+        run: rustup component add clippy
+
+      - name: Config
+        uses: ./.github/actions/init-cfg
+
+      - name: Install Deps
+        uses: ./.github/actions/tools-deps
+
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install cargo-deduplicate-warnings
+        run: cargo binstall cargo-deduplicate-warnings
+
+      - name: Install sarif
+        run: cargo binstall clippy-sarif sarif-fmt
+
+      - name: Clippy -> Sarif
+        # continue-on-error: true
+        run: >-
+          cargo clippy
+          -p=cargo-playdate
+          -p=playdate-bindgen
+          -p=playdate-bindgen-cfg
+          -p=playdate-build
+          -p=playdate-device
+          -p=playdate-simulator-utils
+          -p=playdate-build-utils
+          -p=playdate-tool
+          --bins --examples --all-targets --no-deps
+          --message-format=json | cargo deduplicate-warnings | clippy-sarif | tee results.sarif | sarif-fmt
+
+      - name: Fix PWD
+        if: runner.os == 'Windows'
+        run: >-
+          cat results.sarif
+          | jq --arg pwd "some_folder/my_crate" '.runs[].results[].locations[].physicalLocation.artifactLocation.uri |= $pwd + "/" + .'
+          > results.sarif
+
+      - name: Upload CodeQl
+        id: upload
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sha: ${{ steps.checkout.outputs.commit }}
+          ref: ${{ steps.checkout.outputs.ref || inputs.ref || github.ref }}
+          sarif_file: results.sarif
+          wait-for-processing: true
+          category: Clippy
+
+      - name: Results
+        run: |
+          echo "sarif id: ${{ steps.upload.outputs.sarif-id }}"
+
+  cargo-vet:
+    name: Vet Deps
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+      # security-events: write
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install cargo-vet
+        run: cargo binstall cargo-vet
+
+      - name: Test
+        run: cargo vet --locked
+
+  cargo-audit:
+    name: Cargo Audit
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install cargo-audit
+        run: cargo binstall cargo-audit
+
+      - name: Test
+        run: cargo audit
+
+  cargo-deny:
+    if: false
+    name: Cargo Deny
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install cargo-deny
+        run: cargo binstall cargo-deny
+
+      - name: Install cargo-action-fmt
+        run: cargo binstall cargo-action-fmt
+
+      - name: Test
+        run: cargo deny --all-features --workspace --exclude-unpublished check --show-stats --hide-inclusion-graph
+        # https://github.com/psastras/sarif-rs/issues/643
+        # deny -> sarif is not yet existing 🤷🏻‍♂️
+        # It could be:
+        #   cargo deny  --format=json ...
+        #   | cargo deduplicate-warnings | clippy-sarif | tee results.deny.sarif | sarif-fmt
+
+  coverage:
+    if: false
+    name: Coverage
+    continue-on-error: true
+    runs-on: ${{ matrix.os }}
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    strategy:
+      matrix:
+        os: [macos-14, ubuntu-latest, windows-latest]
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Add llvm-tools
+        run: |
+          rustup component add llvm-tools
+          rustup component add llvm-tools-preview
+
+      - name: Config
+        uses: ./.github/actions/init-cfg
+
+      - name: Install Deps
+        uses: ./.github/actions/tools-deps
+
+      - name: Install LLVM
+        if: runner.os != 'Windows'
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: 18
+          directory: ${{ runner.temp }}/llvm
+          # cached: ${{ steps.cache-llvm.outputs.cache-hit }}
+
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install cargo-llvm-cov
+        run: cargo binstall cargo-llvm-cov
+
+      - name: Install SDK (${{ matrix.sdk }})
+        uses: ./.github/actions/install-sdk
+        with:
+          version: latest
+
+      # - uses: taiki-e/install-action@v2.44.9
+      #   with:
+      #     tool: cargo-llvm-cov
+
+      - name: Test Api
+        env:
+          CRATES: >-
+            -p=playdate-color
+            -p=playdate-controls
+            -p=playdate-display
+            -p=playdate-fs
+            -p=playdate-graphics
+            -p=playdate-menu
+            -p=playdate-scoreboards
+            -p=playdate-sound
+            -p=playdate-sprite
+            -p=playdate-system
+            -p=playdate
+          FEATURES: --features=bindings-derive-debug,sys/bindings-documentation,sys/error-ctx
+        run: >-
+          cargo llvm-cov test ${{ env.CRATES }}
+          --lib --tests --no-default-features
+          --no-fail-fast --ignore-rust-version --include-ffi
+          --remap-path-prefix --show-instantiations
+          --branch --mcdc
+          --lcov --output-path api-no-default.lcov.info
+
+          cargo llvm-cov test ${{ env.CRATES }}
+          --lib --tests --no-default-features ${{ env.FEATURES }}
+          --no-fail-fast --ignore-rust-version --include-ffi
+          --remap-path-prefix --show-instantiations
+          --branch --mcdc
+          --lcov --output-path api-features.lcov.info
+
+      - name: Test Tools
+        if: ""
+        env:
+          CRATES: >-
+            -p=playdate-bindgen
+            -p=playdate-bindgen-cfg
+            -p=playdate-build
+            -p=playdate-device
+            -p=playdate-simulator-utils
+            -p=playdate-build-utils
+            -p=playdate-tool
+        run: >-
+          cargo llvm-cov test ${{ env.CRATES }}
+          --bins --examples --lib --all-targets --tests
+          --no-fail-fast --ignore-rust-version
+          --remap-path-prefix --show-instantiations
+          --branch --mcdc
+          --lcov --output-path tools-utils.lcov.info
+
+      - name: Test Cargo
+        if: ""
+        env:
+          CRATES: -p=cargo-playdate
+          RUSTFLAGS: --cfg init_tests
+        run: >-
+          cargo llvm-cov test ${{ env.CRATES }}
+          --bins --examples --all-targets --lib --tests
+          --ignore-rust-version --remap-path-prefix
+          --show-instantiations --ignore-run-fail
+          --branch --mcdc
+          --lcov --output-path cargo.lcov.info
+
+      - name: Upload to Coveralls
+        uses: coverallsapp/github-action@v2.3.6
+        with:
+          files: >-
+            api-no-default.lcov.info
+            api-features.lcov.info
+            tools-utils.lcov.info
+            cargo.lcov.info
+          format: lcov
+          flag-name: Unit
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: api-no-default.lcov.info,api-features.lcov.info,tools-utils.lcov.info,cargo.lcov.info
+          flags: unit
+          name: codeql
+          fail_ci_if_error: true
+          # base_sha: ${{ steps.checkout.outputs.commit }}
