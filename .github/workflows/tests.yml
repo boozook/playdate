@@ -108,6 +108,15 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
 
+      # - name: Sweep cache for stale files
+      #   uses: BD103/cargo-sweep@v2
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+      - name: Install cargo-sweep
+        run: cargo binstall cargo-sweep
+      - name: Cache Sweep for stale files
+        run: cargo sweep --recursive --dry-run --time 2
+
       - name: Config
         uses: ./.github/actions/init-cfg
 

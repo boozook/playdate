@@ -182,5 +182,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.PR_GITHUB_TOKEN}}
         run: >-
-          gh pr merge --auto --squash
+          gh pr merge --auto --merge
           "${{ needs.pr.outputs.number || needs.pr.outputs.url }}"
