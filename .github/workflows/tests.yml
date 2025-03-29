@@ -115,7 +115,7 @@ jobs:
       - name: Install cargo-sweep
         run: cargo binstall cargo-sweep
       - name: Cache Sweep for stale files
-        run: cargo sweep --recursive --dry-run --time 2
+        run: cargo sweep --recursive --time 2
 
       - name: Config
         uses: ./.github/actions/init-cfg
