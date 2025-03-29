@@ -629,6 +629,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Check
+        id: check
+        continue-on-error: true
         env:
           DOCS_RS: 1
           PLAYDATE_SDK_PATH: 0
@@ -638,7 +640,18 @@ jobs:
           feature-group: default-features
           rust-toolchain: manual
 
-  bumped:
+      - name: Check (fallback)
+        if: steps.check.outcome == 'failure'
+        env:
+          DOCS_RS: 1
+          PLAYDATE_SDK_PATH: 0
+          IGNORE_EXISTING_PLAYDATE_SDK: 1
+        uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          feature-group: default-features
+          rust-toolchain: stable
+
+  consistency:
     name: Consistency
     if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
     runs-on: macos-14

@@ -59,4 +59,4 @@ overwrite = false
 
 
 [workspace.metadata.vet]
-store = { path = '.vet' }
+store = { path = ".vet" }

@@ -1,6 +1,6 @@
 [package]
 name = "playdate-bindgen-cfg"
-version = "0.3.0"
+version = "0.3.1"
 readme = "README.md"
 description = "Minimal configuration for playdate-bindgen."
 keywords = ["playdate", "bindings", "ffi", "code-generation"]
@@ -16,10 +16,6 @@ repository.workspace = true
 features = ["std", "env", "derive", "help"]
 workspace = true
 optional = true
-
-
-[features]
-default = []
 
 
 [package.metadata.docs.rs]
