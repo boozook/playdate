@@ -1,7 +1,7 @@
 # doc: https://taplo.tamasfe.dev/configuration/formatter-options.html
 
 include = ["**/*.toml"]
-exclude = ["**/target/*.toml"]
+exclude = ["**/target/*.toml", ".vet/*.toml"]
 
 [formatting]
 align_entries         = false # Align entries vertically. Entries that have table headers, comments, or blank lines between them are not aligned.

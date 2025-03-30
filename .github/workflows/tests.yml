@@ -7,10 +7,15 @@ on:
         type: string
         required: true
       sdk:
-        description: "Version of Playdate SDK"
+        description: Version of Playdate SDK
         default: latest
         type: string
         required: true
+      semver:
+        description: Run semver-tests
+        default: true
+        type: boolean
+        required: false
   workflow_dispatch:
     inputs:
       ref:
@@ -23,6 +28,11 @@ on:
         default: latest
         type: string
         required: true
+      semver:
+        description: Run semver-tests
+        default: true
+        type: boolean
+        required: false
   pull_request:
   push:
     branches: [main, master]
@@ -97,6 +107,15 @@ jobs:
             target/
             ~/.cargo
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
+
+      # - name: Sweep cache for stale files
+      #   uses: BD103/cargo-sweep@v2
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+      - name: Install cargo-sweep
+        run: cargo binstall cargo-sweep
+      - name: Cache Sweep for stale files
+        run: cargo sweep --recursive --time 2
 
       - name: Config
         uses: ./.github/actions/init-cfg
@@ -604,12 +623,14 @@ jobs:
 
   semver:
     name: Semver
-    if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+    if: inputs.semver != 'false' && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
     runs-on: macos-14
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Check
+        id: check
+        continue-on-error: true
         env:
           DOCS_RS: 1
           PLAYDATE_SDK_PATH: 0
@@ -619,7 +640,18 @@ jobs:
           feature-group: default-features
           rust-toolchain: manual
 
-  bumped:
+      - name: Check (fallback)
+        if: steps.check.outcome == 'failure'
+        env:
+          DOCS_RS: 1
+          PLAYDATE_SDK_PATH: 0
+          IGNORE_EXISTING_PLAYDATE_SDK: 1
+        uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          feature-group: default-features
+          rust-toolchain: stable
+
+  consistency:
     name: Consistency
     if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
     runs-on: macos-14
