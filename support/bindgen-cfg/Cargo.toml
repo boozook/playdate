@@ -18,10 +18,6 @@ workspace = true
 optional = true
 
 
-[features]
-default = []
-
-
 [package.metadata.docs.rs]
 all-features = true
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
