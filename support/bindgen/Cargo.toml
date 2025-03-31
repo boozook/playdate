@@ -16,7 +16,7 @@ repository.workspace = true
 semver.workspace = true
 
 # parser:
-html2md = { version = "0.2.15", optional = true }
+html2md = { package = "html2md-rs", version = "0.10", optional = true }
 html5ever = { version = "0.27.0", optional = true }
 markup5ever_rcdom = { version = "0.3.0", optional = true }
 

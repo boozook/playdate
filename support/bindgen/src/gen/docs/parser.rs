@@ -10,10 +10,13 @@
 use std::io::{Error as IoError, ErrorKind};
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
-use html2md::NodeData;
-use html2md::RcDom;
-use html2md::StructuredPrinter;
-use html2md::TagHandler;
+// use html2md::NodeData;
+// use html2md::RcDom;
+// use html2md::StructuredPrinter;
+// use html2md::TagHandler;
+use markup5ever_rcdom::NodeData;
+use markup5ever_rcdom::RcDom;
+
 use html5ever::parse_document;
 use html5ever::tendril::TendrilSink;
 use html5ever::tree_builder::TreeSink;
@@ -143,69 +146,70 @@ fn walk(handle: &Handle, results: &mut DocsMap) {
 		                                                                .expect("serialization failed");
 		let html = std::str::from_utf8(&render).unwrap();
 
-		use html2md::TagHandlerFactory;
-		struct PreAsIsTagFactory;
-		impl TagHandlerFactory for PreAsIsTagFactory {
-			fn instantiate(&self) -> Box<dyn TagHandler> {
-				Box::new(CodeHandler { lang: "cpp",
-				                       ..Default::default() })
-			}
-		}
+		// use html2md::TagHandlerFactory;
+		// struct PreAsIsTagFactory;
+		// impl TagHandlerFactory for PreAsIsTagFactory {
+		// 	fn instantiate(&self) -> Box<dyn TagHandler> {
+		// 		Box::new(CodeHandler { lang: "cpp",
+		// 		                       ..Default::default() })
+		// 	}
+		// }
 		// TODO:
-		let mut tag_factory: HashMap<String, Box<dyn TagHandlerFactory>> = HashMap::new();
-		tag_factory.insert(String::from("pre"), Box::new(PreAsIsTagFactory));
-		let md = html2md::parse_html_custom(html, &tag_factory);
+		// let mut tag_factory: HashMap<String, Box<dyn TagHandlerFactory>> = HashMap::new();
+		// tag_factory.insert(String::from("pre"), Box::new(PreAsIsTagFactory));
+		// let md = html2md::parse_html_custom(html, &tag_factory);
+		let md = html2md::to_md::safe_from_html_to_md(html.to_owned()).expect("convertion failed");
 
 		results.insert(key, md);
 	}
 }
 
 
-#[derive(Default)]
-/// Produces markdown code-block and set lang for each <pre>: ```cpp...```.
-/// It needed to do not produce broken doctest in comments.
-pub struct CodeHandler {
-	/// Default lang for `pre` tags.
-	lang: &'static str,
-	code_type: String,
-}
+// #[derive(Default)]
+// /// Produces markdown code-block and set lang for each <pre>: ```cpp...```.
+// /// It needed to do not produce broken doctest in comments.
+// pub struct CodeHandler {
+// 	/// Default lang for `pre` tags.
+// 	lang: &'static str,
+// 	code_type: String,
+// }
 
-impl CodeHandler {
-	/// Used in both starting and finishing handling
-	fn do_handle(&mut self, printer: &mut StructuredPrinter, start: bool) {
-		let immediate_parent = printer.parent_chain.last().unwrap().to_owned();
-		if self.code_type == "code" && immediate_parent == "pre" {
-			// we are already in "code" mode
-			return;
-		}
+// impl CodeHandler {
+// 	/// Used in both starting and finishing handling
+// 	fn do_handle(&mut self, printer: &mut StructuredPrinter, start: bool) {
+// 		let immediate_parent = printer.parent_chain.last().unwrap().to_owned();
+// 		if self.code_type == "code" && immediate_parent == "pre" {
+// 			// we are already in "code" mode
+// 			return;
+// 		}
 
-		match self.code_type.as_ref() {
-			"pre" => {
-				// code block should have its own paragraph
-				if start {
-					printer.insert_newline();
-					printer.append_str(&format!("\n```{}\n", self.lang));
-				}
-				// printer.append_str(&format!("\n```{}\n", self.lang));
-				if !start {
-					printer.append_str("\n```\n");
-					printer.insert_newline();
-				}
-			},
-			"code" | "samp" => printer.append_str("`"),
-			_ => {},
-		}
-	}
-}
+// 		match self.code_type.as_ref() {
+// 			"pre" => {
+// 				// code block should have its own paragraph
+// 				if start {
+// 					printer.insert_newline();
+// 					printer.append_str(&format!("\n```{}\n", self.lang));
+// 				}
+// 				// printer.append_str(&format!("\n```{}\n", self.lang));
+// 				if !start {
+// 					printer.append_str("\n```\n");
+// 					printer.insert_newline();
+// 				}
+// 			},
+// 			"code" | "samp" => printer.append_str("`"),
+// 			_ => {},
+// 		}
+// 	}
+// }
 
-impl TagHandler for CodeHandler {
-	fn handle(&mut self, tag: &Handle, printer: &mut StructuredPrinter) {
-		self.code_type = match tag.data {
-			NodeData::Element { ref name, .. } => name.local.to_string(),
-			_ => String::new(),
-		};
+// impl TagHandler for CodeHandler {
+// 	fn handle(&mut self, tag: &Handle, printer: &mut StructuredPrinter) {
+// 		self.code_type = match tag.data {
+// 			NodeData::Element { ref name, .. } => name.local.to_string(),
+// 			_ => String::new(),
+// 		};
 
-		self.do_handle(printer, true);
-	}
-	fn after_handle(&mut self, printer: &mut StructuredPrinter) { self.do_handle(printer, false); }
-}
+// 		self.do_handle(printer, true);
+// 	}
+// 	fn after_handle(&mut self, printer: &mut StructuredPrinter) { self.do_handle(printer, false); }
+// }
