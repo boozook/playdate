@@ -148,9 +148,8 @@ impl bindgen::callbacks::ParseCallbacks for RenameMap {
 	}
 
 	fn item_name(&self, name: &str) -> Option<String> {
-		if name.starts_with("_bindgen_") ||
-		   name.starts_with("__bindgen_") ||
-		   name.starts_with("__builtin_") ||
+		if name.starts_with("__") ||
+		   name.starts_with("_bindgen_") ||
 		   name.starts_with("ptr_") ||
 		   name.ends_with("_t")
 		{
@@ -169,6 +168,7 @@ impl bindgen::callbacks::ParseCallbacks for RenameMap {
 		ignore.extend([
 			"void",
 			"root",
+			"unsigned_int",
 			"unsigned_long",
 			"va_list",
 			"float",
@@ -246,6 +246,10 @@ impl bindgen::callbacks::ParseCallbacks for RenameMap {
 		let ename = ename.expect("enum name for {vname} must not be empty");
 
 
+		if ename.starts_with("__") || vname.starts_with("__") {
+			println!("\tSKIP: {ename}::{vname}");
+			return None;
+		}
 		if ignore.contains(&ename) || ignore.contains(vname) {
 			return None;
 		}
