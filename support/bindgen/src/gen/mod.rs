@@ -1,5 +1,6 @@
 #![cfg(feature = "extra-codegen")]
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
@@ -12,12 +13,14 @@ use crate::error::Error;
 use crate::rustify::rename::{self, Kind, SharedRenamed};
 
 pub mod docs;
+pub mod fixes;
 
 
 #[allow(unused_variables)]
 pub fn engage(source: &bindgen::Bindings,
               renamed: SharedRenamed,
               features: &crate::cfg::Features,
+              target: &crate::cfg::Target,
               sdk: &Sdk,
               root: Option<&str>)
               -> Result<Bindings> {
@@ -51,12 +54,25 @@ pub fn engage(source: &bindgen::Bindings,
 	#[allow(unused_assignments)]
 	#[cfg(feature = "documentation")]
 	let docset = if features.documentation {
-		let docset_new = docs::parser::parse(sdk)?;
-		docs::gen::engage(&mut bindings, &root_struct_name, &docset_new)?;
-		Some(docset_new)
+		let docset = docs::parser::parse(sdk)?;
+		docs::gen::engage(&mut bindings, &root_struct_name, &docset)?;
+		Some(docset)
 	} else {
 		None
 	};
+
+
+	#[cfg(feature = "extra-codegen")]
+	if features.rustify {
+		// let fixes = if target.is_playdate() {
+		let mut fixes = HashMap::new();
+		fixes.insert("system.error".to_owned(), fixes::Fix::ReturnNever);
+		// fixes
+		// } else {
+		// 	Default::default()
+		// };
+		fixes::engage(&mut bindings, &root_struct_name, target, &fixes)?;
+	}
 
 	let mut module = TokenStream::new();
 	bindings.to_tokens(&mut module);

@@ -157,6 +157,8 @@ fn walk(handle: &Handle, results: &mut DocsMap) {
 		md = md.strip_prefix("```\n```\n")
 		       .map(ToString::to_string)
 		       .unwrap_or(md);
-		results.insert(key, md);
+		if !md.trim().is_empty() {
+			results.insert(key, md);
+		}
 	}
 }

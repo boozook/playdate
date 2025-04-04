@@ -1,16 +1,18 @@
 #![no_std]
 #![cfg_attr(feature = "local", feature(allocator_api, slice_ptr_get))]
-#![cfg_attr(feature = "global", feature(alloc_error_handler))]
+#![cfg_attr(feature = "global-error-handler",
+            feature(alloc_error_handler, core_intrinsics),
+            allow(internal_features))]
 #![cfg_attr(any(test, debug_assertions, not(feature = "static-link")),
             feature(fn_ptr_trait))]
 
 
-// extern crate alloc;
+extern crate alloc;
 
 
 #[cfg(feature = "local")]
-pub mod local;
-pub mod global;
+pub(crate) mod local;
+pub(crate) mod global;
 
 
 /// PlaydateOs system allocator.
