@@ -6,10 +6,10 @@ pub mod error;
 
 
 /// Main unsafe API endpoint.
-pub static mut API: *const crate::ffi::Playdate = core::ptr::null_mut();
+pub static mut API: *const crate::ffi::PlaydateAPI = core::ptr::null_mut();
 
 /// Reference to main (root) API endpoint.
-pub type ApiRef = Option<&'static crate::ffi::Playdate>;
+pub type ApiRef = Option<&'static crate::ffi::PlaydateAPI>;
 
 /// Returns reference to main API endpoint ([`ApiRef`]).
 // TODO: make this `const fn` when rustc feature `const_ptr_as_ref` is well-tested.

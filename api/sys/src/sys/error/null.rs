@@ -38,9 +38,9 @@ pub trait OkOrNullFnErr<T> {
 	fn ok_or_null(self) -> Result<T, Self::Error>;
 }
 
-impl OkOrNullFnErr<&'static crate::ffi::Playdate> for crate::ApiRef {
+impl OkOrNullFnErr<&'static crate::ffi::PlaydateAPI> for crate::ApiRef {
 	type Error = NullPtrError;
-	fn ok_or_null(self) -> Result<&'static crate::ffi::Playdate, NullPtrError> { self.ok_or(NullPtrError) }
+	fn ok_or_null(self) -> Result<&'static crate::ffi::PlaydateAPI, NullPtrError> { self.ok_or(NullPtrError) }
 }
 
 

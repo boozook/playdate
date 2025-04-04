@@ -61,19 +61,19 @@ pub mod ffi {
 /// It needed for allocators and panic handler.
 ///
 /// Linking requires rust-abi symbol `event_handler: fn(*const Playdate, PDSystemEvent, arg: u32) -> c_int`
-pub extern "C" fn eventHandlerShim(api: *const ffi::Playdate,
-                                   event: ffi::SystemEvent,
+pub extern "C" fn eventHandlerShim(api: *const ffi::PlaydateAPI,
+                                   event: ffi::PDSystemEvent,
                                    arg: u32)
                                    -> core::ffi::c_int {
 	extern "Rust" {
-		fn event_handler(api: *const ffi::Playdate, event: ffi::SystemEvent, arg: u32) -> EventLoopCtrl;
+		fn event_handler(api: *const ffi::PlaydateAPI, event: ffi::PDSystemEvent, arg: u32) -> EventLoopCtrl;
 
 		#[cfg(not(playdate))]
 		// This is atomic in the `sys::proc::error`.
 		static END_WITH_ERR: core::sync::atomic::AtomicBool;
 	}
 
-	if let ffi::SystemEvent::Init = event {
+	if let ffi::PDSystemEvent::kEventInit = event {
 		unsafe { API = api }
 	}
 
