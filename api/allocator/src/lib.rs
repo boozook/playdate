@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(feature = "local", feature(allocator_api, slice_ptr_get))]
+#![cfg_attr(feature = "allocator-api", feature(allocator_api, slice_ptr_get))]
 #![cfg_attr(feature = "global-error-handler",
             feature(alloc_error_handler, core_intrinsics),
             allow(internal_features))]
@@ -10,7 +10,7 @@
 extern crate alloc;
 
 
-#[cfg(feature = "local")]
+#[cfg(feature = "allocator-api")]
 pub(crate) mod local;
 pub(crate) mod global;
 

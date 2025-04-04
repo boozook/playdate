@@ -15,8 +15,8 @@ publish = true
 
 [features]
 default = []
-global = []  # Global allocator (system)
-local = []   # Implementation of `allocator-api`
+global = []        # Global allocator (system)
+allocator-api = [] # Implementation of `allocator-api`
 
 # Link statically `realloc` c-fn, otherwise store `realloc` in the static mut and reqires init.
 static-link = []
