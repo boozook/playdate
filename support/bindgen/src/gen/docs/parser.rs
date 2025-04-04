@@ -101,7 +101,6 @@ fn walk(handle: &Handle, results: &mut DocsMap) {
 							                    template_contents,
 							                    mathml_annotation_xml_integration_point, } => {
 								let mut code = name.clone();
-								// code.borrow_mut().local = html5ever::ATOM_LOCALNAME__63_6F_64_65;
 								code.borrow_mut().local = html5ever::LocalName::from("code");
 								NodeData::Element { name: code,
 								                    attrs: attrs.clone(),

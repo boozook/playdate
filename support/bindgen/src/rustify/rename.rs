@@ -247,7 +247,8 @@ impl bindgen::callbacks::ParseCallbacks for RenameMap {
 
 
 		if ename.starts_with("__") || vname.starts_with("__") {
-			println!("\tSKIP: {ename}::{vname}");
+			#[cfg(feature = "log")]
+			println!("skip renaming: {ename}::{vname}");
 			return None;
 		}
 		if ignore.contains(&ename) || ignore.contains(vname) {
