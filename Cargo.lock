@@ -3642,14 +3642,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "miri-mock"
-version = "0.0.0"
-
-[[package]]
-name = "miri-test"
-version = "0.0.0"
-
-[[package]]
 name = "msvc-demangler"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
