@@ -48,6 +48,43 @@ pub unsafe fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void { crate::get
 pub unsafe fn dealloc(ptr: *mut c_void) { realloc(ptr, 0); }
 
 
+/// Global handler for an Out Of Memory (OOM) condition
+#[track_caller]
+#[alloc_error_handler]
+#[cfg(feature = "global-error-handler")]
+fn alloc_error(layout: Layout) -> ! {
+	type Error = unsafe extern "C" fn(fmt: *const core::ffi::c_char, ...) -> !;
+	unsafe extern "Rust" {
+		#[link_name = "PDERR"]
+		pub static ERROR: core::mem::MaybeUninit<Error>;
+	}
+	if unsafe { ERROR.as_ptr() }.is_null() {
+		use core::intrinsics::is_val_statically_known;
+		if is_val_statically_known(layout.size() != 0) {
+			// const-known, so alloc-less
+			panic!("OoM: {}b", layout.size())
+		} else {
+			// alloc-less panic
+			panic!("OoM")
+		}
+	} else {
+		use numtoa_like::*;
+		// rendes size to ascii inplace:
+		let mut s = [79, 111, 77, 58, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 98, 0];
+		let mut index = s.len() - 3;
+		render(layout.size(), &mut index, &mut s);
+		s[5..].rotate_left(index.wrapping_sub(3));
+
+		// alloc-less panic via pd-err
+		unsafe {
+			let f = ERROR.assume_init();
+			f(s.as_ptr().cast())
+		}
+	}
+}
+
+
+#[cfg(feature = "global-error-handler")]
 mod numtoa_like {
 	// A lookup table to prevent the need for conditional branching
 	// The value of the remainder of each step will be used as the index
@@ -89,42 +126,6 @@ mod numtoa_like {
 		} else {
 			buf[*index] = LOOKUP[v as usize];
 			*index = index.wrapping_sub(1);
-		}
-	}
-}
-
-
-/// Global handler for an Out Of Memory (OOM) condition
-#[track_caller]
-#[alloc_error_handler]
-#[cfg(feature = "global-error-handler")]
-fn alloc_error(layout: Layout) -> ! {
-	type Error = unsafe extern "C" fn(fmt: *const core::ffi::c_char, ...) -> !;
-	unsafe extern "Rust" {
-		#[link_name = "PDERR"]
-		pub static ERROR: core::mem::MaybeUninit<Error>;
-	}
-	if unsafe { ERROR.as_ptr() }.is_null() {
-		use core::intrinsics::is_val_statically_known;
-		if is_val_statically_known(layout.size() != 0) {
-			// const-known, so alloc-less
-			panic!("OoM: {}b", layout.size())
-		} else {
-			// alloc-less panic
-			panic!("OoM")
-		}
-	} else {
-		use numtoa_like::*;
-		// rendes size to ascii inplace:
-		let mut s = [79, 111, 77, 58, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 98, 0];
-		let mut index = s.len() - 3;
-		render(layout.size(), &mut index, &mut s);
-		s[5..].rotate_left(index.wrapping_sub(3));
-
-		// alloc-less panic via pd-err
-		unsafe {
-			let f = ERROR.assume_init();
-			f(s.as_ptr().cast())
 		}
 	}
 }
