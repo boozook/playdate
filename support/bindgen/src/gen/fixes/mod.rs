@@ -140,15 +140,12 @@ fn extract_type_from_option(ty: &syn::Type) -> Option<&syn::Type> {
 fn apply(_key: &str, field: &mut syn::Field, fix: &Fix, _underlying: Option<Type>) {
 	match fix {
 		Fix::ReturnNever => {
-			match &mut field.ty {
-				Type::BareFn(ref mut ty) => {
-					ty.output =
-						syn::ReturnType::Type(
-						                      RArrow(ty.output.span()),
-						                      Box::new(syn::TypeNever { bang_token: Not(ty.output.span()), }.into()),
-						);
-				},
-				_ => {},
+			if let Type::BareFn(ref mut ty) = &mut field.ty {
+				ty.output =
+					syn::ReturnType::Type(
+					                      RArrow(ty.output.span()),
+					                      Box::new(syn::TypeNever { bang_token: Not(ty.output.span()), }.into()),
+					);
 			}
 		},
 		Fix::Unwrap => {
@@ -191,6 +188,6 @@ fn apply_all(key: &str, field: &mut syn::Field, fixes: &FixMap, ty: Option<Type>
 	}
 
 	if let Some(fix) = fixes.get(key) {
-		apply(&key, field, fix, None);
+		apply(key, field, fix, None);
 	}
 }
