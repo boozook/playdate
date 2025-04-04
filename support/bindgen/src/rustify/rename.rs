@@ -42,7 +42,7 @@ pub fn print_as_md_table(changes: SharedRenamed) {
 		let changes = changes.read().expect("renamed set is locked");
 		let iter = changes.keys().filter_map(|k| {
 			                         if let Kind::EnumVariant(name, _) = k {
-				                         Some(&*name)
+				                         Some(name)
 			                         } else {
 				                         None
 			                         }
@@ -60,7 +60,7 @@ pub fn print_as_md_table(changes: SharedRenamed) {
 		for (was, now) in changes.iter() {
 			match was {
 				Kind::Item(name) => {
-					let kind = enums.contains(&*name).then_some("enum").unwrap_or("item");
+					let kind = if enums.contains(name) { "enum" } else { "item" };
 					println!("| {kind} | `{name}` | `{now}` |");
 				},
 				Kind::Struct(name) => {
@@ -70,7 +70,7 @@ pub fn print_as_md_table(changes: SharedRenamed) {
 					println!("| union | `{name}` | `{now}` |");
 				},
 				Kind::EnumVariant(name, var) => {
-					let ren = find_item(&*name).map(String::as_str).unwrap_or("_");
+					let ren = find_item(name).map(String::as_str).unwrap_or("_");
 					println!("| enum ctor | `{name}::{var}` | `{ren}::{now}` |");
 				},
 			}
