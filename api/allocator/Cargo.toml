@@ -1,0 +1,24 @@
+[package]
+name = "playdate-allocator"
+version = "0.1.0"
+readme = "README.md"
+description = "Global allocator and allocator-api implementation for Playdate"
+keywords = ["playdate", "allocator", "allocator-api", "gamedev"]
+categories = ["memory-management", "external-ffi-bindings", "api-bindings", "game-development", "no-std"]
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+publish = true
+
+
+[features]
+default = []
+global = []        # Global allocator (system)
+allocator-api = [] # Implementation of `allocator-api`
+
+# Link statically `realloc` c-fn, otherwise store `realloc` in the static mut and reqires init.
+static-link = []
+
+global-error-handler = [] # Optional global OoM handler, panics.

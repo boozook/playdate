@@ -60,7 +60,7 @@ pub mod ffi {
 /// Registers API endpoint when called with `event` matches `PDSystemEvent::kEventInit`.
 /// It needed for allocators and panic handler.
 ///
-/// Linking requires rust-abi symbol `event_handler: fn(*const PlaydateAPI, PDSystemEvent, arg: u32) -> c_int`
+/// Linking requires rust-abi symbol `event_handler: fn(*const Playdate, PDSystemEvent, arg: u32) -> c_int`
 pub extern "C" fn eventHandlerShim(api: *const ffi::PlaydateAPI,
                                    event: ffi::PDSystemEvent,
                                    arg: u32)

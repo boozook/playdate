@@ -107,7 +107,14 @@ impl Generator {
 
 
 		#[cfg(feature = "extra-codegen")]
-		gen::engage(&bindings, self.renamed, &self.features, &self.sdk, None).map(Bindings::Engaged)
+		gen::engage(
+		            &bindings,
+		            self.renamed,
+		            &self.features,
+		            &self.filename.target,
+		            &self.sdk,
+		            None,
+		).map(Bindings::Engaged)
 	}
 }
 
@@ -229,6 +236,7 @@ fn create_builder(_target: &str,
 	.allowlist_type("LCDMakePattern")
 	.allowlist_var("LCDOpaquePattern")
 	.allowlist_type("LCDOpaquePattern")
+	.allowlist_type("LCDFontLanguage")
 
 	.bitfield_enum("FileOptions")
 	.bitfield_enum("PDButtons")

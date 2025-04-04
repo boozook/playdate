@@ -13,7 +13,72 @@ use convert_case::{Case, Casing};
 pub type SharedRenamed = Arc<RwLock<BTreeMap<Kind, String>>>;
 
 
-pub fn reduce(_changes: &mut SharedRenamed) {}
+pub fn reduce(changes: SharedRenamed) {
+	let mut items = BTreeSet::new();
+	{
+		let changes = changes.read().expect("renamed set is locked");
+		for k in changes.keys().filter(|k| matches!(k, Kind::Struct(_))) {
+			let name = match k {
+				Kind::Struct(name) | Kind::Union(name) => name.as_str(),
+				Kind::Item(_) | Kind::EnumVariant(..) => unreachable!("already filtered-out"),
+			};
+			let ik = Kind::Item(name.to_string());
+			if changes.contains_key(&ik) {
+				items.insert(ik);
+			}
+		}
+	}
+
+	let mut changes = changes.write().expect("renamed set is locked");
+	for k in items {
+		changes.remove(&k);
+	}
+}
+
+
+pub fn print_as_md_table(changes: SharedRenamed) {
+	{
+		let mut enums = BTreeSet::new();
+		let changes = changes.read().expect("renamed set is locked");
+		let iter = changes.keys().filter_map(|k| {
+			                         if let Kind::EnumVariant(name, _) = k {
+				                         Some(name)
+			                         } else {
+				                         None
+			                         }
+		                         });
+		enums.extend(iter);
+
+		let find_item = |name: &str| {
+			let key = Kind::Item(name.to_owned());
+			changes.get(&key)
+		};
+
+		// print
+		println!("| kind | original | generated |");
+		println!("| ----: | :-------- | :-------- |");
+		for (was, now) in changes.iter() {
+			match was {
+				Kind::Item(name) => {
+					let kind = if enums.contains(name) { "enum" } else { "item" };
+					println!("| {kind} | `{name}` | `{now}` |");
+				},
+				Kind::Struct(name) => {
+					println!("| struct | `{name}` | `{now}` |");
+				},
+				Kind::Union(name) => {
+					println!("| union | `{name}` | `{now}` |");
+				},
+				Kind::EnumVariant(name, var) => {
+					let ren = find_item(name).map(String::as_str).unwrap_or("_");
+					println!("| enum ctor | `{name}::{var}` | `{ren}::{now}` |");
+				},
+			}
+		}
+
+		println!("\n_total: {}_", changes.len());
+	}
+}
 
 
 /// Renames symbols in the bindings.
@@ -83,10 +148,10 @@ impl bindgen::callbacks::ParseCallbacks for RenameMap {
 	}
 
 	fn item_name(&self, name: &str) -> Option<String> {
-		if name.starts_with("_bindgen_") ||
-		   name.starts_with("__bindgen_") ||
-		   name.starts_with("__builtin_") ||
-		   name.starts_with("ptr_")
+		if name.starts_with("__") ||
+		   name.starts_with("_bindgen_") ||
+		   name.starts_with("ptr_") ||
+		   name.ends_with("_t")
 		{
 			return None;
 		}
@@ -96,11 +161,17 @@ impl bindgen::callbacks::ParseCallbacks for RenameMap {
 		exact.insert("PlaydateAPI", "Playdate");
 		exact.insert("playdate_videostream", "PlaydateVideoStream");
 		exact.insert("l_valtype", "LuaValueType");
+		exact.insert("PDRect", "Rect");
+		exact.insert("LCDRect", "Aabb");
 
 		let mut ignore = BTreeSet::new();
 		ignore.extend([
 			"void",
 			"root",
+			"unsigned_int",
+			"unsigned_long",
+			"va_list",
+			"float",
 			//
 			"SEEK_SET",
 			"SEEK_CUR",
@@ -175,6 +246,11 @@ impl bindgen::callbacks::ParseCallbacks for RenameMap {
 		let ename = ename.expect("enum name for {vname} must not be empty");
 
 
+		if ename.starts_with("__") || vname.starts_with("__") {
+			#[cfg(feature = "log")]
+			println!("skip renaming: {ename}::{vname}");
+			return None;
+		}
 		if ignore.contains(&ename) || ignore.contains(vname) {
 			return None;
 		}
