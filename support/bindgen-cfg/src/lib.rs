@@ -484,13 +484,22 @@ pub enum Target {
 impl Target {
 	/// Retrieve by cargo env vars.
 	pub fn from_env_target() -> Result<Self, VarError> {
-		use std::env::var;
+		use std::env::{var, var_os};
 
 		let target = var("TARGET")?;
-
+		let is_pdos = var_os("CARGO_CFG_TARGET_OS").filter(|v| {
+			                                           let v = v.to_ascii_lowercase();
+			                                           v == "playdate" || v == "playdateos" || v == "pdos"
+		                                           })
+		                                           .is_some();
+		// let is_panic = var_os("CARGO_CFG_TARGET_VENDOR").filter(|v| {
+		// 	                                                let v = v.to_ascii_lowercase();
+		// 	                                                v == "panic" || v == "playdate"
+		//                                                 })
+		//                                                 .is_some();
 		// XXX: "sim" may conflict with "simd" for example.
-		// TODO: use CARGO_CFG_TARGET_OS && CARGO_CFG_TARGET_VENDOR to ensure.
-		if target == "thumbv7em-none-eabihf" || (target.contains("playdate") && !target.contains("sim")) {
+		let is_sim = target.contains("sim");
+		if target == "thumbv7em-none-eabihf" || (is_pdos && !is_sim) || (target.contains("playdate") && !is_sim) {
 			Ok(Self::Playdate)
 		} else {
 			use core::ffi::c_int;
@@ -503,6 +512,8 @@ impl Target {
 			                 c_int: c_int::BITS as usize })
 		}
 	}
+
+	pub fn is_playdate(&self) -> bool { matches!(self, Target::Playdate) }
 }
 
 impl std::fmt::Display for Target {

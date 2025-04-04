@@ -12,14 +12,11 @@ homepage.workspace = true
 repository.workspace = true
 publish = true
 
-[dependencies]
-
 
 [features]
 default = []
-
-global = [] # Global allocator (system)
-local = []  # Implementation of `allocator-api`
+global = []  # Global allocator (system)
+local = []   # Implementation of `allocator-api`
 
 # Link statically `realloc` c-fn, otherwise store `realloc` in the static mut and reqires init.
 static-link = []
