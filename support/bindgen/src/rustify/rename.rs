@@ -192,15 +192,10 @@ impl bindgen::callbacks::ParseCallbacks for RenameMap {
 			return Some(s.to_string());
 		}
 
-		let res = if name.starts_with("PD") {
-			&name[2..]
-		} else if name.starts_with("LCD") {
-			&name[3..]
-		} else {
-			name
-		};
-
-		let res = res.to_case(Case::UpperCamel);
+		let res = name.strip_prefix("PD")
+		              .or_else(|| name.strip_prefix("LCD"))
+		              .unwrap_or(name)
+		              .to_case(Case::UpperCamel);
 
 		if res != name {
 			self.renamed(Kind::Item(name.to_owned()), res.clone());

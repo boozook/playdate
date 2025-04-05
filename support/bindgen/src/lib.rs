@@ -27,7 +27,7 @@ pub const SDK_VER_SUPPORTED: &str = ">=2.1.0, <3.0.0";
 
 /// Generated Rust bindings.
 pub enum Bindings {
-	Bindgen(bindgen::Bindings),
+	Bindgen(Box<bindgen::Bindings>),
 	#[cfg(feature = "extra-codegen")]
 	Engaged(gen::Bindings),
 }
@@ -103,7 +103,7 @@ impl Generator {
 		let bindings = self.builder.generate()?;
 
 		#[cfg(not(feature = "extra-codegen"))]
-		return Ok(Bindings::Bindgen(bindings));
+		return Ok(Bindings::Bindgen(bindings.into()));
 
 
 		#[cfg(feature = "extra-codegen")]
@@ -424,10 +424,10 @@ impl bindgen::callbacks::ParseCallbacks for DeriveConstParamTy {
 }
 
 
-pub fn rustfmt<'out>(mut rustfmt_path: Option<PathBuf>,
-                     source: String,
-                     config_path: Option<&Path>)
-                     -> std::io::Result<String> {
+pub fn rustfmt(mut rustfmt_path: Option<PathBuf>,
+               source: String,
+               config_path: Option<&Path>)
+               -> std::io::Result<String> {
 	use std::io::Write;
 	use std::process::{Command, Stdio};
 
@@ -471,12 +471,12 @@ pub fn rustfmt<'out>(mut rustfmt_path: Option<PathBuf>,
 		Ok(bindings) => {
 			match status.code() {
 				Some(0) => Ok(bindings),
-				Some(2) => Err(std::io::Error::new(std::io::ErrorKind::Other, "Rustfmt parsing errors.".to_string())),
+				Some(2) => Err(std::io::Error::other("Rustfmt parsing errors.".to_string())),
 				Some(3) => {
 					println!("cargo:warning=Rustfmt could not format some lines.");
 					Ok(bindings)
 				},
-				_ => Err(std::io::Error::new(std::io::ErrorKind::Other, "Internal rustfmt error".to_string())),
+				_ => Err(std::io::Error::other("Internal rustfmt error".to_string())),
 			}
 		},
 		_ => Ok(source),
