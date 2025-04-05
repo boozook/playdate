@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::Derive;
 
 
@@ -21,8 +23,12 @@ impl DerivesMask {
 		}
 		Ok(Self { values })
 	}
+}
 
-	pub fn from_str(mask: &str) -> Result<Self, ParseMaskError> {
+impl FromStr for DerivesMask {
+	type Err = ParseMaskError;
+
+	fn from_str(mask: &str) -> Result<Self, Self::Err> {
 		if mask.is_ascii() {
 			Self::from_ascii(mask.as_bytes())
 		} else {

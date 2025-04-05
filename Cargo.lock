@@ -4131,7 +4131,7 @@ version = "0.1.0"
 
 [[package]]
 name = "playdate-bindgen"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "bindgen",
  "clap",
@@ -4152,7 +4152,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-bindgen-cfg"
-version = "0.3.2"
+version = "0.4.0"
 dependencies = [
  "clap",
 ]

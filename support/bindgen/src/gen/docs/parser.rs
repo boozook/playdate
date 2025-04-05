@@ -57,79 +57,71 @@ pub fn parse_file(path: &std::path::Path) -> Result<DocsMap, IoError> {
 fn walk(handle: &Handle, results: &mut DocsMap) {
 	let node = handle;
 	let mut found = None;
-	match node.data {
-		NodeData::Element { ref name, ref attrs, .. } => {
-			found = if name.local == *"div" {
-				let attrs = attrs.borrow();
-				let attr = attrs.iter()
-				                .find(|attr| attr.name.local == *"id" && attr.value.starts_with("f-"));
-				attr.map(|attr| {
-					    attr.value
-					        .strip_prefix("f-")
-					        .expect("prefix 'f-' must be there")
-					        .to_string()
-				    })
-			} else {
-				None
-			};
+	if let NodeData::Element { ref name, ref attrs, .. } = node.data {
+		found = if name.local == *"div" {
+			let attrs = attrs.borrow();
+			let attr = attrs.iter()
+			                .find(|attr| attr.name.local == *"id" && attr.value.starts_with("f-"));
+			attr.map(|attr| {
+				    attr.value
+				        .strip_prefix("f-")
+				        .expect("prefix 'f-' must be there")
+				        .to_string()
+			    })
+		} else {
+			None
+		};
 
-			if let Some(_key) = found.as_ref() {
-				// Changing: this-div . div_class="title" is a cpp-code fn-path+definition
-				//                  to `<code data-lang="c">`
-				// TODO: also fix links like `<a href="#f-sound.source">SoundSource</a>`
-				let mut children = node.children.borrow_mut();
-				let title = children.iter_mut().find(|child| {
-					                               match &child.data {
-						                               NodeData::Element { name, attrs, .. } => {
-						                                  name.local == *"div" &&
-						                                  attrs.borrow()
-						                                       .iter()
-						                                       .find(|attr| {
-							                                       attr.name.local == *"class" &&
-							                                       attr.value.contains("title")
-						                                       })
-						                                       .is_some()
-					                                  },
-					                                  _ => false,
-					                               }
-				                               });
-				if let Some(title) = title {
-					let mut data = {
-						match &title.data {
-							NodeData::Element { name,
-							                    attrs,
-							                    template_contents,
-							                    mathml_annotation_xml_integration_point, } => {
-								let mut code = name.clone();
-								code.borrow_mut().local = html5ever::LocalName::from("code");
-								NodeData::Element { name: code,
-								                    attrs: attrs.clone(),
-								                    template_contents: template_contents.clone(),
-								                    mathml_annotation_xml_integration_point:
-									                    *mathml_annotation_xml_integration_point }.into()
-							},
-							_ => None,
-						}
-					};
+		if let Some(_key) = found.as_ref() {
+			// Changing: this-div . div_class="title" is a cpp-code fn-path+definition
+			//                  to `<code data-lang="c">`
+			// TODO: fix links like `<a href="#f-sound.source">SoundSource</a>`
+			let mut children = node.children.borrow_mut();
+			let title = children.iter_mut().find(|child| {
+				                               match &child.data {
+					                               NodeData::Element { name, attrs, .. } => {
+					                                  name.local.eq("div") &&
+					                                  attrs.borrow().iter().any(|attr| {
+						                                                       attr.name.local.eq("class") &&
+						                                                       attr.value.contains("title")
+					                                                       })
+				                                  },
+				                                  _ => false,
+				                               }
+			                               });
+			if let Some(title) = title {
+				let mut data = {
+					match &title.data {
+						NodeData::Element { name,
+						                    attrs,
+						                    template_contents,
+						                    mathml_annotation_xml_integration_point, } => {
+							let mut code = name.clone();
+							code.borrow_mut().local = html5ever::LocalName::from("code");
+							NodeData::Element { name: code,
+							                    attrs: attrs.clone(),
+							                    template_contents: template_contents.clone(),
+							                    mathml_annotation_xml_integration_point:
+								                    *mathml_annotation_xml_integration_point }.into()
+						},
+						_ => None,
+					}
+				};
 
-					if let Some(data) = data.take() {
-						unsafe {
-							std::rc::Rc::get_mut_unchecked(title).data = data;
-						}
+				if let Some(data) = data.take() {
+					unsafe {
+						std::rc::Rc::get_mut_unchecked(title).data = data;
 					}
 				}
 			}
-		},
-
-		_ => {},
+		}
 	}
 
-	for child in node.children.borrow().iter().filter(|child| {
-		                                          match child.data {
-			                                          NodeData::Text { .. } | NodeData::Element { .. } => true,
-		                                             _ => false,
-		                                          }
-	                                          })
+	for child in
+		node.children
+		    .borrow()
+		    .iter()
+		    .filter(|child| matches!(child.data, NodeData::Text { .. } | NodeData::Element { .. }))
 	{
 		walk(child, results);
 	}
@@ -137,8 +129,7 @@ fn walk(handle: &Handle, results: &mut DocsMap) {
 	if let Some(key) = found {
 		let document: SerializableHandle = node.clone().into();
 		let mut render = Vec::new();
-		html5ever::serialize(&mut render, &document, Default::default()).ok()
-		                                                                .expect("serialization failed");
+		html5ever::serialize(&mut render, &document, Default::default()).expect("serialization failed");
 		let html = std::str::from_utf8(&render).unwrap();
 		let mut node = html2md::parser::safe_parse_html(html.to_owned()).expect("parsing failed");
 		if let Some(node) = node.children.first_mut() {

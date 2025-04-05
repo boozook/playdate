@@ -103,7 +103,7 @@ impl Runner {
 
 	pub fn gen_cmd(cfg: &Cfg) -> Option<Command> {
 		Self::cmd(&cfg.bin).and_then(|mut proc| {
-			                   proc.args(cfg.to_cli_args());
+			                   proc.args(cfg.cli_args());
 			                   proc.into()
 		                   })
 	}
@@ -131,7 +131,7 @@ impl Runner {
 		// Alternative way is to execute the tool:
 		if sdk_version.is_none() {
 			Self::cmd(&cfg.bin)?.arg(FIND_SDK_VERSION_CMD)
-			                    .args(cfg.to_cli_args())
+			                    .args(cfg.cli_args())
 			                    .stdout(Stdio::piped())
 			                    .output()
 			                    .ok()
@@ -175,7 +175,7 @@ impl Default for Cfg {
 
 
 impl Cfg {
-	pub fn to_cli_args(&self) -> Vec<String> {
+	pub fn cli_args(&self) -> Vec<String> {
 		let mut args = vec![];
 
 		if let Some(ref sdk) = self.sdk {
@@ -186,8 +186,8 @@ impl Cfg {
 			args.push(format!("--gcc={}", gcc.display()));
 		}
 
-		args.extend(self.derive.to_cli_args());
-		args.extend(self.features.to_cli_args());
+		args.extend(self.derive.cli_args());
+		args.extend(self.features.cli_args());
 
 		if let Some(ref path) = self.output {
 			args.push(format!("--output={}", path.display()));
@@ -226,8 +226,8 @@ impl Derive {
 		       constparamty: false }
 	}
 
-	pub fn to_cli_args(&self) -> Vec<String> {
-		let words = self.to_feature_list();
+	pub fn cli_args(&self) -> Vec<String> {
+		let words = self.arg_feature_list();
 		if words.is_empty() {
 			vec!["--derive=".to_string()]
 		} else {
@@ -268,7 +268,7 @@ impl FromStr for Derive {
 
 impl Derive {
 	#[rustfmt::skip]
-	fn to_feature_list(&self) -> String {
+	fn arg_feature_list(&self) -> String {
 		let mut out = Vec::new();
 		if self.default { out.push("default") }
 		if self.eq {out.push("eq")}
@@ -285,7 +285,7 @@ impl Derive {
 
 impl std::fmt::Display for Derive {
 	#[inline]
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { self.to_feature_list().fmt(f) }
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { self.arg_feature_list().fmt(f) }
 }
 
 impl Default for Derive {
@@ -315,8 +315,8 @@ impl Features {
 		       rustify: false }
 	}
 
-	pub fn to_cli_args(&self) -> Vec<String> {
-		let words = self.to_feature_list();
+	pub fn cli_args(&self) -> Vec<String> {
+		let words = self.arg_feature_list();
 		if words.is_empty() {
 			vec!["--features=".to_string()]
 		} else {
@@ -350,7 +350,7 @@ impl FromStr for Features {
 
 impl Features {
 	#[rustfmt::skip]
-	fn to_feature_list(&self) -> String {
+	fn arg_feature_list(&self) -> String {
 		let mut out = Vec::new();
 		if self.documentation { out.push("documentation") }
 		if self.rustify { out.push("rustify") }
@@ -360,7 +360,7 @@ impl Features {
 
 impl std::fmt::Display for Features {
 	#[inline]
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { self.to_feature_list().fmt(f) }
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { self.arg_feature_list().fmt(f) }
 }
 
 impl Default for Features {
