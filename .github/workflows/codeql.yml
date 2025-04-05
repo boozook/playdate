@@ -51,6 +51,7 @@ jobs:
         run: cargo vet --locked
 
   cargo-audit:
+    if: false
     name: Cargo Audit
     runs-on: ubuntu-latest
     permissions:
@@ -74,7 +75,6 @@ jobs:
         run: cargo audit
 
   cargo-deny:
-    if: false
     name: Cargo Deny
     runs-on: ubuntu-latest
     continue-on-error: true
