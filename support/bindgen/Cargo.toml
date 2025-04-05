@@ -1,6 +1,6 @@
 [package]
 name = "playdate-bindgen"
-version = "0.4.0"
+version = "0.4.1"
 readme = "README.md"
 description = "Preconfigured Bindgen with extra codegen for Playdate C-API."
 keywords = ["playdate", "bindings", "ffi", "code-generation"]
