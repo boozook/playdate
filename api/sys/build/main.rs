@@ -75,7 +75,7 @@ fn main() {
 	// builtin, exactly same as requested:
 	let bundled = builtin::path(&filename);
 
-	if bundled.exists() {
+	if bundled.exists() && !is_bundled_rebuild_requested() {
 		lint::check_bindgen_unnecessary_inner();
 
 		println!("Found exact match");
