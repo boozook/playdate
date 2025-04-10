@@ -32,7 +32,7 @@ build = { version = "0.4", path = "support/build", package = "playdate-build", d
 utils = { version = "0.3", path = "support/utils", package = "playdate-build-utils", default-features = false }
 device = { version = "0.2", path = "support/device", package = "playdate-device" }
 simulator = { version = "0.1", path = "support/sim-ctrl", package = "playdate-simulator-utils", default-features = false }
-bindgen = { version = "0.4", path = "support/bindgen", package = "playdate-bindgen", default-features = false }
+bindgen = { version = "0.5", path = "support/bindgen", package = "playdate-bindgen", default-features = false }
 bindgen-cfg = { version = "0.4", path = "support/bindgen-cfg", package = "playdate-bindgen-cfg", default-features = false }
 
 # Deps that used multiple times,
