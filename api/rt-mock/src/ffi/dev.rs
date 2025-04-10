@@ -708,16 +708,16 @@ pub type ButtonCallbackFunction = ::core::option::Option<unsafe extern "C" fn(bu
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSys {
-	pub realloc : unsafe extern "C" fn (ptr : * mut core :: ffi :: c_void , size : usize) -> * mut core :: ffi :: c_void ,
+	pub realloc: unsafe extern "C" fn(ptr: *mut core::ffi::c_void, size: usize) -> *mut core::ffi::c_void,
 	// pub formatString : unsafe extern "C" fn (ret : * mut * mut core :: ffi :: c_char , fmt : * const core :: ffi :: c_char , ...) -> core :: ffi :: c_int ,
-	pub logToConsole : unsafe extern "C" fn (fmt : * const core :: ffi :: c_char , ...) ,
-	pub error : unsafe extern "C" fn (fmt : * const core :: ffi :: c_char , ...) -> ! ,
+	pub logToConsole: unsafe extern "C" fn(fmt: *const core::ffi::c_char, ...),
+	pub error: unsafe extern "C" fn(fmt: *const core::ffi::c_char, ...) -> !,
 	// pub getLanguage : unsafe extern "C" fn () -> Language ,
 	// pub getCurrentTimeMilliseconds : unsafe extern "C" fn () -> core :: ffi :: c_uint ,
 	// pub getSecondsSinceEpoch : unsafe extern "C" fn (milliseconds : * mut core :: ffi :: c_uint) -> core :: ffi :: c_uint ,
-	pub drawFPS : unsafe extern "C" fn (x : core :: ffi :: c_int , y : core :: ffi :: c_int) ,
-	pub setUpdateCallback : unsafe extern "C" fn (update : CallbackFunction , userdata : * mut core :: ffi :: c_void) ,
-	pub getButtonState : unsafe extern "C" fn (current : * mut Buttons , pushed : * mut Buttons , released : * mut Buttons) ,
+	pub drawFPS: unsafe extern "C" fn(x: core::ffi::c_int, y: core::ffi::c_int),
+	pub setUpdateCallback: unsafe extern "C" fn(update: CallbackFunction, userdata: *mut core::ffi::c_void),
+	pub getButtonState: unsafe extern "C" fn(current: *mut Buttons, pushed: *mut Buttons, released: *mut Buttons),
 	// pub setPeripheralsEnabled : unsafe extern "C" fn (mask : Peripherals) ,
 	// pub getAccelerometer : unsafe extern "C" fn (outx : * mut core :: ffi :: c_float , outy : * mut core :: ffi :: c_float , outz : * mut core :: ffi :: c_float) ,
 	// pub getCrankChange : unsafe extern "C" fn () -> core :: ffi :: c_float ,
