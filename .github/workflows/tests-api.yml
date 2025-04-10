@@ -241,5 +241,8 @@ jobs:
       - name: Test
         run: cargo test -p=playdate-sys-mock --features=${{ matrix.features }}
 
+      - name: Install miri
+        run: rustup component add miri
+
       - name: Test (miri)
         run: cargo miri test -p=playdate-sys-mock --features=${{ matrix.features }}
