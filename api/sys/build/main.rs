@@ -54,9 +54,10 @@ fn main() {
 
 	let cfg = cfg::create();
 
-	// Docs.rs-like environment:
-	if is_env_without_sdk() {
-		println!("docs.rs detected");
+	// Docs.rs-like environment,
+	// With mock the bindings are replaced so it doesn’t matter what to use.
+	if is_env_without_sdk() || cfg!(any(mockrt, mockrt = "alloc", mockrt = "std")) {
+		println!("docs.rs or mock detected");
 		return use_existing_bundled(&cfg);
 	}
 

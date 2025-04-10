@@ -69,13 +69,11 @@ package = "playdate-sys-mock"
 path = "../rt-mock"
 version = "0"
 features = ["std"]
-public = false
 
 [target.'cfg(any(mockrt, mockrt = "alloc"))'.dev-dependencies.mock]
 package = "playdate-sys-mock"
 path = "../rt-mock"
 version = "0"
-public = false
 
 
 [[example]]
