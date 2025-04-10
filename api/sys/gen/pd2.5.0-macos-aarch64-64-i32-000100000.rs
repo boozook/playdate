@@ -125,6 +125,37 @@ impl<Storage> __BindgenBitfieldUnit<Storage> where Storage: AsRef<[u8]> + AsMut<
 		}
 	}
 }
+#[repr(C)]
+pub struct __BindgenUnionField<T>(::core::marker::PhantomData<T>);
+impl<T> __BindgenUnionField<T> {
+	#[inline]
+	pub const fn new() -> Self { __BindgenUnionField(::core::marker::PhantomData) }
+	#[inline]
+	pub unsafe fn as_ref(&self) -> &T { ::core::mem::transmute(self) }
+	#[inline]
+	pub unsafe fn as_mut(&mut self) -> &mut T { ::core::mem::transmute(self) }
+}
+impl<T> ::core::default::Default for __BindgenUnionField<T> {
+	#[inline]
+	fn default() -> Self { Self::new() }
+}
+impl<T> ::core::clone::Clone for __BindgenUnionField<T> {
+	#[inline]
+	fn clone(&self) -> Self { *self }
+}
+impl<T> ::core::marker::Copy for __BindgenUnionField<T> {}
+impl<T> ::core::fmt::Debug for __BindgenUnionField<T> {
+	fn fmt(&self, fmt: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+		fmt.write_str("__BindgenUnionField")
+	}
+}
+impl<T> ::core::hash::Hash for __BindgenUnionField<T> {
+	fn hash<H: ::core::hash::Hasher>(&self, _state: &mut H) {}
+}
+impl<T> ::core::cmp::PartialEq for __BindgenUnionField<T> {
+	fn eq(&self, _other: &__BindgenUnionField<T>) -> bool { true }
+}
+impl<T> ::core::cmp::Eq for __BindgenUnionField<T> {}
 pub const LCD_COLUMNS: u32 = 400;
 pub const LCD_ROWS: u32 = 240;
 pub const LCD_ROWSIZE: u32 = 52;
@@ -134,7 +165,7 @@ pub const SEEK_END: u32 = 2;
 pub const AUDIO_FRAMES_PER_CYCLE: u32 = 512;
 pub const NOTE_C4: u32 = 60;
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq, Default)]
+#[derive(Debug)]
 #[must_use]
 pub struct Aabb {
 	pub left: core::ffi::c_int,
@@ -153,7 +184,7 @@ const _: () = {
 };
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum BitmapDrawMode {
 	Copy = 0,
 	WhiteTransparent = 1,
@@ -166,7 +197,7 @@ pub enum BitmapDrawMode {
 }
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum BitmapFlip {
 	Unflipped = 0,
 	FlippedX = 1,
@@ -175,7 +206,7 @@ pub enum BitmapFlip {
 }
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum SolidColor {
 	Black = 0,
 	White = 1,
@@ -184,7 +215,7 @@ pub enum SolidColor {
 }
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LineCapStyle {
 	Butt = 0,
 	Square = 1,
@@ -192,7 +223,7 @@ pub enum LineCapStyle {
 }
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum FontLanguage {
 	English = 0,
 	Japanese = 1,
@@ -200,7 +231,7 @@ pub enum FontLanguage {
 }
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum StringEncoding {
 	ASCII = 0,
 	UTF8 = 1,
@@ -210,71 +241,55 @@ pub type Pattern = [u8; 16usize];
 pub type Color = usize;
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum PolygonFillRule {
 	NonZero = 0,
 	EvenOdd = 1,
 }
-#[repr(u32)]
-#[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
-pub enum TextWrappingMode {
-	Clip = 0,
-	Character = 1,
-	Word = 2,
-}
-#[repr(u32)]
-#[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
-pub enum TextAlignment {
-	Left = 0,
-	Center = 1,
-	Right = 2,
-}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct Bitmap {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct BitmapTable {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct Font {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct FontData {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct FontPage {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct FontGlyph {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct VideoPlayer {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateVideo {
 	#[doc = "\n<code class=\"title\">LCDVideoPlayer playdate-&gt;graphics-&gt;video-&gt;loadVideo(const char* path)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Opens the <em>pdv</em> file at <em>path</em> and returns a new video player object for rendering its frames.</p>\n</div>\n</div>\n"]
@@ -314,7 +329,7 @@ const _: () = {
 	["Offset of field: PlaydateVideo::getContext"][::core::mem::offset_of!(PlaydateVideo, getContext) - 56usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateGraphics {
 	pub video: &'static PlaydateVideo,
@@ -405,7 +420,7 @@ pub struct PlaydateGraphics {
 	                                           y: core::ffi::c_int,
 	                                           xscale: core::ffi::c_float,
 	                                           yscale: core::ffi::c_float),
-	#[doc = "\n<code class=\"title\">int playdate-&gt;graphics-&gt;drawText(const void* text, size_t len, PDStringEncoding encoding, int x, int y);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Draws the given text using the provided options. If no font has been set with <a href=\"#f-graphics.setFont\">setFont</a>, the default system font Asheville Sans 14 Light is used. Note that <code>len</code> is the length of the <strong>decoded</strong> string—\u{200b}that is, the number of codepoints in the string, not the number of bytes; however, since the parser stops at the NUL terminator it’s safe to pass <code>strlen(text)</code> in here when you want to draw the entire string.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#f-graphics.drawText\"><code>playdate.graphics.drawText()</code></a> in the Lua API.</p>\n</div>\n</div>\n"]
+	#[doc = "\n<code class=\"title\">int playdate-&gt;graphics-&gt;drawText(const void* text, size_t len, PDStringEncoding encoding, int x, int y);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Draws the given text using the provided options. If no font has been set with <a href=\"#f-graphics.setFont\">setFont</a>, the default system font Asheville Sans 14 Light is used.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#f-graphics.drawText\"><code>playdate.graphics.drawText()</code></a> in the Lua API.</p>\n</div>\n</div>\n"]
 	pub drawText: unsafe extern "C" fn(text: *const core::ffi::c_void,
 	                                   len: usize,
 	                                   encoding: StringEncoding,
@@ -472,7 +487,7 @@ pub struct PlaydateGraphics {
 	#[doc = "\n<code class=\"title\">int playdate-&gt;graphics-&gt;getGlyphKerning(LCDFontGlyph* glyph, uint32_t c1, uint32_t c2);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the kerning adjustment between characters <em>c1</em> and <em>c2</em> as specified by the font.</p>\n</div>\n</div>\n"]
 	pub getGlyphKerning:
 		unsafe extern "C" fn(glyph: *mut FontGlyph, glyphcode: u32, nextcode: u32) -> core::ffi::c_int,
-	#[doc = "\n<code class=\"title\">int playdate-&gt;graphics-&gt;getTextWidth(LCDFont* font, const void* text, size_t len, PDStringEncoding encoding, int tracking);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the width of the given text in the given font. See the <a href=\"#f-graphics.drawText\">note above</a> about the <code>len</code> argument.</p>\n</div>\n<div class=\"literalblock\">\n<div class=\"title\">PDStringEncoding</div>\n<div class=\"content\">\n<pre>typedef enum\n{\n\tkASCIIEncoding,\n\tkUTF8Encoding,\n\tk16BitLEEncoding\n} PDStringEncoding;</pre>\n</div>\n</div>\n</div>\n"]
+	#[doc = "\n<code class=\"title\">int playdate-&gt;graphics-&gt;getTextWidth(LCDFont* font, const void* text, size_t len, PDStringEncoding encoding, int tracking);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the width of the given text in the given font.</p>\n</div>\n<div class=\"literalblock\">\n<div class=\"title\">PDStringEncoding</div>\n<div class=\"content\">\n<pre>typedef enum\n{\n\tkASCIIEncoding,\n\tkUTF8Encoding,\n\tk16BitLEEncoding\n} PDStringEncoding;</pre>\n</div>\n</div>\n</div>\n"]
 	pub getTextWidth: unsafe extern "C" fn(font: *mut Font,
 	                                       text: *const core::ffi::c_void,
 	                                       len: usize,
@@ -519,7 +534,7 @@ pub struct PlaydateGraphics {
 	pub getFontHeight: unsafe extern "C" fn(font: *mut Font) -> u8,
 	#[doc = "\n<code class=\"title\">LCDBitmap* playdate-&gt;graphics-&gt;getDisplayBufferBitmap(void);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns a bitmap containing the contents of the display buffer. The system owns this bitmap—\u{200b}do not free it!</p>\n</div>\n</div>\n"]
 	pub getDisplayBufferBitmap: unsafe extern "C" fn() -> *mut Bitmap,
-	#[doc = "\n<code class=\"title\">void playdate-&gt;graphics-&gt;drawRotatedBitmap(LCDBitmap* bitmap, int x, int y, float degrees, float centerx, float centery, float xscale, float yscale);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Draws the <em>bitmap</em> scaled to <em>xscale</em> and <em>yscale</em> then rotated by <em>degrees</em> with its center as given by proportions <em>centerx</em> and <em>centery</em> at <em>x</em>, <em>y</em>; that is: if <em>centerx</em> and <em>centery</em> are both 0.5 the center of the image is at (<em>x</em>,<em>y</em>), if <em>centerx</em> and <em>centery</em> are both 0 the top left corner of the image (before rotation) is at (<em>x</em>,<em>y</em>), etc.</p>\n</div>\n</div>\n"]
+	#[doc = "\n<code class=\"title\">LCDBitmap* playdate-&gt;graphics-&gt;drawRotatedBitmap(LCDBitmap* bitmap, int x, int y, float degrees, float centerx, float centery, float xscale, float yscale);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Draws the <em>bitmap</em> scaled to <em>xscale</em> and <em>yscale</em> then rotated by <em>degrees</em> with its center as given by proportions <em>centerx</em> and <em>centery</em> at <em>x</em>, <em>y</em>; that is: if <em>centerx</em> and <em>centery</em> are both 0.5 the center of the image is at (<em>x</em>,<em>y</em>), if <em>centerx</em> and <em>centery</em> are both 0 the top left corner of the image (before rotation) is at (<em>x</em>,<em>y</em>), etc.</p>\n</div>\n</div>\n"]
 	pub drawRotatedBitmap: unsafe extern "C" fn(bitmap: *mut Bitmap,
 	                                            x: core::ffi::c_int,
 	                                            y: core::ffi::c_int,
@@ -548,20 +563,10 @@ pub struct PlaydateGraphics {
 	#[doc = "\n<code class=\"title\">void playdate-&gt;graphics-&gt;getBitmapTableInfo(LCDBitmapTable* table, int* count, int* cellswide);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the bitmap table’s image count in the <em>count</em> pointer (if not NULL) and number of cells across in the <em>cellswide</em> pointer (ditto).</p>\n</div>\n</div>\n"]
 	pub getBitmapTableInfo:
 		unsafe extern "C" fn(table: *mut BitmapTable, count: *mut core::ffi::c_int, width: *mut core::ffi::c_int),
-	#[doc = "\n<code class=\"title\">int playdate-&gt;graphics-&gt;drawTextInRect(const void* text, size_t len, PDStringEncoding encoding, int x, int y, int width, int height, PDTextWrappingMode wrap, PDTextAlignment align);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Draws the text in the given rectangle using the provided options. If no font has been set with <a href=\"#f-graphics.setFont\">setFont</a>, the default system font Asheville Sans 14 Light is used. See the <a href=\"#f-graphics.drawText\">above note</a> about the <code>len</code> argument.</p>\n</div>\n<div class=\"paragraph\">\n<p>The <em>wrap</em> argument is one of</p>\n</div>\n<div class=\"literalblock\">\n<div class=\"title\">PDTextWrappingMode</div>\n<div class=\"content\">\n<pre>typedef enum\n{\n\tkWrapClip,\n\tkWrapCharacter,\n\tkWrapWord,\n} PDTextWrappingMode;</pre>\n</div>\n</div>\n<div class=\"paragraph\">\n<p>and <em>align</em> is one of</p>\n</div>\n<div class=\"literalblock\">\n<div class=\"title\">PDTextAlignment</div>\n<div class=\"content\">\n<pre>typedef enum\n{\n\tkAlignTextLeft,\n\tkAlignTextCenter,\n\tkAlignTextRight\n} PDTextAlignment;</pre>\n</div>\n</div>\n</div>\n"]
-	pub drawTextInRect: unsafe extern "C" fn(text: *const core::ffi::c_void,
-	                                         len: usize,
-	                                         encoding: StringEncoding,
-	                                         x: core::ffi::c_int,
-	                                         y: core::ffi::c_int,
-	                                         width: core::ffi::c_int,
-	                                         height: core::ffi::c_int,
-	                                         wrap: TextWrappingMode,
-	                                         align: TextAlignment),
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateGraphics"][::core::mem::size_of::<PlaydateGraphics>() - 512usize];
+	["Size of PlaydateGraphics"][::core::mem::size_of::<PlaydateGraphics>() - 504usize];
 	["Alignment of PlaydateGraphics"][::core::mem::align_of::<PlaydateGraphics>() - 8usize];
 	["Offset of field: PlaydateGraphics::video"][::core::mem::offset_of!(PlaydateGraphics, video) - 0usize];
 	["Offset of field: PlaydateGraphics::clear"][::core::mem::offset_of!(PlaydateGraphics, clear) - 8usize];
@@ -685,8 +690,6 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateGraphics, getBitmapPixel) - 488usize];
 	["Offset of field: PlaydateGraphics::getBitmapTableInfo"]
 		[::core::mem::offset_of!(PlaydateGraphics, getBitmapTableInfo) - 496usize];
-	["Offset of field: PlaydateGraphics::drawTextInRect"]
-		[::core::mem::offset_of!(PlaydateGraphics, drawTextInRect) - 504usize];
 };
 pub type va_list = __builtin_va_list;
 impl Buttons {
@@ -727,18 +730,18 @@ impl ::core::ops::BitAndAssign for Buttons {
 }
 #[repr(transparent)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub struct Buttons(pub u32);
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum Language {
 	English = 0,
 	Japanese = 1,
 	Unknown = 2,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct DateTime {
 	pub year: u16,
@@ -762,14 +765,14 @@ const _: () = {
 	["Offset of field: DateTime::second"][::core::mem::offset_of!(DateTime, second) - 7usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct MenuItem {
 	_unused: [u8; 0],
 }
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum Peripherals {
 	None = 0,
 	Accelerometer = 1,
@@ -785,7 +788,7 @@ pub type ButtonCallbackFunction = ::core::option::Option<unsafe extern "C" fn(bu
                                                                               userdata: *mut core::ffi::c_void)
                                                                               -> core::ffi::c_int>;
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSys { # [doc = "\n<code class=\"title\">void* playdate-&gt;system-&gt;realloc(void* ptr, size_t size)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Allocates heap space if <em>ptr</em> is NULL, else reallocates the given pointer. If <em>size</em> is zero, frees the given pointer.</p>\n</div>\n</div>\n"] pub realloc : unsafe extern "C" fn (ptr : * mut core :: ffi :: c_void , size : usize) -> * mut core :: ffi :: c_void , # [doc = "\n<code class=\"title\">int playdate-&gt;system-&gt;formatString(char **outstring, const char *format, ...)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Creates a formatted string and returns it via the <em>outstring</em> argument. The arguments and return value match libc’s <code>asprintf()</code>: the format string is standard <code>printf()</code> style, the string returned in <em>outstring</em> should be freed by the caller when it’s no longer in use, and the return value is the length of the formatted string.</p>\n</div>\n</div>\n"] pub formatString : unsafe extern "C" fn (ret : * mut * mut core :: ffi :: c_char , fmt : * const core :: ffi :: c_char , ...) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;logToConsole(const char* format, ...)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Calls the log function.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#f-print\"><code>print()</code></a> in the Lua API.</p>\n</div>\n</div>\n"] pub logToConsole : unsafe extern "C" fn (fmt : * const core :: ffi :: c_char , ...) , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;error(const char* format, ...)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Calls the log function, outputting an error in red to the console, then pauses execution.</p>\n</div>\n</div>\n"] pub error : unsafe extern "C" fn (fmt : * const core :: ffi :: c_char , ...) -> ! , # [doc = "\n<code class=\"title\">PDLanguage playdate-&gt;system-&gt;getLanguage(void);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the current language of the system.</p>\n</div>\n</div>\n"] pub getLanguage : unsafe extern "C" fn () -> Language , # [doc = "\n<code class=\"title\">unsigned int playdate-&gt;system-&gt;getCurrentTimeMilliseconds(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the number of milliseconds since…\u{200b}some arbitrary point in time. This should present a consistent timebase while a game is running, but the counter will be disabled when the device is sleeping.</p>\n</div>\n</div>\n"] pub getCurrentTimeMilliseconds : unsafe extern "C" fn () -> core :: ffi :: c_uint , # [doc = "\n<code class=\"title\">unsigned int playdate-&gt;system-&gt;getSecondsSinceEpoch(unsigned int *milliseconds)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the number of seconds (and sets <em>milliseconds</em> if not NULL) elapsed since midnight (hour 0), January 1, 2000.</p>\n</div>\n</div>\n"] pub getSecondsSinceEpoch : unsafe extern "C" fn (milliseconds : * mut core :: ffi :: c_uint) -> core :: ffi :: c_uint , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;drawFPS(int x, int y)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Calculates the current frames per second and draws that value at <em>x, y</em>.</p>\n</div>\n</div>\n"] pub drawFPS : unsafe extern "C" fn (x : core :: ffi :: c_int , y : core :: ffi :: c_int) , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;setUpdateCallback(PDCallbackFunction* update, void* userdata)</code>\n<div class=\"content\">\n<div class=\"literalblock\">\n<div class=\"title\">PDCallbackFunction</div>\n<div class=\"content\">\n<pre>int PDCallbackFunction(void* userdata);</pre>\n</div>\n</div>\n<div class=\"paragraph\">\n<p>Replaces the default Lua run loop function with a custom update function. The update function should return a non-zero number to tell the system to update the display, or zero if update isn’t needed.</p>\n</div>\n</div>\n"] pub setUpdateCallback : unsafe extern "C" fn (update : CallbackFunction , userdata : * mut core :: ffi :: c_void) , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;getButtonState(PDButtons* current, PDButtons* pushed, PDButtons* released)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the value pointed to by <em>current</em> to a bitmask indicating which buttons are currently down. <em>pushed</em> and <em>released</em> reflect which buttons were pushed or released over the previous update cycle—at the nominal frame rate of 50 ms, fast button presses can be missed if you just poll the instantaneous state.</p>\n</div>\n<div id=\"_PDButton\" class=\"literalblock\">\n<div class=\"title\">PDButton</div>\n<div class=\"content\">\n<pre>kButtonLeft\nkButtonRight\nkButtonUp\nkButtonDown\nkButtonB\nkButtonA</pre>\n</div>\n</div>\n</div>\n"] pub getButtonState : unsafe extern "C" fn (current : * mut Buttons , pushed : * mut Buttons , released : * mut Buttons) , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;setPeripheralsEnabled(PDPeripherals mask)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>By default, the accelerometer is disabled to save (a small amount of) power. To use a peripheral, it must first be enabled via this function. Accelerometer data is not available until the next update cycle after it’s enabled.</p>\n</div>\n<div class=\"literalblock\">\n<div class=\"title\">PDPeripherals</div>\n<div class=\"content\">\n<pre>kNone\nkAccelerometer</pre>\n</div>\n</div>\n</div>\n"] pub setPeripheralsEnabled : unsafe extern "C" fn (mask : Peripherals) , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;getAccelerometer(float* outx, float* outy, float* outz)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the last-read accelerometer data.</p>\n</div>\n</div>\n"] pub getAccelerometer : unsafe extern "C" fn (outx : * mut core :: ffi :: c_float , outy : * mut core :: ffi :: c_float , outz : * mut core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">float playdate-&gt;system-&gt;getCrankChange(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the angle change of the crank since the last time this function was called. Negative values are anti-clockwise.</p>\n</div>\n</div>\n"] pub getCrankChange : unsafe extern "C" fn () -> core :: ffi :: c_float , # [doc = "\n<code class=\"title\">float playdate-&gt;system-&gt;getCrankAngle(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the current position of the crank, in the range 0-360. Zero is pointing up, and the value increases as the crank moves clockwise, as viewed from the right side of the device.</p>\n</div>\n</div>\n"] pub getCrankAngle : unsafe extern "C" fn () -> core :: ffi :: c_float , # [doc = "\n<code class=\"title\">int playdate-&gt;system-&gt;isCrankDocked(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns 1 or 0 indicating whether or not the crank is folded into the unit.</p>\n</div>\n</div>\n"] pub isCrankDocked : unsafe extern "C" fn () -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;system-&gt;setCrankSoundsDisabled(int disable)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>The function returns the previous value for this setting.</p>\n</div>\n</div>\n"] pub setCrankSoundsDisabled : unsafe extern "C" fn (flag : core :: ffi :: c_int) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;system-&gt;getFlipped()</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns 1 if the global \"flipped\" system setting is set, otherwise 0.</p>\n</div>\n</div>\n"] pub getFlipped : unsafe extern "C" fn () -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;setAutoLockDisabled(int disable)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Disables or enables the 3 minute auto lock feature. When called, the timer is reset to 3 minutes.</p>\n</div>\n</div>\n"] pub setAutoLockDisabled : unsafe extern "C" fn (disable : core :: ffi :: c_int) , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;setMenuImage(LCDBitmap* bitmap, int xOffset);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>A game can optionally provide an image to be displayed alongside the system menu. <em>bitmap</em> must be a 400x240 LCDBitmap. All important content should be in the left half of the image in an area 200 pixels wide, as the menu will obscure the rest. The right side of the image will be visible briefly as the menu animates in and out.</p>\n</div>\n<div class=\"paragraph\">\n<p>Optionally, a non-zero <em>xoffset</em>, can be provided. This must be a number between 0 and 200 and will cause the menu image to animate to a position offset left by xoffset pixels as the menu is animated in.</p>\n</div>\n<div class=\"paragraph\">\n<p>This function could be called in response to the kEventPause <em>event</em> in your implementation of <a href=\"#_eventHandler\">eventHandler()</a>.</p>\n</div>\n</div>\n"] pub setMenuImage : unsafe extern "C" fn (bitmap : * mut Bitmap , xOffset : core :: ffi :: c_int) , # [doc = "\n<code class=\"title\">PDMenuItem* playdate-&gt;system-&gt;addMenuItem(const char* title, PDMenuItemCallbackFunction* callback, void* userdata)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p><em>title</em> will be the title displayed by the menu item.</p>\n</div>\n<div class=\"paragraph\">\n<p>Adds a new menu item to the System Menu. When invoked by the user, this menu item will:</p>\n</div>\n<div class=\"olist arabic\">\n<ol class=\"arabic\">\n<li>\n<p>Invoke your <em>callback</em> function.</p>\n</li>\n<li>\n<p>Hide the System Menu.</p>\n</li>\n<li>\n<p>Unpause your game and call <a href=\"#_eventHandler\">eventHandler()</a> with the kEventResume <em>event</em>.</p>\n</li>\n</ol>\n</div>\n<div class=\"paragraph\">\n<p>Your game can then present an options interface to the player, or take other action, in whatever manner you choose.</p>\n</div>\n<div class=\"paragraph\">\n<p>The returned menu item is freed when removed from the menu; it does not need to be freed manually.</p>\n</div>\n</div>\n"] pub addMenuItem : unsafe extern "C" fn (title : * const core :: ffi :: c_char , callback : MenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut MenuItem , # [doc = "\n<code class=\"title\">PDMenuItem* playdate-&gt;system-&gt;addCheckmarkMenuItem(const char* title, int value, PDMenuItemCallbackFunction* callback, void* userdata)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Adds a new menu item that can be checked or unchecked by the player.</p>\n</div>\n<div class=\"paragraph\">\n<p><em>title</em> will be the title displayed by the menu item.</p>\n</div>\n<div class=\"paragraph\">\n<p><em>value</em> should be 0 for unchecked, 1 for checked.</p>\n</div>\n<div class=\"paragraph\">\n<p>If this menu item is interacted with while the system menu is open, <em>callback</em> will be called when the menu is closed.</p>\n</div>\n<div class=\"paragraph\">\n<p>The returned menu item is freed when removed from the menu; it does not need to be freed manually.</p>\n</div>\n</div>\n"] pub addCheckmarkMenuItem : unsafe extern "C" fn (title : * const core :: ffi :: c_char , value : core :: ffi :: c_int , callback : MenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut MenuItem , # [doc = "\n<code class=\"title\">PDMenuItem* playdate-&gt;system-&gt;addOptionsMenuItem(const char* title, const char** options, int optionsCount, PDMenuItemCallbackFunction* callback, void* userdata)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Adds a new menu item that allows the player to cycle through a set of options.</p>\n</div>\n<div class=\"paragraph\">\n<p><em>title</em> will be the title displayed by the menu item.</p>\n</div>\n<div class=\"paragraph\">\n<p><em>options</em> should be an array of strings representing the states this menu item can cycle through. Due to limited horizontal space, the option strings and title should be kept short for this type of menu item.</p>\n</div>\n<div class=\"paragraph\">\n<p><em>optionsCount</em> should be the number of items contained in <em>options</em>.</p>\n</div>\n<div class=\"paragraph\">\n<p>If this menu item is interacted with while the system menu is open, <em>callback</em> will be called when the menu is closed.</p>\n</div>\n<div class=\"paragraph\">\n<p>The returned menu item is freed when removed from the menu; it does not need to be freed manually.</p>\n</div>\n</div>\n"] pub addOptionsMenuItem : unsafe extern "C" fn (title : * const core :: ffi :: c_char , optionTitles : * mut * const core :: ffi :: c_char , optionsCount : core :: ffi :: c_int , f : MenuItemCallbackFunction , userdata : * mut core :: ffi :: c_void) -> * mut MenuItem , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;removeAllMenuItems()</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Removes all custom menu items from the system menu.</p>\n</div>\n</div>\n"] pub removeAllMenuItems : unsafe extern "C" fn () , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;removeMenuItem(PDMenuItem *menuItem)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Removes the menu item from the system menu.</p>\n</div>\n</div>\n"] pub removeMenuItem : unsafe extern "C" fn (menuItem : * mut MenuItem) , # [doc = "\n<code class=\"title\">int playdate-&gt;system-&gt;getMenuItemValue(PDMenuItem *menuItem)</code>\n<div class=\"content\">\n\n</div>\n"] pub getMenuItemValue : unsafe extern "C" fn (menuItem : * mut MenuItem) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;setMenuItemValue(PDMenuItem *menuItem, int value)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Gets or sets the integer value of the menu item.</p>\n</div>\n<div class=\"paragraph\">\n<p>For checkmark menu items, 1 means checked, 0 unchecked. For option menu items, the value indicates the array index of the currently selected option.</p>\n</div>\n</div>\n"] pub setMenuItemValue : unsafe extern "C" fn (menuItem : * mut MenuItem , value : core :: ffi :: c_int) , # [doc = "\n<code class=\"title\">const char* playdate-&gt;system-&gt;getMenuItemTitle(PDMenuItem *menuItem)</code>\n<div class=\"content\">\n\n</div>\n"] pub getMenuItemTitle : unsafe extern "C" fn (menuItem : * mut MenuItem) -> * const core :: ffi :: c_char , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;setMenuItemTitle(PDMenuItem *menuItem, const char* title)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Gets or sets the display title of the menu item.</p>\n</div>\n</div>\n"] pub setMenuItemTitle : unsafe extern "C" fn (menuItem : * mut MenuItem , title : * const core :: ffi :: c_char) , # [doc = "\n<code class=\"title\">void* playdate-&gt;system-&gt;getMenuItemUserdata(PDMenuItem *menuItem)</code>\n<div class=\"content\">\n\n</div>\n"] pub getMenuItemUserdata : unsafe extern "C" fn (menuItem : * mut MenuItem) -> * mut core :: ffi :: c_void , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;setMenuItemUserdata(PDMenuItem *menuItem, void* userdata)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Gets or sets the userdata value associated with this menu item.</p>\n</div>\n</div>\n"] pub setMenuItemUserdata : unsafe extern "C" fn (menuItem : * mut MenuItem , ud : * mut core :: ffi :: c_void) , # [doc = "\n<code class=\"title\">int playdate-&gt;system-&gt;getReduceFlashing()</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns 1 if the global \"reduce flashing\" system setting is set, otherwise 0.</p>\n</div>\n</div>\n"] pub getReduceFlashing : unsafe extern "C" fn () -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">float playdate-&gt;system-&gt;getElapsedTime()</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the number of seconds since <code>playdate.resetElapsedTime()</code> was called. The value is a floating-point number with microsecond accuracy.</p>\n</div>\n</div>\n"] pub getElapsedTime : unsafe extern "C" fn () -> core :: ffi :: c_float , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;resetElapsedTime(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Resets the high-resolution timer.</p>\n</div>\n</div>\n"] pub resetElapsedTime : unsafe extern "C" fn () , # [doc = "\n<code class=\"title\">float playdate-&gt;system-&gt;getBatteryPercentage()</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns a value from 0-100 denoting the current level of battery charge. 0 = empty; 100 = full.</p>\n</div>\n</div>\n"] pub getBatteryPercentage : unsafe extern "C" fn () -> core :: ffi :: c_float , # [doc = "\n<code class=\"title\">float playdate-&gt;system-&gt;getBatteryVoltage()</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the battery’s current voltage level.</p>\n</div>\n</div>\n"] pub getBatteryVoltage : unsafe extern "C" fn () -> core :: ffi :: c_float , # [doc = "\n<code class=\"title\">int32_t playdate-&gt;system-&gt;getTimezoneOffset()</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the system timezone offset from GMT, in seconds.</p>\n</div>\n</div>\n"] pub getTimezoneOffset : unsafe extern "C" fn () -> i32 , # [doc = "\n<code class=\"title\">int playdate-&gt;system-&gt;shouldDisplay24HourTime()</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns 1 if the user has set the 24-Hour Time preference in the Settings program.</p>\n</div>\n</div>\n"] pub shouldDisplay24HourTime : unsafe extern "C" fn () -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;convertEpochToDateTime(uint32_t epoch, struct PDDateTime* datetime)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Converts the given epoch time to a PDDateTime.</p>\n</div>\n</div>\n"] pub convertEpochToDateTime : unsafe extern "C" fn (epoch : u32 , datetime : * mut DateTime) , # [doc = "\n<code class=\"title\">uint32_t playdate-&gt;system-&gt;convertDateTimeToEpoch(struct PDDateTime* datetime)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Converts the given PDDateTime to an epoch time.</p>\n</div>\n</div>\n"] pub convertDateTimeToEpoch : unsafe extern "C" fn (datetime : * mut DateTime) -> u32 , # [doc = "\n<code class=\"title\">float playdate-&gt;system-&gt;clearICache()</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Flush the CPU instruction cache, on the very unlikely chance you’re modifying instruction code on the fly. (If you don’t know what I’m talking about, you don’t need this. :smile:)</p>\n</div>\n</div>\n"] pub clearICache : unsafe extern "C" fn () , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;setButtonCallback(PDButtonCallbackFunction* cb, void* userdata, int queuesize)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>As an alternative to polling for button presses using <code>getButtonState()</code>, this function allows a callback function to be set. The function is called for each button up/down event (possibly multiple events on the same button) that occurred during the previous update cycle. At the default 30 FPS, a queue size of 5 should be adequate. At lower frame rates/longer frame times, the queue size should be extended until all button presses are caught. The function should return 0 on success or a non-zero value to signal an error.</p>\n</div>\n<div class=\"literalblock\">\n<div class=\"title\">PDButtonCallbackFunction</div>\n<div class=\"content\">\n<pre>typedef int PDButtonCallbackFunction(PDButtons button, int down, uint32_t when, void* userdata);</pre>\n</div>\n</div>\n</div>\n"] pub setButtonCallback : unsafe extern "C" fn (cb : ButtonCallbackFunction , buttonud : * mut core :: ffi :: c_void , queuesize : core :: ffi :: c_int) , # [doc = "\n<code class=\"title\">void playdate-&gt;system-&gt;setSerialMessageCallback(void (*callback)(const char* data));</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Provides a callback to receive messages sent to the device over the serial port using the <code>msg</code> command. If no device is connected, you can send these messages to a game in the simulator by entering <code>!msg &lt;message&gt;</code> in the Lua console.</p>\n</div>\n</div>\n"] pub setSerialMessageCallback : unsafe extern "C" fn (callback : :: core :: option :: Option < unsafe extern "C" fn (data : * const core :: ffi :: c_char) >) , # [doc = "\n<code class=\"title\">int playdate-&gt;system-&gt;vaFormatString(char **ret, const char *format, va_list args)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Allocates and formats a string using a variadic <code>va_list</code> argument, in the style of <code>vasprintf()</code>. The string returned via <em>ret</em> should be freed by the caller when it is no longer in use. The return value from the function is the length of the formatted string.</p>\n</div>\n</div>\n"] pub vaFormatString : unsafe extern "C" fn (outstr : * mut * mut core :: ffi :: c_char , fmt : * const core :: ffi :: c_char , args : va_list) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;system-&gt;parseString(const char *str, const char *format, ...)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Like libc <code>sscanf()</code>, parses a string according to a format string and places the values into pointers passed in after the format. The return value is the number of items matched.</p>\n</div>\n</div>\n"] pub parseString : unsafe extern "C" fn (str_ : * const core :: ffi :: c_char , format : * const core :: ffi :: c_char , ...) -> core :: ffi :: c_int , }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -873,27 +876,27 @@ const _: () = {
 pub type LuaState = *mut core::ffi::c_void;
 pub type LuaCFunction = ::core::option::Option<unsafe extern "C" fn(L: *mut LuaState) -> core::ffi::c_int>;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct LuaUdObject {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct Sprite {
 	_unused: [u8; 0],
 }
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LuaValueType {
 	Int = 0,
 	Float = 1,
 	Str = 2,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct LuaReg {
 	pub name: *const core::ffi::c_char,
@@ -908,7 +911,7 @@ const _: () = {
 };
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LuaType {
 	Nil = 0,
 	Bool = 1,
@@ -921,7 +924,6 @@ pub enum LuaType {
 	Object = 8,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
 #[must_use]
 pub struct LuaVal {
 	pub name: *const core::ffi::c_char,
@@ -929,12 +931,12 @@ pub struct LuaVal {
 	pub v: LuaValBindgenTy1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
 #[must_use]
-pub union LuaValBindgenTy1 {
-	pub intval: core::ffi::c_uint,
-	pub floatval: core::ffi::c_float,
-	pub strval: *const core::ffi::c_char,
+pub struct LuaValBindgenTy1 {
+	pub intval: __BindgenUnionField<core::ffi::c_uint>,
+	pub floatval: __BindgenUnionField<core::ffi::c_float>,
+	pub strval: __BindgenUnionField<*const core::ffi::c_char>,
+	pub bindgen_union_field: u64,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
@@ -953,7 +955,7 @@ const _: () = {
 	["Offset of field: LuaVal::v"][::core::mem::offset_of!(LuaVal, v) - 16usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateLua {
 	#[doc = "\n<code class=\"title\">int playdate-&gt;lua-&gt;addFunction(lua_CFunction f, const char* name, const char** outErr);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Adds the Lua function <em>f</em> to the Lua runtime, with name <em>name</em>. (<em>name</em> can be a table path using dots, e.g. if name = “mycode.myDrawingFunction” adds the function “myDrawingFunction” to the global table “myCode”.) Returns 1 on success or 0 with an error message in <em>outErr</em>.</p>\n</div>\n</div>\n"]
@@ -1080,7 +1082,7 @@ const _: () = {
 };
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum JsonValueType {
 	Null = 0,
 	True = 1,
@@ -1092,21 +1094,20 @@ pub enum JsonValueType {
 	Table = 7,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
 #[must_use]
 pub struct JsonValue {
 	pub type_: core::ffi::c_char,
 	pub data: JsonValueBindgenTy1,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
 #[must_use]
-pub union JsonValueBindgenTy1 {
-	pub intval: core::ffi::c_int,
-	pub floatval: core::ffi::c_float,
-	pub stringval: *mut core::ffi::c_char,
-	pub arrayval: *mut core::ffi::c_void,
-	pub tableval: *mut core::ffi::c_void,
+pub struct JsonValueBindgenTy1 {
+	pub intval: __BindgenUnionField<core::ffi::c_int>,
+	pub floatval: __BindgenUnionField<core::ffi::c_float>,
+	pub stringval: __BindgenUnionField<*mut core::ffi::c_char>,
+	pub arrayval: __BindgenUnionField<*mut core::ffi::c_void>,
+	pub tableval: __BindgenUnionField<*mut core::ffi::c_void>,
+	pub bindgen_union_field: u64,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
@@ -1131,7 +1132,7 @@ const _: () = {
 	["Offset of field: JsonValue::data"][::core::mem::offset_of!(JsonValue, data) - 8usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct JsonDecoder {
 	pub decodeError: ::core::option::Option<unsafe extern "C" fn(decoder: *mut JsonDecoder,
@@ -1186,7 +1187,7 @@ pub type JsonReadFunc = ::core::option::Option<unsafe extern "C" fn(userdata: *m
                                                                     bufsize: core::ffi::c_int)
                                                                     -> core::ffi::c_int>;
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct JsonReader {
 	pub read: JsonReadFunc,
@@ -1203,7 +1204,7 @@ pub type JsonWriteFunc = ::core::option::Option<unsafe extern "C" fn(userdata: *
                                                                      str_: *const core::ffi::c_char,
                                                                      len: core::ffi::c_int)>;
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct JsonEncoder {
 	pub writeStringFunc: JsonWriteFunc,
@@ -1394,7 +1395,7 @@ impl JsonEncoder {
 	}
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateJson {
 	#[doc = "\n<code class=\"title\">void playdate-&gt;json-&gt;initEncoder(json_encoder* encoder, writeFunc* write, void* userdata, int pretty);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Populates the given json_encoder <em>encoder</em> with the functions necessary to encode arbitrary data into a JSON string. <em>userdata</em> is passed as the first argument of the given writeFunc <em>write</em>. When <em>pretty</em> is 1 the string is written with human-readable formatting.</p>\n</div>\n</div>\n"]
@@ -1453,10 +1454,10 @@ impl ::core::ops::BitAndAssign for FileOptions {
 }
 #[repr(transparent)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub struct FileOptions(pub u32);
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq, Default)]
+#[derive(Debug)]
 #[must_use]
 pub struct FileStat {
 	pub isdir: core::ffi::c_int,
@@ -1482,7 +1483,7 @@ const _: () = {
 	["Offset of field: FileStat::m_second"][::core::mem::offset_of!(FileStat, m_second) - 28usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateFile { # [doc = "\n<code class=\"title\">const char* playdate-&gt;file-&gt;geterr(void);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns human-readable text describing the most recent error (usually indicated by a -1 return from a filesystem function).</p>\n</div>\n</div>\n"] pub geterr : unsafe extern "C" fn () -> * const core :: ffi :: c_char , # [doc = "\n<code class=\"title\">int playdate-&gt;file-&gt;listfiles(const char* path, void (*callback)(const char* filename, void* userdata), void* userdata, int showhidden);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Calls the given callback function for every file at <em>path</em>. Subfolders are indicated by a trailing slash '/' in <em>filename</em>. <em>listfiles()</em> does not recurse into subfolders. If <em>showhidden</em> is set, files beginning with a period will be included; otherwise, they are skipped. Returns 0 on success, -1 if no folder exists at <em>path</em> or it can’t be opened.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#f-file.listFiles\"><code>playdate.file.listFiles()</code></a> in the Lua API.</p>\n</div>\n</div>\n"] pub listfiles : unsafe extern "C" fn (path : * const core :: ffi :: c_char , callback : :: core :: option :: Option < unsafe extern "C" fn (path : * const core :: ffi :: c_char , userdata : * mut core :: ffi :: c_void) > , userdata : * mut core :: ffi :: c_void , showhidden : core :: ffi :: c_int) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;file-&gt;stat(const char* path, FileStat* stat);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Populates the FileStat <em>stat</em> with information about the file at <em>path</em>. Returns 0 on success, or -1 in case of error.</p>\n</div>\n<div class=\"literalblock\">\n<div class=\"title\">FileStat</div>\n<div class=\"content\">\n<pre>typedef struct\n{\n\tint isdir;\n\tunsigned int size;\n\tint m_year;\n\tint m_month;\n\tint m_day;\n\tint m_hour;\n\tint m_minute;\n\tint m_second;\n} FileStat;</pre>\n</div>\n</div>\n</div>\n"] pub stat : unsafe extern "C" fn (path : * const core :: ffi :: c_char , stat : * mut FileStat) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;file-&gt;mkdir(const char* path);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Creates the given <em>path</em> in the Data/&lt;gameid&gt; folder. It does not create intermediate folders. Returns 0 on success, or -1 in case of error.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#f-file.mkdir\"><code>playdate.file.mkdir()</code></a> in the Lua API.</p>\n</div>\n</div>\n"] pub mkdir : unsafe extern "C" fn (path : * const core :: ffi :: c_char) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;file-&gt;unlink(const char* path, int recursive);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Deletes the file at <em>path</em>. Returns 0 on success, or -1 in case of error. If recursive is 1 and the target path is a folder, this deletes everything inside the folder (including folders, folders inside those, and so on) as well as the folder itself.</p>\n</div>\n</div>\n"] pub unlink : unsafe extern "C" fn (name : * const core :: ffi :: c_char , recursive : core :: ffi :: c_int) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;file-&gt;rename(const char* from, const char* to);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Renames the file at <em>from</em> to <em>to</em>. It will overwrite the file at <em>to</em> without confirmation. It does not create intermediate folders. Returns 0 on success, or -1 in case of error.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#f-file.rename\"><code>playdate.file.rename()</code></a> in the Lua API.</p>\n</div>\n</div>\n"] pub rename : unsafe extern "C" fn (from : * const core :: ffi :: c_char , to : * const core :: ffi :: c_char) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">SDFile* playdate-&gt;file-&gt;open(const char* path, FileOptions mode);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Opens a handle for the file at <em>path</em>. The <em>kFileRead</em> mode opens a file in the game pdx, while <em>kFileReadData</em> searches the game’s data folder; to search the data folder first then fall back on the game pdx, use the bitwise combination <em>kFileRead|kFileReadData</em>.<em>kFileWrite</em> and <em>kFileAppend</em> always write to the data folder. The function returns NULL if a file at <em>path</em> cannot be opened, and <a href=\"#f-file.geterr\">playdate-&gt;file-&gt;geterr()</a> will describe the error. The filesystem has a limit of 64 simultaneous open files. The returned file handle should be <a href=\"#f-file.close\">closed</a>, not freed, when it is no longer in use.</p>\n</div>\n<div class=\"literalblock\">\n<div class=\"title\">FileOptions</div>\n<div class=\"content\">\n<pre>typedef enum\n{\n\tkFileRead,\n\tkFileReadData,\n\tkFileWrite,\n\tkFileAppend\n} FileOptions;</pre>\n</div>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#f-file.open\"><code>playdate.file.open()</code></a> in the Lua API.</p>\n</div>\n</div>\n"] pub open : unsafe extern "C" fn (name : * const core :: ffi :: c_char , mode : FileOptions) -> * mut SdFile , # [doc = "\n<code class=\"title\">int playdate-&gt;file-&gt;close(SDFile* file);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Closes the given <em>file</em> handle. Returns 0 on success, or -1 in case of error.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#f-file.close\"><code>playdate.file.close()</code></a> in the Lua API.</p>\n</div>\n</div>\n"] pub close : unsafe extern "C" fn (file : * mut SdFile) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;file-&gt;read(SDFile* file, void* buf, unsigned int len);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Reads up to <em>len</em> bytes from the <em>file</em> into the buffer <em>buf</em>. Returns the number of bytes read (0 indicating end of file), or -1 in case of error.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#m-file.read\"><code>playdate.file.file:read()</code></a> in the Lua API.</p>\n</div>\n</div>\n"] pub read : unsafe extern "C" fn (file : * mut SdFile , buf : * mut core :: ffi :: c_void , len : core :: ffi :: c_uint) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;file-&gt;write(SDFile* file, const void* buf, unsigned int len);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Writes the buffer of bytes <em>buf</em> to the <em>file</em>. Returns the number of bytes written, or -1 in case of error.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#m-file.write\"><code>playdate.file.file:write()</code></a> in the Lua API.</p>\n</div>\n</div>\n"] pub write : unsafe extern "C" fn (file : * mut SdFile , buf : * const core :: ffi :: c_void , len : core :: ffi :: c_uint) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;file-&gt;flush(SDFile* file);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Flushes the output buffer of <em>file</em> immediately. Returns the number of bytes written, or -1 in case of error.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#f-file.flush\"><code>playdate.file.flush()</code></a> in the Lua API.</p>\n</div>\n</div>\n"] pub flush : unsafe extern "C" fn (file : * mut SdFile) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;file-&gt;tell(SDFile* file);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the current read/write offset in the given <em>file</em> handle, or -1 on error.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#m-file.tell\"><code>playdate.file.file:tell()</code></a> in the Lua API.</p>\n</div>\n</div>\n"] pub tell : unsafe extern "C" fn (file : * mut SdFile) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;file-&gt;seek(SDFile* file, int pos, int whence);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the read/write offset in the given <em>file</em> handle to <em>pos</em>, relative to the <em>whence</em> macro. SEEK_SET is relative to the beginning of the file, SEEK_CUR is relative to the current position of the file pointer, and SEEK_END is relative to the end of the file. Returns 0 on success, -1 on error.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#m-file.seek\"><code>playdate.file.file:seek()</code></a> in the Lua API.</p>\n</div>\n</div>\n"] pub seek : unsafe extern "C" fn (file : * mut SdFile , pos : core :: ffi :: c_int , whence : core :: ffi :: c_int) -> core :: ffi :: c_int , }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -1505,7 +1506,7 @@ const _: () = {
 };
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum SpriteCollisionResponseType {
 	Slide = 0,
 	Freeze = 1,
@@ -1513,7 +1514,7 @@ pub enum SpriteCollisionResponseType {
 	Bounce = 3,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Default)]
+#[derive(Debug)]
 #[must_use]
 pub struct Rect {
 	pub x: core::ffi::c_float,
@@ -1531,7 +1532,7 @@ const _: () = {
 	["Offset of field: Rect::height"][::core::mem::offset_of!(Rect, height) - 12usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Default)]
+#[derive(Debug)]
 #[must_use]
 pub struct CollisionPoint {
 	pub x: core::ffi::c_float,
@@ -1545,7 +1546,7 @@ const _: () = {
 	["Offset of field: CollisionPoint::y"][::core::mem::offset_of!(CollisionPoint, y) - 4usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq, Default)]
+#[derive(Debug)]
 #[must_use]
 pub struct CollisionVector {
 	pub x: core::ffi::c_int,
@@ -1559,7 +1560,7 @@ const _: () = {
 	["Offset of field: CollisionVector::y"][::core::mem::offset_of!(CollisionVector, y) - 4usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+#[derive(Debug)]
 #[must_use]
 pub struct SpriteCollisionInfo {
 	pub sprite: *mut Sprite,
@@ -1595,7 +1596,7 @@ const _: () = {
 		[::core::mem::offset_of!(SpriteCollisionInfo, otherRect) - 68usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+#[derive(Debug)]
 #[must_use]
 pub struct SpriteQueryInfo {
 	pub sprite: *mut Sprite,
@@ -1622,7 +1623,7 @@ pub type SpriteCollisionFilterProc = ::core::option::Option<unsafe extern "C" fn
                                                                                  other: *mut Sprite)
                                                                                  -> SpriteCollisionResponseType>;
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSprite {
 	#[doc = "\n<code class=\"title\">void playdate-&gt;sprite-&gt;setAlwaysRedraw(int flag);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>When <em>flag</em> is set to 1, this causes all sprites to draw each frame, whether or not they have been marked dirty. This may speed up the performance of your game if the system’s dirty rect tracking is taking up too much time - for example if there are many sprites moving around on screen at once.</p>\n</div>\n</div>\n"]
@@ -1897,7 +1898,7 @@ const _: () = {
 };
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum SoundFormat {
 	Mono8bit = 0,
 	Stereo8bit = 1,
@@ -1908,7 +1909,7 @@ pub enum SoundFormat {
 }
 pub type MidiNote = core::ffi::c_float;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct SoundSource {
 	_unused: [u8; 0],
@@ -1916,7 +1917,7 @@ pub struct SoundSource {
 pub type SndCallbackProc =
 	::core::option::Option<unsafe extern "C" fn(c: *mut SoundSource, userdata: *mut core::ffi::c_void)>;
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundSource {
 	#[doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;source-&gt;setVolume(SoundSource* c, float lvol, float rvol)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the playback volume (0.0 - 1.0) for left and right channels of the source.</p>\n</div>\n</div>\n"]
@@ -1943,15 +1944,15 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundSource, setFinishCallback) - 24usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct FilePlayer {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
-pub struct PlaydateSoundFileplayer { # [doc = "\n<code class=\"title\">FilePlayer* playdate-&gt;sound-&gt;fileplayer-&gt;newPlayer(void);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Allocates a new FilePlayer.</p>\n</div>\n</div>\n"] pub newPlayer : unsafe extern "C" fn () -> * mut FilePlayer , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;freePlayer(FilePlayer* player);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Frees the given <em>player</em>.</p>\n</div>\n</div>\n"] pub freePlayer : unsafe extern "C" fn (player : * mut FilePlayer) , # [doc = "\n<code class=\"title\">int playdate-&gt;sound-&gt;fileplayer-&gt;loadIntoPlayer(FilePlayer* player, const char* path);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Prepares <em>player</em> to stream the file at <em>path</em>. Returns 1 if the file exists, otherwise 0.</p>\n</div>\n</div>\n"] pub loadIntoPlayer : unsafe extern "C" fn (player : * mut FilePlayer , path : * const core :: ffi :: c_char) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;setBufferLength(FilePlayer* player, float bufferLen);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the buffer length of <em>player</em> to <em>bufferLen</em> seconds;</p>\n</div>\n</div>\n"] pub setBufferLength : unsafe extern "C" fn (player : * mut FilePlayer , bufferLen : core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">int playdate-&gt;sound-&gt;fileplayer-&gt;play(FilePlayer* player, int repeat);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Starts playing the file <em>player</em>. If <em>repeat</em> is greater than one, it loops the given number of times. If zero, it loops endlessly until it is stopped with <a href=\"#f-sound.fileplayer.stop\">playdate-&gt;sound-&gt;fileplayer-&gt;stop()</a>. Returns 1 on success, 0 if buffer allocation failed.</p>\n</div>\n</div>\n"] pub play : unsafe extern "C" fn (player : * mut FilePlayer , repeat : core :: ffi :: c_int) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;sound-&gt;fileplayer-&gt;isPlaying(FilePlayer* player);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns one if <em>player</em> is playing, zero if not.</p>\n</div>\n</div>\n"] pub isPlaying : unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;pause(FilePlayer* player);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Pauses the file <em>player</em>.</p>\n</div>\n</div>\n"] pub pause : unsafe extern "C" fn (player : * mut FilePlayer) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;stop(FilePlayer* player);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Stops playing the file.</p>\n</div>\n</div>\n"] pub stop : unsafe extern "C" fn (player : * mut FilePlayer) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;setVolume(FilePlayer* player, float left, float right);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the playback volume for left and right channels of <em>player</em>.</p>\n</div>\n</div>\n"] pub setVolume : unsafe extern "C" fn (player : * mut FilePlayer , left : core :: ffi :: c_float , right : core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;getVolume(FilePlayer* player, float* outleft, float* outright);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Gets the left and right channel playback volume for <em>player</em>.</p>\n</div>\n</div>\n"] pub getVolume : unsafe extern "C" fn (player : * mut FilePlayer , left : * mut core :: ffi :: c_float , right : * mut core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">float playdate-&gt;sound-&gt;fileplayer-&gt;getLength(FilePlayer* player);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the length, in seconds, of the file loaded into <em>player</em>.</p>\n</div>\n</div>\n"] pub getLength : unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_float , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;setOffset(FilePlayer* player, float offset);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the current <em>offset</em> in seconds.</p>\n</div>\n</div>\n"] pub setOffset : unsafe extern "C" fn (player : * mut FilePlayer , offset : core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;setRate(FilePlayer* player, float rate)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the playback <em>rate</em> for the <em>player</em>. 1.0 is normal speed, 0.5 is down an octave, 2.0 is up an octave, etc. Unlike sampleplayers, fileplayers can’t play in reverse (i.e., rate &lt; 0).</p>\n</div>\n</div>\n"] pub setRate : unsafe extern "C" fn (player : * mut FilePlayer , rate : core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;setLoopRange(FilePlayer* player, float start, float end);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the <em>start</em> and <em>end</em> of the loop region for playback, in seconds. If <em>end</em> is omitted, the end of the file is used.</p>\n</div>\n</div>\n"] pub setLoopRange : unsafe extern "C" fn (player : * mut FilePlayer , start : core :: ffi :: c_float , end : core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">int playdate-&gt;sound-&gt;fileplayer-&gt;didUnderrun(FilePlayer* player);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns one if <em>player</em> has underrun, zero if not.</p>\n</div>\n</div>\n"] pub didUnderrun : unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;setFinishCallback(FilePlayer* player, sndCallbackProc callback, void* userdata);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets a function to be called when playback has completed. This is an alias for <a href=\"#f-sound.source.setFinishCallback\">playdate→sound→source→setFinishCallback()</a>.</p>\n</div>\n<div id=\"_sndCallbackProc\" class=\"literalblock\">\n<div class=\"title\">sndCallbackProc</div>\n<div class=\"content\">\n<pre>typedef void sndCallbackProc(SoundSource* c, void* userdata);</pre>\n</div>\n</div>\n</div>\n"] pub setFinishCallback : unsafe extern "C" fn (player : * mut FilePlayer , callback : SndCallbackProc , userdata : * mut core :: ffi :: c_void) , pub setLoopCallback : unsafe extern "C" fn (player : * mut FilePlayer , callback : SndCallbackProc , userdata : * mut core :: ffi :: c_void) , # [doc = "\n<code class=\"title\">float playdate-&gt;sound-&gt;fileplayer-&gt;getOffset(FilePlayer* player);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the current offset in seconds for <em>player</em>.</p>\n</div>\n</div>\n"] pub getOffset : unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_float , # [doc = "\n<code class=\"title\">float playdate-&gt;sound-&gt;fileplayer-&gt;getRate(FilePlayer* player)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the playback rate for <em>player</em>.</p>\n</div>\n</div>\n"] pub getRate : unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_float , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;setStopOnUnderrun(FilePlayer* player, int flag)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>If <em>flag</em> evaluates to true, the <em>player</em> will restart playback (after an audible stutter) as soon as data is available.</p>\n</div>\n</div>\n"] pub setStopOnUnderrun : unsafe extern "C" fn (player : * mut FilePlayer , flag : core :: ffi :: c_int) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;fadeVolume(FilePlayer* player, float left, float right, int32_t len, sndCallbackProc finishCallback, void* userdata);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Changes the volume of the fileplayer to <em>left</em> and <em>right</em> over a length of <em>len</em> sample frames, then calls the provided callback (if set).</p>\n</div>\n</div>\n"] pub fadeVolume : unsafe extern "C" fn (player : * mut FilePlayer , left : core :: ffi :: c_float , right : core :: ffi :: c_float , len : i32 , finishCallback : SndCallbackProc , userdata : * mut core :: ffi :: c_void) , pub setMP3StreamSource : unsafe extern "C" fn (player : * mut FilePlayer , dataSource : :: core :: option :: Option < unsafe extern "C" fn (data : * mut u8 , bytes : core :: ffi :: c_int , userdata : * mut core :: ffi :: c_void) -> core :: ffi :: c_int > , userdata : * mut core :: ffi :: c_void , bufferLen : core :: ffi :: c_float) , }
+pub struct PlaydateSoundFileplayer { # [doc = "\n<code class=\"title\">FilePlayer* playdate-&gt;sound-&gt;fileplayer-&gt;newPlayer(void);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Allocates a new FilePlayer.</p>\n</div>\n</div>\n"] pub newPlayer : unsafe extern "C" fn () -> * mut FilePlayer , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;freePlayer(FilePlayer* player);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Frees the given <em>player</em>.</p>\n</div>\n</div>\n"] pub freePlayer : unsafe extern "C" fn (player : * mut FilePlayer) , # [doc = "\n<code class=\"title\">int playdate-&gt;sound-&gt;fileplayer-&gt;loadIntoPlayer(FilePlayer* player, const char* path);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Prepares <em>player</em> to stream the file at <em>path</em>. Returns 1 if the file exists, otherwise 0.</p>\n</div>\n</div>\n"] pub loadIntoPlayer : unsafe extern "C" fn (player : * mut FilePlayer , path : * const core :: ffi :: c_char) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;setBufferLength(FilePlayer* player, float bufferLen);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the buffer length of <em>player</em> to <em>bufferLen</em> seconds;</p>\n</div>\n</div>\n"] pub setBufferLength : unsafe extern "C" fn (player : * mut FilePlayer , bufferLen : core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">int playdate-&gt;sound-&gt;fileplayer-&gt;play(FilePlayer* player, int repeat);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Starts playing the file <em>player</em>. If <em>repeat</em> is greater than one, it loops the given number of times. If zero, it loops endlessly until it is stopped with <a href=\"#f-sound.fileplayer.stop\">playdate-&gt;sound-&gt;fileplayer-&gt;stop()</a>. Returns 1 on success, 0 if buffer allocation failed.</p>\n</div>\n</div>\n"] pub play : unsafe extern "C" fn (player : * mut FilePlayer , repeat : core :: ffi :: c_int) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;sound-&gt;fileplayer-&gt;isPlaying(FilePlayer* player);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns one if <em>player</em> is playing, zero if not.</p>\n</div>\n</div>\n"] pub isPlaying : unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;pause(FilePlayer* player);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Pauses the file <em>player</em>.</p>\n</div>\n</div>\n"] pub pause : unsafe extern "C" fn (player : * mut FilePlayer) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;stop(FilePlayer* player);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Stops playing the file.</p>\n</div>\n</div>\n"] pub stop : unsafe extern "C" fn (player : * mut FilePlayer) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;setVolume(FilePlayer* player, float left, float right);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the playback volume for left and right channels of <em>player</em>.</p>\n</div>\n</div>\n"] pub setVolume : unsafe extern "C" fn (player : * mut FilePlayer , left : core :: ffi :: c_float , right : core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;getVolume(FilePlayer* player, float* outleft, float* outright);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Gets the left and right channel playback volume for <em>player</em>.</p>\n</div>\n</div>\n"] pub getVolume : unsafe extern "C" fn (player : * mut FilePlayer , left : * mut core :: ffi :: c_float , right : * mut core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">float playdate-&gt;sound-&gt;fileplayer-&gt;getLength(FilePlayer* player);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the length, in seconds, of the file loaded into <em>player</em>.</p>\n</div>\n</div>\n"] pub getLength : unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_float , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;setOffset(FilePlayer* player, float offset);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the current <em>offset</em> in seconds.</p>\n</div>\n</div>\n"] pub setOffset : unsafe extern "C" fn (player : * mut FilePlayer , offset : core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;setRate(FilePlayer* player, float rate)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the playback <em>rate</em> for the <em>player</em>. 1.0 is normal speed, 0.5 is down an octave, 2.0 is up an octave, etc. Unlike sampleplayers, fileplayers can’t play in reverse (i.e., rate &lt; 0).</p>\n</div>\n</div>\n"] pub setRate : unsafe extern "C" fn (player : * mut FilePlayer , rate : core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;setLoopRange(FilePlayer* player, float start, float end);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the <em>start</em> and <em>end</em> of the loop region for playback, in seconds. If <em>end</em> is omitted, the end of the file is used.</p>\n</div>\n</div>\n"] pub setLoopRange : unsafe extern "C" fn (player : * mut FilePlayer , start : core :: ffi :: c_float , end : core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">int playdate-&gt;sound-&gt;fileplayer-&gt;didUnderrun(FilePlayer* player);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns one if <em>player</em> has underrun, zero if not.</p>\n</div>\n</div>\n"] pub didUnderrun : unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;setFinishCallback(FilePlayer* player, sndCallbackProc callback, void* userdata);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets a function to be called when playback has completed. This is an alias for <a href=\"#f-sound.source.setFinishCallback\">playdate→sound→source→setFinishCallback()</a>.</p>\n</div>\n<div id=\"_sndCallbackProc\" class=\"literalblock\">\n<div class=\"title\">sndCallbackProc</div>\n<div class=\"content\">\n<pre>typedef void sndCallbackProc(SoundSource* c, void* userdata);</pre>\n</div>\n</div>\n</div>\n"] pub setFinishCallback : unsafe extern "C" fn (player : * mut FilePlayer , callback : SndCallbackProc , userdata : * mut core :: ffi :: c_void) , pub setLoopCallback : unsafe extern "C" fn (player : * mut FilePlayer , callback : SndCallbackProc , userdata : * mut core :: ffi :: c_void) , # [doc = "\n<code class=\"title\">float playdate-&gt;sound-&gt;fileplayer-&gt;getOffset(FilePlayer* player);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the current offset in seconds for <em>player</em>.</p>\n</div>\n</div>\n"] pub getOffset : unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_float , # [doc = "\n<code class=\"title\">float playdate-&gt;sound-&gt;fileplayer-&gt;getRate(FilePlayer* player)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the playback rate for <em>player</em>.</p>\n</div>\n</div>\n"] pub getRate : unsafe extern "C" fn (player : * mut FilePlayer) -> core :: ffi :: c_float , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;setStopOnUnderrun(FilePlayer* player, int flag)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>If <em>flag</em> evaluates to true, the <em>player</em> will restart playback (after an audible stutter) as soon as data is available.</p>\n</div>\n</div>\n"] pub setStopOnUnderrun : unsafe extern "C" fn (player : * mut FilePlayer , flag : core :: ffi :: c_int) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;fileplayer-&gt;fadeVolume(FilePlayer* player, float left, float right, int32_t len, sndCallbackProc finishCallback);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Changes the volume of the fileplayer to <em>left</em> and <em>right</em> over a length of <em>len</em> sample frames, then calls the provided callback (if set).</p>\n</div>\n</div>\n"] pub fadeVolume : unsafe extern "C" fn (player : * mut FilePlayer , left : core :: ffi :: c_float , right : core :: ffi :: c_float , len : i32 , finishCallback : SndCallbackProc , userdata : * mut core :: ffi :: c_void) , pub setMP3StreamSource : unsafe extern "C" fn (player : * mut FilePlayer , dataSource : :: core :: option :: Option < unsafe extern "C" fn (data : * mut u8 , bytes : core :: ffi :: c_int , userdata : * mut core :: ffi :: c_void) -> core :: ffi :: c_int > , userdata : * mut core :: ffi :: c_void , bufferLen : core :: ffi :: c_float) , }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
 	["Size of PlaydateSoundFileplayer"][::core::mem::size_of::<PlaydateSoundFileplayer>() - 176usize];
@@ -2002,19 +2003,19 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundFileplayer, setMP3StreamSource) - 168usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct AudioSample {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct SamplePlayer {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundSample {
 	#[doc = "\n<code class=\"title\">AudioSample* playdate-&gt;sound-&gt;sample-&gt;newSampleBuffer(int length)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Allocates and returns a new AudioSample with a buffer large enough to load a file of <em>length</em> bytes.</p>\n</div>\n</div>\n"]
@@ -2064,7 +2065,7 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundSample, decompress) - 56usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundSampleplayer {
 	#[doc = "\n<code class=\"title\">SamplePlayer* playdate-&gt;sound-&gt;sampleplayer-&gt;newPlayer(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Allocates and returns a new SamplePlayer.</p>\n</div>\n</div>\n"]
@@ -2151,13 +2152,13 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setPaused) - 128usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct SynthSignalValue {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct SynthSignal {
 	_unused: [u8; 0],
@@ -2171,14 +2172,14 @@ pub type SignalNoteOnFunc = ::core::option::Option<unsafe extern "C" fn(userdata
                                                                         vel: core::ffi::c_float,
                                                                         len: core::ffi::c_float)>;
 pub type SignalNoteOffFunc = ::core::option::Option<unsafe extern "C" fn(userdata: *mut core::ffi::c_void,
-                                                                         stopped: core::ffi::c_int,
+                                                                         stop: core::ffi::c_int,
                                                                          offset: core::ffi::c_int)>;
 pub type SignalDeallocFunc = ::core::option::Option<unsafe extern "C" fn(userdata: *mut core::ffi::c_void)>;
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundSignal {
-	#[doc = "\n<code class=\"title\">PDSynthSignal* playdate-&gt;sound-&gt;signal-&gt;newSignal(signalStepFunc step, signalNoteOnFunc noteOn, signalNoteOffFunc noteOff, signalDeallocFunc dealloc, void* userdata)</code>\n<div class=\"content\">\n<div class=\"literalblock\">\n<div class=\"title\">SignalCallbacks</div>\n<div class=\"content\">\n<pre>typedef float (*signalStepFunc)(void* userdata, int* iosamples, float* ifval);\ntypedef void (*signalNoteOnFunc)(void* userdata, MIDINote note, float vel, float len); // len = -1 for indefinite\ntypedef void (*signalNoteOffFunc)(void* userdata, int stopped, int offset); // stopped = 0 on note release, = 1 when note actually stops playing; offset is # of frames into the current cycle\ntypedef void (*signalDeallocFunc)(void* userdata);</pre>\n</div>\n</div>\n<div class=\"paragraph\">\n<p>Provides a custom implementation for the signal. <em>signalStepFunc step</em> is the only required function, returning the value at the end of the current frame. When called, the <em>ioframes</em> pointer contains the number of samples until the end of the frame. If the signal needs to provide a value in the middle of the frame (e.g. an LFO that needs to be sample-accurate) it should return the \"interframe\" value in <em>ifval</em> and set <em>iosamples</em> to the sample offset of the value. The functions are called on the audio render thread, so they should return as quickly as possible.</p>\n</div>\n</div>\n"]
+	#[doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;signal-&gt;newSignal(signalStepFunc step, signalNoteOnFunc noteOn, signalNoteOffFunc noteOff, signalDeallocFunc dealloc, void* userdata)</code>\n<div class=\"content\">\n<div class=\"literalblock\">\n<div class=\"title\">SignalCallbacks</div>\n<div class=\"content\">\n<pre>typedef float (*signalStepFunc)(void* userdata, int* iosamples, float* ifval);\ntypedef void (*signalNoteOnFunc)(void* userdata, MIDINote note, float vel, float len); // len = -1 for indefinite\ntypedef void (*signalNoteOffFunc)(void* userdata, int stopped, int offset); // ended = 0 for note release, = 1 when note stops playing\ntypedef void (*signalDeallocFunc)(void* userdata);</pre>\n</div>\n</div>\n<div class=\"paragraph\">\n<p>Provides a custom implementation for the signal. <em>signalStepFunc step</em> is the only required function, returning the value at the end of the current frame. When called, the <em>ioframes</em> pointer contains the number of samples until the end of the frame. If the signal needs to provide a value in the middle of the frame (e.g. an LFO that needs to be sample-accurate) it should return the \"interframe\" value in <em>ifval</em> and set <em>iosamples</em> to the sample offset of the value. The functions are called on the audio render thread, so they should return as quickly as possible.</p>\n</div>\n</div>\n"]
 	pub newSignal: unsafe extern "C" fn(step: SignalStepFunc,
 	                                    noteOn: SignalNoteOnFunc,
 	                                    noteOff: SignalNoteOffFunc,
@@ -2193,12 +2194,10 @@ pub struct PlaydateSoundSignal {
 	pub setValueScale: unsafe extern "C" fn(signal: *mut SynthSignal, scale: core::ffi::c_float),
 	#[doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;signal-&gt;setValueOffset(PDSynthSignal* signal, float offset);</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Offsets the signal’s output by the given amount.</p>\n</div>\n</div>\n"]
 	pub setValueOffset: unsafe extern "C" fn(signal: *mut SynthSignal, offset: core::ffi::c_float),
-	#[doc = "\n<code class=\"title\">PDSynthSignal* playdate-&gt;sound-&gt;signal-&gt;newSignalForValue(PDSynthSignalValue* value)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Creates a new PDSynthSignal that tracks a PDSynthSignalValue.</p>\n</div>\n</div>\n"]
-	pub newSignalForValue: unsafe extern "C" fn(value: *mut SynthSignalValue) -> *mut SynthSignal,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundSignal"][::core::mem::size_of::<PlaydateSoundSignal>() - 48usize];
+	["Size of PlaydateSoundSignal"][::core::mem::size_of::<PlaydateSoundSignal>() - 40usize];
 	["Alignment of PlaydateSoundSignal"][::core::mem::align_of::<PlaydateSoundSignal>() - 8usize];
 	["Offset of field: PlaydateSoundSignal::newSignal"]
 		[::core::mem::offset_of!(PlaydateSoundSignal, newSignal) - 0usize];
@@ -2210,12 +2209,10 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundSignal, setValueScale) - 24usize];
 	["Offset of field: PlaydateSoundSignal::setValueOffset"]
 		[::core::mem::offset_of!(PlaydateSoundSignal, setValueOffset) - 32usize];
-	["Offset of field: PlaydateSoundSignal::newSignalForValue"]
-		[::core::mem::offset_of!(PlaydateSoundSignal, newSignalForValue) - 40usize];
 };
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum LfoType {
 	Square = 0,
 	Triangle = 1,
@@ -2227,13 +2224,13 @@ pub enum LfoType {
 	Function = 7,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct SynthLfo {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundLfo { # [doc = "\n<code class=\"title\">PDSynthLFO* playdate-&gt;sound-&gt;lfo-&gt;newLFO(LFOType type)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns a new LFO object, which can be used to modulate sounds. The <em>type</em> argument is one of the following values:</p>\n</div>\n<div class=\"literalblock\">\n<div class=\"title\">LFOType</div>\n<div class=\"content\">\n<pre>typedef enum\n{\n\tkLFOTypeSquare,\n\tkLFOTypeTriangle,\n\tkLFOTypeSine,\n\tkLFOTypeSampleAndHold,\n\tkLFOTypeSawtoothUp,\n\tkLFOTypeSawtoothDown,\n\tkLFOTypeArpeggiator,\n\tkLFOTypeFunction\n} LFOType;</pre>\n</div>\n</div>\n</div>\n"] pub newLFO : unsafe extern "C" fn (type_ : LfoType) -> * mut SynthLfo , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;lfo-&gt;freeLFO(PDSynthLFO* lfo)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Frees the LFO.</p>\n</div>\n</div>\n"] pub freeLFO : unsafe extern "C" fn (lfo : * mut SynthLfo) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;lfo-&gt;setType(PDSynthLFO* lfo, LFOType type)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the LFO shape to one of the values given above.</p>\n</div>\n</div>\n"] pub setType : unsafe extern "C" fn (lfo : * mut SynthLfo , type_ : LfoType) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;lfo-&gt;setRate(PDSynthLFO* lfo, float rate)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the LFO’s rate, in cycles per second.</p>\n</div>\n</div>\n"] pub setRate : unsafe extern "C" fn (lfo : * mut SynthLfo , rate : core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;lfo-&gt;setPhase(PDSynthLFO* lfo, float phase)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the LFO’s phase, from 0 to 1.</p>\n</div>\n</div>\n"] pub setPhase : unsafe extern "C" fn (lfo : * mut SynthLfo , phase : core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;lfo-&gt;setCenter(PDSynthLFO* lfo, float center)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the center value for the LFO.</p>\n</div>\n</div>\n"] pub setCenter : unsafe extern "C" fn (lfo : * mut SynthLfo , center : core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;lfo-&gt;setDepth(PDSynthLFO* lfo, float depth)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the depth of the LFO.</p>\n</div>\n</div>\n"] pub setDepth : unsafe extern "C" fn (lfo : * mut SynthLfo , depth : core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;lfo-&gt;setArpeggiation(PDSynthLFO* lfo, int nSteps, float* steps)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the LFO type to arpeggio, where the given values are in half-steps from the center note. For example, the sequence (0, 4, 7, 12) plays the notes of a major chord.</p>\n</div>\n</div>\n"] pub setArpeggiation : unsafe extern "C" fn (lfo : * mut SynthLfo , nSteps : core :: ffi :: c_int , steps : * mut core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;lfo-&gt;setFunction(PDSynthLFO* lfo, float (*lfoFunc)(PDSynthLFO* lfo, void* userdata), void* userdata, int interpolate)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Provides a custom function for LFO values.</p>\n</div>\n</div>\n"] pub setFunction : unsafe extern "C" fn (lfo : * mut SynthLfo , lfoFunc : :: core :: option :: Option < unsafe extern "C" fn (lfo : * mut SynthLfo , userdata : * mut core :: ffi :: c_void) -> core :: ffi :: c_float > , userdata : * mut core :: ffi :: c_void , interpolate : core :: ffi :: c_int) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;lfo-&gt;setDelay(PDSynthLFO* lfo, float holdoff, float ramptime)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets an initial holdoff time for the LFO where the LFO remains at its center value, and a ramp time where the value increases linearly to its maximum depth. Values are in seconds.</p>\n</div>\n</div>\n"] pub setDelay : unsafe extern "C" fn (lfo : * mut SynthLfo , holdoff : core :: ffi :: c_float , ramptime : core :: ffi :: c_float) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;lfo-&gt;setRetrigger(PDSynthLFO* lfo, int flag)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>If retrigger is on, the LFO’s phase is reset to its initial phase (default 0) when a synth using the LFO starts playing a note.</p>\n</div>\n</div>\n"] pub setRetrigger : unsafe extern "C" fn (lfo : * mut SynthLfo , flag : core :: ffi :: c_int) , # [doc = "\n<code class=\"title\">float playdate-&gt;sound-&gt;lfo-&gt;getValue(PDSynthLFO* lfo)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Return the current output value of the LFO.</p>\n</div>\n</div>\n"] pub getValue : unsafe extern "C" fn (lfo : * mut SynthLfo) -> core :: ffi :: c_float , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;lfo-&gt;setGlobal(PDSynthLFO* lfo, int global)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>If <em>global</em> is set, the LFO is continuously updated whether or not it’s currently in use.</p>\n</div>\n</div>\n"] pub setGlobal : unsafe extern "C" fn (lfo : * mut SynthLfo , global : core :: ffi :: c_int) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;lfo-&gt;setStartPhase(PDSynthLFO* lfo, float phase)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the LFO’s initial phase, from 0 to 1.</p>\n</div>\n</div>\n"] pub setStartPhase : unsafe extern "C" fn (lfo : * mut SynthLfo , phase : core :: ffi :: c_float) , }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -2262,13 +2259,13 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundLfo, setStartPhase) - 104usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct SynthEnvelope {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundEnvelope {
 	#[doc = "\n<code class=\"title\">PDSynthEnvelope* playdate-&gt;sound-&gt;envelope-&gt;newEnvelope(float attack, float decay, float sustain, float release)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Creates a new envelope with the given parameters.</p>\n</div>\n</div>\n"]
@@ -2332,7 +2329,7 @@ const _: () = {
 };
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum SoundWaveform {
 	Square = 0,
 	Triangle = 1,
@@ -2364,13 +2361,13 @@ pub type SynthDeallocFunc = ::core::option::Option<unsafe extern "C" fn(userdata
 pub type SynthCopyUserdata =
 	::core::option::Option<unsafe extern "C" fn(userdata: *mut core::ffi::c_void) -> *mut core::ffi::c_void>;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct Synth {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundSynth {
 	#[doc = "\n<code class=\"title\">PDSynth* playdate-&gt;sound-&gt;synth-&gt;newSynth(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Creates a new synth object.</p>\n</div>\n</div>\n"]
@@ -2387,7 +2384,7 @@ pub struct PlaydateSoundSynth {
 	                                                  setparam: SynthSetParameterFunc,
 	                                                  dealloc: SynthDeallocFunc,
 	                                                  userdata: *mut core::ffi::c_void),
-	#[doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;synth-&gt;setSample(PDSynth* synth, AudioSample* sample, uint32_t sustainStart, uint32_t sustainEnd)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Provides a sample for the synth to play. Sample data must be uncompressed PCM, not ADPCM. If a sustain range is set, it is looped while the synth is playing a note. When the note ends, if an envelope has been set on the synth and the sustain range goes to the end of the sample (i.e. there’s no release section of the sample after the sustain range) then the sustain section continues looping during the envelope release; otherwise it plays through the end of the sample and stops. As a convenience, if <code>sustainEnd</code> is zero and <code>sustainStart</code> is greater than zero, <code>sustainEnd</code> will be set to the length of the sample.</p>\n</div>\n</div>\n"]
+	#[doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;synth-&gt;setSample(PDSynth* synth, AudioSample* sample, uint32_t sustainStart, uint32_t sustainEnd)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Provides a sample for the synth to play. Sample data must be uncompressed PCM, not ADPCM.</p>\n</div>\n</div>\n"]
 	pub setSample:
 		unsafe extern "C" fn(synth: *mut Synth, sample: *mut AudioSample, sustainStart: u32, sustainEnd: u32),
 	#[doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;synth-&gt;setAttackTime(PDSynth* synth, float attack)</code>\n<div class=\"content\">\n\n</div>\n"]
@@ -2464,12 +2461,10 @@ pub struct PlaydateSoundSynth {
 	                                       userdata: *mut core::ffi::c_void),
 	#[doc = "\n<code class=\"title\">PDSynth* playdate-&gt;sound-&gt;synth-&gt;copy(PDSynth* synth)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns a copy of the given synth. Caller assumes ownership of the returned object and should free it when it is no longer in use.</p>\n</div>\n</div>\n"]
 	pub copy: unsafe extern "C" fn(synth: *mut Synth) -> *mut Synth,
-	#[doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;synth-&gt;clearEnvelope(PDSynth* synth)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Clears the synth’s envelope settings.</p>\n</div>\n</div>\n"]
-	pub clearEnvelope: unsafe extern "C" fn(synth: *mut Synth),
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundSynth"][::core::mem::size_of::<PlaydateSoundSynth>() - 240usize];
+	["Size of PlaydateSoundSynth"][::core::mem::size_of::<PlaydateSoundSynth>() - 232usize];
 	["Alignment of PlaydateSoundSynth"][::core::mem::align_of::<PlaydateSoundSynth>() - 8usize];
 	["Offset of field: PlaydateSoundSynth::newSynth"]
 		[::core::mem::offset_of!(PlaydateSoundSynth, newSynth) - 0usize];
@@ -2527,17 +2522,15 @@ const _: () = {
 	["Offset of field: PlaydateSoundSynth::setGenerator"]
 		[::core::mem::offset_of!(PlaydateSoundSynth, setGenerator) - 216usize];
 	["Offset of field: PlaydateSoundSynth::copy"][::core::mem::offset_of!(PlaydateSoundSynth, copy) - 224usize];
-	["Offset of field: PlaydateSoundSynth::clearEnvelope"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, clearEnvelope) - 232usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct ControlSignal {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateControlSignal {
 	#[doc = "\n<code class=\"title\">ControlSignal* playdate-&gt;sound-&gt;controlsignal-&gt;newSignal(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Creates a new control signal object.</p>\n</div>\n</div>\n"]
@@ -2574,13 +2567,13 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateControlSignal, getMIDIControllerNumber) - 40usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct SynthInstrument {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundInstrument {
 	#[doc = "\n<code class=\"title\">PDSynthInstrument* playdate-&gt;sound-&gt;instrument-&gt;newInstrument(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Creates a new PDSynthInstrument object.</p>\n</div>\n</div>\n"]
@@ -2606,9 +2599,9 @@ pub struct PlaydateSoundInstrument {
 	                                       vel: core::ffi::c_float,
 	                                       len: core::ffi::c_float,
 	                                       when: u32) -> *mut Synth,
-	#[doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;instrument-&gt;setPitchBend(PDSynthInstrument* instrument, float amount)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the pitch bend to be applied to the voices in the instrument, as a fraction of the full range.</p>\n</div>\n</div>\n"]
+	#[doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;instrument-&gt;setPitchBend(PDSynthInstrument* instrument, float bend)</code>\n<div class=\"content\">\n\n</div>\n"]
 	pub setPitchBend: unsafe extern "C" fn(inst: *mut SynthInstrument, bend: core::ffi::c_float),
-	#[doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;instrument-&gt;setPitchBendRange(PDSynthInstrument* instrument, float halfSteps)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the pitch bend range for the voices in the instrument. The default range is 12, for a full octave.</p>\n</div>\n</div>\n"]
+	#[doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;instrument-&gt;setPitchBendRange(PDSynthInstrument* instrument, float halfSteps)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the pitch bend and pitch bend range to be applied to the voices in the instrument.</p>\n</div>\n</div>\n"]
 	pub setPitchBendRange: unsafe extern "C" fn(inst: *mut SynthInstrument, halfSteps: core::ffi::c_float),
 	#[doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;instrument-&gt;setTranspose(PDSynthInstrument* instrument, float halfSteps)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Sets the transpose parameter for all voices in the instrument.</p>\n</div>\n</div>\n"]
 	pub setTranspose: unsafe extern "C" fn(inst: *mut SynthInstrument, halfSteps: core::ffi::c_float),
@@ -2658,13 +2651,13 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundInstrument, activeVoiceCount) - 96usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct SequenceTrack {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundTrack {
 	#[doc = "\n<code class=\"title\">SequenceTrack* playdate-&gt;sound-&gt;track-&gt;newTrack(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns a new SequenceTrack.</p>\n</div>\n</div>\n"]
@@ -2756,7 +2749,7 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundTrack, getSignalForController) - 128usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct SoundSequence {
 	_unused: [u8; 0],
@@ -2764,7 +2757,7 @@ pub struct SoundSequence {
 pub type SequenceFinishedCallback =
 	::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence, userdata: *mut core::ffi::c_void)>;
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundSequence {
 	#[doc = "\n<code class=\"title\">SoundSequence* playdate-&gt;sound-&gt;sequence-&gt;newSequence(void)</code>\n<div class=\"content\">\n\n</div>\n"]
@@ -2865,14 +2858,14 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundSequence, getTempo) - 152usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct TwoPoleFilter {
 	_unused: [u8; 0],
 }
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum TwoPoleFilterType {
 	LowPass = 0,
 	HighPass = 1,
@@ -2883,7 +2876,7 @@ pub enum TwoPoleFilterType {
 	HighShelf = 6,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundEffectTwopolefilter {
 	#[doc = "\n<code class=\"title\">TwoPoleFilter* playdate-&gt;sound-&gt;effect-&gt;twopolefilter-&gt;newFilter(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Creates a new two pole filter effect.</p>\n</div>\n</div>\n"]
@@ -2935,13 +2928,13 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, getResonanceModulator) - 72usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct OnePoleFilter {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundEffectOnepolefilter {
 	#[doc = "\n<code class=\"title\">OnePoleFilter* playdate-&gt;sound-&gt;effect-&gt;onepolefilter-&gt;newFilter(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Creates a new one pole filter.</p>\n</div>\n</div>\n"]
@@ -2973,13 +2966,13 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundEffectOnepolefilter, getParameterModulator) - 32usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct BitCrusher {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundEffectBitcrusher {
 	#[doc = "\n<code class=\"title\">BitCrusher* playdate-&gt;sound-&gt;effect-&gt;bitcrusher-&gt;newBitCrusher(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns a new BitCrusher effect.</p>\n</div>\n</div>\n"]
@@ -3022,13 +3015,13 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, getUndersampleModulator) - 56usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct RingModulator {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundEffectRingmodulator {
 	#[doc = "\n<code class=\"title\">RingModulator* playdate-&gt;sound-&gt;effect-&gt;ringmodulator-&gt;newRingmod(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns a new ring modulator effect.</p>\n</div>\n</div>\n"]
@@ -3059,19 +3052,19 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundEffectRingmodulator, getFrequencyModulator) - 32usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct DelayLine {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct DelayLineTap {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundEffectDelayline {
 	#[doc = "\n<code class=\"title\">DelayLine* playdate-&gt;sound-&gt;effect-&gt;delayline-&gt;newDelayLine(int length, int stereo)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Creates a new delay line effect. The <em>length</em> parameter is given in samples.</p>\n</div>\n</div>\n"]
@@ -3122,13 +3115,13 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, setTapChannelsFlipped) - 72usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct Overdrive {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundEffectOverdrive {
 	#[doc = "\n<code class=\"title\">Overdrive* playdate-&gt;sound-&gt;effect-&gt;overdrive-&gt;newOverdrive(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns a new overdrive effect.</p>\n</div>\n</div>\n"]
@@ -3175,7 +3168,7 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, getOffsetModulator) - 64usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct SoundEffect {
 	_unused: [u8; 0],
@@ -3187,7 +3180,7 @@ pub type EffectProc = ::core::option::Option<unsafe extern "C" fn(e: *mut SoundE
                                                                   bufactive: core::ffi::c_int)
                                                                   -> core::ffi::c_int>;
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundEffect {
 	#[doc = "\n<code class=\"title\">SoundEffect* playdate-&gt;sound-&gt;effect-&gt;newEffect(effectProc* proc, void* userdata)</code>\n<div class=\"content\">\n<div class=\"literalblock\">\n<div class=\"title\">effectProc</div>\n<div class=\"content\">\n<pre>typedef int effectProc(SoundEffect* e, int32_t* left, int32_t* right, int nsamples, int bufactive);</pre>\n</div>\n</div>\n<div class=\"paragraph\">\n<p>Creates a new effect using the given processing function. <em>bufactive</em> is 1 if samples have been set in the left or right buffers. The function should return 1 if it changed the buffer samples, otherwise 0. <em>left</em> and <em>right</em> (if the effect is on a stereo channel) are sample buffers in Q8.24 format.</p>\n</div>\n</div>\n"]
@@ -3243,7 +3236,7 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundEffect, overdrive) - 96usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 #[must_use]
 pub struct SoundChannel {
 	_unused: [u8; 0],
@@ -3254,7 +3247,7 @@ pub type AudioSourceFunction = ::core::option::Option<unsafe extern "C" fn(conte
                                                                            len: core::ffi::c_int)
                                                                            -> core::ffi::c_int>;
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSoundChannel {
 	#[doc = "\n<code class=\"title\">SoundChannel* playdate-&gt;sound-&gt;channel-&gt;newChannel(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns a new <em>SoundChannel</em> object.</p>\n</div>\n</div>\n"]
@@ -3338,14 +3331,14 @@ pub type RecordCallback = ::core::option::Option<unsafe extern "C" fn(context: *
                                                                       -> core::ffi::c_int>;
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum MicSource {
 	Autodetect = 0,
 	Internal = 1,
 	Headset = 2,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateSound { pub channel : & 'static PlaydateSoundChannel , pub fileplayer : & 'static PlaydateSoundFileplayer , pub sample : & 'static PlaydateSoundSample , pub sampleplayer : & 'static PlaydateSoundSampleplayer , pub synth : & 'static PlaydateSoundSynth , pub sequence : & 'static PlaydateSoundSequence , pub effect : & 'static PlaydateSoundEffect , pub lfo : & 'static PlaydateSoundLfo , pub envelope : & 'static PlaydateSoundEnvelope , pub source : & 'static PlaydateSoundSource , pub controlsignal : & 'static PlaydateControlSignal , pub track : & 'static PlaydateSoundTrack , pub instrument : & 'static PlaydateSoundInstrument , # [doc = "\n<code class=\"title\">uint32_t playdate-&gt;sound-&gt;getCurrentTime(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the sound engine’s current time value, in units of sample frames, 44,100 per second.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#f-sound.getCurrentTime\"><code>playdate.sound.getCurrentTime()</code></a> in the Lua API.</p>\n</div>\n</div>\n"] pub getCurrentTime : unsafe extern "C" fn () -> u32 , # [doc = "\n<code class=\"title\">SoundSource* playdate-&gt;sound-&gt;addSource(AudioSourceFunction* callback, void* context, int stereo)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>The <em>callback</em> function you pass in will be called every audio render cycle.</p>\n</div>\n<div class=\"literalblock\">\n<div class=\"title\">AudioSourceFunction</div>\n<div class=\"content\">\n<pre>int AudioSourceFunction(void* context, int16_t* left, int16_t* right, int len)</pre>\n</div>\n</div>\n<div class=\"paragraph\">\n<p>This function should fill the passed-in <em>left</em> buffer (and <em>right</em> if it’s a stereo source) with <em>len</em> samples each and return 1, or return 0 if the source is silent through the cycle.</p>\n</div>\n</div>\n"] pub addSource : unsafe extern "C" fn (callback : AudioSourceFunction , context : * mut core :: ffi :: c_void , stereo : core :: ffi :: c_int) -> * mut SoundSource , # [doc = "\n<code class=\"title\">SoundChannel* playdate-&gt;sound-&gt;getDefaultChannel(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the default channel, where sound sources play if they haven’t been explicity assigned to a different channel.</p>\n</div>\n</div>\n"] pub getDefaultChannel : unsafe extern "C" fn () -> * mut SoundChannel , # [doc = "\n<code class=\"title\">int playdate-&gt;sound-&gt;addChannel(SoundChannel* channel)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Adds the given channel to the sound engine. Returns 1 if the channel was added, 0 if it was already in the engine.</p>\n</div>\n</div>\n"] pub addChannel : unsafe extern "C" fn (channel : * mut SoundChannel) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;sound-&gt;removeChannel(SoundChannel* channel)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Removes the given channel from the sound engine. Returns 1 if the channel was successfully removed, 0 if the channel is the default channel or hadn’t been previously added.</p>\n</div>\n</div>\n"] pub removeChannel : unsafe extern "C" fn (channel : * mut SoundChannel) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">int playdate-&gt;sound-&gt;setMicCallback(AudioInputFunction* callback, void* context, enum MicSource source)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>The <em>callback</em> you pass in will be called every audio cycle.</p>\n</div>\n<div class=\"literalblock\">\n<div class=\"title\">AudioInputFunction</div>\n<div class=\"content\">\n<pre>int AudioInputFunction(void* context, int16_t* data, int len)</pre>\n</div>\n</div>\n<div class=\"literalblock\">\n<div class=\"title\">enum MicSource</div>\n<div class=\"content\">\n<pre>enum MicSource {\n\tkMicInputAutodetect = 0,\n\tkMicInputInternal = 1,\n\tkMicInputHeadset = 2\n};</pre>\n</div>\n</div>\n<div class=\"paragraph\">\n<p>Your input callback will be called with the recorded audio data, a monophonic stream of samples. The function should return 1 to continue recording, 0 to stop recording.</p>\n</div>\n<div class=\"paragraph\">\n<p>The Playdate hardware has a circuit that attempts to autodetect the presence of a headset mic, but there are cases where you may want to override this. For instance, if you’re using a headphone splitter to wire an external source to the mic input, the detector may not always see the input. Setting the source to <code>kMicInputHeadset</code> forces recording from the headset. Using <code>kMicInputInternal</code> records from the device mic even when a headset with a mic is plugged in. And <code>kMicInputAutodetect</code> uses a headset mic if one is detected, otherwise the device microphone. <code>setMicCallback()</code> returns which source the function used, internal or headset, or 0 on error.</p>\n</div>\n</div>\n"] pub setMicCallback : unsafe extern "C" fn (callback : RecordCallback , context : * mut core :: ffi :: c_void , source : MicSource) -> core :: ffi :: c_int , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;getHeadphoneState(int* headphone, int* mic, void (*changeCallback)(int headphone, int mic))</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>If <em>headphone</em> contains a pointer to an int, the value is set to 1 if headphones are currently plugged in. Likewise, <em>mic</em> is set if the headphones include a microphone. If <em>changeCallback</em> is provided, it will be called when the headset or mic status changes, and audio output will <strong>not</strong> automatically switch from speaker to headphones when headphones are plugged in (and vice versa). In this case, the callback should use <code>playdate→sound→setOutputsActive()</code> to change the output if needed.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#f-sound.getHeadphoneState\"><code>playdate.sound.getHeadphoneState()</code></a> in the Lua API.</p>\n</div>\n</div>\n"] pub getHeadphoneState : unsafe extern "C" fn (headphone : * mut core :: ffi :: c_int , headsetmic : * mut core :: ffi :: c_int , changeCallback : :: core :: option :: Option < unsafe extern "C" fn (headphone : core :: ffi :: c_int , mic : core :: ffi :: c_int) >) , # [doc = "\n<code class=\"title\">void playdate-&gt;sound-&gt;setOutputsActive(int headphone, int speaker)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Force audio output to the given outputs, regardless of headphone status.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#f-sound.setOutputsActive\"><code>playdate.sound.setOutputsActive()</code></a> in the Lua API.</p>\n</div>\n</div>\n"] pub setOutputsActive : unsafe extern "C" fn (headphone : core :: ffi :: c_int , speaker : core :: ffi :: c_int) , # [doc = "\n<code class=\"title\">int playdate-&gt;sound-&gt;removeSource(SoundSource* source)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Removes the given <a href=\"#C-sound.source\">SoundSource</a> object from its channel, whether it’s in the default channel or a channel created with <a href=\"#f-sound.addChannel\">playdate→sound→addChannel()</a>. Returns 1 if a source was removed, 0 if the source wasn’t in a channel.</p>\n</div>\n</div>\n"] pub removeSource : unsafe extern "C" fn (source : * mut SoundSource) -> core :: ffi :: c_int , pub signal : & 'static PlaydateSoundSignal , pub getError : unsafe extern "C" fn () -> * const core :: ffi :: c_char , }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -3387,7 +3380,7 @@ const _: () = {
 	["Offset of field: PlaydateSound::getError"][::core::mem::offset_of!(PlaydateSound, getError) - 184usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateDisplay {
 	#[doc = "\n<code class=\"title\">int playdate-&gt;display-&gt;getWidth(void)</code>\n<div class=\"content\">\n<div class=\"paragraph\">\n<p>Returns the width of the display, taking the current scale into account; e.g., if the scale is 2, this function returns 200 instead of 400.</p>\n</div>\n<div class=\"paragraph xref xref-lua\">\n<p>Equivalent to <a href=\"./Inside%20Playdate.html#f-display.getWidth\"><code>playdate.display.getWidth()</code></a> in the Lua API.</p>\n</div>\n</div>\n"]
@@ -3424,7 +3417,7 @@ const _: () = {
 	["Offset of field: PlaydateDisplay::setOffset"][::core::mem::offset_of!(PlaydateDisplay, setOffset) - 56usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct Score {
 	pub rank: u32,
@@ -3440,7 +3433,7 @@ const _: () = {
 	["Offset of field: Score::player"][::core::mem::offset_of!(Score, player) - 8usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct ScoresList {
 	pub boardID: *mut core::ffi::c_char,
@@ -3462,7 +3455,7 @@ const _: () = {
 	["Offset of field: ScoresList::scores"][::core::mem::offset_of!(ScoresList, scores) - 24usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct Board {
 	pub boardID: *mut core::ffi::c_char,
@@ -3476,7 +3469,7 @@ const _: () = {
 	["Offset of field: Board::name"][::core::mem::offset_of!(Board, name) - 8usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct BoardsList {
 	pub count: core::ffi::c_uint,
@@ -3500,7 +3493,7 @@ pub type BoardsListCallback =
 pub type ScoresCallback =
 	::core::option::Option<unsafe extern "C" fn(scores: *mut ScoresList, errorMessage: *const core::ffi::c_char)>;
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct PlaydateScoreboards {
 	pub addScore: unsafe extern "C" fn(boardId: *const core::ffi::c_char,
@@ -3536,7 +3529,7 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateScoreboards, freeScoresList) - 48usize];
 };
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug)]
 #[must_use]
 pub struct Playdate {
 	pub system: &'static PlaydateSys,
@@ -3565,7 +3558,7 @@ const _: () = {
 };
 #[repr(u32)]
 #[must_use]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub enum SystemEvent {
 	Init = 0,
 	InitLua = 1,
