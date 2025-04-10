@@ -351,6 +351,7 @@ jobs:
       url: ${{ steps.pr.outputs.PULL_REQUEST_URL }}
 
   accept:
+    if: false
     name: Accept
     needs: [new-branch, pr]
     runs-on: ubuntu-latest
