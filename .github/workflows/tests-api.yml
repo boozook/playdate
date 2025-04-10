@@ -22,7 +22,10 @@ env:
 jobs:
   # Final no-op job as result of all deps-jobs, needed as finalisation step of complex/dynamic matrix.
   success:
-    needs: sys
+    needs:
+      - sys
+      - sys-mock
+      - sys-miri
     name: Done
     runs-on: ubuntu-latest
     steps:
@@ -102,3 +105,54 @@ jobs:
         run: |
           cargo build -p=playdate-sys --features=${{ matrix.bindgen.features }} ${{ env.BUILD_STD_ARGS }} --example=hello-world --features=lang-items
           cargo build -p=playdate-sys --features=${{ matrix.bindgen.features }} ${{ env.BUILD_STD_ARGS }} --example=handler --features=lang-items,entry-point
+
+  sys-miri:
+    name: "Sys: Miri"
+    runs-on: ubuntu-latest # macos-14
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Config
+        uses: ./.github/actions/init-cfg
+
+      - name: Test (host)
+        run: cargo miri test -p=playdate-sys --features=lang-items --lib
+
+      - name: Run (host)
+        run: |
+          cargo miri run -p=playdate-sys --example=hello-world-bin --features=lang-items
+          cargo miri run -p=playdate-sys --example=handler-bin --features=lang-items,entry-point
+
+      - name: Run (device)
+        run: |
+          cargo miri run -p=playdate-sys --example=hello-world-bin --features=lang-items --target=thumbv7em-none-eabihf
+          cargo miri run -p=playdate-sys --example=handler-bin --features=lang-items,entry-point --target=thumbv7em-none-eabihf
+
+  sys-mock:
+    name: "Sys: Mock"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Config
+        uses: ./.github/actions/init-cfg
+
+      - name: Test (mock on alloc)
+        env:
+          RUSTFLAGS: --cfg mockrt="alloc"
+        run: cargo test -p=playdate-sys --features=lang-items --lib
+
+      - name: Test (mock on std)
+        env:
+          RUSTFLAGS: --cfg mockrt="std"
+        run: cargo test -p=playdate-sys --features=lang-items --lib
