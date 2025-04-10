@@ -5,3 +5,7 @@ config-include = true
 panic-abort-tests = true
 mtime-on-use = true
 avoid-dev-deps = true
+
+
+[env]
+MIRIFLAGS = "-Zmiri-symbolic-alignment-check -Zmiri-track-alloc-accesses -Zmiri-report-progress -Zmiri-unique-is-unique -Zmiri-tree-borrows -Zmiri-backtrace=full"

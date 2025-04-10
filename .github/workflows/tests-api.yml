@@ -120,6 +120,9 @@ jobs:
       - name: Config
         uses: ./.github/actions/init-cfg
 
+      - name: Install miri
+        run: rustup component add miri
+
       - name: Test (host)
         run: cargo miri test -p=playdate-sys --features=lang-items --lib
 
