@@ -22,11 +22,13 @@ env:
 jobs:
   # Final no-op job as result of all deps-jobs, needed as finalisation step of complex/dynamic matrix.
   success:
+    name: Done
+    permissions:
+      contents: read
     needs:
       - sys
       - sys-mock
       - sys-miri
-    name: Done
     runs-on: ubuntu-latest
     steps:
       - name: success
@@ -36,6 +38,8 @@ jobs:
     name: >-
       Sys (${{ matrix.os.name }}${{ matrix.bindgen.install && ' +bindgen' || '' }})
       ${{ matrix.bindgen.features }}
+    permissions:
+      contents: read
     env:
       FEATURES_1: bindgen-runtime
       FEATURES_2: bindgen-runtime,bindings-derive-debug
@@ -109,6 +113,8 @@ jobs:
   sys-miri:
     name: "Sys: Miri"
     runs-on: ubuntu-latest # macos-14
+    permissions:
+      contents: read
     defaults:
       run:
         shell: bash
@@ -139,6 +145,8 @@ jobs:
   sys-mock:
     name: "Sys: Mock"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         shell: bash
