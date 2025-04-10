@@ -293,7 +293,7 @@ fn alloc_error(layout: Layout) -> ! {
 		// rendes size to ascii inplace:
 		let mut s = [79, 111, 77, 58, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 98, 0]; // "OoM: {u32::MAX}b"
 		let mut index = s.len() - 3;
-		render(layout.size(), &mut index, &mut s);
+		n2s(layout.size(), &mut index, &mut s);
 		s[5..].rotate_left(index.wrapping_sub(3));
 
 		// alloc-less panic via pd-err

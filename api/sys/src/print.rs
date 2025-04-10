@@ -84,7 +84,7 @@ pub(crate) mod allocless {
 	/// - `i16` requires at least 6 bytes
 	/// - `i32` requires at least 11 bytes
 	/// - `i64` requires at least 20 bytes
-	pub fn render(num: usize, index: &mut usize, buf: &mut [u8]) {
+	pub fn n2s(num: usize, index: &mut usize, buf: &mut [u8]) {
 		let mut v = num;
 		// Decode four characters at the same time
 		while v > 9999 {

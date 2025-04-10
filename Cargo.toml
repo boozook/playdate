@@ -60,3 +60,7 @@ overwrite = false
 
 [workspace.metadata.vet]
 store = { path = ".vet" }
+
+
+# [workspace.lints.cargo]
+# unknown-lints = "warn"

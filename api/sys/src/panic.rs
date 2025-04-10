@@ -1,84 +1,87 @@
 //! Global Panic Handler implementation. Depends on `panic-handler` feature.
-#![cfg_attr(test, allow(dead_code))]
-
-use core::fmt::Arguments;
-use core::fmt::Write;
-use core::panic::Location;
-use core::panic::PanicInfo;
-use core::ffi::CStr;
-
-use crate::ffi::Playdate;
+#![cfg(feature = "panic-handler")]
 
 
-/// Heapless.
-/// Stops the program execution with custom system-level error.
-///
-/// In case of missed [`crate::API`] (doesn't set) uses [`abort`](core::intrinsics::abort).
-#[cfg(not(miri))]
-#[cfg_attr(all(feature = "panic-handler", not(test)), panic_handler)]
-fn panic(info: &PanicInfo) -> ! {
-	#[cfg(all(feature = "entry-point", not(playdate)))]
-	{
-		crate::PANICKED.store(true, core::sync::atomic::Ordering::Relaxed);
-	}
+mod norm {
+	#![cfg(not(miri))]
+	use core::fmt::Arguments;
+	use core::fmt::Write;
+	use core::panic::Location;
+	use core::panic::PanicInfo;
+	use core::ffi::CStr;
+	use crate::ffi::Playdate;
 
-	if let Some(api) = crate::api() {
-		match info.message().as_str() {
-			Some(m) => error_str(api, m, info.location()),
-			None => error_fmt(api, format_args!("{}", info.message()), info.location()),
+
+	/// Heapless.
+	/// Stops the program execution with custom system-level error.
+	///
+	/// In case of missed [`crate::API`] (doesn't set) uses [`abort`](core::intrinsics::abort).
+	#[cfg_attr(not(test), panic_handler)]
+	// #[cfg_attr(all(feature = "panic-handler", not(test)), panic_handler)]
+	fn panic(info: &PanicInfo) -> ! {
+		#[cfg(all(feature = "entry-point", not(playdate)))]
+		{
+			crate::PANICKED.store(true, core::sync::atomic::Ordering::Relaxed);
 		}
-	} else {
-		core::intrinsics::abort()
-	}
-}
 
-
-const PWORD: &CStr = c"panic";
-
-#[track_caller]
-fn error_str(api: &Playdate, m: &str, l: Option<&Location<'_>>) -> ! {
-	let error = api.system.error;
-
-	if let Some(l) = l {
-		unsafe {
-			error(
-			      c"%s @ %.*s:%d:%d: %.*s".as_ptr(),
-			      PWORD.as_ptr(),
-			      l.file().len(),
-			      l.file().as_ptr(),
-			      l.line(),
-			      l.column(),
-			      m.len(),
-			      m.as_ptr(),
-			)
+		if let Some(api) = crate::api() {
+			match info.message().as_str() {
+				Some(m) => error_str(api, m, info.location()),
+				None => error_fmt(api, format_args!("{}", info.message()), info.location()),
+			}
+		} else {
+			core::intrinsics::abort()
 		}
-	} else {
-		unsafe { error(c"%s: %.*s".as_ptr(), PWORD.as_ptr(), m.len(), m.as_ptr()) }
 	}
-}
 
-#[track_caller]
-fn error_fmt(api: &Playdate, m: Arguments<'_>, l: Option<&Location<'_>>) -> ! {
-	let error = api.system.error;
-	let mut buf = crate::print::allocless::FmtBufDef::new();
 
-	if buf.write_fmt(m).is_ok() {
-		let m = buf.as_str();
-		error_str(api, m, l);
-	} else {
+	const PWORD: &CStr = c"panic";
+
+	#[track_caller]
+	fn error_str(api: &Playdate, m: &str, l: Option<&Location<'_>>) -> ! {
+		let error = api.system.error;
+
 		if let Some(l) = l {
 			unsafe {
 				error(
-				      c"%s @ %.*s:%d:%d".as_ptr(),
+				      c"%s @ %.*s:%d:%d: %.*s".as_ptr(),
 				      PWORD.as_ptr(),
 				      l.file().len(),
 				      l.file().as_ptr(),
 				      l.line(),
 				      l.column(),
+				      m.len(),
+				      m.as_ptr(),
 				)
 			}
 		} else {
-			unsafe { error(PWORD.as_ptr()) }
+			unsafe { error(c"%s: %.*s".as_ptr(), PWORD.as_ptr(), m.len(), m.as_ptr()) }
+		}
+	}
+
+	#[track_caller]
+	fn error_fmt(api: &Playdate, m: Arguments<'_>, l: Option<&Location<'_>>) -> ! {
+		let error = api.system.error;
+		let mut buf = crate::print::allocless::FmtBufDef::new();
+
+		if buf.write_fmt(m).is_ok() {
+			let m = buf.as_str();
+			error_str(api, m, l);
+		} else {
+			if let Some(l) = l {
+				unsafe {
+					error(
+					      c"%s @ %.*s:%d:%d".as_ptr(),
+					      PWORD.as_ptr(),
+					      l.file().len(),
+					      l.file().as_ptr(),
+					      l.line(),
+					      l.column(),
+					)
+				}
+			} else {
+				unsafe { error(PWORD.as_ptr()) }
+			}
 		}
 	}
 }
@@ -89,11 +92,13 @@ fn error_fmt(api: &Playdate, m: Arguments<'_>, l: Option<&Location<'_>>) -> ! {
 // So, that's why here is special implementation.
 mod miri {
 	#![cfg(miri)]
+	use core::fmt::Write;
 	use core::panic::Location;
-	use super::*;
+	use core::panic::PanicInfo;
 
 
-	#[cfg_attr(all(feature = "panic-handler", not(test)), panic_handler)]
+	// #[cfg_attr(all(feature = "panic-handler", not(test)), panic_handler)]
+	#[cfg_attr(not(test), panic_handler)]
 	fn panic(info: &PanicInfo) -> ! {
 		let print_message = || {
 			#[cfg(feature = "alloc")]
@@ -124,7 +129,7 @@ mod miri {
 				use crate::print::allocless::*;
 				let mut buf = [0u8; 10];
 				let mut index = buf.len() - 1;
-				render(v as _, &mut index, &mut buf);
+				n2s(v as _, &mut index, &mut buf);
 
 				unsafe {
 					if !pre.is_empty() {
@@ -174,16 +179,10 @@ mod miri {
 	}
 
 
-	#[cfg(miri)]
 	extern "Rust" {
 		/// Miri-provided extern function to print (from the interpreter, not the
 		/// program) the contents of a section of program memory, as bytes. Bytes
 		/// written using this function will emerge from the interpreter's stderr.
 		fn miri_write_to_stderr(bytes: &[u8]);
-
-		/// Miri-provided extern function to print (from the interpreter, not the
-		/// program) the contents of a section of program memory, as bytes. Bytes
-		/// written using this function will emerge from the interpreter's stdout.
-		fn miri_write_to_stdout(bytes: &[u8]);
 	}
 }

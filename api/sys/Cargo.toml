@@ -132,7 +132,10 @@ cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=co
 [lints.rust.unexpected_cfgs]
 level = "deny"
 check-cfg = [
-	'cfg(mockrt, values("alloc", "std", none()))',                  # enable runtime-mock for tests
 	'cfg(playdate)',                                                # FIXME: refactor `cfg playdate`
+	'cfg(mockrt, values("alloc", "std", none()))',                  # enable runtime-mock for tests
 	'cfg(format_buffer, values("0", "128", "256", "512", "1024"))', # configure size of on-stack buffer used for formatting
 ]
+
+[lints.rust]
+exported_private_dependencies = "allow"
