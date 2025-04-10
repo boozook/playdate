@@ -48,13 +48,11 @@ fn main() {
 	let target = Target::from_env_target().inspect_err(|err| cargo::warn(err)).ok();
 
 	// target -> cfg:
-	println!("cargo::rustc-check-cfg=cfg(playdate)");
 	if matches!(target, Some(Target::Playdate)) {
 		println!("cargo::rustc-cfg=playdate")
 	}
 
 	let cfg = cfg::create();
-
 
 	// Docs.rs-like environment:
 	if is_env_without_sdk() {

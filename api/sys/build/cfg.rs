@@ -28,4 +28,4 @@ pub const fn feature_derive_partialeq() -> bool { cfg!(feature = "bindings-deriv
 pub const fn feature_derive_partialord() -> bool { cfg!(feature = "bindings-derive-partialord") }
 pub const fn feature_derive_constparamty() -> bool { cfg!(feature = "bindings-derive-constparamty") }
 pub const fn feature_bindings_documentation() -> bool { cfg!(feature = "bindings-documentation") }
-pub const fn feature_bindings_rustify() -> bool { false }
+pub const fn feature_bindings_rustify() -> bool { true }

@@ -5,34 +5,33 @@ build = "build/main.rs"
 readme = "README.md"
 description = "Low-level Playdate API bindings"
 keywords = ["playdate", "bindings", "ffi", "gamedev"]
-categories = ["external-ffi-bindings", "development-tools::ffi", "game-development", "no-std"]
+categories = ["external-ffi-bindings", "game-development", "no-std", "no-std::no-alloc"]
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
 homepage.workspace = true
 repository.workspace = true
-publish = true
 
 
 [features]
 default = ["bindings-derive-debug", "bindings-documentation"]
+lang-items = ["allocator", "panic-handler", "eh-personality"] # lang-items feature-set
 
-lang-items = ["allocator", "panic-handler", "eh-personality"] # lang-items
-allocator = []                                                # global allocator
-panic-handler = ["arrayvec"]                                  # global panic handler
-eh-personality = []                                           # eh_personality for sim-targets, dummy empty no-op
+alloc = []          # use alloc crate
+allocator = []      # global allocator
+allocator-api = []  # allocator-api implementation
+panic-handler = []  # global panic handler
+eh-personality = [] # eh_personality for sim-targets, dummy empty no-op # TODO: remove `eh-personality` feature?
+entry-point = []    # simple minimal proxy entry point, just registers api endpoint
+try-trait-v2 = []   # TODO: remove `try-trait-v2` feature
+error-ctx = []      # TODO: remove `error-ctx` feature
 
-entry-point = []  # simple minimal proxy entry point
-try-trait-v2 = [] # impl `FromResidual` for `EventLoopCtrl`
-error-ctx = []    # errors with context (incomplete feature)
 
-
-bindgen-runtime = ["bindgen", "bindgen?/runtime"]  # runtime linking (dlopen)
-bindgen-static = ["bindgen", "bindgen?/static"]    # static linking to clang
-bindgen-logging = ["bindgen?/logging"]
-bindgen-pretty-please = ["bindgen?/pretty-please"] # TODO: remove formatting at all
-bindgen-which-rustfmt = ["bindgen?/which-rustfmt"]
-
+bindgen-runtime = ["bindgen", "bindgen?/runtime"]   # runtime linking (dlopen)
+bindgen-static = ["bindgen", "bindgen?/static"]     # static linking with clang-lib
+bindgen-logging = ["bindgen?/logging"]              # TODO: remove
+bindgen-pretty-please = ["bindgen?/pretty-please"]  # TODO: remove formatting at all
+bindgen-which-rustfmt = ["bindgen?/which-rustfmt"]  # TODO: remove
 bindings-documentation = ["bindgen?/documentation"] # generate docs for bindings
 
 bindings-derive-default = []      # ask bindgen to derive `Default`
@@ -48,10 +47,6 @@ bindings-derive-constparamty = [] # derive `ConstParamTy`
 # to allow top-down infecting of the deps-tree, from user's top to this crate.
 
 
-[dependencies]
-arrayvec = { version = "0.7", default-features = false, optional = true }
-
-
 [build-dependencies.bindgen]
 optional = true
 workspace = true
@@ -62,13 +57,62 @@ workspace = true
 default-features = false
 
 
+[target.'cfg(miri)'.dependencies.mock]
+package = "playdate-sys-mock"
+path = "../rt-mock"
+version = "0"
+features = ["executor"]
+public = false
+
+[target.'cfg(mockrt = "std")'.dev-dependencies.mock]
+package = "playdate-sys-mock"
+path = "../rt-mock"
+version = "0"
+features = ["std"]
+public = false
+
+[target.'cfg(any(mockrt, mockrt = "alloc"))'.dev-dependencies.mock]
+package = "playdate-sys-mock"
+path = "../rt-mock"
+version = "0"
+public = false
+
+
+[[example]]
+name = "hello-world"
+crate-type = ["dylib", "staticlib"]
+path = "examples/hello-world.rs"
+required-features = ["lang-items"]
+
+[[example]]
+name = "hello-world-bin"
+crate-type = ["bin"]
+path = "examples/hello-world.rs"
+required-features = ["lang-items"]
+
+[[example]]
+name = "handler"
+crate-type = ["dylib", "staticlib"]
+path = "examples/handler.rs"
+required-features = ["lang-items", "entry-point"]
+
+[[example]]
+name = "handler-bin"
+crate-type = ["bin"]
+path = "examples/handler.rs"
+required-features = ["lang-items", "entry-point"]
+
+
+[package.metadata.playdate]
+bundle-id = "rs.playdate.sys"
+
+
 [package.metadata.docs.rs]
 all-features = false
 features = [
 	"lang-items",
 	"entry-point",
-	"try-trait-v2",
-	"error-ctx",
+	"allocator-api",
 	"bindings-derive-default",
 	"bindings-derive-eq",
 	"bindings-derive-copy",
@@ -85,17 +129,10 @@ default-target = "thumbv7em-none-eabihf"
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]
 
 
-[[example]]
-name = "hello-world"
-crate-type = ["dylib", "staticlib"]
-path = "examples/hello-world.rs"
-required-features = ["lang-items"]
-
-[[example]]
-name = "handler"
-crate-type = ["dylib", "staticlib"]
-path = "examples/handler.rs"
-required-features = ["lang-items", "entry-point"]
-
-[package.metadata.playdate]
-bundle-id = "rs.playdate.sys"
+[lints.rust.unexpected_cfgs]
+level = "deny"
+check-cfg = [
+	'cfg(mockrt, values("alloc", "std", none()))',                  # enable runtime-mock for tests
+	'cfg(playdate)',                                                # FIXME: refactor `cfg playdate`
+	'cfg(format_buffer, values("0", "128", "256", "512", "1024"))', # configure size of on-stack buffer used for formatting
+]

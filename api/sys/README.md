@@ -315,8 +315,106 @@ To trigger changing _prebuilt_ bindings, you need set env var: `PD_BUILD_PREBUIL
 [crate-docs-example]: https://docs.rs/playdate-sys/0.1.3/playdate_sys/ffi/struct.playdate_sys.html
 
 
-⚠️ Prior to the version `1.0` API is unstable and can be changed without deprecation period.
+### Testing
+
+Three available options:
+1. normal tests
+2. tests with mock
+3. `miri` tests
+
+In normal tests `mock` crate is available but not replaces bindings.
+_Replacing bindings is needed because mock is not support all features and functionality of PlaydateOs._
+```bash
+cargo test -p=playdate-sys --features=lang-items --lib
+```
+
+Tests with mock uses __host-system allocator__ by `alloc` crate and optional std for printing _(`println` & `eprintln`)_.
+```bash
+# test with mock which uses allocator from alloc
+RUSTFLAGS='--cfg mockrt="alloc"' cargo test -p=playdate-sys --features=lang-items --lib
+# test with mock which uses allocator from alloc and std for print
+RUSTFLAGS='--cfg mockrt="std"' cargo test -p=playdate-sys --features=lang-items --lib
+```
+
+Tests with miri also uses mock which supports miri and automatically uses transparent allocator which calls `miri`'s one.
+```bash
+# run miri evaluation for tests, with mock which supports miri
+cargo miri test -p=playdate-sys --features=lang-items --lib
+
+# run miri evaluation with mock as above
+cargo miri run -p=playdate-sys --example=hello-world-bin --features=lang-items
+```
+
+### Testing dependent crates
+
+Recomended solution for unit- and integration tests.
+
+1. Move `playdate-sys`'s features which enables global handlers and/or lang-items to your crate's default features.
+
+```toml
+[features]
+default = [
+	"sys/lang-items", # feature-set with global panic handler and global allocator
+	"entry-point", # simple minimal proxy entry point, just registers api endpoint
+	# ...
+]
+
+
+[dependencies.sys]
+package = "playdate-sys"
+version = "*"
+features = [ "alloc", "allocator-api" ] # any features which does not enables global handlers, lang-items.
+```
+
+And test:
+```rust
+#[cfg(test)]
+mod tests {
+	#[test]
+	fn without_mock() {
+		assert!(sys::api_opt!(system).is_none());
+	}
+}
+```
+
+So now you can run tests simply disable default features for your crate:
+
+```bash
+cargo test -p=your --lib --no-default-features
+```
+
+Same for miri:
+
+```bash
+cargo miri test -p=your --lib --no-default-features
+```
+
+And test:
+```rust
+#[cfg(test)]
+mod tests {
+	#[test]
+	#[cfg(miri)]
+	fn with_miri_mock() {
+		// run executor with minimal set of events
+		sys::mock::executor::minimal(); //  <-----------------------------------↴
+		// now endpoint is `some` because already inited statically in previous ☝🏻 step
+		assert!(sys::api_opt!(system).is_some());
+	}
+}
+```
+
+Also in some future it could be possible to use mock for normal tests, like this:
+```bash
+RUSTFLAGS='--cfg mockrt' cargo test ...
+RUSTFLAGS='--cfg mockrt="std"' cargo test ...
+```
+
+
 
 - - -
+
+⚠️ Prior to the version `1.0` API is unstable and can be changed without deprecation period.
+
 
 This software is not sponsored or supported by Panic.
