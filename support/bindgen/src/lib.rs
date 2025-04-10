@@ -9,7 +9,7 @@ use utils::consts::*;
 use utils::toolchain::gcc::{ArmToolchain, Gcc};
 use utils::toolchain::sdk::Sdk;
 pub use bindgen_cfg as cfg;
-use rustify::rename::SharedRenamed;
+use rustify::rename::SharedIdents;
 
 
 pub mod error;
@@ -82,7 +82,7 @@ pub struct Generator {
 	pub builder: Builder,
 
 	/// Renamed symbols, if `rustify` is enabled.
-	renamed: SharedRenamed,
+	renamed: SharedIdents,
 
 	// configuration
 	pub derives: cfg::Derive,
@@ -206,7 +206,7 @@ fn create_builder(_target: &str,
                   header: &Path,
                   derive: &cfg::Derive,
                   features: &cfg::Features)
-                  -> (Builder, SharedRenamed) {
+                  -> (Builder, SharedIdents) {
 	let mut builder = bindgen::builder()
 	.header(format!("{}", header.display()))
 	.rust_target(RustTarget::nightly())
@@ -262,7 +262,6 @@ fn create_builder(_target: &str,
 	.dynamic_link_require_all(true)
 
 	// derives:
-	.derive_default(derive.default)
 	.derive_eq(derive.eq)
 	.derive_copy(derive.copy)
 	.derive_debug(derive.debug)
@@ -277,14 +276,8 @@ fn create_builder(_target: &str,
 
 
 	builder = builder.parse_callbacks(Box::new(bindgen::CargoCallbacks::new()));
-	if !derive.copy {
-		builder = builder.parse_callbacks(Box::new(DeriveCopyToPrimitives));
-	}
-	if derive.constparamty {
-		builder = builder.parse_callbacks(Box::new(DeriveConstParamTy));
-	}
 
-	let renamed = if features.rustify {
+	let idents = if features.rustify {
 		let hook = rustify::rename::RenameMap::new();
 		let renamed = hook.renamed.clone();
 		builder = builder.parse_callbacks(Box::new(hook));
@@ -293,6 +286,15 @@ fn create_builder(_target: &str,
 		Default::default()
 	};
 
+	if derive.default {
+		builder = builder.parse_callbacks(Box::new(DeriveDefault(idents.clone())));
+	}
+	if !derive.copy {
+		builder = builder.parse_callbacks(Box::new(DeriveCopyToPrimitives(idents.clone())));
+	}
+	if derive.constparamty {
+		builder = builder.parse_callbacks(Box::new(DeriveConstParamTy(idents.clone())));
+	}
 
 	// explicitly set "do not derive":
 	if !derive.default {
@@ -311,7 +313,7 @@ fn create_builder(_target: &str,
 		builder = builder.no_partialeq(".*");
 	}
 
-	(builder, renamed)
+	(builder, idents)
 }
 
 
@@ -351,9 +353,23 @@ fn apply_target(mut builder: Builder, target: &str, gcc: &ArmToolchain) -> Build
 }
 
 
+fn struct_name_matches(info: &DeriveInfo<'_>, with: &[&str], names: &SharedIdents) -> bool {
+	// matched as-is:
+	with.contains(&info.name) || {
+		use rustify::rename::Kind;
+		names.read().expect("names is locked").iter().any(|(k, v)| {
+			                    let vmatch = v == info.name;
+			                    // matched orig key:
+			                    matches!(k, Kind::Item(name) | Kind::Struct(name) if with.contains(&name.as_str())) &&
+			                    vmatch
+		                    })
+	}
+}
+
+
 /// Derives `Copy` to simple structs and enums.
 #[derive(Debug)]
-struct DeriveCopyToPrimitives;
+struct DeriveCopyToPrimitives(SharedIdents);
 impl bindgen::callbacks::ParseCallbacks for DeriveCopyToPrimitives {
 	fn add_derives(&self, info: &DeriveInfo<'_>) -> Vec<String> {
 		const TYPES: &[&str] = &[
@@ -378,7 +394,7 @@ impl bindgen::callbacks::ParseCallbacks for DeriveCopyToPrimitives {
 		                         "PDSystemEvent",
 		];
 
-		if TYPES.contains(&info.name) {
+		if struct_name_matches(info, TYPES, &self.0) {
 			vec!["Copy".to_string()]
 		} else {
 			vec![]
@@ -388,8 +404,33 @@ impl bindgen::callbacks::ParseCallbacks for DeriveCopyToPrimitives {
 
 
 #[derive(Debug)]
-/// Derives `Copy` to simple structs and enums.
-struct DeriveConstParamTy;
+/// Derives `Default` to simple structs and enums.
+struct DeriveDefault(SharedIdents);
+
+impl bindgen::callbacks::ParseCallbacks for DeriveDefault {
+	fn add_derives(&self, info: &DeriveInfo<'_>) -> Vec<String> {
+		const TYPES: &[&str] = &[
+		                         "PDButtons",
+		                         "FileOptions",
+		                         "FileStat",
+		                         "LCDRect",
+		                         "PDRect",
+		                         "CollisionPoint",
+		                         "CollisionVector",
+		];
+
+		if struct_name_matches(info, TYPES, &self.0) {
+			vec!["Default".to_string()]
+		} else {
+			vec![]
+		}
+	}
+}
+
+
+#[derive(Debug)]
+/// Derives `ConstParamTy` to simple structs and enums.
+struct DeriveConstParamTy(SharedIdents);
 
 impl bindgen::callbacks::ParseCallbacks for DeriveConstParamTy {
 	fn add_derives(&self, info: &DeriveInfo<'_>) -> Vec<String> {
@@ -415,7 +456,7 @@ impl bindgen::callbacks::ParseCallbacks for DeriveConstParamTy {
 		                         "PDSystemEvent",
 		];
 
-		if TYPES.contains(&info.name) {
+		if struct_name_matches(info, TYPES, &self.0) {
 			vec!["::core::marker::ConstParamTy".to_string()]
 		} else {
 			vec![]

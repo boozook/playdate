@@ -10,7 +10,7 @@ use proc_macro2::TokenStream;
 
 use crate::Result;
 use crate::error::Error;
-use crate::rustify::rename::{self, Kind, SharedRenamed};
+use crate::rustify::rename::{self, Kind, SharedIdents};
 
 pub mod docs;
 pub mod fixes;
@@ -18,7 +18,7 @@ pub mod fixes;
 
 #[allow(unused_variables)]
 pub fn engage(source: &bindgen::Bindings,
-              renamed: SharedRenamed,
+              renamed: SharedIdents,
               features: &crate::cfg::Features,
               target: &crate::cfg::Target,
               sdk: &Sdk,

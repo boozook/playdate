@@ -10,10 +10,10 @@ use bindgen::callbacks::DiscoveredItemId;
 use convert_case::{Case, Casing};
 
 
-pub type SharedRenamed = Arc<RwLock<BTreeMap<Kind, String>>>;
+pub type SharedIdents = Arc<RwLock<BTreeMap<Kind, String>>>;
 
 
-pub fn reduce(changes: SharedRenamed) {
+pub fn reduce(changes: SharedIdents) {
 	let mut items = BTreeSet::new();
 	{
 		let changes = changes.read().expect("renamed set is locked");
@@ -36,7 +36,7 @@ pub fn reduce(changes: SharedRenamed) {
 }
 
 
-pub fn print_as_md_table(changes: SharedRenamed) {
+pub fn print_as_md_table(changes: SharedIdents) {
 	{
 		let mut enums = BTreeSet::new();
 		let changes = changes.read().expect("renamed set is locked");
@@ -84,7 +84,7 @@ pub fn print_as_md_table(changes: SharedRenamed) {
 /// Renames symbols in the bindings.
 #[derive(Debug, Default)]
 pub struct RenameMap {
-	pub renamed: SharedRenamed,
+	pub renamed: SharedIdents,
 }
 
 impl RenameMap {
