@@ -3,6 +3,8 @@
 #![feature(c_variadic)]
 #![feature(core_intrinsics)]
 #![allow(internal_features)]
+// bindings features:
+#![feature(adt_const_params)]
 // tests, benches:
 #![cfg_attr(test, feature(test))]
 // until not published:
