@@ -20,6 +20,8 @@ jobs:
     needs: docs
     name: Done
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: success
         run: "true"
@@ -28,6 +30,8 @@ jobs:
   metadata:
     name: Preparation
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -61,6 +65,8 @@ jobs:
     name: ${{ matrix.crate.name }}
     needs: metadata
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.metadata.outputs.public) }}
