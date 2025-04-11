@@ -51,6 +51,8 @@ jobs:
     name: Api
     uses: ./.github/workflows/tests-api.yml
     secrets: inherit
+    permissions:
+      contents: read
     with:
       sdk: ${{ inputs.sdk || 'latest' }}
       ref: ${{ inputs.ref || github.ref }}
@@ -58,11 +60,15 @@ jobs:
     name: Docs
     uses: ./.github/workflows/tests-docs.yml
     secrets: inherit
+    permissions:
+      contents: read
     with:
       ref: ${{ inputs.ref || github.ref }}
 
   api:
     name: Api (${{ matrix.os.name }})
+    permissions:
+      contents: read
     env:
       FEATURES_1: ""
       FEATURES_2: bindings-derive-debug
@@ -149,6 +155,8 @@ jobs:
 
   utils:
     name: Utils (${{ matrix.os.name }})
+    permissions:
+      contents: read
     defaults:
       run:
         shell: bash
@@ -218,6 +226,8 @@ jobs:
 
   tool:
     name: Tool (${{ matrix.os.name }})
+    permissions:
+      contents: read
     defaults:
       run:
         shell: bash
@@ -273,6 +283,8 @@ jobs:
 
   tool-init:
     name: "Tool: Init (${{ matrix.os.name }})"
+    permissions:
+      contents: read
     defaults:
       run:
         shell: bash
@@ -331,6 +343,8 @@ jobs:
 
   tool-execution:
     name: "Tool: Run (${{ matrix.os.name }})"
+    permissions:
+      contents: read
     defaults:
       run:
         shell: bash
@@ -398,6 +412,8 @@ jobs:
 
   tool-package:
     name: "Tool: Package (${{ matrix.os.name }})"
+    permissions:
+      contents: read
     defaults:
       run:
         shell: bash
@@ -625,6 +641,8 @@ jobs:
     name: Semver
     if: inputs.semver != 'false' && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
     runs-on: macos-14
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -655,6 +673,8 @@ jobs:
     name: Consistency
     if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
     runs-on: macos-14
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4

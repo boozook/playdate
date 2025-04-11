@@ -18,6 +18,7 @@ jobs:
   post:
     name: Post
     runs-on: ubuntu-latest
+    permissions: read-all
     steps:
       - name: Repo Url
         id: url
