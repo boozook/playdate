@@ -13,19 +13,19 @@ pub fn create() -> Cfg {
 	cfg.derive.partialord = feature_derive_partialord();
 	cfg.derive.constparamty = feature_derive_constparamty();
 	cfg.features.documentation = feature_bindings_documentation();
-	cfg.features.rustify = feature_bindings_rustify();
+	cfg.features.nice = feature_bindings_extra();
 	cfg
 }
 
 
-pub const fn feature_derive_default() -> bool { cfg!(feature = "bindings-derive-default") }
-pub const fn feature_derive_eq() -> bool { cfg!(feature = "bindings-derive-eq") }
-pub const fn feature_derive_copy() -> bool { cfg!(feature = "bindings-derive-copy") }
-pub const fn feature_derive_debug() -> bool { cfg!(feature = "bindings-derive-debug") }
-pub const fn feature_derive_hash() -> bool { cfg!(feature = "bindings-derive-hash") }
-pub const fn feature_derive_ord() -> bool { cfg!(feature = "bindings-derive-ord") }
-pub const fn feature_derive_partialeq() -> bool { cfg!(feature = "bindings-derive-partialeq") }
-pub const fn feature_derive_partialord() -> bool { cfg!(feature = "bindings-derive-partialord") }
-pub const fn feature_derive_constparamty() -> bool { cfg!(feature = "bindings-derive-constparamty") }
+pub const fn feature_derive_default() -> bool { true }
+pub const fn feature_derive_eq() -> bool { true }
+pub const fn feature_derive_copy() -> bool { true }
+pub const fn feature_derive_debug() -> bool { true }
+pub const fn feature_derive_hash() -> bool { true }
+pub const fn feature_derive_ord() -> bool { true }
+pub const fn feature_derive_partialeq() -> bool { true }
+pub const fn feature_derive_partialord() -> bool { true }
+pub const fn feature_derive_constparamty() -> bool { true }
 pub const fn feature_bindings_documentation() -> bool { cfg!(feature = "bindings-documentation") }
-pub const fn feature_bindings_rustify() -> bool { true }
+pub const fn feature_bindings_extra() -> bool { true }

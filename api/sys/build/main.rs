@@ -129,7 +129,7 @@ fn with_external_bindgen(mut cfg: Cfg, filename: &Filename) {
 
 
 #[cfg(feature = "bindgen")]
-fn with_builtin_bindgen(mut cfg: Cfg) {
+fn with_builtin_bindgen(cfg: Cfg) {
 	// prepare generator:
 	let generator = bindgen::Generator::new(cfg).expect("Couldn't create bindings generator.");
 	let filename = generator.filename.to_owned();

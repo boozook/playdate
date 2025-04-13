@@ -105,10 +105,10 @@ jobs:
         sdk:
           - ${{ github.event.inputs.sdk || 'latest' }}
         features:
-          - v: >-
-              bindings-documentation
-              bindings-derive-debug
-            name: default
+          # - v: >-
+          #     bindings-documentation
+          #     bindings-derive-debug
+          #   name: default
           - v: >-
               bindings-documentation
               bindings-derive-default

@@ -9,7 +9,6 @@ use super::DocsMap;
 
 
 pub fn engage(bindings: &mut syn::File, root: &str, docs: &DocsMap) -> Result<()> {
-	// TODO: preserve bindings.attrs
 	let items = Cell::from_mut(&mut bindings.items[..]);
 	let items_cells = items.as_slice_of_cells();
 	if let Some(root) = find_struct(items_cells, root) {
