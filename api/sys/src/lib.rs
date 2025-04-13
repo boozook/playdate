@@ -87,6 +87,12 @@ pub mod ffi {
 	pub use alloc::ffi::CString;
 	/// Preferred `CStr` to use.
 	pub use core::ffi::CStr;
+
+
+	/// Entry-point type, event handler.
+	/// Must be not mangled and symbol named "eventHandlerShim".
+	pub type EventHandler =
+		extern "C" fn(api: *const Playdate, event: SystemEvent, arg: u32) -> ::core::ffi::c_int;
 }
 
 

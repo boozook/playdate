@@ -27,22 +27,23 @@ try-trait-v2 = []   # TODO: remove `try-trait-v2` feature
 error-ctx = []      # TODO: remove `error-ctx` feature
 
 
-bindgen-runtime = ["bindgen", "bindgen?/runtime"]   # runtime linking (dlopen)
-bindgen-static = ["bindgen", "bindgen?/static"]     # static linking with clang-lib
+bindgen-runtime = ["bindgen", "bindgen?/runtime"]   # runtime linking (dlopen) # TODO: remove
+bindgen-static = ["bindgen", "bindgen?/static"]     # static linking with clang-lib # TODO: remove
 bindgen-logging = ["bindgen?/logging"]              # TODO: remove
-bindgen-pretty-please = ["bindgen?/pretty-please"]  # TODO: remove formatting at all
-bindgen-which-rustfmt = ["bindgen?/which-rustfmt"]  # TODO: remove
+bindgen-pretty-please = ["bindgen?/pretty"]         # TODO: remove
+bindgen-which-rustfmt = []                          # TODO: remove
 bindings-documentation = ["bindgen?/documentation"] # generate docs for bindings
 
-bindings-derive-default = []      # ask bindgen to derive `Default`
-bindings-derive-eq = []           # ask bindgen to derive `Eq`
-bindings-derive-copy = []         # ask bindgen to derive `Copy`
-bindings-derive-debug = []        # ask bindgen to derive `Debug`
-bindings-derive-hash = []         # ask bindgen to derive `Hash`
-bindings-derive-ord = []          # ask bindgen to derive `Ord`
-bindings-derive-partialeq = []    # ask bindgen to derive `PartialEq`
-bindings-derive-partialord = []   # ask bindgen to derive `PartialOrd`
-bindings-derive-constparamty = [] # derive `ConstParamTy`
+bindings-derive-default = []      # TODO: remove
+bindings-derive-eq = []           # TODO: remove
+bindings-derive-copy = []         # TODO: remove
+bindings-derive-debug = []        # TODO: remove
+bindings-derive-hash = []         # TODO: remove
+bindings-derive-ord = []          # TODO: remove
+bindings-derive-partialeq = []    # TODO: remove
+bindings-derive-partialord = []   # TODO: remove
+bindings-derive-constparamty = [] # TODO: remove
+const-types = []                  # derive `ConstParamTy` for simple types
 # These "derive-" bindgen's options are presented as features
 # to allow top-down infecting of the deps-tree, from user's top to this crate.
 
@@ -51,6 +52,18 @@ bindings-derive-constparamty = [] # derive `ConstParamTy`
 optional = true
 workspace = true
 default-features = false
+features = ["pretty"]
+[target.'cfg(bindgen = "runtime")'.build-dependencies.bindgen]
+optional = true
+workspace = true
+default-features = false
+features = ["runtime"]   # RUSTFLAGS='--cfg bindgen="runtime"'
+[target.'cfg(bindgen = "static")'.build-dependencies.bindgen]
+optional = true
+workspace = true
+default-features = false
+features = ["static"]
+
 
 [build-dependencies.bindgen-cfg]
 workspace = true
@@ -137,3 +150,7 @@ check-cfg = [
 
 [lints.rust]
 exported_private_dependencies = "allow"
+
+
+[badges.maintenance]
+status = "actively-developed"

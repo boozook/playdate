@@ -2716,15 +2716,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "html2md-rs"
-version = "0.10.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "153717a95db950deae78899e9b3ba69702ead5b50c98f83f0f8d366c17605819"
-dependencies = [
- "percent-encoding",
-]
-
-[[package]]
 name = "html5ever"
 version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4136,7 +4127,6 @@ dependencies = [
  "bindgen",
  "clap",
  "convert_case",
- "html2md-rs",
  "html5ever",
  "log",
  "markup5ever_rcdom",
