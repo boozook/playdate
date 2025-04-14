@@ -165,8 +165,7 @@ pub const SEEK_END: u32 = 2;
 pub const AUDIO_FRAMES_PER_CYCLE: u32 = 512;
 pub const NOTE_C4: u32 = 60;
 #[repr(C)]
-#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
-#[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
+#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, PartialEq)]
 #[must_use]
 pub struct Aabb {
 	pub left: core::ffi::c_int,
@@ -186,7 +185,7 @@ const _: () = {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum BitmapDrawMode {
 	Copy = 0,
 	WhiteTransparent = 1,
@@ -200,7 +199,7 @@ pub enum BitmapDrawMode {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum BitmapFlip {
 	Unflipped = 0,
 	FlippedX = 1,
@@ -210,7 +209,7 @@ pub enum BitmapFlip {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum SolidColor {
 	Black = 0,
 	White = 1,
@@ -220,7 +219,7 @@ pub enum SolidColor {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum LineCapStyle {
 	Butt = 0,
 	Square = 1,
@@ -229,7 +228,7 @@ pub enum LineCapStyle {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum FontLanguage {
 	English = 0,
 	Japanese = 1,
@@ -238,7 +237,7 @@ pub enum FontLanguage {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum StringEncoding {
 	ASCII = 0,
 	UTF8 = 1,
@@ -249,7 +248,7 @@ pub type Color = usize;
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum PolygonFillRule {
 	NonZero = 0,
 	EvenOdd = 1,
@@ -257,7 +256,7 @@ pub enum PolygonFillRule {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum TextWrappingMode {
 	Clip = 0,
 	Character = 1,
@@ -266,7 +265,7 @@ pub enum TextWrappingMode {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum TextAlignment {
 	Left = 0,
 	Center = 1,
@@ -308,7 +307,6 @@ pub struct VideoPlayer {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateVideo {
 	/**
@@ -404,7 +402,6 @@ const _: () = {
 	["Offset of field: PlaydateVideo::getContext"][::core::mem::offset_of!(PlaydateVideo, getContext) - 56usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateGraphics {
 	pub video: &'static PlaydateVideo,
@@ -1401,19 +1398,19 @@ impl ::core::ops::BitAndAssign for Buttons {
 #[repr(transparent)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub struct Buttons(pub u32);
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum Language {
 	English = 0,
 	Japanese = 1,
 	Unknown = 2,
 }
 #[repr(C)]
-#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, PartialEq)]
 #[must_use]
 pub struct DateTime {
 	pub year: u16,
@@ -1444,7 +1441,7 @@ pub struct MenuItem {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum Peripherals {
 	None = 0,
 	Accelerometer = 1,
@@ -1460,7 +1457,6 @@ pub type ButtonCallbackFunction = ::core::option::Option<unsafe extern "C" fn(bu
                                                                               userdata: *mut core::ffi::c_void)
                                                                               -> core::ffi::c_int>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSys {
     /**
@@ -2116,14 +2112,14 @@ pub struct Sprite {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum LuaValueType {
 	Int = 0,
 	Float = 1,
 	Str = 2,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq)]
 #[must_use]
 pub struct LuaReg {
 	pub name: *const core::ffi::c_char,
@@ -2148,7 +2144,7 @@ impl Default for LuaReg {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum LuaType {
 	Nil = 0,
 	Bool = 1,
@@ -2211,7 +2207,6 @@ impl Default for LuaVal {
 	}
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateLua {
 	/**
@@ -2556,7 +2551,7 @@ const _: () = {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub enum JsonValueType {
 	Null = 0,
 	True = 1,
@@ -2606,7 +2601,6 @@ const _: () = {
 	["Offset of field: JsonValue::data"][::core::mem::offset_of!(JsonValue, data) - 8usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct JsonDecoder {
 	pub decodeError: ::core::option::Option<unsafe extern "C" fn(decoder: *mut JsonDecoder,
@@ -2661,7 +2655,6 @@ pub type JsonReadFunc = ::core::option::Option<unsafe extern "C" fn(userdata: *m
                                                                     bufsize: core::ffi::c_int)
                                                                     -> core::ffi::c_int>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct JsonReader {
 	pub read: JsonReadFunc,
@@ -2678,7 +2671,6 @@ pub type JsonWriteFunc = ::core::option::Option<unsafe extern "C" fn(userdata: *
                                                                      str_: *const core::ffi::c_char,
                                                                      len: core::ffi::c_int)>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct JsonEncoder {
 	pub writeStringFunc: JsonWriteFunc,
@@ -2889,7 +2881,6 @@ impl JsonEncoder {
 	}
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateJson {
 	/**
@@ -2970,10 +2961,10 @@ impl ::core::ops::BitAndAssign for FileOptions {
 #[repr(transparent)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub struct FileOptions(pub u32);
 #[repr(C)]
-#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, PartialEq)]
 #[must_use]
 pub struct FileStat {
 	pub isdir: core::ffi::c_int,
@@ -2999,7 +2990,6 @@ const _: () = {
 	["Offset of field: FileStat::m_second"][::core::mem::offset_of!(FileStat, m_second) - 28usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateFile {
     /**
@@ -3233,7 +3223,7 @@ const _: () = {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum SpriteCollisionResponseType {
 	Slide = 0,
 	Freeze = 1,
@@ -3242,7 +3232,6 @@ pub enum SpriteCollisionResponseType {
 }
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
-#[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
 #[must_use]
 pub struct Rect {
 	pub x: core::ffi::c_float,
@@ -3261,7 +3250,6 @@ const _: () = {
 };
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
-#[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
 #[must_use]
 pub struct CollisionPoint {
 	pub x: core::ffi::c_float,
@@ -3275,8 +3263,7 @@ const _: () = {
 	["Offset of field: CollisionPoint::y"][::core::mem::offset_of!(CollisionPoint, y) - 4usize];
 };
 #[repr(C)]
-#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
-#[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
+#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, PartialEq)]
 #[must_use]
 pub struct CollisionVector {
 	pub x: core::ffi::c_int,
@@ -3290,7 +3277,6 @@ const _: () = {
 	["Offset of field: CollisionVector::y"][::core::mem::offset_of!(CollisionVector, y) - 4usize];
 };
 #[repr(C)]
-#[derive(PartialOrd, PartialEq)]
 #[must_use]
 pub struct SpriteCollisionInfo {
 	pub sprite: *mut Sprite,
@@ -3326,7 +3312,6 @@ const _: () = {
 		[::core::mem::offset_of!(SpriteCollisionInfo, otherRect) - 68usize];
 };
 #[repr(C)]
-#[derive(PartialOrd, PartialEq)]
 #[must_use]
 pub struct SpriteQueryInfo {
 	pub sprite: *mut Sprite,
@@ -3353,7 +3338,6 @@ pub type SpriteCollisionFilterProc = ::core::option::Option<unsafe extern "C" fn
                                                                                  other: *mut Sprite)
                                                                                  -> SpriteCollisionResponseType>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSprite {
 	/**
@@ -4070,7 +4054,7 @@ const _: () = {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum SoundFormat {
 	Mono8bit = 0,
 	Stereo8bit = 1,
@@ -4088,7 +4072,6 @@ pub struct SoundSource {
 pub type SndCallbackProc =
 	::core::option::Option<unsafe extern "C" fn(c: *mut SoundSource, userdata: *mut core::ffi::c_void)>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundSource {
 	/**
@@ -4141,7 +4124,6 @@ pub struct FilePlayer {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundFileplayer {
     /**
@@ -4446,7 +4428,6 @@ pub struct SamplePlayer {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundSample {
 	/**
@@ -4569,7 +4550,6 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateSoundSample, decompress) - 56usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundSampleplayer {
 	/**
@@ -4799,7 +4779,6 @@ pub type SignalNoteOffFunc = ::core::option::Option<unsafe extern "C" fn(userdat
                                                                          offset: core::ffi::c_int)>;
 pub type SignalDeallocFunc = ::core::option::Option<unsafe extern "C" fn(userdata: *mut core::ffi::c_void)>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundSignal {
 	/**
@@ -4891,7 +4870,7 @@ const _: () = {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum LfoType {
 	Square = 0,
 	Triangle = 1,
@@ -4908,7 +4887,6 @@ pub struct SynthLfo {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundLfo {
     /**
@@ -5106,7 +5084,6 @@ pub struct SynthEnvelope {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEnvelope {
 	/**
@@ -5249,7 +5226,7 @@ const _: () = {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum SoundWaveform {
 	Square = 0,
 	Triangle = 1,
@@ -5286,7 +5263,6 @@ pub struct Synth {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundSynth {
 	/**
@@ -5726,7 +5702,6 @@ pub struct ControlSignal {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateControlSignal {
 	/**
@@ -5810,7 +5785,6 @@ pub struct SynthInstrument {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundInstrument {
 	/**
@@ -5986,7 +5960,6 @@ pub struct SequenceTrack {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundTrack {
 	/**
@@ -6202,7 +6175,6 @@ pub struct SoundSequence {
 pub type SequenceFinishedCallback =
 	::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence, userdata: *mut core::ffi::c_void)>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundSequence {
 	/**
@@ -6439,7 +6411,7 @@ pub struct TwoPoleFilter {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum TwoPoleFilterType {
 	LowPass = 0,
 	HighPass = 1,
@@ -6450,7 +6422,6 @@ pub enum TwoPoleFilterType {
 	HighShelf = 6,
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEffectTwopolefilter {
 	/**
@@ -6592,7 +6563,6 @@ pub struct OnePoleFilter {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEffectOnepolefilter {
 	/**
@@ -6664,7 +6634,6 @@ pub struct BitCrusher {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEffectBitcrusher {
 	/**
@@ -6768,7 +6737,6 @@ pub struct RingModulator {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEffectRingmodulator {
 	/**
@@ -6837,7 +6805,6 @@ pub struct DelayLineTap {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEffectDelayline {
 	/**
@@ -6963,7 +6930,6 @@ pub struct Overdrive {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEffectOverdrive {
 	/**
@@ -7084,7 +7050,6 @@ pub type EffectProc = ::core::option::Option<unsafe extern "C" fn(e: *mut SoundE
                                                                   bufactive: core::ffi::c_int)
                                                                   -> core::ffi::c_int>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEffect {
 	/**
@@ -7203,7 +7168,6 @@ pub type AudioSourceFunction = ::core::option::Option<unsafe extern "C" fn(conte
                                                                            len: core::ffi::c_int)
                                                                            -> core::ffi::c_int>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundChannel {
 	/**
@@ -7417,14 +7381,13 @@ pub type RecordCallback = ::core::option::Option<unsafe extern "C" fn(context: *
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum MicSource {
 	Autodetect = 0,
 	Internal = 1,
 	Headset = 2,
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSound {
     pub channel: &'static PlaydateSoundChannel,
@@ -7622,7 +7585,6 @@ const _: () = {
 	["Offset of field: PlaydateSound::getError"][::core::mem::offset_of!(PlaydateSound, getError) - 184usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateDisplay {
 	/**
@@ -7745,7 +7707,6 @@ const _: () = {
 	["Offset of field: PlaydateDisplay::setOffset"][::core::mem::offset_of!(PlaydateDisplay, setOffset) - 56usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct Score {
 	pub rank: u32,
@@ -7761,7 +7722,6 @@ const _: () = {
 	["Offset of field: Score::player"][::core::mem::offset_of!(Score, player) - 8usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct ScoresList {
 	pub boardID: *mut core::ffi::c_char,
@@ -7783,7 +7743,6 @@ const _: () = {
 	["Offset of field: ScoresList::scores"][::core::mem::offset_of!(ScoresList, scores) - 24usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct Board {
 	pub boardID: *mut core::ffi::c_char,
@@ -7797,7 +7756,6 @@ const _: () = {
 	["Offset of field: Board::name"][::core::mem::offset_of!(Board, name) - 8usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct BoardsList {
 	pub count: core::ffi::c_uint,
@@ -7821,7 +7779,6 @@ pub type BoardsListCallback =
 pub type ScoresCallback =
 	::core::option::Option<unsafe extern "C" fn(scores: *mut ScoresList, errorMessage: *const core::ffi::c_char)>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateScoreboards {
 	pub addScore: unsafe extern "C" fn(boardId: *const core::ffi::c_char,
@@ -7857,7 +7814,6 @@ const _: () = {
 		[::core::mem::offset_of!(PlaydateScoreboards, freeScoresList) - 48usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct Playdate {
 	pub system: &'static PlaydateSys,
@@ -7887,7 +7843,7 @@ const _: () = {
 #[repr(u32)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum SystemEvent {
 	Init = 0,
 	InitLua = 1,

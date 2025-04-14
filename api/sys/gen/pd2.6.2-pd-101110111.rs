@@ -165,8 +165,7 @@ pub const SEEK_END: u32 = 2;
 pub const AUDIO_FRAMES_PER_CYCLE: u32 = 512;
 pub const NOTE_C4: u32 = 60;
 #[repr(C)]
-#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
-#[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
+#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, PartialEq)]
 #[must_use]
 pub struct Aabb {
 	pub left: core::ffi::c_int,
@@ -183,10 +182,10 @@ const _: () = {
 	["Offset of field: Aabb::top"][::core::mem::offset_of!(Aabb, top) - 8usize];
 	["Offset of field: Aabb::bottom"][::core::mem::offset_of!(Aabb, bottom) - 12usize];
 };
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum BitmapDrawMode {
 	Copy = 0,
 	WhiteTransparent = 1,
@@ -197,48 +196,48 @@ pub enum BitmapDrawMode {
 	NXOR = 6,
 	Inverted = 7,
 }
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum BitmapFlip {
 	Unflipped = 0,
 	FlippedX = 1,
 	FlippedY = 2,
 	FlippedXy = 3,
 }
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum SolidColor {
 	Black = 0,
 	White = 1,
 	Clear = 2,
 	XOR = 3,
 }
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum LineCapStyle {
 	Butt = 0,
 	Square = 1,
 	Round = 2,
 }
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum FontLanguage {
 	English = 0,
 	Japanese = 1,
 	Unknown = 2,
 }
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum StringEncoding {
 	ASCII = 0,
 	UTF8 = 1,
@@ -246,27 +245,27 @@ pub enum StringEncoding {
 }
 pub type Pattern = [u8; 16usize];
 pub type Color = usize;
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum PolygonFillRule {
 	NonZero = 0,
 	EvenOdd = 1,
 }
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum TextWrappingMode {
 	Clip = 0,
 	Character = 1,
 	Word = 2,
 }
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum TextAlignment {
 	Left = 0,
 	Center = 1,
@@ -308,7 +307,6 @@ pub struct VideoPlayer {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateVideo {
 	/**
@@ -391,20 +389,19 @@ pub struct PlaydateVideo {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateVideo"][::core::mem::size_of::<PlaydateVideo>() - 64usize];
-	["Alignment of PlaydateVideo"][::core::mem::align_of::<PlaydateVideo>() - 8usize];
+	["Size of PlaydateVideo"][::core::mem::size_of::<PlaydateVideo>() - 32usize];
+	["Alignment of PlaydateVideo"][::core::mem::align_of::<PlaydateVideo>() - 4usize];
 	["Offset of field: PlaydateVideo::loadVideo"][::core::mem::offset_of!(PlaydateVideo, loadVideo) - 0usize];
-	["Offset of field: PlaydateVideo::freePlayer"][::core::mem::offset_of!(PlaydateVideo, freePlayer) - 8usize];
-	["Offset of field: PlaydateVideo::setContext"][::core::mem::offset_of!(PlaydateVideo, setContext) - 16usize];
+	["Offset of field: PlaydateVideo::freePlayer"][::core::mem::offset_of!(PlaydateVideo, freePlayer) - 4usize];
+	["Offset of field: PlaydateVideo::setContext"][::core::mem::offset_of!(PlaydateVideo, setContext) - 8usize];
 	["Offset of field: PlaydateVideo::useScreenContext"]
-		[::core::mem::offset_of!(PlaydateVideo, useScreenContext) - 24usize];
-	["Offset of field: PlaydateVideo::renderFrame"][::core::mem::offset_of!(PlaydateVideo, renderFrame) - 32usize];
-	["Offset of field: PlaydateVideo::getError"][::core::mem::offset_of!(PlaydateVideo, getError) - 40usize];
-	["Offset of field: PlaydateVideo::getInfo"][::core::mem::offset_of!(PlaydateVideo, getInfo) - 48usize];
-	["Offset of field: PlaydateVideo::getContext"][::core::mem::offset_of!(PlaydateVideo, getContext) - 56usize];
+		[::core::mem::offset_of!(PlaydateVideo, useScreenContext) - 12usize];
+	["Offset of field: PlaydateVideo::renderFrame"][::core::mem::offset_of!(PlaydateVideo, renderFrame) - 16usize];
+	["Offset of field: PlaydateVideo::getError"][::core::mem::offset_of!(PlaydateVideo, getError) - 20usize];
+	["Offset of field: PlaydateVideo::getInfo"][::core::mem::offset_of!(PlaydateVideo, getInfo) - 24usize];
+	["Offset of field: PlaydateVideo::getContext"][::core::mem::offset_of!(PlaydateVideo, getContext) - 28usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateGraphics {
 	pub video: &'static PlaydateVideo,
@@ -1234,134 +1231,130 @@ pub struct PlaydateGraphics {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateGraphics"][::core::mem::size_of::<PlaydateGraphics>() - 512usize];
-	["Alignment of PlaydateGraphics"][::core::mem::align_of::<PlaydateGraphics>() - 8usize];
+	["Size of PlaydateGraphics"][::core::mem::size_of::<PlaydateGraphics>() - 256usize];
+	["Alignment of PlaydateGraphics"][::core::mem::align_of::<PlaydateGraphics>() - 4usize];
 	["Offset of field: PlaydateGraphics::video"][::core::mem::offset_of!(PlaydateGraphics, video) - 0usize];
-	["Offset of field: PlaydateGraphics::clear"][::core::mem::offset_of!(PlaydateGraphics, clear) - 8usize];
+	["Offset of field: PlaydateGraphics::clear"][::core::mem::offset_of!(PlaydateGraphics, clear) - 4usize];
 	["Offset of field: PlaydateGraphics::setBackgroundColor"]
-		[::core::mem::offset_of!(PlaydateGraphics, setBackgroundColor) - 16usize];
+		[::core::mem::offset_of!(PlaydateGraphics, setBackgroundColor) - 8usize];
 	["Offset of field: PlaydateGraphics::setStencil"]
-		[::core::mem::offset_of!(PlaydateGraphics, setStencil) - 24usize];
+		[::core::mem::offset_of!(PlaydateGraphics, setStencil) - 12usize];
 	["Offset of field: PlaydateGraphics::setDrawMode"]
-		[::core::mem::offset_of!(PlaydateGraphics, setDrawMode) - 32usize];
+		[::core::mem::offset_of!(PlaydateGraphics, setDrawMode) - 16usize];
 	["Offset of field: PlaydateGraphics::setDrawOffset"]
-		[::core::mem::offset_of!(PlaydateGraphics, setDrawOffset) - 40usize];
+		[::core::mem::offset_of!(PlaydateGraphics, setDrawOffset) - 20usize];
 	["Offset of field: PlaydateGraphics::setClipRect"]
-		[::core::mem::offset_of!(PlaydateGraphics, setClipRect) - 48usize];
+		[::core::mem::offset_of!(PlaydateGraphics, setClipRect) - 24usize];
 	["Offset of field: PlaydateGraphics::clearClipRect"]
-		[::core::mem::offset_of!(PlaydateGraphics, clearClipRect) - 56usize];
+		[::core::mem::offset_of!(PlaydateGraphics, clearClipRect) - 28usize];
 	["Offset of field: PlaydateGraphics::setLineCapStyle"]
-		[::core::mem::offset_of!(PlaydateGraphics, setLineCapStyle) - 64usize];
-	["Offset of field: PlaydateGraphics::setFont"][::core::mem::offset_of!(PlaydateGraphics, setFont) - 72usize];
+		[::core::mem::offset_of!(PlaydateGraphics, setLineCapStyle) - 32usize];
+	["Offset of field: PlaydateGraphics::setFont"][::core::mem::offset_of!(PlaydateGraphics, setFont) - 36usize];
 	["Offset of field: PlaydateGraphics::setTextTracking"]
-		[::core::mem::offset_of!(PlaydateGraphics, setTextTracking) - 80usize];
+		[::core::mem::offset_of!(PlaydateGraphics, setTextTracking) - 40usize];
 	["Offset of field: PlaydateGraphics::pushContext"]
-		[::core::mem::offset_of!(PlaydateGraphics, pushContext) - 88usize];
+		[::core::mem::offset_of!(PlaydateGraphics, pushContext) - 44usize];
 	["Offset of field: PlaydateGraphics::popContext"]
-		[::core::mem::offset_of!(PlaydateGraphics, popContext) - 96usize];
+		[::core::mem::offset_of!(PlaydateGraphics, popContext) - 48usize];
 	["Offset of field: PlaydateGraphics::drawBitmap"]
-		[::core::mem::offset_of!(PlaydateGraphics, drawBitmap) - 104usize];
+		[::core::mem::offset_of!(PlaydateGraphics, drawBitmap) - 52usize];
 	["Offset of field: PlaydateGraphics::tileBitmap"]
-		[::core::mem::offset_of!(PlaydateGraphics, tileBitmap) - 112usize];
-	["Offset of field: PlaydateGraphics::drawLine"]
-		[::core::mem::offset_of!(PlaydateGraphics, drawLine) - 120usize];
+		[::core::mem::offset_of!(PlaydateGraphics, tileBitmap) - 56usize];
+	["Offset of field: PlaydateGraphics::drawLine"][::core::mem::offset_of!(PlaydateGraphics, drawLine) - 60usize];
 	["Offset of field: PlaydateGraphics::fillTriangle"]
-		[::core::mem::offset_of!(PlaydateGraphics, fillTriangle) - 128usize];
-	["Offset of field: PlaydateGraphics::drawRect"]
-		[::core::mem::offset_of!(PlaydateGraphics, drawRect) - 136usize];
-	["Offset of field: PlaydateGraphics::fillRect"]
-		[::core::mem::offset_of!(PlaydateGraphics, fillRect) - 144usize];
+		[::core::mem::offset_of!(PlaydateGraphics, fillTriangle) - 64usize];
+	["Offset of field: PlaydateGraphics::drawRect"][::core::mem::offset_of!(PlaydateGraphics, drawRect) - 68usize];
+	["Offset of field: PlaydateGraphics::fillRect"][::core::mem::offset_of!(PlaydateGraphics, fillRect) - 72usize];
 	["Offset of field: PlaydateGraphics::drawEllipse"]
-		[::core::mem::offset_of!(PlaydateGraphics, drawEllipse) - 152usize];
+		[::core::mem::offset_of!(PlaydateGraphics, drawEllipse) - 76usize];
 	["Offset of field: PlaydateGraphics::fillEllipse"]
-		[::core::mem::offset_of!(PlaydateGraphics, fillEllipse) - 160usize];
+		[::core::mem::offset_of!(PlaydateGraphics, fillEllipse) - 80usize];
 	["Offset of field: PlaydateGraphics::drawScaledBitmap"]
-		[::core::mem::offset_of!(PlaydateGraphics, drawScaledBitmap) - 168usize];
-	["Offset of field: PlaydateGraphics::drawText"]
-		[::core::mem::offset_of!(PlaydateGraphics, drawText) - 176usize];
+		[::core::mem::offset_of!(PlaydateGraphics, drawScaledBitmap) - 84usize];
+	["Offset of field: PlaydateGraphics::drawText"][::core::mem::offset_of!(PlaydateGraphics, drawText) - 88usize];
 	["Offset of field: PlaydateGraphics::newBitmap"]
-		[::core::mem::offset_of!(PlaydateGraphics, newBitmap) - 184usize];
+		[::core::mem::offset_of!(PlaydateGraphics, newBitmap) - 92usize];
 	["Offset of field: PlaydateGraphics::freeBitmap"]
-		[::core::mem::offset_of!(PlaydateGraphics, freeBitmap) - 192usize];
+		[::core::mem::offset_of!(PlaydateGraphics, freeBitmap) - 96usize];
 	["Offset of field: PlaydateGraphics::loadBitmap"]
-		[::core::mem::offset_of!(PlaydateGraphics, loadBitmap) - 200usize];
+		[::core::mem::offset_of!(PlaydateGraphics, loadBitmap) - 100usize];
 	["Offset of field: PlaydateGraphics::copyBitmap"]
-		[::core::mem::offset_of!(PlaydateGraphics, copyBitmap) - 208usize];
+		[::core::mem::offset_of!(PlaydateGraphics, copyBitmap) - 104usize];
 	["Offset of field: PlaydateGraphics::loadIntoBitmap"]
-		[::core::mem::offset_of!(PlaydateGraphics, loadIntoBitmap) - 216usize];
+		[::core::mem::offset_of!(PlaydateGraphics, loadIntoBitmap) - 108usize];
 	["Offset of field: PlaydateGraphics::getBitmapData"]
-		[::core::mem::offset_of!(PlaydateGraphics, getBitmapData) - 224usize];
+		[::core::mem::offset_of!(PlaydateGraphics, getBitmapData) - 112usize];
 	["Offset of field: PlaydateGraphics::clearBitmap"]
-		[::core::mem::offset_of!(PlaydateGraphics, clearBitmap) - 232usize];
+		[::core::mem::offset_of!(PlaydateGraphics, clearBitmap) - 116usize];
 	["Offset of field: PlaydateGraphics::rotatedBitmap"]
-		[::core::mem::offset_of!(PlaydateGraphics, rotatedBitmap) - 240usize];
+		[::core::mem::offset_of!(PlaydateGraphics, rotatedBitmap) - 120usize];
 	["Offset of field: PlaydateGraphics::newBitmapTable"]
-		[::core::mem::offset_of!(PlaydateGraphics, newBitmapTable) - 248usize];
+		[::core::mem::offset_of!(PlaydateGraphics, newBitmapTable) - 124usize];
 	["Offset of field: PlaydateGraphics::freeBitmapTable"]
-		[::core::mem::offset_of!(PlaydateGraphics, freeBitmapTable) - 256usize];
+		[::core::mem::offset_of!(PlaydateGraphics, freeBitmapTable) - 128usize];
 	["Offset of field: PlaydateGraphics::loadBitmapTable"]
-		[::core::mem::offset_of!(PlaydateGraphics, loadBitmapTable) - 264usize];
+		[::core::mem::offset_of!(PlaydateGraphics, loadBitmapTable) - 132usize];
 	["Offset of field: PlaydateGraphics::loadIntoBitmapTable"]
-		[::core::mem::offset_of!(PlaydateGraphics, loadIntoBitmapTable) - 272usize];
+		[::core::mem::offset_of!(PlaydateGraphics, loadIntoBitmapTable) - 136usize];
 	["Offset of field: PlaydateGraphics::getTableBitmap"]
-		[::core::mem::offset_of!(PlaydateGraphics, getTableBitmap) - 280usize];
+		[::core::mem::offset_of!(PlaydateGraphics, getTableBitmap) - 140usize];
 	["Offset of field: PlaydateGraphics::loadFont"]
-		[::core::mem::offset_of!(PlaydateGraphics, loadFont) - 288usize];
+		[::core::mem::offset_of!(PlaydateGraphics, loadFont) - 144usize];
 	["Offset of field: PlaydateGraphics::getFontPage"]
-		[::core::mem::offset_of!(PlaydateGraphics, getFontPage) - 296usize];
+		[::core::mem::offset_of!(PlaydateGraphics, getFontPage) - 148usize];
 	["Offset of field: PlaydateGraphics::getPageGlyph"]
-		[::core::mem::offset_of!(PlaydateGraphics, getPageGlyph) - 304usize];
+		[::core::mem::offset_of!(PlaydateGraphics, getPageGlyph) - 152usize];
 	["Offset of field: PlaydateGraphics::getGlyphKerning"]
-		[::core::mem::offset_of!(PlaydateGraphics, getGlyphKerning) - 312usize];
+		[::core::mem::offset_of!(PlaydateGraphics, getGlyphKerning) - 156usize];
 	["Offset of field: PlaydateGraphics::getTextWidth"]
-		[::core::mem::offset_of!(PlaydateGraphics, getTextWidth) - 320usize];
+		[::core::mem::offset_of!(PlaydateGraphics, getTextWidth) - 160usize];
 	["Offset of field: PlaydateGraphics::getFrame"]
-		[::core::mem::offset_of!(PlaydateGraphics, getFrame) - 328usize];
+		[::core::mem::offset_of!(PlaydateGraphics, getFrame) - 164usize];
 	["Offset of field: PlaydateGraphics::getDisplayFrame"]
-		[::core::mem::offset_of!(PlaydateGraphics, getDisplayFrame) - 336usize];
+		[::core::mem::offset_of!(PlaydateGraphics, getDisplayFrame) - 168usize];
 	["Offset of field: PlaydateGraphics::getDebugBitmap"]
-		[::core::mem::offset_of!(PlaydateGraphics, getDebugBitmap) - 344usize];
+		[::core::mem::offset_of!(PlaydateGraphics, getDebugBitmap) - 172usize];
 	["Offset of field: PlaydateGraphics::copyFrameBufferBitmap"]
-		[::core::mem::offset_of!(PlaydateGraphics, copyFrameBufferBitmap) - 352usize];
+		[::core::mem::offset_of!(PlaydateGraphics, copyFrameBufferBitmap) - 176usize];
 	["Offset of field: PlaydateGraphics::markUpdatedRows"]
-		[::core::mem::offset_of!(PlaydateGraphics, markUpdatedRows) - 360usize];
-	["Offset of field: PlaydateGraphics::display"][::core::mem::offset_of!(PlaydateGraphics, display) - 368usize];
+		[::core::mem::offset_of!(PlaydateGraphics, markUpdatedRows) - 180usize];
+	["Offset of field: PlaydateGraphics::display"][::core::mem::offset_of!(PlaydateGraphics, display) - 184usize];
 	["Offset of field: PlaydateGraphics::setColorToPattern"]
-		[::core::mem::offset_of!(PlaydateGraphics, setColorToPattern) - 376usize];
+		[::core::mem::offset_of!(PlaydateGraphics, setColorToPattern) - 188usize];
 	["Offset of field: PlaydateGraphics::checkMaskCollision"]
-		[::core::mem::offset_of!(PlaydateGraphics, checkMaskCollision) - 384usize];
+		[::core::mem::offset_of!(PlaydateGraphics, checkMaskCollision) - 192usize];
 	["Offset of field: PlaydateGraphics::setScreenClipRect"]
-		[::core::mem::offset_of!(PlaydateGraphics, setScreenClipRect) - 392usize];
+		[::core::mem::offset_of!(PlaydateGraphics, setScreenClipRect) - 196usize];
 	["Offset of field: PlaydateGraphics::fillPolygon"]
-		[::core::mem::offset_of!(PlaydateGraphics, fillPolygon) - 400usize];
+		[::core::mem::offset_of!(PlaydateGraphics, fillPolygon) - 200usize];
 	["Offset of field: PlaydateGraphics::getFontHeight"]
-		[::core::mem::offset_of!(PlaydateGraphics, getFontHeight) - 408usize];
+		[::core::mem::offset_of!(PlaydateGraphics, getFontHeight) - 204usize];
 	["Offset of field: PlaydateGraphics::getDisplayBufferBitmap"]
-		[::core::mem::offset_of!(PlaydateGraphics, getDisplayBufferBitmap) - 416usize];
+		[::core::mem::offset_of!(PlaydateGraphics, getDisplayBufferBitmap) - 208usize];
 	["Offset of field: PlaydateGraphics::drawRotatedBitmap"]
-		[::core::mem::offset_of!(PlaydateGraphics, drawRotatedBitmap) - 424usize];
+		[::core::mem::offset_of!(PlaydateGraphics, drawRotatedBitmap) - 212usize];
 	["Offset of field: PlaydateGraphics::setTextLeading"]
-		[::core::mem::offset_of!(PlaydateGraphics, setTextLeading) - 432usize];
+		[::core::mem::offset_of!(PlaydateGraphics, setTextLeading) - 216usize];
 	["Offset of field: PlaydateGraphics::setBitmapMask"]
-		[::core::mem::offset_of!(PlaydateGraphics, setBitmapMask) - 440usize];
+		[::core::mem::offset_of!(PlaydateGraphics, setBitmapMask) - 220usize];
 	["Offset of field: PlaydateGraphics::getBitmapMask"]
-		[::core::mem::offset_of!(PlaydateGraphics, getBitmapMask) - 448usize];
+		[::core::mem::offset_of!(PlaydateGraphics, getBitmapMask) - 224usize];
 	["Offset of field: PlaydateGraphics::setStencilImage"]
-		[::core::mem::offset_of!(PlaydateGraphics, setStencilImage) - 456usize];
+		[::core::mem::offset_of!(PlaydateGraphics, setStencilImage) - 228usize];
 	["Offset of field: PlaydateGraphics::makeFontFromData"]
-		[::core::mem::offset_of!(PlaydateGraphics, makeFontFromData) - 464usize];
+		[::core::mem::offset_of!(PlaydateGraphics, makeFontFromData) - 232usize];
 	["Offset of field: PlaydateGraphics::getTextTracking"]
-		[::core::mem::offset_of!(PlaydateGraphics, getTextTracking) - 472usize];
+		[::core::mem::offset_of!(PlaydateGraphics, getTextTracking) - 236usize];
 	["Offset of field: PlaydateGraphics::setPixel"]
-		[::core::mem::offset_of!(PlaydateGraphics, setPixel) - 480usize];
+		[::core::mem::offset_of!(PlaydateGraphics, setPixel) - 240usize];
 	["Offset of field: PlaydateGraphics::getBitmapPixel"]
-		[::core::mem::offset_of!(PlaydateGraphics, getBitmapPixel) - 488usize];
+		[::core::mem::offset_of!(PlaydateGraphics, getBitmapPixel) - 244usize];
 	["Offset of field: PlaydateGraphics::getBitmapTableInfo"]
-		[::core::mem::offset_of!(PlaydateGraphics, getBitmapTableInfo) - 496usize];
+		[::core::mem::offset_of!(PlaydateGraphics, getBitmapTableInfo) - 248usize];
 	["Offset of field: PlaydateGraphics::drawTextInRect"]
-		[::core::mem::offset_of!(PlaydateGraphics, drawTextInRect) - 504usize];
+		[::core::mem::offset_of!(PlaydateGraphics, drawTextInRect) - 252usize];
 };
-pub type va_list = __builtin_va_list;
+pub type va_list = u32;
 impl Buttons {
 	pub const Left: Buttons = Buttons(1);
 }
@@ -1401,19 +1394,19 @@ impl ::core::ops::BitAndAssign for Buttons {
 #[repr(transparent)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
-pub struct Buttons(pub u32);
-#[repr(u32)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
+pub struct Buttons(pub u8);
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum Language {
 	English = 0,
 	Japanese = 1,
 	Unknown = 2,
 }
 #[repr(C)]
-#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, PartialEq)]
 #[must_use]
 pub struct DateTime {
 	pub year: u16,
@@ -1441,10 +1434,10 @@ const _: () = {
 pub struct MenuItem {
 	_unused: [u8; 0],
 }
-#[repr(u32)]
+#[repr(u16)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum Peripherals {
 	None = 0,
 	Accelerometer = 1,
@@ -1460,7 +1453,6 @@ pub type ButtonCallbackFunction = ::core::option::Option<unsafe extern "C" fn(bu
                                                                               userdata: *mut core::ffi::c_void)
                                                                               -> core::ffi::c_int>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSys {
     /**
@@ -2003,7 +1995,7 @@ kAccelerometer</pre>
     pub vaFormatString: unsafe extern "C" fn(
         outstr: *mut *mut core::ffi::c_char,
         fmt: *const core::ffi::c_char,
-        args: *mut va_list,
+        args: va_list,
     ) -> core::ffi::c_int,
     /**
 <code class="title">int playdate-&gt;system-&gt;parseString(const char *str, const char *format, ...)</code>
@@ -2021,85 +2013,83 @@ kAccelerometer</pre>
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSys"][::core::mem::size_of::<PlaydateSys>() - 352usize];
-	["Alignment of PlaydateSys"][::core::mem::align_of::<PlaydateSys>() - 8usize];
+	["Size of PlaydateSys"][::core::mem::size_of::<PlaydateSys>() - 176usize];
+	["Alignment of PlaydateSys"][::core::mem::align_of::<PlaydateSys>() - 4usize];
 	["Offset of field: PlaydateSys::realloc"][::core::mem::offset_of!(PlaydateSys, realloc) - 0usize];
-	["Offset of field: PlaydateSys::formatString"][::core::mem::offset_of!(PlaydateSys, formatString) - 8usize];
-	["Offset of field: PlaydateSys::logToConsole"][::core::mem::offset_of!(PlaydateSys, logToConsole) - 16usize];
-	["Offset of field: PlaydateSys::error"][::core::mem::offset_of!(PlaydateSys, error) - 24usize];
-	["Offset of field: PlaydateSys::getLanguage"][::core::mem::offset_of!(PlaydateSys, getLanguage) - 32usize];
+	["Offset of field: PlaydateSys::formatString"][::core::mem::offset_of!(PlaydateSys, formatString) - 4usize];
+	["Offset of field: PlaydateSys::logToConsole"][::core::mem::offset_of!(PlaydateSys, logToConsole) - 8usize];
+	["Offset of field: PlaydateSys::error"][::core::mem::offset_of!(PlaydateSys, error) - 12usize];
+	["Offset of field: PlaydateSys::getLanguage"][::core::mem::offset_of!(PlaydateSys, getLanguage) - 16usize];
 	["Offset of field: PlaydateSys::getCurrentTimeMilliseconds"]
-		[::core::mem::offset_of!(PlaydateSys, getCurrentTimeMilliseconds) - 40usize];
+		[::core::mem::offset_of!(PlaydateSys, getCurrentTimeMilliseconds) - 20usize];
 	["Offset of field: PlaydateSys::getSecondsSinceEpoch"]
-		[::core::mem::offset_of!(PlaydateSys, getSecondsSinceEpoch) - 48usize];
-	["Offset of field: PlaydateSys::drawFPS"][::core::mem::offset_of!(PlaydateSys, drawFPS) - 56usize];
+		[::core::mem::offset_of!(PlaydateSys, getSecondsSinceEpoch) - 24usize];
+	["Offset of field: PlaydateSys::drawFPS"][::core::mem::offset_of!(PlaydateSys, drawFPS) - 28usize];
 	["Offset of field: PlaydateSys::setUpdateCallback"]
-		[::core::mem::offset_of!(PlaydateSys, setUpdateCallback) - 64usize];
+		[::core::mem::offset_of!(PlaydateSys, setUpdateCallback) - 32usize];
 	["Offset of field: PlaydateSys::getButtonState"]
-		[::core::mem::offset_of!(PlaydateSys, getButtonState) - 72usize];
+		[::core::mem::offset_of!(PlaydateSys, getButtonState) - 36usize];
 	["Offset of field: PlaydateSys::setPeripheralsEnabled"]
-		[::core::mem::offset_of!(PlaydateSys, setPeripheralsEnabled) - 80usize];
+		[::core::mem::offset_of!(PlaydateSys, setPeripheralsEnabled) - 40usize];
 	["Offset of field: PlaydateSys::getAccelerometer"]
-		[::core::mem::offset_of!(PlaydateSys, getAccelerometer) - 88usize];
+		[::core::mem::offset_of!(PlaydateSys, getAccelerometer) - 44usize];
 	["Offset of field: PlaydateSys::getCrankChange"]
-		[::core::mem::offset_of!(PlaydateSys, getCrankChange) - 96usize];
-	["Offset of field: PlaydateSys::getCrankAngle"]
-		[::core::mem::offset_of!(PlaydateSys, getCrankAngle) - 104usize];
-	["Offset of field: PlaydateSys::isCrankDocked"]
-		[::core::mem::offset_of!(PlaydateSys, isCrankDocked) - 112usize];
+		[::core::mem::offset_of!(PlaydateSys, getCrankChange) - 48usize];
+	["Offset of field: PlaydateSys::getCrankAngle"][::core::mem::offset_of!(PlaydateSys, getCrankAngle) - 52usize];
+	["Offset of field: PlaydateSys::isCrankDocked"][::core::mem::offset_of!(PlaydateSys, isCrankDocked) - 56usize];
 	["Offset of field: PlaydateSys::setCrankSoundsDisabled"]
-		[::core::mem::offset_of!(PlaydateSys, setCrankSoundsDisabled) - 120usize];
-	["Offset of field: PlaydateSys::getFlipped"][::core::mem::offset_of!(PlaydateSys, getFlipped) - 128usize];
+		[::core::mem::offset_of!(PlaydateSys, setCrankSoundsDisabled) - 60usize];
+	["Offset of field: PlaydateSys::getFlipped"][::core::mem::offset_of!(PlaydateSys, getFlipped) - 64usize];
 	["Offset of field: PlaydateSys::setAutoLockDisabled"]
-		[::core::mem::offset_of!(PlaydateSys, setAutoLockDisabled) - 136usize];
-	["Offset of field: PlaydateSys::setMenuImage"][::core::mem::offset_of!(PlaydateSys, setMenuImage) - 144usize];
-	["Offset of field: PlaydateSys::addMenuItem"][::core::mem::offset_of!(PlaydateSys, addMenuItem) - 152usize];
+		[::core::mem::offset_of!(PlaydateSys, setAutoLockDisabled) - 68usize];
+	["Offset of field: PlaydateSys::setMenuImage"][::core::mem::offset_of!(PlaydateSys, setMenuImage) - 72usize];
+	["Offset of field: PlaydateSys::addMenuItem"][::core::mem::offset_of!(PlaydateSys, addMenuItem) - 76usize];
 	["Offset of field: PlaydateSys::addCheckmarkMenuItem"]
-		[::core::mem::offset_of!(PlaydateSys, addCheckmarkMenuItem) - 160usize];
+		[::core::mem::offset_of!(PlaydateSys, addCheckmarkMenuItem) - 80usize];
 	["Offset of field: PlaydateSys::addOptionsMenuItem"]
-		[::core::mem::offset_of!(PlaydateSys, addOptionsMenuItem) - 168usize];
+		[::core::mem::offset_of!(PlaydateSys, addOptionsMenuItem) - 84usize];
 	["Offset of field: PlaydateSys::removeAllMenuItems"]
-		[::core::mem::offset_of!(PlaydateSys, removeAllMenuItems) - 176usize];
+		[::core::mem::offset_of!(PlaydateSys, removeAllMenuItems) - 88usize];
 	["Offset of field: PlaydateSys::removeMenuItem"]
-		[::core::mem::offset_of!(PlaydateSys, removeMenuItem) - 184usize];
+		[::core::mem::offset_of!(PlaydateSys, removeMenuItem) - 92usize];
 	["Offset of field: PlaydateSys::getMenuItemValue"]
-		[::core::mem::offset_of!(PlaydateSys, getMenuItemValue) - 192usize];
+		[::core::mem::offset_of!(PlaydateSys, getMenuItemValue) - 96usize];
 	["Offset of field: PlaydateSys::setMenuItemValue"]
-		[::core::mem::offset_of!(PlaydateSys, setMenuItemValue) - 200usize];
+		[::core::mem::offset_of!(PlaydateSys, setMenuItemValue) - 100usize];
 	["Offset of field: PlaydateSys::getMenuItemTitle"]
-		[::core::mem::offset_of!(PlaydateSys, getMenuItemTitle) - 208usize];
+		[::core::mem::offset_of!(PlaydateSys, getMenuItemTitle) - 104usize];
 	["Offset of field: PlaydateSys::setMenuItemTitle"]
-		[::core::mem::offset_of!(PlaydateSys, setMenuItemTitle) - 216usize];
+		[::core::mem::offset_of!(PlaydateSys, setMenuItemTitle) - 108usize];
 	["Offset of field: PlaydateSys::getMenuItemUserdata"]
-		[::core::mem::offset_of!(PlaydateSys, getMenuItemUserdata) - 224usize];
+		[::core::mem::offset_of!(PlaydateSys, getMenuItemUserdata) - 112usize];
 	["Offset of field: PlaydateSys::setMenuItemUserdata"]
-		[::core::mem::offset_of!(PlaydateSys, setMenuItemUserdata) - 232usize];
+		[::core::mem::offset_of!(PlaydateSys, setMenuItemUserdata) - 116usize];
 	["Offset of field: PlaydateSys::getReduceFlashing"]
-		[::core::mem::offset_of!(PlaydateSys, getReduceFlashing) - 240usize];
+		[::core::mem::offset_of!(PlaydateSys, getReduceFlashing) - 120usize];
 	["Offset of field: PlaydateSys::getElapsedTime"]
-		[::core::mem::offset_of!(PlaydateSys, getElapsedTime) - 248usize];
+		[::core::mem::offset_of!(PlaydateSys, getElapsedTime) - 124usize];
 	["Offset of field: PlaydateSys::resetElapsedTime"]
-		[::core::mem::offset_of!(PlaydateSys, resetElapsedTime) - 256usize];
+		[::core::mem::offset_of!(PlaydateSys, resetElapsedTime) - 128usize];
 	["Offset of field: PlaydateSys::getBatteryPercentage"]
-		[::core::mem::offset_of!(PlaydateSys, getBatteryPercentage) - 264usize];
+		[::core::mem::offset_of!(PlaydateSys, getBatteryPercentage) - 132usize];
 	["Offset of field: PlaydateSys::getBatteryVoltage"]
-		[::core::mem::offset_of!(PlaydateSys, getBatteryVoltage) - 272usize];
+		[::core::mem::offset_of!(PlaydateSys, getBatteryVoltage) - 136usize];
 	["Offset of field: PlaydateSys::getTimezoneOffset"]
-		[::core::mem::offset_of!(PlaydateSys, getTimezoneOffset) - 280usize];
+		[::core::mem::offset_of!(PlaydateSys, getTimezoneOffset) - 140usize];
 	["Offset of field: PlaydateSys::shouldDisplay24HourTime"]
-		[::core::mem::offset_of!(PlaydateSys, shouldDisplay24HourTime) - 288usize];
+		[::core::mem::offset_of!(PlaydateSys, shouldDisplay24HourTime) - 144usize];
 	["Offset of field: PlaydateSys::convertEpochToDateTime"]
-		[::core::mem::offset_of!(PlaydateSys, convertEpochToDateTime) - 296usize];
+		[::core::mem::offset_of!(PlaydateSys, convertEpochToDateTime) - 148usize];
 	["Offset of field: PlaydateSys::convertDateTimeToEpoch"]
-		[::core::mem::offset_of!(PlaydateSys, convertDateTimeToEpoch) - 304usize];
-	["Offset of field: PlaydateSys::clearICache"][::core::mem::offset_of!(PlaydateSys, clearICache) - 312usize];
+		[::core::mem::offset_of!(PlaydateSys, convertDateTimeToEpoch) - 152usize];
+	["Offset of field: PlaydateSys::clearICache"][::core::mem::offset_of!(PlaydateSys, clearICache) - 156usize];
 	["Offset of field: PlaydateSys::setButtonCallback"]
-		[::core::mem::offset_of!(PlaydateSys, setButtonCallback) - 320usize];
+		[::core::mem::offset_of!(PlaydateSys, setButtonCallback) - 160usize];
 	["Offset of field: PlaydateSys::setSerialMessageCallback"]
-		[::core::mem::offset_of!(PlaydateSys, setSerialMessageCallback) - 328usize];
+		[::core::mem::offset_of!(PlaydateSys, setSerialMessageCallback) - 164usize];
 	["Offset of field: PlaydateSys::vaFormatString"]
-		[::core::mem::offset_of!(PlaydateSys, vaFormatString) - 336usize];
-	["Offset of field: PlaydateSys::parseString"][::core::mem::offset_of!(PlaydateSys, parseString) - 344usize];
+		[::core::mem::offset_of!(PlaydateSys, vaFormatString) - 168usize];
+	["Offset of field: PlaydateSys::parseString"][::core::mem::offset_of!(PlaydateSys, parseString) - 172usize];
 };
 pub type LuaState = *mut core::ffi::c_void;
 pub type LuaCFunction = ::core::option::Option<unsafe extern "C" fn(L: *mut LuaState) -> core::ffi::c_int>;
@@ -2113,17 +2103,17 @@ pub struct LuaUdObject {
 pub struct Sprite {
 	_unused: [u8; 0],
 }
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum LuaValueType {
 	Int = 0,
 	Float = 1,
 	Str = 2,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq)]
 #[must_use]
 pub struct LuaReg {
 	pub name: *const core::ffi::c_char,
@@ -2131,10 +2121,10 @@ pub struct LuaReg {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of LuaReg"][::core::mem::size_of::<LuaReg>() - 16usize];
-	["Alignment of LuaReg"][::core::mem::align_of::<LuaReg>() - 8usize];
+	["Size of LuaReg"][::core::mem::size_of::<LuaReg>() - 8usize];
+	["Alignment of LuaReg"][::core::mem::align_of::<LuaReg>() - 4usize];
 	["Offset of field: LuaReg::name"][::core::mem::offset_of!(LuaReg, name) - 0usize];
-	["Offset of field: LuaReg::func"][::core::mem::offset_of!(LuaReg, func) - 8usize];
+	["Offset of field: LuaReg::func"][::core::mem::offset_of!(LuaReg, func) - 4usize];
 };
 impl Default for LuaReg {
 	fn default() -> Self {
@@ -2145,10 +2135,10 @@ impl Default for LuaReg {
 		}
 	}
 }
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum LuaType {
 	Nil = 0,
 	Bool = 1,
@@ -2178,8 +2168,8 @@ pub union LuaValBindgenTy1 {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of LuaValBindgenTy1"][::core::mem::size_of::<LuaValBindgenTy1>() - 8usize];
-	["Alignment of LuaValBindgenTy1"][::core::mem::align_of::<LuaValBindgenTy1>() - 8usize];
+	["Size of LuaValBindgenTy1"][::core::mem::size_of::<LuaValBindgenTy1>() - 4usize];
+	["Alignment of LuaValBindgenTy1"][::core::mem::align_of::<LuaValBindgenTy1>() - 4usize];
 	["Offset of field: LuaValBindgenTy1::intval"][::core::mem::offset_of!(LuaValBindgenTy1, intval) - 0usize];
 	["Offset of field: LuaValBindgenTy1::floatval"][::core::mem::offset_of!(LuaValBindgenTy1, floatval) - 0usize];
 	["Offset of field: LuaValBindgenTy1::strval"][::core::mem::offset_of!(LuaValBindgenTy1, strval) - 0usize];
@@ -2195,11 +2185,11 @@ impl Default for LuaValBindgenTy1 {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of LuaVal"][::core::mem::size_of::<LuaVal>() - 24usize];
-	["Alignment of LuaVal"][::core::mem::align_of::<LuaVal>() - 8usize];
+	["Size of LuaVal"][::core::mem::size_of::<LuaVal>() - 12usize];
+	["Alignment of LuaVal"][::core::mem::align_of::<LuaVal>() - 4usize];
 	["Offset of field: LuaVal::name"][::core::mem::offset_of!(LuaVal, name) - 0usize];
-	["Offset of field: LuaVal::type_"][::core::mem::offset_of!(LuaVal, type_) - 8usize];
-	["Offset of field: LuaVal::v"][::core::mem::offset_of!(LuaVal, v) - 16usize];
+	["Offset of field: LuaVal::type_"][::core::mem::offset_of!(LuaVal, type_) - 4usize];
+	["Offset of field: LuaVal::v"][::core::mem::offset_of!(LuaVal, v) - 8usize];
 };
 impl Default for LuaVal {
 	fn default() -> Self {
@@ -2211,7 +2201,6 @@ impl Default for LuaVal {
 	}
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateLua {
 	/**
@@ -2515,48 +2504,48 @@ pub struct PlaydateLua {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateLua"][::core::mem::size_of::<PlaydateLua>() - 256usize];
-	["Alignment of PlaydateLua"][::core::mem::align_of::<PlaydateLua>() - 8usize];
+	["Size of PlaydateLua"][::core::mem::size_of::<PlaydateLua>() - 128usize];
+	["Alignment of PlaydateLua"][::core::mem::align_of::<PlaydateLua>() - 4usize];
 	["Offset of field: PlaydateLua::addFunction"][::core::mem::offset_of!(PlaydateLua, addFunction) - 0usize];
-	["Offset of field: PlaydateLua::registerClass"][::core::mem::offset_of!(PlaydateLua, registerClass) - 8usize];
-	["Offset of field: PlaydateLua::pushFunction"][::core::mem::offset_of!(PlaydateLua, pushFunction) - 16usize];
+	["Offset of field: PlaydateLua::registerClass"][::core::mem::offset_of!(PlaydateLua, registerClass) - 4usize];
+	["Offset of field: PlaydateLua::pushFunction"][::core::mem::offset_of!(PlaydateLua, pushFunction) - 8usize];
 	["Offset of field: PlaydateLua::indexMetatable"]
-		[::core::mem::offset_of!(PlaydateLua, indexMetatable) - 24usize];
-	["Offset of field: PlaydateLua::stop"][::core::mem::offset_of!(PlaydateLua, stop) - 32usize];
-	["Offset of field: PlaydateLua::start"][::core::mem::offset_of!(PlaydateLua, start) - 40usize];
-	["Offset of field: PlaydateLua::getArgCount"][::core::mem::offset_of!(PlaydateLua, getArgCount) - 48usize];
-	["Offset of field: PlaydateLua::getArgType"][::core::mem::offset_of!(PlaydateLua, getArgType) - 56usize];
-	["Offset of field: PlaydateLua::argIsNil"][::core::mem::offset_of!(PlaydateLua, argIsNil) - 64usize];
-	["Offset of field: PlaydateLua::getArgBool"][::core::mem::offset_of!(PlaydateLua, getArgBool) - 72usize];
-	["Offset of field: PlaydateLua::getArgInt"][::core::mem::offset_of!(PlaydateLua, getArgInt) - 80usize];
-	["Offset of field: PlaydateLua::getArgFloat"][::core::mem::offset_of!(PlaydateLua, getArgFloat) - 88usize];
-	["Offset of field: PlaydateLua::getArgString"][::core::mem::offset_of!(PlaydateLua, getArgString) - 96usize];
-	["Offset of field: PlaydateLua::getArgBytes"][::core::mem::offset_of!(PlaydateLua, getArgBytes) - 104usize];
-	["Offset of field: PlaydateLua::getArgObject"][::core::mem::offset_of!(PlaydateLua, getArgObject) - 112usize];
-	["Offset of field: PlaydateLua::getBitmap"][::core::mem::offset_of!(PlaydateLua, getBitmap) - 120usize];
-	["Offset of field: PlaydateLua::getSprite"][::core::mem::offset_of!(PlaydateLua, getSprite) - 128usize];
-	["Offset of field: PlaydateLua::pushNil"][::core::mem::offset_of!(PlaydateLua, pushNil) - 136usize];
-	["Offset of field: PlaydateLua::pushBool"][::core::mem::offset_of!(PlaydateLua, pushBool) - 144usize];
-	["Offset of field: PlaydateLua::pushInt"][::core::mem::offset_of!(PlaydateLua, pushInt) - 152usize];
-	["Offset of field: PlaydateLua::pushFloat"][::core::mem::offset_of!(PlaydateLua, pushFloat) - 160usize];
-	["Offset of field: PlaydateLua::pushString"][::core::mem::offset_of!(PlaydateLua, pushString) - 168usize];
-	["Offset of field: PlaydateLua::pushBytes"][::core::mem::offset_of!(PlaydateLua, pushBytes) - 176usize];
-	["Offset of field: PlaydateLua::pushBitmap"][::core::mem::offset_of!(PlaydateLua, pushBitmap) - 184usize];
-	["Offset of field: PlaydateLua::pushSprite"][::core::mem::offset_of!(PlaydateLua, pushSprite) - 192usize];
-	["Offset of field: PlaydateLua::pushObject"][::core::mem::offset_of!(PlaydateLua, pushObject) - 200usize];
-	["Offset of field: PlaydateLua::retainObject"][::core::mem::offset_of!(PlaydateLua, retainObject) - 208usize];
+		[::core::mem::offset_of!(PlaydateLua, indexMetatable) - 12usize];
+	["Offset of field: PlaydateLua::stop"][::core::mem::offset_of!(PlaydateLua, stop) - 16usize];
+	["Offset of field: PlaydateLua::start"][::core::mem::offset_of!(PlaydateLua, start) - 20usize];
+	["Offset of field: PlaydateLua::getArgCount"][::core::mem::offset_of!(PlaydateLua, getArgCount) - 24usize];
+	["Offset of field: PlaydateLua::getArgType"][::core::mem::offset_of!(PlaydateLua, getArgType) - 28usize];
+	["Offset of field: PlaydateLua::argIsNil"][::core::mem::offset_of!(PlaydateLua, argIsNil) - 32usize];
+	["Offset of field: PlaydateLua::getArgBool"][::core::mem::offset_of!(PlaydateLua, getArgBool) - 36usize];
+	["Offset of field: PlaydateLua::getArgInt"][::core::mem::offset_of!(PlaydateLua, getArgInt) - 40usize];
+	["Offset of field: PlaydateLua::getArgFloat"][::core::mem::offset_of!(PlaydateLua, getArgFloat) - 44usize];
+	["Offset of field: PlaydateLua::getArgString"][::core::mem::offset_of!(PlaydateLua, getArgString) - 48usize];
+	["Offset of field: PlaydateLua::getArgBytes"][::core::mem::offset_of!(PlaydateLua, getArgBytes) - 52usize];
+	["Offset of field: PlaydateLua::getArgObject"][::core::mem::offset_of!(PlaydateLua, getArgObject) - 56usize];
+	["Offset of field: PlaydateLua::getBitmap"][::core::mem::offset_of!(PlaydateLua, getBitmap) - 60usize];
+	["Offset of field: PlaydateLua::getSprite"][::core::mem::offset_of!(PlaydateLua, getSprite) - 64usize];
+	["Offset of field: PlaydateLua::pushNil"][::core::mem::offset_of!(PlaydateLua, pushNil) - 68usize];
+	["Offset of field: PlaydateLua::pushBool"][::core::mem::offset_of!(PlaydateLua, pushBool) - 72usize];
+	["Offset of field: PlaydateLua::pushInt"][::core::mem::offset_of!(PlaydateLua, pushInt) - 76usize];
+	["Offset of field: PlaydateLua::pushFloat"][::core::mem::offset_of!(PlaydateLua, pushFloat) - 80usize];
+	["Offset of field: PlaydateLua::pushString"][::core::mem::offset_of!(PlaydateLua, pushString) - 84usize];
+	["Offset of field: PlaydateLua::pushBytes"][::core::mem::offset_of!(PlaydateLua, pushBytes) - 88usize];
+	["Offset of field: PlaydateLua::pushBitmap"][::core::mem::offset_of!(PlaydateLua, pushBitmap) - 92usize];
+	["Offset of field: PlaydateLua::pushSprite"][::core::mem::offset_of!(PlaydateLua, pushSprite) - 96usize];
+	["Offset of field: PlaydateLua::pushObject"][::core::mem::offset_of!(PlaydateLua, pushObject) - 100usize];
+	["Offset of field: PlaydateLua::retainObject"][::core::mem::offset_of!(PlaydateLua, retainObject) - 104usize];
 	["Offset of field: PlaydateLua::releaseObject"]
-		[::core::mem::offset_of!(PlaydateLua, releaseObject) - 216usize];
-	["Offset of field: PlaydateLua::setUserValue"][::core::mem::offset_of!(PlaydateLua, setUserValue) - 224usize];
-	["Offset of field: PlaydateLua::getUserValue"][::core::mem::offset_of!(PlaydateLua, getUserValue) - 232usize];
+		[::core::mem::offset_of!(PlaydateLua, releaseObject) - 108usize];
+	["Offset of field: PlaydateLua::setUserValue"][::core::mem::offset_of!(PlaydateLua, setUserValue) - 112usize];
+	["Offset of field: PlaydateLua::getUserValue"][::core::mem::offset_of!(PlaydateLua, getUserValue) - 116usize];
 	["Offset of field: PlaydateLua::callFunction_deprecated"]
-		[::core::mem::offset_of!(PlaydateLua, callFunction_deprecated) - 240usize];
-	["Offset of field: PlaydateLua::callFunction"][::core::mem::offset_of!(PlaydateLua, callFunction) - 248usize];
+		[::core::mem::offset_of!(PlaydateLua, callFunction_deprecated) - 120usize];
+	["Offset of field: PlaydateLua::callFunction"][::core::mem::offset_of!(PlaydateLua, callFunction) - 124usize];
 };
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub enum JsonValueType {
 	Null = 0,
 	True = 1,
@@ -2581,12 +2570,12 @@ pub struct JsonValueBindgenTy1 {
 	pub stringval: __BindgenUnionField<*mut core::ffi::c_char>,
 	pub arrayval: __BindgenUnionField<*mut core::ffi::c_void>,
 	pub tableval: __BindgenUnionField<*mut core::ffi::c_void>,
-	pub bindgen_union_field: u64,
+	pub bindgen_union_field: u32,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of JsonValueBindgenTy1"][::core::mem::size_of::<JsonValueBindgenTy1>() - 8usize];
-	["Alignment of JsonValueBindgenTy1"][::core::mem::align_of::<JsonValueBindgenTy1>() - 8usize];
+	["Size of JsonValueBindgenTy1"][::core::mem::size_of::<JsonValueBindgenTy1>() - 4usize];
+	["Alignment of JsonValueBindgenTy1"][::core::mem::align_of::<JsonValueBindgenTy1>() - 4usize];
 	["Offset of field: JsonValueBindgenTy1::intval"]
 		[::core::mem::offset_of!(JsonValueBindgenTy1, intval) - 0usize];
 	["Offset of field: JsonValueBindgenTy1::floatval"]
@@ -2600,13 +2589,12 @@ const _: () = {
 };
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of JsonValue"][::core::mem::size_of::<JsonValue>() - 16usize];
-	["Alignment of JsonValue"][::core::mem::align_of::<JsonValue>() - 8usize];
+	["Size of JsonValue"][::core::mem::size_of::<JsonValue>() - 8usize];
+	["Alignment of JsonValue"][::core::mem::align_of::<JsonValue>() - 4usize];
 	["Offset of field: JsonValue::type_"][::core::mem::offset_of!(JsonValue, type_) - 0usize];
-	["Offset of field: JsonValue::data"][::core::mem::offset_of!(JsonValue, data) - 8usize];
+	["Offset of field: JsonValue::data"][::core::mem::offset_of!(JsonValue, data) - 4usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct JsonDecoder {
 	pub decodeError: ::core::option::Option<unsafe extern "C" fn(decoder: *mut JsonDecoder,
@@ -2637,31 +2625,30 @@ pub struct JsonDecoder {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of JsonDecoder"][::core::mem::size_of::<JsonDecoder>() - 80usize];
-	["Alignment of JsonDecoder"][::core::mem::align_of::<JsonDecoder>() - 8usize];
+	["Size of JsonDecoder"][::core::mem::size_of::<JsonDecoder>() - 40usize];
+	["Alignment of JsonDecoder"][::core::mem::align_of::<JsonDecoder>() - 4usize];
 	["Offset of field: JsonDecoder::decodeError"][::core::mem::offset_of!(JsonDecoder, decodeError) - 0usize];
 	["Offset of field: JsonDecoder::willDecodeSublist"]
-		[::core::mem::offset_of!(JsonDecoder, willDecodeSublist) - 8usize];
+		[::core::mem::offset_of!(JsonDecoder, willDecodeSublist) - 4usize];
 	["Offset of field: JsonDecoder::shouldDecodeTableValueForKey"]
-		[::core::mem::offset_of!(JsonDecoder, shouldDecodeTableValueForKey) - 16usize];
+		[::core::mem::offset_of!(JsonDecoder, shouldDecodeTableValueForKey) - 8usize];
 	["Offset of field: JsonDecoder::didDecodeTableValue"]
-		[::core::mem::offset_of!(JsonDecoder, didDecodeTableValue) - 24usize];
+		[::core::mem::offset_of!(JsonDecoder, didDecodeTableValue) - 12usize];
 	["Offset of field: JsonDecoder::shouldDecodeArrayValueAtIndex"]
-		[::core::mem::offset_of!(JsonDecoder, shouldDecodeArrayValueAtIndex) - 32usize];
+		[::core::mem::offset_of!(JsonDecoder, shouldDecodeArrayValueAtIndex) - 16usize];
 	["Offset of field: JsonDecoder::didDecodeArrayValue"]
-		[::core::mem::offset_of!(JsonDecoder, didDecodeArrayValue) - 40usize];
+		[::core::mem::offset_of!(JsonDecoder, didDecodeArrayValue) - 20usize];
 	["Offset of field: JsonDecoder::didDecodeSublist"]
-		[::core::mem::offset_of!(JsonDecoder, didDecodeSublist) - 48usize];
-	["Offset of field: JsonDecoder::userdata"][::core::mem::offset_of!(JsonDecoder, userdata) - 56usize];
-	["Offset of field: JsonDecoder::returnString"][::core::mem::offset_of!(JsonDecoder, returnString) - 64usize];
-	["Offset of field: JsonDecoder::path"][::core::mem::offset_of!(JsonDecoder, path) - 72usize];
+		[::core::mem::offset_of!(JsonDecoder, didDecodeSublist) - 24usize];
+	["Offset of field: JsonDecoder::userdata"][::core::mem::offset_of!(JsonDecoder, userdata) - 28usize];
+	["Offset of field: JsonDecoder::returnString"][::core::mem::offset_of!(JsonDecoder, returnString) - 32usize];
+	["Offset of field: JsonDecoder::path"][::core::mem::offset_of!(JsonDecoder, path) - 36usize];
 };
 pub type JsonReadFunc = ::core::option::Option<unsafe extern "C" fn(userdata: *mut core::ffi::c_void,
                                                                     buf: *mut u8,
                                                                     bufsize: core::ffi::c_int)
                                                                     -> core::ffi::c_int>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct JsonReader {
 	pub read: JsonReadFunc,
@@ -2669,16 +2656,15 @@ pub struct JsonReader {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of JsonReader"][::core::mem::size_of::<JsonReader>() - 16usize];
-	["Alignment of JsonReader"][::core::mem::align_of::<JsonReader>() - 8usize];
+	["Size of JsonReader"][::core::mem::size_of::<JsonReader>() - 8usize];
+	["Alignment of JsonReader"][::core::mem::align_of::<JsonReader>() - 4usize];
 	["Offset of field: JsonReader::read"][::core::mem::offset_of!(JsonReader, read) - 0usize];
-	["Offset of field: JsonReader::userdata"][::core::mem::offset_of!(JsonReader, userdata) - 8usize];
+	["Offset of field: JsonReader::userdata"][::core::mem::offset_of!(JsonReader, userdata) - 4usize];
 };
 pub type JsonWriteFunc = ::core::option::Option<unsafe extern "C" fn(userdata: *mut core::ffi::c_void,
                                                                      str_: *const core::ffi::c_char,
                                                                      len: core::ffi::c_int)>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct JsonEncoder {
 	pub writeStringFunc: JsonWriteFunc,
@@ -2705,25 +2691,25 @@ pub struct JsonEncoder {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of JsonEncoder"][::core::mem::size_of::<JsonEncoder>() - 120usize];
-	["Alignment of JsonEncoder"][::core::mem::align_of::<JsonEncoder>() - 8usize];
+	["Size of JsonEncoder"][::core::mem::size_of::<JsonEncoder>() - 60usize];
+	["Alignment of JsonEncoder"][::core::mem::align_of::<JsonEncoder>() - 4usize];
 	["Offset of field: JsonEncoder::writeStringFunc"]
 		[::core::mem::offset_of!(JsonEncoder, writeStringFunc) - 0usize];
-	["Offset of field: JsonEncoder::userdata"][::core::mem::offset_of!(JsonEncoder, userdata) - 8usize];
-	["Offset of field: JsonEncoder::startArray"][::core::mem::offset_of!(JsonEncoder, startArray) - 24usize];
+	["Offset of field: JsonEncoder::userdata"][::core::mem::offset_of!(JsonEncoder, userdata) - 4usize];
+	["Offset of field: JsonEncoder::startArray"][::core::mem::offset_of!(JsonEncoder, startArray) - 12usize];
 	["Offset of field: JsonEncoder::addArrayMember"]
-		[::core::mem::offset_of!(JsonEncoder, addArrayMember) - 32usize];
-	["Offset of field: JsonEncoder::endArray"][::core::mem::offset_of!(JsonEncoder, endArray) - 40usize];
-	["Offset of field: JsonEncoder::startTable"][::core::mem::offset_of!(JsonEncoder, startTable) - 48usize];
+		[::core::mem::offset_of!(JsonEncoder, addArrayMember) - 16usize];
+	["Offset of field: JsonEncoder::endArray"][::core::mem::offset_of!(JsonEncoder, endArray) - 20usize];
+	["Offset of field: JsonEncoder::startTable"][::core::mem::offset_of!(JsonEncoder, startTable) - 24usize];
 	["Offset of field: JsonEncoder::addTableMember"]
-		[::core::mem::offset_of!(JsonEncoder, addTableMember) - 56usize];
-	["Offset of field: JsonEncoder::endTable"][::core::mem::offset_of!(JsonEncoder, endTable) - 64usize];
-	["Offset of field: JsonEncoder::writeNull"][::core::mem::offset_of!(JsonEncoder, writeNull) - 72usize];
-	["Offset of field: JsonEncoder::writeFalse"][::core::mem::offset_of!(JsonEncoder, writeFalse) - 80usize];
-	["Offset of field: JsonEncoder::writeTrue"][::core::mem::offset_of!(JsonEncoder, writeTrue) - 88usize];
-	["Offset of field: JsonEncoder::writeInt"][::core::mem::offset_of!(JsonEncoder, writeInt) - 96usize];
-	["Offset of field: JsonEncoder::writeDouble"][::core::mem::offset_of!(JsonEncoder, writeDouble) - 104usize];
-	["Offset of field: JsonEncoder::writeString"][::core::mem::offset_of!(JsonEncoder, writeString) - 112usize];
+		[::core::mem::offset_of!(JsonEncoder, addTableMember) - 28usize];
+	["Offset of field: JsonEncoder::endTable"][::core::mem::offset_of!(JsonEncoder, endTable) - 32usize];
+	["Offset of field: JsonEncoder::writeNull"][::core::mem::offset_of!(JsonEncoder, writeNull) - 36usize];
+	["Offset of field: JsonEncoder::writeFalse"][::core::mem::offset_of!(JsonEncoder, writeFalse) - 40usize];
+	["Offset of field: JsonEncoder::writeTrue"][::core::mem::offset_of!(JsonEncoder, writeTrue) - 44usize];
+	["Offset of field: JsonEncoder::writeInt"][::core::mem::offset_of!(JsonEncoder, writeInt) - 48usize];
+	["Offset of field: JsonEncoder::writeDouble"][::core::mem::offset_of!(JsonEncoder, writeDouble) - 52usize];
+	["Offset of field: JsonEncoder::writeString"][::core::mem::offset_of!(JsonEncoder, writeString) - 56usize];
 };
 impl JsonEncoder {
 	#[inline]
@@ -2889,7 +2875,6 @@ impl JsonEncoder {
 	}
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateJson {
 	/**
@@ -2930,11 +2915,11 @@ pub struct PlaydateJson {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateJson"][::core::mem::size_of::<PlaydateJson>() - 24usize];
-	["Alignment of PlaydateJson"][::core::mem::align_of::<PlaydateJson>() - 8usize];
+	["Size of PlaydateJson"][::core::mem::size_of::<PlaydateJson>() - 12usize];
+	["Alignment of PlaydateJson"][::core::mem::align_of::<PlaydateJson>() - 4usize];
 	["Offset of field: PlaydateJson::initEncoder"][::core::mem::offset_of!(PlaydateJson, initEncoder) - 0usize];
-	["Offset of field: PlaydateJson::decode"][::core::mem::offset_of!(PlaydateJson, decode) - 8usize];
-	["Offset of field: PlaydateJson::decodeString"][::core::mem::offset_of!(PlaydateJson, decodeString) - 16usize];
+	["Offset of field: PlaydateJson::decode"][::core::mem::offset_of!(PlaydateJson, decode) - 4usize];
+	["Offset of field: PlaydateJson::decodeString"][::core::mem::offset_of!(PlaydateJson, decodeString) - 8usize];
 };
 pub type SdFile = core::ffi::c_void;
 impl FileOptions {
@@ -2970,10 +2955,10 @@ impl ::core::ops::BitAndAssign for FileOptions {
 #[repr(transparent)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
-pub struct FileOptions(pub u32);
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
+pub struct FileOptions(pub u8);
 #[repr(C)]
-#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, PartialEq)]
 #[must_use]
 pub struct FileStat {
 	pub isdir: core::ffi::c_int,
@@ -2999,7 +2984,6 @@ const _: () = {
 	["Offset of field: FileStat::m_second"][::core::mem::offset_of!(FileStat, m_second) - 28usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateFile {
     /**
@@ -3214,26 +3198,26 @@ pub struct PlaydateFile {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateFile"][::core::mem::size_of::<PlaydateFile>() - 104usize];
-	["Alignment of PlaydateFile"][::core::mem::align_of::<PlaydateFile>() - 8usize];
+	["Size of PlaydateFile"][::core::mem::size_of::<PlaydateFile>() - 52usize];
+	["Alignment of PlaydateFile"][::core::mem::align_of::<PlaydateFile>() - 4usize];
 	["Offset of field: PlaydateFile::geterr"][::core::mem::offset_of!(PlaydateFile, geterr) - 0usize];
-	["Offset of field: PlaydateFile::listfiles"][::core::mem::offset_of!(PlaydateFile, listfiles) - 8usize];
-	["Offset of field: PlaydateFile::stat"][::core::mem::offset_of!(PlaydateFile, stat) - 16usize];
-	["Offset of field: PlaydateFile::mkdir"][::core::mem::offset_of!(PlaydateFile, mkdir) - 24usize];
-	["Offset of field: PlaydateFile::unlink"][::core::mem::offset_of!(PlaydateFile, unlink) - 32usize];
-	["Offset of field: PlaydateFile::rename"][::core::mem::offset_of!(PlaydateFile, rename) - 40usize];
-	["Offset of field: PlaydateFile::open"][::core::mem::offset_of!(PlaydateFile, open) - 48usize];
-	["Offset of field: PlaydateFile::close"][::core::mem::offset_of!(PlaydateFile, close) - 56usize];
-	["Offset of field: PlaydateFile::read"][::core::mem::offset_of!(PlaydateFile, read) - 64usize];
-	["Offset of field: PlaydateFile::write"][::core::mem::offset_of!(PlaydateFile, write) - 72usize];
-	["Offset of field: PlaydateFile::flush"][::core::mem::offset_of!(PlaydateFile, flush) - 80usize];
-	["Offset of field: PlaydateFile::tell"][::core::mem::offset_of!(PlaydateFile, tell) - 88usize];
-	["Offset of field: PlaydateFile::seek"][::core::mem::offset_of!(PlaydateFile, seek) - 96usize];
+	["Offset of field: PlaydateFile::listfiles"][::core::mem::offset_of!(PlaydateFile, listfiles) - 4usize];
+	["Offset of field: PlaydateFile::stat"][::core::mem::offset_of!(PlaydateFile, stat) - 8usize];
+	["Offset of field: PlaydateFile::mkdir"][::core::mem::offset_of!(PlaydateFile, mkdir) - 12usize];
+	["Offset of field: PlaydateFile::unlink"][::core::mem::offset_of!(PlaydateFile, unlink) - 16usize];
+	["Offset of field: PlaydateFile::rename"][::core::mem::offset_of!(PlaydateFile, rename) - 20usize];
+	["Offset of field: PlaydateFile::open"][::core::mem::offset_of!(PlaydateFile, open) - 24usize];
+	["Offset of field: PlaydateFile::close"][::core::mem::offset_of!(PlaydateFile, close) - 28usize];
+	["Offset of field: PlaydateFile::read"][::core::mem::offset_of!(PlaydateFile, read) - 32usize];
+	["Offset of field: PlaydateFile::write"][::core::mem::offset_of!(PlaydateFile, write) - 36usize];
+	["Offset of field: PlaydateFile::flush"][::core::mem::offset_of!(PlaydateFile, flush) - 40usize];
+	["Offset of field: PlaydateFile::tell"][::core::mem::offset_of!(PlaydateFile, tell) - 44usize];
+	["Offset of field: PlaydateFile::seek"][::core::mem::offset_of!(PlaydateFile, seek) - 48usize];
 };
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum SpriteCollisionResponseType {
 	Slide = 0,
 	Freeze = 1,
@@ -3242,7 +3226,6 @@ pub enum SpriteCollisionResponseType {
 }
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
-#[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
 #[must_use]
 pub struct Rect {
 	pub x: core::ffi::c_float,
@@ -3261,7 +3244,6 @@ const _: () = {
 };
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
-#[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
 #[must_use]
 pub struct CollisionPoint {
 	pub x: core::ffi::c_float,
@@ -3275,8 +3257,7 @@ const _: () = {
 	["Offset of field: CollisionPoint::y"][::core::mem::offset_of!(CollisionPoint, y) - 4usize];
 };
 #[repr(C)]
-#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
-#[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
+#[derive(Debug, Default, Copy, Clone, Hash, PartialOrd, PartialEq)]
 #[must_use]
 pub struct CollisionVector {
 	pub x: core::ffi::c_int,
@@ -3290,7 +3271,6 @@ const _: () = {
 	["Offset of field: CollisionVector::y"][::core::mem::offset_of!(CollisionVector, y) - 4usize];
 };
 #[repr(C)]
-#[derive(PartialOrd, PartialEq)]
 #[must_use]
 pub struct SpriteCollisionInfo {
 	pub sprite: *mut Sprite,
@@ -3306,27 +3286,26 @@ pub struct SpriteCollisionInfo {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of SpriteCollisionInfo"][::core::mem::size_of::<SpriteCollisionInfo>() - 88usize];
-	["Alignment of SpriteCollisionInfo"][::core::mem::align_of::<SpriteCollisionInfo>() - 8usize];
+	["Size of SpriteCollisionInfo"][::core::mem::size_of::<SpriteCollisionInfo>() - 72usize];
+	["Alignment of SpriteCollisionInfo"][::core::mem::align_of::<SpriteCollisionInfo>() - 4usize];
 	["Offset of field: SpriteCollisionInfo::sprite"]
 		[::core::mem::offset_of!(SpriteCollisionInfo, sprite) - 0usize];
-	["Offset of field: SpriteCollisionInfo::other"][::core::mem::offset_of!(SpriteCollisionInfo, other) - 8usize];
+	["Offset of field: SpriteCollisionInfo::other"][::core::mem::offset_of!(SpriteCollisionInfo, other) - 4usize];
 	["Offset of field: SpriteCollisionInfo::responseType"]
-		[::core::mem::offset_of!(SpriteCollisionInfo, responseType) - 16usize];
+		[::core::mem::offset_of!(SpriteCollisionInfo, responseType) - 8usize];
 	["Offset of field: SpriteCollisionInfo::overlaps"]
-		[::core::mem::offset_of!(SpriteCollisionInfo, overlaps) - 20usize];
-	["Offset of field: SpriteCollisionInfo::ti"][::core::mem::offset_of!(SpriteCollisionInfo, ti) - 24usize];
-	["Offset of field: SpriteCollisionInfo::move_"][::core::mem::offset_of!(SpriteCollisionInfo, move_) - 28usize];
+		[::core::mem::offset_of!(SpriteCollisionInfo, overlaps) - 9usize];
+	["Offset of field: SpriteCollisionInfo::ti"][::core::mem::offset_of!(SpriteCollisionInfo, ti) - 12usize];
+	["Offset of field: SpriteCollisionInfo::move_"][::core::mem::offset_of!(SpriteCollisionInfo, move_) - 16usize];
 	["Offset of field: SpriteCollisionInfo::normal"]
-		[::core::mem::offset_of!(SpriteCollisionInfo, normal) - 36usize];
-	["Offset of field: SpriteCollisionInfo::touch"][::core::mem::offset_of!(SpriteCollisionInfo, touch) - 44usize];
+		[::core::mem::offset_of!(SpriteCollisionInfo, normal) - 24usize];
+	["Offset of field: SpriteCollisionInfo::touch"][::core::mem::offset_of!(SpriteCollisionInfo, touch) - 32usize];
 	["Offset of field: SpriteCollisionInfo::spriteRect"]
-		[::core::mem::offset_of!(SpriteCollisionInfo, spriteRect) - 52usize];
+		[::core::mem::offset_of!(SpriteCollisionInfo, spriteRect) - 40usize];
 	["Offset of field: SpriteCollisionInfo::otherRect"]
-		[::core::mem::offset_of!(SpriteCollisionInfo, otherRect) - 68usize];
+		[::core::mem::offset_of!(SpriteCollisionInfo, otherRect) - 56usize];
 };
 #[repr(C)]
-#[derive(PartialOrd, PartialEq)]
 #[must_use]
 pub struct SpriteQueryInfo {
 	pub sprite: *mut Sprite,
@@ -3337,14 +3316,14 @@ pub struct SpriteQueryInfo {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of SpriteQueryInfo"][::core::mem::size_of::<SpriteQueryInfo>() - 32usize];
-	["Alignment of SpriteQueryInfo"][::core::mem::align_of::<SpriteQueryInfo>() - 8usize];
+	["Size of SpriteQueryInfo"][::core::mem::size_of::<SpriteQueryInfo>() - 28usize];
+	["Alignment of SpriteQueryInfo"][::core::mem::align_of::<SpriteQueryInfo>() - 4usize];
 	["Offset of field: SpriteQueryInfo::sprite"][::core::mem::offset_of!(SpriteQueryInfo, sprite) - 0usize];
-	["Offset of field: SpriteQueryInfo::ti1"][::core::mem::offset_of!(SpriteQueryInfo, ti1) - 8usize];
-	["Offset of field: SpriteQueryInfo::ti2"][::core::mem::offset_of!(SpriteQueryInfo, ti2) - 12usize];
+	["Offset of field: SpriteQueryInfo::ti1"][::core::mem::offset_of!(SpriteQueryInfo, ti1) - 4usize];
+	["Offset of field: SpriteQueryInfo::ti2"][::core::mem::offset_of!(SpriteQueryInfo, ti2) - 8usize];
 	["Offset of field: SpriteQueryInfo::entryPoint"]
-		[::core::mem::offset_of!(SpriteQueryInfo, entryPoint) - 16usize];
-	["Offset of field: SpriteQueryInfo::exitPoint"][::core::mem::offset_of!(SpriteQueryInfo, exitPoint) - 24usize];
+		[::core::mem::offset_of!(SpriteQueryInfo, entryPoint) - 12usize];
+	["Offset of field: SpriteQueryInfo::exitPoint"][::core::mem::offset_of!(SpriteQueryInfo, exitPoint) - 20usize];
 };
 pub type SpriteDrawFunction =
 	::core::option::Option<unsafe extern "C" fn(sprite: *mut Sprite, bounds: Rect, drawrect: Rect)>;
@@ -3353,7 +3332,6 @@ pub type SpriteCollisionFilterProc = ::core::option::Option<unsafe extern "C" fn
                                                                                  other: *mut Sprite)
                                                                                  -> SpriteCollisionResponseType>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSprite {
 	/**
@@ -3958,119 +3936,118 @@ pub struct PlaydateSprite {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSprite"][::core::mem::size_of::<PlaydateSprite>() - 504usize];
-	["Alignment of PlaydateSprite"][::core::mem::align_of::<PlaydateSprite>() - 8usize];
+	["Size of PlaydateSprite"][::core::mem::size_of::<PlaydateSprite>() - 252usize];
+	["Alignment of PlaydateSprite"][::core::mem::align_of::<PlaydateSprite>() - 4usize];
 	["Offset of field: PlaydateSprite::setAlwaysRedraw"]
 		[::core::mem::offset_of!(PlaydateSprite, setAlwaysRedraw) - 0usize];
 	["Offset of field: PlaydateSprite::addDirtyRect"]
-		[::core::mem::offset_of!(PlaydateSprite, addDirtyRect) - 8usize];
+		[::core::mem::offset_of!(PlaydateSprite, addDirtyRect) - 4usize];
 	["Offset of field: PlaydateSprite::drawSprites"]
-		[::core::mem::offset_of!(PlaydateSprite, drawSprites) - 16usize];
+		[::core::mem::offset_of!(PlaydateSprite, drawSprites) - 8usize];
 	["Offset of field: PlaydateSprite::updateAndDrawSprites"]
-		[::core::mem::offset_of!(PlaydateSprite, updateAndDrawSprites) - 24usize];
-	["Offset of field: PlaydateSprite::newSprite"][::core::mem::offset_of!(PlaydateSprite, newSprite) - 32usize];
-	["Offset of field: PlaydateSprite::freeSprite"][::core::mem::offset_of!(PlaydateSprite, freeSprite) - 40usize];
-	["Offset of field: PlaydateSprite::copy"][::core::mem::offset_of!(PlaydateSprite, copy) - 48usize];
-	["Offset of field: PlaydateSprite::addSprite"][::core::mem::offset_of!(PlaydateSprite, addSprite) - 56usize];
+		[::core::mem::offset_of!(PlaydateSprite, updateAndDrawSprites) - 12usize];
+	["Offset of field: PlaydateSprite::newSprite"][::core::mem::offset_of!(PlaydateSprite, newSprite) - 16usize];
+	["Offset of field: PlaydateSprite::freeSprite"][::core::mem::offset_of!(PlaydateSprite, freeSprite) - 20usize];
+	["Offset of field: PlaydateSprite::copy"][::core::mem::offset_of!(PlaydateSprite, copy) - 24usize];
+	["Offset of field: PlaydateSprite::addSprite"][::core::mem::offset_of!(PlaydateSprite, addSprite) - 28usize];
 	["Offset of field: PlaydateSprite::removeSprite"]
-		[::core::mem::offset_of!(PlaydateSprite, removeSprite) - 64usize];
+		[::core::mem::offset_of!(PlaydateSprite, removeSprite) - 32usize];
 	["Offset of field: PlaydateSprite::removeSprites"]
-		[::core::mem::offset_of!(PlaydateSprite, removeSprites) - 72usize];
+		[::core::mem::offset_of!(PlaydateSprite, removeSprites) - 36usize];
 	["Offset of field: PlaydateSprite::removeAllSprites"]
-		[::core::mem::offset_of!(PlaydateSprite, removeAllSprites) - 80usize];
+		[::core::mem::offset_of!(PlaydateSprite, removeAllSprites) - 40usize];
 	["Offset of field: PlaydateSprite::getSpriteCount"]
-		[::core::mem::offset_of!(PlaydateSprite, getSpriteCount) - 88usize];
-	["Offset of field: PlaydateSprite::setBounds"][::core::mem::offset_of!(PlaydateSprite, setBounds) - 96usize];
-	["Offset of field: PlaydateSprite::getBounds"][::core::mem::offset_of!(PlaydateSprite, getBounds) - 104usize];
-	["Offset of field: PlaydateSprite::moveTo"][::core::mem::offset_of!(PlaydateSprite, moveTo) - 112usize];
-	["Offset of field: PlaydateSprite::moveBy"][::core::mem::offset_of!(PlaydateSprite, moveBy) - 120usize];
-	["Offset of field: PlaydateSprite::setImage"][::core::mem::offset_of!(PlaydateSprite, setImage) - 128usize];
-	["Offset of field: PlaydateSprite::getImage"][::core::mem::offset_of!(PlaydateSprite, getImage) - 136usize];
-	["Offset of field: PlaydateSprite::setSize"][::core::mem::offset_of!(PlaydateSprite, setSize) - 144usize];
-	["Offset of field: PlaydateSprite::setZIndex"][::core::mem::offset_of!(PlaydateSprite, setZIndex) - 152usize];
-	["Offset of field: PlaydateSprite::getZIndex"][::core::mem::offset_of!(PlaydateSprite, getZIndex) - 160usize];
+		[::core::mem::offset_of!(PlaydateSprite, getSpriteCount) - 44usize];
+	["Offset of field: PlaydateSprite::setBounds"][::core::mem::offset_of!(PlaydateSprite, setBounds) - 48usize];
+	["Offset of field: PlaydateSprite::getBounds"][::core::mem::offset_of!(PlaydateSprite, getBounds) - 52usize];
+	["Offset of field: PlaydateSprite::moveTo"][::core::mem::offset_of!(PlaydateSprite, moveTo) - 56usize];
+	["Offset of field: PlaydateSprite::moveBy"][::core::mem::offset_of!(PlaydateSprite, moveBy) - 60usize];
+	["Offset of field: PlaydateSprite::setImage"][::core::mem::offset_of!(PlaydateSprite, setImage) - 64usize];
+	["Offset of field: PlaydateSprite::getImage"][::core::mem::offset_of!(PlaydateSprite, getImage) - 68usize];
+	["Offset of field: PlaydateSprite::setSize"][::core::mem::offset_of!(PlaydateSprite, setSize) - 72usize];
+	["Offset of field: PlaydateSprite::setZIndex"][::core::mem::offset_of!(PlaydateSprite, setZIndex) - 76usize];
+	["Offset of field: PlaydateSprite::getZIndex"][::core::mem::offset_of!(PlaydateSprite, getZIndex) - 80usize];
 	["Offset of field: PlaydateSprite::setDrawMode"]
-		[::core::mem::offset_of!(PlaydateSprite, setDrawMode) - 168usize];
+		[::core::mem::offset_of!(PlaydateSprite, setDrawMode) - 84usize];
 	["Offset of field: PlaydateSprite::setImageFlip"]
-		[::core::mem::offset_of!(PlaydateSprite, setImageFlip) - 176usize];
+		[::core::mem::offset_of!(PlaydateSprite, setImageFlip) - 88usize];
 	["Offset of field: PlaydateSprite::getImageFlip"]
-		[::core::mem::offset_of!(PlaydateSprite, getImageFlip) - 184usize];
-	["Offset of field: PlaydateSprite::setStencil"]
-		[::core::mem::offset_of!(PlaydateSprite, setStencil) - 192usize];
+		[::core::mem::offset_of!(PlaydateSprite, getImageFlip) - 92usize];
+	["Offset of field: PlaydateSprite::setStencil"][::core::mem::offset_of!(PlaydateSprite, setStencil) - 96usize];
 	["Offset of field: PlaydateSprite::setClipRect"]
-		[::core::mem::offset_of!(PlaydateSprite, setClipRect) - 200usize];
+		[::core::mem::offset_of!(PlaydateSprite, setClipRect) - 100usize];
 	["Offset of field: PlaydateSprite::clearClipRect"]
-		[::core::mem::offset_of!(PlaydateSprite, clearClipRect) - 208usize];
+		[::core::mem::offset_of!(PlaydateSprite, clearClipRect) - 104usize];
 	["Offset of field: PlaydateSprite::setClipRectsInRange"]
-		[::core::mem::offset_of!(PlaydateSprite, setClipRectsInRange) - 216usize];
+		[::core::mem::offset_of!(PlaydateSprite, setClipRectsInRange) - 108usize];
 	["Offset of field: PlaydateSprite::clearClipRectsInRange"]
-		[::core::mem::offset_of!(PlaydateSprite, clearClipRectsInRange) - 224usize];
+		[::core::mem::offset_of!(PlaydateSprite, clearClipRectsInRange) - 112usize];
 	["Offset of field: PlaydateSprite::setUpdatesEnabled"]
-		[::core::mem::offset_of!(PlaydateSprite, setUpdatesEnabled) - 232usize];
+		[::core::mem::offset_of!(PlaydateSprite, setUpdatesEnabled) - 116usize];
 	["Offset of field: PlaydateSprite::updatesEnabled"]
-		[::core::mem::offset_of!(PlaydateSprite, updatesEnabled) - 240usize];
+		[::core::mem::offset_of!(PlaydateSprite, updatesEnabled) - 120usize];
 	["Offset of field: PlaydateSprite::setCollisionsEnabled"]
-		[::core::mem::offset_of!(PlaydateSprite, setCollisionsEnabled) - 248usize];
+		[::core::mem::offset_of!(PlaydateSprite, setCollisionsEnabled) - 124usize];
 	["Offset of field: PlaydateSprite::collisionsEnabled"]
-		[::core::mem::offset_of!(PlaydateSprite, collisionsEnabled) - 256usize];
+		[::core::mem::offset_of!(PlaydateSprite, collisionsEnabled) - 128usize];
 	["Offset of field: PlaydateSprite::setVisible"]
-		[::core::mem::offset_of!(PlaydateSprite, setVisible) - 264usize];
-	["Offset of field: PlaydateSprite::isVisible"][::core::mem::offset_of!(PlaydateSprite, isVisible) - 272usize];
-	["Offset of field: PlaydateSprite::setOpaque"][::core::mem::offset_of!(PlaydateSprite, setOpaque) - 280usize];
-	["Offset of field: PlaydateSprite::markDirty"][::core::mem::offset_of!(PlaydateSprite, markDirty) - 288usize];
-	["Offset of field: PlaydateSprite::setTag"][::core::mem::offset_of!(PlaydateSprite, setTag) - 296usize];
-	["Offset of field: PlaydateSprite::getTag"][::core::mem::offset_of!(PlaydateSprite, getTag) - 304usize];
+		[::core::mem::offset_of!(PlaydateSprite, setVisible) - 132usize];
+	["Offset of field: PlaydateSprite::isVisible"][::core::mem::offset_of!(PlaydateSprite, isVisible) - 136usize];
+	["Offset of field: PlaydateSprite::setOpaque"][::core::mem::offset_of!(PlaydateSprite, setOpaque) - 140usize];
+	["Offset of field: PlaydateSprite::markDirty"][::core::mem::offset_of!(PlaydateSprite, markDirty) - 144usize];
+	["Offset of field: PlaydateSprite::setTag"][::core::mem::offset_of!(PlaydateSprite, setTag) - 148usize];
+	["Offset of field: PlaydateSprite::getTag"][::core::mem::offset_of!(PlaydateSprite, getTag) - 152usize];
 	["Offset of field: PlaydateSprite::setIgnoresDrawOffset"]
-		[::core::mem::offset_of!(PlaydateSprite, setIgnoresDrawOffset) - 312usize];
+		[::core::mem::offset_of!(PlaydateSprite, setIgnoresDrawOffset) - 156usize];
 	["Offset of field: PlaydateSprite::setUpdateFunction"]
-		[::core::mem::offset_of!(PlaydateSprite, setUpdateFunction) - 320usize];
+		[::core::mem::offset_of!(PlaydateSprite, setUpdateFunction) - 160usize];
 	["Offset of field: PlaydateSprite::setDrawFunction"]
-		[::core::mem::offset_of!(PlaydateSprite, setDrawFunction) - 328usize];
+		[::core::mem::offset_of!(PlaydateSprite, setDrawFunction) - 164usize];
 	["Offset of field: PlaydateSprite::getPosition"]
-		[::core::mem::offset_of!(PlaydateSprite, getPosition) - 336usize];
+		[::core::mem::offset_of!(PlaydateSprite, getPosition) - 168usize];
 	["Offset of field: PlaydateSprite::resetCollisionWorld"]
-		[::core::mem::offset_of!(PlaydateSprite, resetCollisionWorld) - 344usize];
+		[::core::mem::offset_of!(PlaydateSprite, resetCollisionWorld) - 172usize];
 	["Offset of field: PlaydateSprite::setCollideRect"]
-		[::core::mem::offset_of!(PlaydateSprite, setCollideRect) - 352usize];
+		[::core::mem::offset_of!(PlaydateSprite, setCollideRect) - 176usize];
 	["Offset of field: PlaydateSprite::getCollideRect"]
-		[::core::mem::offset_of!(PlaydateSprite, getCollideRect) - 360usize];
+		[::core::mem::offset_of!(PlaydateSprite, getCollideRect) - 180usize];
 	["Offset of field: PlaydateSprite::clearCollideRect"]
-		[::core::mem::offset_of!(PlaydateSprite, clearCollideRect) - 368usize];
+		[::core::mem::offset_of!(PlaydateSprite, clearCollideRect) - 184usize];
 	["Offset of field: PlaydateSprite::setCollisionResponseFunction"]
-		[::core::mem::offset_of!(PlaydateSprite, setCollisionResponseFunction) - 376usize];
+		[::core::mem::offset_of!(PlaydateSprite, setCollisionResponseFunction) - 188usize];
 	["Offset of field: PlaydateSprite::checkCollisions"]
-		[::core::mem::offset_of!(PlaydateSprite, checkCollisions) - 384usize];
+		[::core::mem::offset_of!(PlaydateSprite, checkCollisions) - 192usize];
 	["Offset of field: PlaydateSprite::moveWithCollisions"]
-		[::core::mem::offset_of!(PlaydateSprite, moveWithCollisions) - 392usize];
+		[::core::mem::offset_of!(PlaydateSprite, moveWithCollisions) - 196usize];
 	["Offset of field: PlaydateSprite::querySpritesAtPoint"]
-		[::core::mem::offset_of!(PlaydateSprite, querySpritesAtPoint) - 400usize];
+		[::core::mem::offset_of!(PlaydateSprite, querySpritesAtPoint) - 200usize];
 	["Offset of field: PlaydateSprite::querySpritesInRect"]
-		[::core::mem::offset_of!(PlaydateSprite, querySpritesInRect) - 408usize];
+		[::core::mem::offset_of!(PlaydateSprite, querySpritesInRect) - 204usize];
 	["Offset of field: PlaydateSprite::querySpritesAlongLine"]
-		[::core::mem::offset_of!(PlaydateSprite, querySpritesAlongLine) - 416usize];
+		[::core::mem::offset_of!(PlaydateSprite, querySpritesAlongLine) - 208usize];
 	["Offset of field: PlaydateSprite::querySpriteInfoAlongLine"]
-		[::core::mem::offset_of!(PlaydateSprite, querySpriteInfoAlongLine) - 424usize];
+		[::core::mem::offset_of!(PlaydateSprite, querySpriteInfoAlongLine) - 212usize];
 	["Offset of field: PlaydateSprite::overlappingSprites"]
-		[::core::mem::offset_of!(PlaydateSprite, overlappingSprites) - 432usize];
+		[::core::mem::offset_of!(PlaydateSprite, overlappingSprites) - 216usize];
 	["Offset of field: PlaydateSprite::allOverlappingSprites"]
-		[::core::mem::offset_of!(PlaydateSprite, allOverlappingSprites) - 440usize];
+		[::core::mem::offset_of!(PlaydateSprite, allOverlappingSprites) - 220usize];
 	["Offset of field: PlaydateSprite::setStencilPattern"]
-		[::core::mem::offset_of!(PlaydateSprite, setStencilPattern) - 448usize];
+		[::core::mem::offset_of!(PlaydateSprite, setStencilPattern) - 224usize];
 	["Offset of field: PlaydateSprite::clearStencil"]
-		[::core::mem::offset_of!(PlaydateSprite, clearStencil) - 456usize];
+		[::core::mem::offset_of!(PlaydateSprite, clearStencil) - 228usize];
 	["Offset of field: PlaydateSprite::setUserdata"]
-		[::core::mem::offset_of!(PlaydateSprite, setUserdata) - 464usize];
+		[::core::mem::offset_of!(PlaydateSprite, setUserdata) - 232usize];
 	["Offset of field: PlaydateSprite::getUserdata"]
-		[::core::mem::offset_of!(PlaydateSprite, getUserdata) - 472usize];
+		[::core::mem::offset_of!(PlaydateSprite, getUserdata) - 236usize];
 	["Offset of field: PlaydateSprite::setStencilImage"]
-		[::core::mem::offset_of!(PlaydateSprite, setStencilImage) - 480usize];
-	["Offset of field: PlaydateSprite::setCenter"][::core::mem::offset_of!(PlaydateSprite, setCenter) - 488usize];
-	["Offset of field: PlaydateSprite::getCenter"][::core::mem::offset_of!(PlaydateSprite, getCenter) - 496usize];
+		[::core::mem::offset_of!(PlaydateSprite, setStencilImage) - 240usize];
+	["Offset of field: PlaydateSprite::setCenter"][::core::mem::offset_of!(PlaydateSprite, setCenter) - 244usize];
+	["Offset of field: PlaydateSprite::getCenter"][::core::mem::offset_of!(PlaydateSprite, getCenter) - 248usize];
 };
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum SoundFormat {
 	Mono8bit = 0,
 	Stereo8bit = 1,
@@ -4088,7 +4065,6 @@ pub struct SoundSource {
 pub type SndCallbackProc =
 	::core::option::Option<unsafe extern "C" fn(c: *mut SoundSource, userdata: *mut core::ffi::c_void)>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundSource {
 	/**
@@ -4124,16 +4100,16 @@ pub struct PlaydateSoundSource {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundSource"][::core::mem::size_of::<PlaydateSoundSource>() - 32usize];
-	["Alignment of PlaydateSoundSource"][::core::mem::align_of::<PlaydateSoundSource>() - 8usize];
+	["Size of PlaydateSoundSource"][::core::mem::size_of::<PlaydateSoundSource>() - 16usize];
+	["Alignment of PlaydateSoundSource"][::core::mem::align_of::<PlaydateSoundSource>() - 4usize];
 	["Offset of field: PlaydateSoundSource::setVolume"]
 		[::core::mem::offset_of!(PlaydateSoundSource, setVolume) - 0usize];
 	["Offset of field: PlaydateSoundSource::getVolume"]
-		[::core::mem::offset_of!(PlaydateSoundSource, getVolume) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundSource, getVolume) - 4usize];
 	["Offset of field: PlaydateSoundSource::isPlaying"]
-		[::core::mem::offset_of!(PlaydateSoundSource, isPlaying) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundSource, isPlaying) - 8usize];
 	["Offset of field: PlaydateSoundSource::setFinishCallback"]
-		[::core::mem::offset_of!(PlaydateSoundSource, setFinishCallback) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundSource, setFinishCallback) - 12usize];
 };
 #[repr(C)]
 #[must_use]
@@ -4141,7 +4117,6 @@ pub struct FilePlayer {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundFileplayer {
     /**
@@ -4388,52 +4363,52 @@ pub struct PlaydateSoundFileplayer {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundFileplayer"][::core::mem::size_of::<PlaydateSoundFileplayer>() - 176usize];
-	["Alignment of PlaydateSoundFileplayer"][::core::mem::align_of::<PlaydateSoundFileplayer>() - 8usize];
+	["Size of PlaydateSoundFileplayer"][::core::mem::size_of::<PlaydateSoundFileplayer>() - 88usize];
+	["Alignment of PlaydateSoundFileplayer"][::core::mem::align_of::<PlaydateSoundFileplayer>() - 4usize];
 	["Offset of field: PlaydateSoundFileplayer::newPlayer"]
 		[::core::mem::offset_of!(PlaydateSoundFileplayer, newPlayer) - 0usize];
 	["Offset of field: PlaydateSoundFileplayer::freePlayer"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, freePlayer) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, freePlayer) - 4usize];
 	["Offset of field: PlaydateSoundFileplayer::loadIntoPlayer"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, loadIntoPlayer) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, loadIntoPlayer) - 8usize];
 	["Offset of field: PlaydateSoundFileplayer::setBufferLength"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, setBufferLength) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, setBufferLength) - 12usize];
 	["Offset of field: PlaydateSoundFileplayer::play"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, play) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, play) - 16usize];
 	["Offset of field: PlaydateSoundFileplayer::isPlaying"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, isPlaying) - 40usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, isPlaying) - 20usize];
 	["Offset of field: PlaydateSoundFileplayer::pause"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, pause) - 48usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, pause) - 24usize];
 	["Offset of field: PlaydateSoundFileplayer::stop"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, stop) - 56usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, stop) - 28usize];
 	["Offset of field: PlaydateSoundFileplayer::setVolume"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, setVolume) - 64usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, setVolume) - 32usize];
 	["Offset of field: PlaydateSoundFileplayer::getVolume"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, getVolume) - 72usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, getVolume) - 36usize];
 	["Offset of field: PlaydateSoundFileplayer::getLength"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, getLength) - 80usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, getLength) - 40usize];
 	["Offset of field: PlaydateSoundFileplayer::setOffset"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, setOffset) - 88usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, setOffset) - 44usize];
 	["Offset of field: PlaydateSoundFileplayer::setRate"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, setRate) - 96usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, setRate) - 48usize];
 	["Offset of field: PlaydateSoundFileplayer::setLoopRange"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, setLoopRange) - 104usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, setLoopRange) - 52usize];
 	["Offset of field: PlaydateSoundFileplayer::didUnderrun"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, didUnderrun) - 112usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, didUnderrun) - 56usize];
 	["Offset of field: PlaydateSoundFileplayer::setFinishCallback"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, setFinishCallback) - 120usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, setFinishCallback) - 60usize];
 	["Offset of field: PlaydateSoundFileplayer::setLoopCallback"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, setLoopCallback) - 128usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, setLoopCallback) - 64usize];
 	["Offset of field: PlaydateSoundFileplayer::getOffset"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, getOffset) - 136usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, getOffset) - 68usize];
 	["Offset of field: PlaydateSoundFileplayer::getRate"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, getRate) - 144usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, getRate) - 72usize];
 	["Offset of field: PlaydateSoundFileplayer::setStopOnUnderrun"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, setStopOnUnderrun) - 152usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, setStopOnUnderrun) - 76usize];
 	["Offset of field: PlaydateSoundFileplayer::fadeVolume"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, fadeVolume) - 160usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, fadeVolume) - 80usize];
 	["Offset of field: PlaydateSoundFileplayer::setMP3StreamSource"]
-		[::core::mem::offset_of!(PlaydateSoundFileplayer, setMP3StreamSource) - 168usize];
+		[::core::mem::offset_of!(PlaydateSoundFileplayer, setMP3StreamSource) - 84usize];
 };
 #[repr(C)]
 #[must_use]
@@ -4446,7 +4421,6 @@ pub struct SamplePlayer {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundSample {
 	/**
@@ -4550,26 +4524,25 @@ pub struct PlaydateSoundSample {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundSample"][::core::mem::size_of::<PlaydateSoundSample>() - 64usize];
-	["Alignment of PlaydateSoundSample"][::core::mem::align_of::<PlaydateSoundSample>() - 8usize];
+	["Size of PlaydateSoundSample"][::core::mem::size_of::<PlaydateSoundSample>() - 32usize];
+	["Alignment of PlaydateSoundSample"][::core::mem::align_of::<PlaydateSoundSample>() - 4usize];
 	["Offset of field: PlaydateSoundSample::newSampleBuffer"]
 		[::core::mem::offset_of!(PlaydateSoundSample, newSampleBuffer) - 0usize];
 	["Offset of field: PlaydateSoundSample::loadIntoSample"]
-		[::core::mem::offset_of!(PlaydateSoundSample, loadIntoSample) - 8usize];
-	["Offset of field: PlaydateSoundSample::load"][::core::mem::offset_of!(PlaydateSoundSample, load) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundSample, loadIntoSample) - 4usize];
+	["Offset of field: PlaydateSoundSample::load"][::core::mem::offset_of!(PlaydateSoundSample, load) - 8usize];
 	["Offset of field: PlaydateSoundSample::newSampleFromData"]
-		[::core::mem::offset_of!(PlaydateSoundSample, newSampleFromData) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundSample, newSampleFromData) - 12usize];
 	["Offset of field: PlaydateSoundSample::getData"]
-		[::core::mem::offset_of!(PlaydateSoundSample, getData) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundSample, getData) - 16usize];
 	["Offset of field: PlaydateSoundSample::freeSample"]
-		[::core::mem::offset_of!(PlaydateSoundSample, freeSample) - 40usize];
+		[::core::mem::offset_of!(PlaydateSoundSample, freeSample) - 20usize];
 	["Offset of field: PlaydateSoundSample::getLength"]
-		[::core::mem::offset_of!(PlaydateSoundSample, getLength) - 48usize];
+		[::core::mem::offset_of!(PlaydateSoundSample, getLength) - 24usize];
 	["Offset of field: PlaydateSoundSample::decompress"]
-		[::core::mem::offset_of!(PlaydateSoundSample, decompress) - 56usize];
+		[::core::mem::offset_of!(PlaydateSoundSample, decompress) - 28usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundSampleplayer {
 	/**
@@ -4739,42 +4712,42 @@ pub struct PlaydateSoundSampleplayer {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundSampleplayer"][::core::mem::size_of::<PlaydateSoundSampleplayer>() - 136usize];
-	["Alignment of PlaydateSoundSampleplayer"][::core::mem::align_of::<PlaydateSoundSampleplayer>() - 8usize];
+	["Size of PlaydateSoundSampleplayer"][::core::mem::size_of::<PlaydateSoundSampleplayer>() - 68usize];
+	["Alignment of PlaydateSoundSampleplayer"][::core::mem::align_of::<PlaydateSoundSampleplayer>() - 4usize];
 	["Offset of field: PlaydateSoundSampleplayer::newPlayer"]
 		[::core::mem::offset_of!(PlaydateSoundSampleplayer, newPlayer) - 0usize];
 	["Offset of field: PlaydateSoundSampleplayer::freePlayer"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, freePlayer) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, freePlayer) - 4usize];
 	["Offset of field: PlaydateSoundSampleplayer::setSample"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setSample) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setSample) - 8usize];
 	["Offset of field: PlaydateSoundSampleplayer::play"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, play) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, play) - 12usize];
 	["Offset of field: PlaydateSoundSampleplayer::isPlaying"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, isPlaying) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, isPlaying) - 16usize];
 	["Offset of field: PlaydateSoundSampleplayer::stop"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, stop) - 40usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, stop) - 20usize];
 	["Offset of field: PlaydateSoundSampleplayer::setVolume"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setVolume) - 48usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setVolume) - 24usize];
 	["Offset of field: PlaydateSoundSampleplayer::getVolume"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, getVolume) - 56usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, getVolume) - 28usize];
 	["Offset of field: PlaydateSoundSampleplayer::getLength"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, getLength) - 64usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, getLength) - 32usize];
 	["Offset of field: PlaydateSoundSampleplayer::setOffset"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setOffset) - 72usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setOffset) - 36usize];
 	["Offset of field: PlaydateSoundSampleplayer::setRate"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setRate) - 80usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setRate) - 40usize];
 	["Offset of field: PlaydateSoundSampleplayer::setPlayRange"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setPlayRange) - 88usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setPlayRange) - 44usize];
 	["Offset of field: PlaydateSoundSampleplayer::setFinishCallback"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setFinishCallback) - 96usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setFinishCallback) - 48usize];
 	["Offset of field: PlaydateSoundSampleplayer::setLoopCallback"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setLoopCallback) - 104usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setLoopCallback) - 52usize];
 	["Offset of field: PlaydateSoundSampleplayer::getOffset"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, getOffset) - 112usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, getOffset) - 56usize];
 	["Offset of field: PlaydateSoundSampleplayer::getRate"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, getRate) - 120usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, getRate) - 60usize];
 	["Offset of field: PlaydateSoundSampleplayer::setPaused"]
-		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setPaused) - 128usize];
+		[::core::mem::offset_of!(PlaydateSoundSampleplayer, setPaused) - 64usize];
 };
 #[repr(C)]
 #[must_use]
@@ -4799,7 +4772,6 @@ pub type SignalNoteOffFunc = ::core::option::Option<unsafe extern "C" fn(userdat
                                                                          offset: core::ffi::c_int)>;
 pub type SignalDeallocFunc = ::core::option::Option<unsafe extern "C" fn(userdata: *mut core::ffi::c_void)>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundSignal {
 	/**
@@ -4873,25 +4845,25 @@ pub struct PlaydateSoundSignal {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundSignal"][::core::mem::size_of::<PlaydateSoundSignal>() - 48usize];
-	["Alignment of PlaydateSoundSignal"][::core::mem::align_of::<PlaydateSoundSignal>() - 8usize];
+	["Size of PlaydateSoundSignal"][::core::mem::size_of::<PlaydateSoundSignal>() - 24usize];
+	["Alignment of PlaydateSoundSignal"][::core::mem::align_of::<PlaydateSoundSignal>() - 4usize];
 	["Offset of field: PlaydateSoundSignal::newSignal"]
 		[::core::mem::offset_of!(PlaydateSoundSignal, newSignal) - 0usize];
 	["Offset of field: PlaydateSoundSignal::freeSignal"]
-		[::core::mem::offset_of!(PlaydateSoundSignal, freeSignal) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundSignal, freeSignal) - 4usize];
 	["Offset of field: PlaydateSoundSignal::getValue"]
-		[::core::mem::offset_of!(PlaydateSoundSignal, getValue) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundSignal, getValue) - 8usize];
 	["Offset of field: PlaydateSoundSignal::setValueScale"]
-		[::core::mem::offset_of!(PlaydateSoundSignal, setValueScale) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundSignal, setValueScale) - 12usize];
 	["Offset of field: PlaydateSoundSignal::setValueOffset"]
-		[::core::mem::offset_of!(PlaydateSoundSignal, setValueOffset) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundSignal, setValueOffset) - 16usize];
 	["Offset of field: PlaydateSoundSignal::newSignalForValue"]
-		[::core::mem::offset_of!(PlaydateSoundSignal, newSignalForValue) - 40usize];
+		[::core::mem::offset_of!(PlaydateSoundSignal, newSignalForValue) - 20usize];
 };
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum LfoType {
 	Square = 0,
 	Triangle = 1,
@@ -4908,7 +4880,6 @@ pub struct SynthLfo {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundLfo {
     /**
@@ -5077,28 +5048,28 @@ pub struct PlaydateSoundLfo {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundLfo"][::core::mem::size_of::<PlaydateSoundLfo>() - 112usize];
-	["Alignment of PlaydateSoundLfo"][::core::mem::align_of::<PlaydateSoundLfo>() - 8usize];
+	["Size of PlaydateSoundLfo"][::core::mem::size_of::<PlaydateSoundLfo>() - 56usize];
+	["Alignment of PlaydateSoundLfo"][::core::mem::align_of::<PlaydateSoundLfo>() - 4usize];
 	["Offset of field: PlaydateSoundLfo::newLFO"][::core::mem::offset_of!(PlaydateSoundLfo, newLFO) - 0usize];
-	["Offset of field: PlaydateSoundLfo::freeLFO"][::core::mem::offset_of!(PlaydateSoundLfo, freeLFO) - 8usize];
-	["Offset of field: PlaydateSoundLfo::setType"][::core::mem::offset_of!(PlaydateSoundLfo, setType) - 16usize];
-	["Offset of field: PlaydateSoundLfo::setRate"][::core::mem::offset_of!(PlaydateSoundLfo, setRate) - 24usize];
-	["Offset of field: PlaydateSoundLfo::setPhase"][::core::mem::offset_of!(PlaydateSoundLfo, setPhase) - 32usize];
+	["Offset of field: PlaydateSoundLfo::freeLFO"][::core::mem::offset_of!(PlaydateSoundLfo, freeLFO) - 4usize];
+	["Offset of field: PlaydateSoundLfo::setType"][::core::mem::offset_of!(PlaydateSoundLfo, setType) - 8usize];
+	["Offset of field: PlaydateSoundLfo::setRate"][::core::mem::offset_of!(PlaydateSoundLfo, setRate) - 12usize];
+	["Offset of field: PlaydateSoundLfo::setPhase"][::core::mem::offset_of!(PlaydateSoundLfo, setPhase) - 16usize];
 	["Offset of field: PlaydateSoundLfo::setCenter"]
-		[::core::mem::offset_of!(PlaydateSoundLfo, setCenter) - 40usize];
-	["Offset of field: PlaydateSoundLfo::setDepth"][::core::mem::offset_of!(PlaydateSoundLfo, setDepth) - 48usize];
+		[::core::mem::offset_of!(PlaydateSoundLfo, setCenter) - 20usize];
+	["Offset of field: PlaydateSoundLfo::setDepth"][::core::mem::offset_of!(PlaydateSoundLfo, setDepth) - 24usize];
 	["Offset of field: PlaydateSoundLfo::setArpeggiation"]
-		[::core::mem::offset_of!(PlaydateSoundLfo, setArpeggiation) - 56usize];
+		[::core::mem::offset_of!(PlaydateSoundLfo, setArpeggiation) - 28usize];
 	["Offset of field: PlaydateSoundLfo::setFunction"]
-		[::core::mem::offset_of!(PlaydateSoundLfo, setFunction) - 64usize];
-	["Offset of field: PlaydateSoundLfo::setDelay"][::core::mem::offset_of!(PlaydateSoundLfo, setDelay) - 72usize];
+		[::core::mem::offset_of!(PlaydateSoundLfo, setFunction) - 32usize];
+	["Offset of field: PlaydateSoundLfo::setDelay"][::core::mem::offset_of!(PlaydateSoundLfo, setDelay) - 36usize];
 	["Offset of field: PlaydateSoundLfo::setRetrigger"]
-		[::core::mem::offset_of!(PlaydateSoundLfo, setRetrigger) - 80usize];
-	["Offset of field: PlaydateSoundLfo::getValue"][::core::mem::offset_of!(PlaydateSoundLfo, getValue) - 88usize];
+		[::core::mem::offset_of!(PlaydateSoundLfo, setRetrigger) - 40usize];
+	["Offset of field: PlaydateSoundLfo::getValue"][::core::mem::offset_of!(PlaydateSoundLfo, getValue) - 44usize];
 	["Offset of field: PlaydateSoundLfo::setGlobal"]
-		[::core::mem::offset_of!(PlaydateSoundLfo, setGlobal) - 96usize];
+		[::core::mem::offset_of!(PlaydateSoundLfo, setGlobal) - 48usize];
 	["Offset of field: PlaydateSoundLfo::setStartPhase"]
-		[::core::mem::offset_of!(PlaydateSoundLfo, setStartPhase) - 104usize];
+		[::core::mem::offset_of!(PlaydateSoundLfo, setStartPhase) - 52usize];
 };
 #[repr(C)]
 #[must_use]
@@ -5106,7 +5077,6 @@ pub struct SynthEnvelope {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEnvelope {
 	/**
@@ -5219,37 +5189,37 @@ pub struct PlaydateSoundEnvelope {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundEnvelope"][::core::mem::size_of::<PlaydateSoundEnvelope>() - 96usize];
-	["Alignment of PlaydateSoundEnvelope"][::core::mem::align_of::<PlaydateSoundEnvelope>() - 8usize];
+	["Size of PlaydateSoundEnvelope"][::core::mem::size_of::<PlaydateSoundEnvelope>() - 48usize];
+	["Alignment of PlaydateSoundEnvelope"][::core::mem::align_of::<PlaydateSoundEnvelope>() - 4usize];
 	["Offset of field: PlaydateSoundEnvelope::newEnvelope"]
 		[::core::mem::offset_of!(PlaydateSoundEnvelope, newEnvelope) - 0usize];
 	["Offset of field: PlaydateSoundEnvelope::freeEnvelope"]
-		[::core::mem::offset_of!(PlaydateSoundEnvelope, freeEnvelope) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundEnvelope, freeEnvelope) - 4usize];
 	["Offset of field: PlaydateSoundEnvelope::setAttack"]
-		[::core::mem::offset_of!(PlaydateSoundEnvelope, setAttack) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundEnvelope, setAttack) - 8usize];
 	["Offset of field: PlaydateSoundEnvelope::setDecay"]
-		[::core::mem::offset_of!(PlaydateSoundEnvelope, setDecay) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundEnvelope, setDecay) - 12usize];
 	["Offset of field: PlaydateSoundEnvelope::setSustain"]
-		[::core::mem::offset_of!(PlaydateSoundEnvelope, setSustain) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundEnvelope, setSustain) - 16usize];
 	["Offset of field: PlaydateSoundEnvelope::setRelease"]
-		[::core::mem::offset_of!(PlaydateSoundEnvelope, setRelease) - 40usize];
+		[::core::mem::offset_of!(PlaydateSoundEnvelope, setRelease) - 20usize];
 	["Offset of field: PlaydateSoundEnvelope::setLegato"]
-		[::core::mem::offset_of!(PlaydateSoundEnvelope, setLegato) - 48usize];
+		[::core::mem::offset_of!(PlaydateSoundEnvelope, setLegato) - 24usize];
 	["Offset of field: PlaydateSoundEnvelope::setRetrigger"]
-		[::core::mem::offset_of!(PlaydateSoundEnvelope, setRetrigger) - 56usize];
+		[::core::mem::offset_of!(PlaydateSoundEnvelope, setRetrigger) - 28usize];
 	["Offset of field: PlaydateSoundEnvelope::getValue"]
-		[::core::mem::offset_of!(PlaydateSoundEnvelope, getValue) - 64usize];
+		[::core::mem::offset_of!(PlaydateSoundEnvelope, getValue) - 32usize];
 	["Offset of field: PlaydateSoundEnvelope::setCurvature"]
-		[::core::mem::offset_of!(PlaydateSoundEnvelope, setCurvature) - 72usize];
+		[::core::mem::offset_of!(PlaydateSoundEnvelope, setCurvature) - 36usize];
 	["Offset of field: PlaydateSoundEnvelope::setVelocitySensitivity"]
-		[::core::mem::offset_of!(PlaydateSoundEnvelope, setVelocitySensitivity) - 80usize];
+		[::core::mem::offset_of!(PlaydateSoundEnvelope, setVelocitySensitivity) - 40usize];
 	["Offset of field: PlaydateSoundEnvelope::setRateScaling"]
-		[::core::mem::offset_of!(PlaydateSoundEnvelope, setRateScaling) - 88usize];
+		[::core::mem::offset_of!(PlaydateSoundEnvelope, setRateScaling) - 44usize];
 };
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum SoundWaveform {
 	Square = 0,
 	Triangle = 1,
@@ -5286,7 +5256,6 @@ pub struct Synth {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundSynth {
 	/**
@@ -5659,66 +5628,66 @@ pub struct PlaydateSoundSynth {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundSynth"][::core::mem::size_of::<PlaydateSoundSynth>() - 240usize];
-	["Alignment of PlaydateSoundSynth"][::core::mem::align_of::<PlaydateSoundSynth>() - 8usize];
+	["Size of PlaydateSoundSynth"][::core::mem::size_of::<PlaydateSoundSynth>() - 120usize];
+	["Alignment of PlaydateSoundSynth"][::core::mem::align_of::<PlaydateSoundSynth>() - 4usize];
 	["Offset of field: PlaydateSoundSynth::newSynth"]
 		[::core::mem::offset_of!(PlaydateSoundSynth, newSynth) - 0usize];
 	["Offset of field: PlaydateSoundSynth::freeSynth"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, freeSynth) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, freeSynth) - 4usize];
 	["Offset of field: PlaydateSoundSynth::setWaveform"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, setWaveform) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, setWaveform) - 8usize];
 	["Offset of field: PlaydateSoundSynth::setGenerator_deprecated"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, setGenerator_deprecated) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, setGenerator_deprecated) - 12usize];
 	["Offset of field: PlaydateSoundSynth::setSample"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, setSample) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, setSample) - 16usize];
 	["Offset of field: PlaydateSoundSynth::setAttackTime"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, setAttackTime) - 40usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, setAttackTime) - 20usize];
 	["Offset of field: PlaydateSoundSynth::setDecayTime"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, setDecayTime) - 48usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, setDecayTime) - 24usize];
 	["Offset of field: PlaydateSoundSynth::setSustainLevel"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, setSustainLevel) - 56usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, setSustainLevel) - 28usize];
 	["Offset of field: PlaydateSoundSynth::setReleaseTime"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, setReleaseTime) - 64usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, setReleaseTime) - 32usize];
 	["Offset of field: PlaydateSoundSynth::setTranspose"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, setTranspose) - 72usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, setTranspose) - 36usize];
 	["Offset of field: PlaydateSoundSynth::setFrequencyModulator"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, setFrequencyModulator) - 80usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, setFrequencyModulator) - 40usize];
 	["Offset of field: PlaydateSoundSynth::getFrequencyModulator"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, getFrequencyModulator) - 88usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, getFrequencyModulator) - 44usize];
 	["Offset of field: PlaydateSoundSynth::setAmplitudeModulator"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, setAmplitudeModulator) - 96usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, setAmplitudeModulator) - 48usize];
 	["Offset of field: PlaydateSoundSynth::getAmplitudeModulator"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, getAmplitudeModulator) - 104usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, getAmplitudeModulator) - 52usize];
 	["Offset of field: PlaydateSoundSynth::getParameterCount"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, getParameterCount) - 112usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, getParameterCount) - 56usize];
 	["Offset of field: PlaydateSoundSynth::setParameter"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, setParameter) - 120usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, setParameter) - 60usize];
 	["Offset of field: PlaydateSoundSynth::setParameterModulator"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, setParameterModulator) - 128usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, setParameterModulator) - 64usize];
 	["Offset of field: PlaydateSoundSynth::getParameterModulator"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, getParameterModulator) - 136usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, getParameterModulator) - 68usize];
 	["Offset of field: PlaydateSoundSynth::playNote"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, playNote) - 144usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, playNote) - 72usize];
 	["Offset of field: PlaydateSoundSynth::playMIDINote"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, playMIDINote) - 152usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, playMIDINote) - 76usize];
 	["Offset of field: PlaydateSoundSynth::noteOff"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, noteOff) - 160usize];
-	["Offset of field: PlaydateSoundSynth::stop"][::core::mem::offset_of!(PlaydateSoundSynth, stop) - 168usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, noteOff) - 80usize];
+	["Offset of field: PlaydateSoundSynth::stop"][::core::mem::offset_of!(PlaydateSoundSynth, stop) - 84usize];
 	["Offset of field: PlaydateSoundSynth::setVolume"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, setVolume) - 176usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, setVolume) - 88usize];
 	["Offset of field: PlaydateSoundSynth::getVolume"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, getVolume) - 184usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, getVolume) - 92usize];
 	["Offset of field: PlaydateSoundSynth::isPlaying"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, isPlaying) - 192usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, isPlaying) - 96usize];
 	["Offset of field: PlaydateSoundSynth::getEnvelope"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, getEnvelope) - 200usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, getEnvelope) - 100usize];
 	["Offset of field: PlaydateSoundSynth::setWavetable"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, setWavetable) - 208usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, setWavetable) - 104usize];
 	["Offset of field: PlaydateSoundSynth::setGenerator"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, setGenerator) - 216usize];
-	["Offset of field: PlaydateSoundSynth::copy"][::core::mem::offset_of!(PlaydateSoundSynth, copy) - 224usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, setGenerator) - 108usize];
+	["Offset of field: PlaydateSoundSynth::copy"][::core::mem::offset_of!(PlaydateSoundSynth, copy) - 112usize];
 	["Offset of field: PlaydateSoundSynth::clearEnvelope"]
-		[::core::mem::offset_of!(PlaydateSoundSynth, clearEnvelope) - 232usize];
+		[::core::mem::offset_of!(PlaydateSoundSynth, clearEnvelope) - 116usize];
 };
 #[repr(C)]
 #[must_use]
@@ -5726,7 +5695,6 @@ pub struct ControlSignal {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateControlSignal {
 	/**
@@ -5789,20 +5757,20 @@ pub struct PlaydateControlSignal {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateControlSignal"][::core::mem::size_of::<PlaydateControlSignal>() - 48usize];
-	["Alignment of PlaydateControlSignal"][::core::mem::align_of::<PlaydateControlSignal>() - 8usize];
+	["Size of PlaydateControlSignal"][::core::mem::size_of::<PlaydateControlSignal>() - 24usize];
+	["Alignment of PlaydateControlSignal"][::core::mem::align_of::<PlaydateControlSignal>() - 4usize];
 	["Offset of field: PlaydateControlSignal::newSignal"]
 		[::core::mem::offset_of!(PlaydateControlSignal, newSignal) - 0usize];
 	["Offset of field: PlaydateControlSignal::freeSignal"]
-		[::core::mem::offset_of!(PlaydateControlSignal, freeSignal) - 8usize];
+		[::core::mem::offset_of!(PlaydateControlSignal, freeSignal) - 4usize];
 	["Offset of field: PlaydateControlSignal::clearEvents"]
-		[::core::mem::offset_of!(PlaydateControlSignal, clearEvents) - 16usize];
+		[::core::mem::offset_of!(PlaydateControlSignal, clearEvents) - 8usize];
 	["Offset of field: PlaydateControlSignal::addEvent"]
-		[::core::mem::offset_of!(PlaydateControlSignal, addEvent) - 24usize];
+		[::core::mem::offset_of!(PlaydateControlSignal, addEvent) - 12usize];
 	["Offset of field: PlaydateControlSignal::removeEvent"]
-		[::core::mem::offset_of!(PlaydateControlSignal, removeEvent) - 32usize];
+		[::core::mem::offset_of!(PlaydateControlSignal, removeEvent) - 16usize];
 	["Offset of field: PlaydateControlSignal::getMIDIControllerNumber"]
-		[::core::mem::offset_of!(PlaydateControlSignal, getMIDIControllerNumber) - 40usize];
+		[::core::mem::offset_of!(PlaydateControlSignal, getMIDIControllerNumber) - 20usize];
 };
 #[repr(C)]
 #[must_use]
@@ -5810,7 +5778,6 @@ pub struct SynthInstrument {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundInstrument {
 	/**
@@ -5951,34 +5918,34 @@ pub struct PlaydateSoundInstrument {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundInstrument"][::core::mem::size_of::<PlaydateSoundInstrument>() - 104usize];
-	["Alignment of PlaydateSoundInstrument"][::core::mem::align_of::<PlaydateSoundInstrument>() - 8usize];
+	["Size of PlaydateSoundInstrument"][::core::mem::size_of::<PlaydateSoundInstrument>() - 52usize];
+	["Alignment of PlaydateSoundInstrument"][::core::mem::align_of::<PlaydateSoundInstrument>() - 4usize];
 	["Offset of field: PlaydateSoundInstrument::newInstrument"]
 		[::core::mem::offset_of!(PlaydateSoundInstrument, newInstrument) - 0usize];
 	["Offset of field: PlaydateSoundInstrument::freeInstrument"]
-		[::core::mem::offset_of!(PlaydateSoundInstrument, freeInstrument) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundInstrument, freeInstrument) - 4usize];
 	["Offset of field: PlaydateSoundInstrument::addVoice"]
-		[::core::mem::offset_of!(PlaydateSoundInstrument, addVoice) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundInstrument, addVoice) - 8usize];
 	["Offset of field: PlaydateSoundInstrument::playNote"]
-		[::core::mem::offset_of!(PlaydateSoundInstrument, playNote) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundInstrument, playNote) - 12usize];
 	["Offset of field: PlaydateSoundInstrument::playMIDINote"]
-		[::core::mem::offset_of!(PlaydateSoundInstrument, playMIDINote) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundInstrument, playMIDINote) - 16usize];
 	["Offset of field: PlaydateSoundInstrument::setPitchBend"]
-		[::core::mem::offset_of!(PlaydateSoundInstrument, setPitchBend) - 40usize];
+		[::core::mem::offset_of!(PlaydateSoundInstrument, setPitchBend) - 20usize];
 	["Offset of field: PlaydateSoundInstrument::setPitchBendRange"]
-		[::core::mem::offset_of!(PlaydateSoundInstrument, setPitchBendRange) - 48usize];
+		[::core::mem::offset_of!(PlaydateSoundInstrument, setPitchBendRange) - 24usize];
 	["Offset of field: PlaydateSoundInstrument::setTranspose"]
-		[::core::mem::offset_of!(PlaydateSoundInstrument, setTranspose) - 56usize];
+		[::core::mem::offset_of!(PlaydateSoundInstrument, setTranspose) - 28usize];
 	["Offset of field: PlaydateSoundInstrument::noteOff"]
-		[::core::mem::offset_of!(PlaydateSoundInstrument, noteOff) - 64usize];
+		[::core::mem::offset_of!(PlaydateSoundInstrument, noteOff) - 32usize];
 	["Offset of field: PlaydateSoundInstrument::allNotesOff"]
-		[::core::mem::offset_of!(PlaydateSoundInstrument, allNotesOff) - 72usize];
+		[::core::mem::offset_of!(PlaydateSoundInstrument, allNotesOff) - 36usize];
 	["Offset of field: PlaydateSoundInstrument::setVolume"]
-		[::core::mem::offset_of!(PlaydateSoundInstrument, setVolume) - 80usize];
+		[::core::mem::offset_of!(PlaydateSoundInstrument, setVolume) - 40usize];
 	["Offset of field: PlaydateSoundInstrument::getVolume"]
-		[::core::mem::offset_of!(PlaydateSoundInstrument, getVolume) - 88usize];
+		[::core::mem::offset_of!(PlaydateSoundInstrument, getVolume) - 44usize];
 	["Offset of field: PlaydateSoundInstrument::activeVoiceCount"]
-		[::core::mem::offset_of!(PlaydateSoundInstrument, activeVoiceCount) - 96usize];
+		[::core::mem::offset_of!(PlaydateSoundInstrument, activeVoiceCount) - 48usize];
 };
 #[repr(C)]
 #[must_use]
@@ -5986,7 +5953,6 @@ pub struct SequenceTrack {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundTrack {
 	/**
@@ -6157,42 +6123,42 @@ pub struct PlaydateSoundTrack {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundTrack"][::core::mem::size_of::<PlaydateSoundTrack>() - 136usize];
-	["Alignment of PlaydateSoundTrack"][::core::mem::align_of::<PlaydateSoundTrack>() - 8usize];
+	["Size of PlaydateSoundTrack"][::core::mem::size_of::<PlaydateSoundTrack>() - 68usize];
+	["Alignment of PlaydateSoundTrack"][::core::mem::align_of::<PlaydateSoundTrack>() - 4usize];
 	["Offset of field: PlaydateSoundTrack::newTrack"]
 		[::core::mem::offset_of!(PlaydateSoundTrack, newTrack) - 0usize];
 	["Offset of field: PlaydateSoundTrack::freeTrack"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, freeTrack) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, freeTrack) - 4usize];
 	["Offset of field: PlaydateSoundTrack::setInstrument"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, setInstrument) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, setInstrument) - 8usize];
 	["Offset of field: PlaydateSoundTrack::getInstrument"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, getInstrument) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, getInstrument) - 12usize];
 	["Offset of field: PlaydateSoundTrack::addNoteEvent"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, addNoteEvent) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, addNoteEvent) - 16usize];
 	["Offset of field: PlaydateSoundTrack::removeNoteEvent"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, removeNoteEvent) - 40usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, removeNoteEvent) - 20usize];
 	["Offset of field: PlaydateSoundTrack::clearNotes"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, clearNotes) - 48usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, clearNotes) - 24usize];
 	["Offset of field: PlaydateSoundTrack::getControlSignalCount"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, getControlSignalCount) - 56usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, getControlSignalCount) - 28usize];
 	["Offset of field: PlaydateSoundTrack::getControlSignal"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, getControlSignal) - 64usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, getControlSignal) - 32usize];
 	["Offset of field: PlaydateSoundTrack::clearControlEvents"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, clearControlEvents) - 72usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, clearControlEvents) - 36usize];
 	["Offset of field: PlaydateSoundTrack::getPolyphony"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, getPolyphony) - 80usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, getPolyphony) - 40usize];
 	["Offset of field: PlaydateSoundTrack::activeVoiceCount"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, activeVoiceCount) - 88usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, activeVoiceCount) - 44usize];
 	["Offset of field: PlaydateSoundTrack::setMuted"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, setMuted) - 96usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, setMuted) - 48usize];
 	["Offset of field: PlaydateSoundTrack::getLength"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, getLength) - 104usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, getLength) - 52usize];
 	["Offset of field: PlaydateSoundTrack::getIndexForStep"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, getIndexForStep) - 112usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, getIndexForStep) - 56usize];
 	["Offset of field: PlaydateSoundTrack::getNoteAtIndex"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, getNoteAtIndex) - 120usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, getNoteAtIndex) - 60usize];
 	["Offset of field: PlaydateSoundTrack::getSignalForController"]
-		[::core::mem::offset_of!(PlaydateSoundTrack, getSignalForController) - 128usize];
+		[::core::mem::offset_of!(PlaydateSoundTrack, getSignalForController) - 64usize];
 };
 #[repr(C)]
 #[must_use]
@@ -6202,7 +6168,6 @@ pub struct SoundSequence {
 pub type SequenceFinishedCallback =
 	::core::option::Option<unsafe extern "C" fn(seq: *mut SoundSequence, userdata: *mut core::ffi::c_void)>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundSequence {
 	/**
@@ -6388,58 +6353,58 @@ pub struct PlaydateSoundSequence {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundSequence"][::core::mem::size_of::<PlaydateSoundSequence>() - 160usize];
-	["Alignment of PlaydateSoundSequence"][::core::mem::align_of::<PlaydateSoundSequence>() - 8usize];
+	["Size of PlaydateSoundSequence"][::core::mem::size_of::<PlaydateSoundSequence>() - 80usize];
+	["Alignment of PlaydateSoundSequence"][::core::mem::align_of::<PlaydateSoundSequence>() - 4usize];
 	["Offset of field: PlaydateSoundSequence::newSequence"]
 		[::core::mem::offset_of!(PlaydateSoundSequence, newSequence) - 0usize];
 	["Offset of field: PlaydateSoundSequence::freeSequence"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, freeSequence) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, freeSequence) - 4usize];
 	["Offset of field: PlaydateSoundSequence::loadMIDIFile"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, loadMIDIFile) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, loadMIDIFile) - 8usize];
 	["Offset of field: PlaydateSoundSequence::getTime"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, getTime) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, getTime) - 12usize];
 	["Offset of field: PlaydateSoundSequence::setTime"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, setTime) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, setTime) - 16usize];
 	["Offset of field: PlaydateSoundSequence::setLoops"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, setLoops) - 40usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, setLoops) - 20usize];
 	["Offset of field: PlaydateSoundSequence::getTempo_deprecated"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, getTempo_deprecated) - 48usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, getTempo_deprecated) - 24usize];
 	["Offset of field: PlaydateSoundSequence::setTempo"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, setTempo) - 56usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, setTempo) - 28usize];
 	["Offset of field: PlaydateSoundSequence::getTrackCount"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, getTrackCount) - 64usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, getTrackCount) - 32usize];
 	["Offset of field: PlaydateSoundSequence::addTrack"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, addTrack) - 72usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, addTrack) - 36usize];
 	["Offset of field: PlaydateSoundSequence::getTrackAtIndex"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, getTrackAtIndex) - 80usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, getTrackAtIndex) - 40usize];
 	["Offset of field: PlaydateSoundSequence::setTrackAtIndex"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, setTrackAtIndex) - 88usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, setTrackAtIndex) - 44usize];
 	["Offset of field: PlaydateSoundSequence::allNotesOff"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, allNotesOff) - 96usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, allNotesOff) - 48usize];
 	["Offset of field: PlaydateSoundSequence::isPlaying"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, isPlaying) - 104usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, isPlaying) - 52usize];
 	["Offset of field: PlaydateSoundSequence::getLength"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, getLength) - 112usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, getLength) - 56usize];
 	["Offset of field: PlaydateSoundSequence::play"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, play) - 120usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, play) - 60usize];
 	["Offset of field: PlaydateSoundSequence::stop"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, stop) - 128usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, stop) - 64usize];
 	["Offset of field: PlaydateSoundSequence::getCurrentStep"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, getCurrentStep) - 136usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, getCurrentStep) - 68usize];
 	["Offset of field: PlaydateSoundSequence::setCurrentStep"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, setCurrentStep) - 144usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, setCurrentStep) - 72usize];
 	["Offset of field: PlaydateSoundSequence::getTempo"]
-		[::core::mem::offset_of!(PlaydateSoundSequence, getTempo) - 152usize];
+		[::core::mem::offset_of!(PlaydateSoundSequence, getTempo) - 76usize];
 };
 #[repr(C)]
 #[must_use]
 pub struct TwoPoleFilter {
 	_unused: [u8; 0],
 }
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum TwoPoleFilterType {
 	LowPass = 0,
 	HighPass = 1,
@@ -6450,7 +6415,6 @@ pub enum TwoPoleFilterType {
 	HighShelf = 6,
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEffectTwopolefilter {
 	/**
@@ -6562,29 +6526,29 @@ pub struct PlaydateSoundEffectTwopolefilter {
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
 	["Size of PlaydateSoundEffectTwopolefilter"]
-		[::core::mem::size_of::<PlaydateSoundEffectTwopolefilter>() - 80usize];
+		[::core::mem::size_of::<PlaydateSoundEffectTwopolefilter>() - 40usize];
 	["Alignment of PlaydateSoundEffectTwopolefilter"]
-		[::core::mem::align_of::<PlaydateSoundEffectTwopolefilter>() - 8usize];
+		[::core::mem::align_of::<PlaydateSoundEffectTwopolefilter>() - 4usize];
 	["Offset of field: PlaydateSoundEffectTwopolefilter::newFilter"]
 		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, newFilter) - 0usize];
 	["Offset of field: PlaydateSoundEffectTwopolefilter::freeFilter"]
-		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, freeFilter) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, freeFilter) - 4usize];
 	["Offset of field: PlaydateSoundEffectTwopolefilter::setType"]
-		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, setType) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, setType) - 8usize];
 	["Offset of field: PlaydateSoundEffectTwopolefilter::setFrequency"]
-		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, setFrequency) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, setFrequency) - 12usize];
 	["Offset of field: PlaydateSoundEffectTwopolefilter::setFrequencyModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, setFrequencyModulator) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, setFrequencyModulator) - 16usize];
 	["Offset of field: PlaydateSoundEffectTwopolefilter::getFrequencyModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, getFrequencyModulator) - 40usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, getFrequencyModulator) - 20usize];
 	["Offset of field: PlaydateSoundEffectTwopolefilter::setGain"]
-		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, setGain) - 48usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, setGain) - 24usize];
 	["Offset of field: PlaydateSoundEffectTwopolefilter::setResonance"]
-		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, setResonance) - 56usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, setResonance) - 28usize];
 	["Offset of field: PlaydateSoundEffectTwopolefilter::setResonanceModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, setResonanceModulator) - 64usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, setResonanceModulator) - 32usize];
 	["Offset of field: PlaydateSoundEffectTwopolefilter::getResonanceModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, getResonanceModulator) - 72usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectTwopolefilter, getResonanceModulator) - 36usize];
 };
 #[repr(C)]
 #[must_use]
@@ -6592,7 +6556,6 @@ pub struct OnePoleFilter {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEffectOnepolefilter {
 	/**
@@ -6644,19 +6607,19 @@ pub struct PlaydateSoundEffectOnepolefilter {
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
 	["Size of PlaydateSoundEffectOnepolefilter"]
-		[::core::mem::size_of::<PlaydateSoundEffectOnepolefilter>() - 40usize];
+		[::core::mem::size_of::<PlaydateSoundEffectOnepolefilter>() - 20usize];
 	["Alignment of PlaydateSoundEffectOnepolefilter"]
-		[::core::mem::align_of::<PlaydateSoundEffectOnepolefilter>() - 8usize];
+		[::core::mem::align_of::<PlaydateSoundEffectOnepolefilter>() - 4usize];
 	["Offset of field: PlaydateSoundEffectOnepolefilter::newFilter"]
 		[::core::mem::offset_of!(PlaydateSoundEffectOnepolefilter, newFilter) - 0usize];
 	["Offset of field: PlaydateSoundEffectOnepolefilter::freeFilter"]
-		[::core::mem::offset_of!(PlaydateSoundEffectOnepolefilter, freeFilter) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectOnepolefilter, freeFilter) - 4usize];
 	["Offset of field: PlaydateSoundEffectOnepolefilter::setParameter"]
-		[::core::mem::offset_of!(PlaydateSoundEffectOnepolefilter, setParameter) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectOnepolefilter, setParameter) - 8usize];
 	["Offset of field: PlaydateSoundEffectOnepolefilter::setParameterModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectOnepolefilter, setParameterModulator) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectOnepolefilter, setParameterModulator) - 12usize];
 	["Offset of field: PlaydateSoundEffectOnepolefilter::getParameterModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectOnepolefilter, getParameterModulator) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectOnepolefilter, getParameterModulator) - 16usize];
 };
 #[repr(C)]
 #[must_use]
@@ -6664,7 +6627,6 @@ pub struct BitCrusher {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEffectBitcrusher {
 	/**
@@ -6742,25 +6704,25 @@ pub struct PlaydateSoundEffectBitcrusher {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundEffectBitcrusher"][::core::mem::size_of::<PlaydateSoundEffectBitcrusher>() - 64usize];
+	["Size of PlaydateSoundEffectBitcrusher"][::core::mem::size_of::<PlaydateSoundEffectBitcrusher>() - 32usize];
 	["Alignment of PlaydateSoundEffectBitcrusher"]
-		[::core::mem::align_of::<PlaydateSoundEffectBitcrusher>() - 8usize];
+		[::core::mem::align_of::<PlaydateSoundEffectBitcrusher>() - 4usize];
 	["Offset of field: PlaydateSoundEffectBitcrusher::newBitCrusher"]
 		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, newBitCrusher) - 0usize];
 	["Offset of field: PlaydateSoundEffectBitcrusher::freeBitCrusher"]
-		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, freeBitCrusher) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, freeBitCrusher) - 4usize];
 	["Offset of field: PlaydateSoundEffectBitcrusher::setAmount"]
-		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, setAmount) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, setAmount) - 8usize];
 	["Offset of field: PlaydateSoundEffectBitcrusher::setAmountModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, setAmountModulator) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, setAmountModulator) - 12usize];
 	["Offset of field: PlaydateSoundEffectBitcrusher::getAmountModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, getAmountModulator) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, getAmountModulator) - 16usize];
 	["Offset of field: PlaydateSoundEffectBitcrusher::setUndersampling"]
-		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, setUndersampling) - 40usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, setUndersampling) - 20usize];
 	["Offset of field: PlaydateSoundEffectBitcrusher::setUndersampleModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, setUndersampleModulator) - 48usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, setUndersampleModulator) - 24usize];
 	["Offset of field: PlaydateSoundEffectBitcrusher::getUndersampleModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, getUndersampleModulator) - 56usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectBitcrusher, getUndersampleModulator) - 28usize];
 };
 #[repr(C)]
 #[must_use]
@@ -6768,7 +6730,6 @@ pub struct RingModulator {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEffectRingmodulator {
 	/**
@@ -6812,19 +6773,19 @@ pub struct PlaydateSoundEffectRingmodulator {
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
 	["Size of PlaydateSoundEffectRingmodulator"]
-		[::core::mem::size_of::<PlaydateSoundEffectRingmodulator>() - 40usize];
+		[::core::mem::size_of::<PlaydateSoundEffectRingmodulator>() - 20usize];
 	["Alignment of PlaydateSoundEffectRingmodulator"]
-		[::core::mem::align_of::<PlaydateSoundEffectRingmodulator>() - 8usize];
+		[::core::mem::align_of::<PlaydateSoundEffectRingmodulator>() - 4usize];
 	["Offset of field: PlaydateSoundEffectRingmodulator::newRingmod"]
 		[::core::mem::offset_of!(PlaydateSoundEffectRingmodulator, newRingmod) - 0usize];
 	["Offset of field: PlaydateSoundEffectRingmodulator::freeRingmod"]
-		[::core::mem::offset_of!(PlaydateSoundEffectRingmodulator, freeRingmod) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectRingmodulator, freeRingmod) - 4usize];
 	["Offset of field: PlaydateSoundEffectRingmodulator::setFrequency"]
-		[::core::mem::offset_of!(PlaydateSoundEffectRingmodulator, setFrequency) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectRingmodulator, setFrequency) - 8usize];
 	["Offset of field: PlaydateSoundEffectRingmodulator::setFrequencyModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectRingmodulator, setFrequencyModulator) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectRingmodulator, setFrequencyModulator) - 12usize];
 	["Offset of field: PlaydateSoundEffectRingmodulator::getFrequencyModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectRingmodulator, getFrequencyModulator) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectRingmodulator, getFrequencyModulator) - 16usize];
 };
 #[repr(C)]
 #[must_use]
@@ -6837,7 +6798,6 @@ pub struct DelayLineTap {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEffectDelayline {
 	/**
@@ -6933,29 +6893,29 @@ pub struct PlaydateSoundEffectDelayline {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundEffectDelayline"][::core::mem::size_of::<PlaydateSoundEffectDelayline>() - 80usize];
+	["Size of PlaydateSoundEffectDelayline"][::core::mem::size_of::<PlaydateSoundEffectDelayline>() - 40usize];
 	["Alignment of PlaydateSoundEffectDelayline"]
-		[::core::mem::align_of::<PlaydateSoundEffectDelayline>() - 8usize];
+		[::core::mem::align_of::<PlaydateSoundEffectDelayline>() - 4usize];
 	["Offset of field: PlaydateSoundEffectDelayline::newDelayLine"]
 		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, newDelayLine) - 0usize];
 	["Offset of field: PlaydateSoundEffectDelayline::freeDelayLine"]
-		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, freeDelayLine) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, freeDelayLine) - 4usize];
 	["Offset of field: PlaydateSoundEffectDelayline::setLength"]
-		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, setLength) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, setLength) - 8usize];
 	["Offset of field: PlaydateSoundEffectDelayline::setFeedback"]
-		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, setFeedback) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, setFeedback) - 12usize];
 	["Offset of field: PlaydateSoundEffectDelayline::addTap"]
-		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, addTap) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, addTap) - 16usize];
 	["Offset of field: PlaydateSoundEffectDelayline::freeTap"]
-		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, freeTap) - 40usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, freeTap) - 20usize];
 	["Offset of field: PlaydateSoundEffectDelayline::setTapDelay"]
-		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, setTapDelay) - 48usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, setTapDelay) - 24usize];
 	["Offset of field: PlaydateSoundEffectDelayline::setTapDelayModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, setTapDelayModulator) - 56usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, setTapDelayModulator) - 28usize];
 	["Offset of field: PlaydateSoundEffectDelayline::getTapDelayModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, getTapDelayModulator) - 64usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, getTapDelayModulator) - 32usize];
 	["Offset of field: PlaydateSoundEffectDelayline::setTapChannelsFlipped"]
-		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, setTapChannelsFlipped) - 72usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectDelayline, setTapChannelsFlipped) - 36usize];
 };
 #[repr(C)]
 #[must_use]
@@ -6963,7 +6923,6 @@ pub struct Overdrive {
 	_unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEffectOverdrive {
 	/**
@@ -7050,27 +7009,27 @@ pub struct PlaydateSoundEffectOverdrive {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundEffectOverdrive"][::core::mem::size_of::<PlaydateSoundEffectOverdrive>() - 72usize];
+	["Size of PlaydateSoundEffectOverdrive"][::core::mem::size_of::<PlaydateSoundEffectOverdrive>() - 36usize];
 	["Alignment of PlaydateSoundEffectOverdrive"]
-		[::core::mem::align_of::<PlaydateSoundEffectOverdrive>() - 8usize];
+		[::core::mem::align_of::<PlaydateSoundEffectOverdrive>() - 4usize];
 	["Offset of field: PlaydateSoundEffectOverdrive::newOverdrive"]
 		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, newOverdrive) - 0usize];
 	["Offset of field: PlaydateSoundEffectOverdrive::freeOverdrive"]
-		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, freeOverdrive) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, freeOverdrive) - 4usize];
 	["Offset of field: PlaydateSoundEffectOverdrive::setGain"]
-		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, setGain) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, setGain) - 8usize];
 	["Offset of field: PlaydateSoundEffectOverdrive::setLimit"]
-		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, setLimit) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, setLimit) - 12usize];
 	["Offset of field: PlaydateSoundEffectOverdrive::setLimitModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, setLimitModulator) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, setLimitModulator) - 16usize];
 	["Offset of field: PlaydateSoundEffectOverdrive::getLimitModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, getLimitModulator) - 40usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, getLimitModulator) - 20usize];
 	["Offset of field: PlaydateSoundEffectOverdrive::setOffset"]
-		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, setOffset) - 48usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, setOffset) - 24usize];
 	["Offset of field: PlaydateSoundEffectOverdrive::setOffsetModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, setOffsetModulator) - 56usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, setOffsetModulator) - 28usize];
 	["Offset of field: PlaydateSoundEffectOverdrive::getOffsetModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, getOffsetModulator) - 64usize];
+		[::core::mem::offset_of!(PlaydateSoundEffectOverdrive, getOffsetModulator) - 32usize];
 };
 #[repr(C)]
 #[must_use]
@@ -7084,7 +7043,6 @@ pub type EffectProc = ::core::option::Option<unsafe extern "C" fn(e: *mut SoundE
                                                                   bufactive: core::ffi::c_int)
                                                                   -> core::ffi::c_int>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundEffect {
 	/**
@@ -7163,34 +7121,34 @@ pub struct PlaydateSoundEffect {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundEffect"][::core::mem::size_of::<PlaydateSoundEffect>() - 104usize];
-	["Alignment of PlaydateSoundEffect"][::core::mem::align_of::<PlaydateSoundEffect>() - 8usize];
+	["Size of PlaydateSoundEffect"][::core::mem::size_of::<PlaydateSoundEffect>() - 52usize];
+	["Alignment of PlaydateSoundEffect"][::core::mem::align_of::<PlaydateSoundEffect>() - 4usize];
 	["Offset of field: PlaydateSoundEffect::newEffect"]
 		[::core::mem::offset_of!(PlaydateSoundEffect, newEffect) - 0usize];
 	["Offset of field: PlaydateSoundEffect::freeEffect"]
-		[::core::mem::offset_of!(PlaydateSoundEffect, freeEffect) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundEffect, freeEffect) - 4usize];
 	["Offset of field: PlaydateSoundEffect::setMix"]
-		[::core::mem::offset_of!(PlaydateSoundEffect, setMix) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundEffect, setMix) - 8usize];
 	["Offset of field: PlaydateSoundEffect::setMixModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffect, setMixModulator) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundEffect, setMixModulator) - 12usize];
 	["Offset of field: PlaydateSoundEffect::getMixModulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffect, getMixModulator) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundEffect, getMixModulator) - 16usize];
 	["Offset of field: PlaydateSoundEffect::setUserdata"]
-		[::core::mem::offset_of!(PlaydateSoundEffect, setUserdata) - 40usize];
+		[::core::mem::offset_of!(PlaydateSoundEffect, setUserdata) - 20usize];
 	["Offset of field: PlaydateSoundEffect::getUserdata"]
-		[::core::mem::offset_of!(PlaydateSoundEffect, getUserdata) - 48usize];
+		[::core::mem::offset_of!(PlaydateSoundEffect, getUserdata) - 24usize];
 	["Offset of field: PlaydateSoundEffect::twopolefilter"]
-		[::core::mem::offset_of!(PlaydateSoundEffect, twopolefilter) - 56usize];
+		[::core::mem::offset_of!(PlaydateSoundEffect, twopolefilter) - 28usize];
 	["Offset of field: PlaydateSoundEffect::onepolefilter"]
-		[::core::mem::offset_of!(PlaydateSoundEffect, onepolefilter) - 64usize];
+		[::core::mem::offset_of!(PlaydateSoundEffect, onepolefilter) - 32usize];
 	["Offset of field: PlaydateSoundEffect::bitcrusher"]
-		[::core::mem::offset_of!(PlaydateSoundEffect, bitcrusher) - 72usize];
+		[::core::mem::offset_of!(PlaydateSoundEffect, bitcrusher) - 36usize];
 	["Offset of field: PlaydateSoundEffect::ringmodulator"]
-		[::core::mem::offset_of!(PlaydateSoundEffect, ringmodulator) - 80usize];
+		[::core::mem::offset_of!(PlaydateSoundEffect, ringmodulator) - 40usize];
 	["Offset of field: PlaydateSoundEffect::delayline"]
-		[::core::mem::offset_of!(PlaydateSoundEffect, delayline) - 88usize];
+		[::core::mem::offset_of!(PlaydateSoundEffect, delayline) - 44usize];
 	["Offset of field: PlaydateSoundEffect::overdrive"]
-		[::core::mem::offset_of!(PlaydateSoundEffect, overdrive) - 96usize];
+		[::core::mem::offset_of!(PlaydateSoundEffect, overdrive) - 48usize];
 };
 #[repr(C)]
 #[must_use]
@@ -7203,7 +7161,6 @@ pub type AudioSourceFunction = ::core::option::Option<unsafe extern "C" fn(conte
                                                                            len: core::ffi::c_int)
                                                                            -> core::ffi::c_int>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSoundChannel {
 	/**
@@ -7375,56 +7332,55 @@ pub struct PlaydateSoundChannel {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSoundChannel"][::core::mem::size_of::<PlaydateSoundChannel>() - 128usize];
-	["Alignment of PlaydateSoundChannel"][::core::mem::align_of::<PlaydateSoundChannel>() - 8usize];
+	["Size of PlaydateSoundChannel"][::core::mem::size_of::<PlaydateSoundChannel>() - 64usize];
+	["Alignment of PlaydateSoundChannel"][::core::mem::align_of::<PlaydateSoundChannel>() - 4usize];
 	["Offset of field: PlaydateSoundChannel::newChannel"]
 		[::core::mem::offset_of!(PlaydateSoundChannel, newChannel) - 0usize];
 	["Offset of field: PlaydateSoundChannel::freeChannel"]
-		[::core::mem::offset_of!(PlaydateSoundChannel, freeChannel) - 8usize];
+		[::core::mem::offset_of!(PlaydateSoundChannel, freeChannel) - 4usize];
 	["Offset of field: PlaydateSoundChannel::addSource"]
-		[::core::mem::offset_of!(PlaydateSoundChannel, addSource) - 16usize];
+		[::core::mem::offset_of!(PlaydateSoundChannel, addSource) - 8usize];
 	["Offset of field: PlaydateSoundChannel::removeSource"]
-		[::core::mem::offset_of!(PlaydateSoundChannel, removeSource) - 24usize];
+		[::core::mem::offset_of!(PlaydateSoundChannel, removeSource) - 12usize];
 	["Offset of field: PlaydateSoundChannel::addCallbackSource"]
-		[::core::mem::offset_of!(PlaydateSoundChannel, addCallbackSource) - 32usize];
+		[::core::mem::offset_of!(PlaydateSoundChannel, addCallbackSource) - 16usize];
 	["Offset of field: PlaydateSoundChannel::addEffect"]
-		[::core::mem::offset_of!(PlaydateSoundChannel, addEffect) - 40usize];
+		[::core::mem::offset_of!(PlaydateSoundChannel, addEffect) - 20usize];
 	["Offset of field: PlaydateSoundChannel::removeEffect"]
-		[::core::mem::offset_of!(PlaydateSoundChannel, removeEffect) - 48usize];
+		[::core::mem::offset_of!(PlaydateSoundChannel, removeEffect) - 24usize];
 	["Offset of field: PlaydateSoundChannel::setVolume"]
-		[::core::mem::offset_of!(PlaydateSoundChannel, setVolume) - 56usize];
+		[::core::mem::offset_of!(PlaydateSoundChannel, setVolume) - 28usize];
 	["Offset of field: PlaydateSoundChannel::getVolume"]
-		[::core::mem::offset_of!(PlaydateSoundChannel, getVolume) - 64usize];
+		[::core::mem::offset_of!(PlaydateSoundChannel, getVolume) - 32usize];
 	["Offset of field: PlaydateSoundChannel::setVolumeModulator"]
-		[::core::mem::offset_of!(PlaydateSoundChannel, setVolumeModulator) - 72usize];
+		[::core::mem::offset_of!(PlaydateSoundChannel, setVolumeModulator) - 36usize];
 	["Offset of field: PlaydateSoundChannel::getVolumeModulator"]
-		[::core::mem::offset_of!(PlaydateSoundChannel, getVolumeModulator) - 80usize];
+		[::core::mem::offset_of!(PlaydateSoundChannel, getVolumeModulator) - 40usize];
 	["Offset of field: PlaydateSoundChannel::setPan"]
-		[::core::mem::offset_of!(PlaydateSoundChannel, setPan) - 88usize];
+		[::core::mem::offset_of!(PlaydateSoundChannel, setPan) - 44usize];
 	["Offset of field: PlaydateSoundChannel::setPanModulator"]
-		[::core::mem::offset_of!(PlaydateSoundChannel, setPanModulator) - 96usize];
+		[::core::mem::offset_of!(PlaydateSoundChannel, setPanModulator) - 48usize];
 	["Offset of field: PlaydateSoundChannel::getPanModulator"]
-		[::core::mem::offset_of!(PlaydateSoundChannel, getPanModulator) - 104usize];
+		[::core::mem::offset_of!(PlaydateSoundChannel, getPanModulator) - 52usize];
 	["Offset of field: PlaydateSoundChannel::getDryLevelSignal"]
-		[::core::mem::offset_of!(PlaydateSoundChannel, getDryLevelSignal) - 112usize];
+		[::core::mem::offset_of!(PlaydateSoundChannel, getDryLevelSignal) - 56usize];
 	["Offset of field: PlaydateSoundChannel::getWetLevelSignal"]
-		[::core::mem::offset_of!(PlaydateSoundChannel, getWetLevelSignal) - 120usize];
+		[::core::mem::offset_of!(PlaydateSoundChannel, getWetLevelSignal) - 60usize];
 };
 pub type RecordCallback = ::core::option::Option<unsafe extern "C" fn(context: *mut core::ffi::c_void,
                                                                       buffer: *mut i16,
                                                                       length: core::ffi::c_int)
                                                                       -> core::ffi::c_int>;
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum MicSource {
 	Autodetect = 0,
 	Internal = 1,
 	Headset = 2,
 }
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateSound {
     pub channel: &'static PlaydateSoundChannel,
@@ -7585,44 +7541,43 @@ pub struct PlaydateSound {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateSound"][::core::mem::size_of::<PlaydateSound>() - 192usize];
-	["Alignment of PlaydateSound"][::core::mem::align_of::<PlaydateSound>() - 8usize];
+	["Size of PlaydateSound"][::core::mem::size_of::<PlaydateSound>() - 96usize];
+	["Alignment of PlaydateSound"][::core::mem::align_of::<PlaydateSound>() - 4usize];
 	["Offset of field: PlaydateSound::channel"][::core::mem::offset_of!(PlaydateSound, channel) - 0usize];
-	["Offset of field: PlaydateSound::fileplayer"][::core::mem::offset_of!(PlaydateSound, fileplayer) - 8usize];
-	["Offset of field: PlaydateSound::sample"][::core::mem::offset_of!(PlaydateSound, sample) - 16usize];
+	["Offset of field: PlaydateSound::fileplayer"][::core::mem::offset_of!(PlaydateSound, fileplayer) - 4usize];
+	["Offset of field: PlaydateSound::sample"][::core::mem::offset_of!(PlaydateSound, sample) - 8usize];
 	["Offset of field: PlaydateSound::sampleplayer"]
-		[::core::mem::offset_of!(PlaydateSound, sampleplayer) - 24usize];
-	["Offset of field: PlaydateSound::synth"][::core::mem::offset_of!(PlaydateSound, synth) - 32usize];
-	["Offset of field: PlaydateSound::sequence"][::core::mem::offset_of!(PlaydateSound, sequence) - 40usize];
-	["Offset of field: PlaydateSound::effect"][::core::mem::offset_of!(PlaydateSound, effect) - 48usize];
-	["Offset of field: PlaydateSound::lfo"][::core::mem::offset_of!(PlaydateSound, lfo) - 56usize];
-	["Offset of field: PlaydateSound::envelope"][::core::mem::offset_of!(PlaydateSound, envelope) - 64usize];
-	["Offset of field: PlaydateSound::source"][::core::mem::offset_of!(PlaydateSound, source) - 72usize];
+		[::core::mem::offset_of!(PlaydateSound, sampleplayer) - 12usize];
+	["Offset of field: PlaydateSound::synth"][::core::mem::offset_of!(PlaydateSound, synth) - 16usize];
+	["Offset of field: PlaydateSound::sequence"][::core::mem::offset_of!(PlaydateSound, sequence) - 20usize];
+	["Offset of field: PlaydateSound::effect"][::core::mem::offset_of!(PlaydateSound, effect) - 24usize];
+	["Offset of field: PlaydateSound::lfo"][::core::mem::offset_of!(PlaydateSound, lfo) - 28usize];
+	["Offset of field: PlaydateSound::envelope"][::core::mem::offset_of!(PlaydateSound, envelope) - 32usize];
+	["Offset of field: PlaydateSound::source"][::core::mem::offset_of!(PlaydateSound, source) - 36usize];
 	["Offset of field: PlaydateSound::controlsignal"]
-		[::core::mem::offset_of!(PlaydateSound, controlsignal) - 80usize];
-	["Offset of field: PlaydateSound::track"][::core::mem::offset_of!(PlaydateSound, track) - 88usize];
-	["Offset of field: PlaydateSound::instrument"][::core::mem::offset_of!(PlaydateSound, instrument) - 96usize];
+		[::core::mem::offset_of!(PlaydateSound, controlsignal) - 40usize];
+	["Offset of field: PlaydateSound::track"][::core::mem::offset_of!(PlaydateSound, track) - 44usize];
+	["Offset of field: PlaydateSound::instrument"][::core::mem::offset_of!(PlaydateSound, instrument) - 48usize];
 	["Offset of field: PlaydateSound::getCurrentTime"]
-		[::core::mem::offset_of!(PlaydateSound, getCurrentTime) - 104usize];
-	["Offset of field: PlaydateSound::addSource"][::core::mem::offset_of!(PlaydateSound, addSource) - 112usize];
+		[::core::mem::offset_of!(PlaydateSound, getCurrentTime) - 52usize];
+	["Offset of field: PlaydateSound::addSource"][::core::mem::offset_of!(PlaydateSound, addSource) - 56usize];
 	["Offset of field: PlaydateSound::getDefaultChannel"]
-		[::core::mem::offset_of!(PlaydateSound, getDefaultChannel) - 120usize];
-	["Offset of field: PlaydateSound::addChannel"][::core::mem::offset_of!(PlaydateSound, addChannel) - 128usize];
+		[::core::mem::offset_of!(PlaydateSound, getDefaultChannel) - 60usize];
+	["Offset of field: PlaydateSound::addChannel"][::core::mem::offset_of!(PlaydateSound, addChannel) - 64usize];
 	["Offset of field: PlaydateSound::removeChannel"]
-		[::core::mem::offset_of!(PlaydateSound, removeChannel) - 136usize];
+		[::core::mem::offset_of!(PlaydateSound, removeChannel) - 68usize];
 	["Offset of field: PlaydateSound::setMicCallback"]
-		[::core::mem::offset_of!(PlaydateSound, setMicCallback) - 144usize];
+		[::core::mem::offset_of!(PlaydateSound, setMicCallback) - 72usize];
 	["Offset of field: PlaydateSound::getHeadphoneState"]
-		[::core::mem::offset_of!(PlaydateSound, getHeadphoneState) - 152usize];
+		[::core::mem::offset_of!(PlaydateSound, getHeadphoneState) - 76usize];
 	["Offset of field: PlaydateSound::setOutputsActive"]
-		[::core::mem::offset_of!(PlaydateSound, setOutputsActive) - 160usize];
+		[::core::mem::offset_of!(PlaydateSound, setOutputsActive) - 80usize];
 	["Offset of field: PlaydateSound::removeSource"]
-		[::core::mem::offset_of!(PlaydateSound, removeSource) - 168usize];
-	["Offset of field: PlaydateSound::signal"][::core::mem::offset_of!(PlaydateSound, signal) - 176usize];
-	["Offset of field: PlaydateSound::getError"][::core::mem::offset_of!(PlaydateSound, getError) - 184usize];
+		[::core::mem::offset_of!(PlaydateSound, removeSource) - 84usize];
+	["Offset of field: PlaydateSound::signal"][::core::mem::offset_of!(PlaydateSound, signal) - 88usize];
+	["Offset of field: PlaydateSound::getError"][::core::mem::offset_of!(PlaydateSound, getError) - 92usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateDisplay {
 	/**
@@ -7730,22 +7685,21 @@ pub struct PlaydateDisplay {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateDisplay"][::core::mem::size_of::<PlaydateDisplay>() - 64usize];
-	["Alignment of PlaydateDisplay"][::core::mem::align_of::<PlaydateDisplay>() - 8usize];
+	["Size of PlaydateDisplay"][::core::mem::size_of::<PlaydateDisplay>() - 32usize];
+	["Alignment of PlaydateDisplay"][::core::mem::align_of::<PlaydateDisplay>() - 4usize];
 	["Offset of field: PlaydateDisplay::getWidth"][::core::mem::offset_of!(PlaydateDisplay, getWidth) - 0usize];
-	["Offset of field: PlaydateDisplay::getHeight"][::core::mem::offset_of!(PlaydateDisplay, getHeight) - 8usize];
+	["Offset of field: PlaydateDisplay::getHeight"][::core::mem::offset_of!(PlaydateDisplay, getHeight) - 4usize];
 	["Offset of field: PlaydateDisplay::setRefreshRate"]
-		[::core::mem::offset_of!(PlaydateDisplay, setRefreshRate) - 16usize];
+		[::core::mem::offset_of!(PlaydateDisplay, setRefreshRate) - 8usize];
 	["Offset of field: PlaydateDisplay::setInverted"]
-		[::core::mem::offset_of!(PlaydateDisplay, setInverted) - 24usize];
-	["Offset of field: PlaydateDisplay::setScale"][::core::mem::offset_of!(PlaydateDisplay, setScale) - 32usize];
-	["Offset of field: PlaydateDisplay::setMosaic"][::core::mem::offset_of!(PlaydateDisplay, setMosaic) - 40usize];
+		[::core::mem::offset_of!(PlaydateDisplay, setInverted) - 12usize];
+	["Offset of field: PlaydateDisplay::setScale"][::core::mem::offset_of!(PlaydateDisplay, setScale) - 16usize];
+	["Offset of field: PlaydateDisplay::setMosaic"][::core::mem::offset_of!(PlaydateDisplay, setMosaic) - 20usize];
 	["Offset of field: PlaydateDisplay::setFlipped"]
-		[::core::mem::offset_of!(PlaydateDisplay, setFlipped) - 48usize];
-	["Offset of field: PlaydateDisplay::setOffset"][::core::mem::offset_of!(PlaydateDisplay, setOffset) - 56usize];
+		[::core::mem::offset_of!(PlaydateDisplay, setFlipped) - 24usize];
+	["Offset of field: PlaydateDisplay::setOffset"][::core::mem::offset_of!(PlaydateDisplay, setOffset) - 28usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct Score {
 	pub rank: u32,
@@ -7754,14 +7708,13 @@ pub struct Score {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of Score"][::core::mem::size_of::<Score>() - 16usize];
-	["Alignment of Score"][::core::mem::align_of::<Score>() - 8usize];
+	["Size of Score"][::core::mem::size_of::<Score>() - 12usize];
+	["Alignment of Score"][::core::mem::align_of::<Score>() - 4usize];
 	["Offset of field: Score::rank"][::core::mem::offset_of!(Score, rank) - 0usize];
 	["Offset of field: Score::value"][::core::mem::offset_of!(Score, value) - 4usize];
 	["Offset of field: Score::player"][::core::mem::offset_of!(Score, player) - 8usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct ScoresList {
 	pub boardID: *mut core::ffi::c_char,
@@ -7773,17 +7726,16 @@ pub struct ScoresList {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of ScoresList"][::core::mem::size_of::<ScoresList>() - 32usize];
-	["Alignment of ScoresList"][::core::mem::align_of::<ScoresList>() - 8usize];
+	["Size of ScoresList"][::core::mem::size_of::<ScoresList>() - 24usize];
+	["Alignment of ScoresList"][::core::mem::align_of::<ScoresList>() - 4usize];
 	["Offset of field: ScoresList::boardID"][::core::mem::offset_of!(ScoresList, boardID) - 0usize];
-	["Offset of field: ScoresList::count"][::core::mem::offset_of!(ScoresList, count) - 8usize];
-	["Offset of field: ScoresList::lastUpdated"][::core::mem::offset_of!(ScoresList, lastUpdated) - 12usize];
-	["Offset of field: ScoresList::playerIncluded"][::core::mem::offset_of!(ScoresList, playerIncluded) - 16usize];
-	["Offset of field: ScoresList::limit"][::core::mem::offset_of!(ScoresList, limit) - 20usize];
-	["Offset of field: ScoresList::scores"][::core::mem::offset_of!(ScoresList, scores) - 24usize];
+	["Offset of field: ScoresList::count"][::core::mem::offset_of!(ScoresList, count) - 4usize];
+	["Offset of field: ScoresList::lastUpdated"][::core::mem::offset_of!(ScoresList, lastUpdated) - 8usize];
+	["Offset of field: ScoresList::playerIncluded"][::core::mem::offset_of!(ScoresList, playerIncluded) - 12usize];
+	["Offset of field: ScoresList::limit"][::core::mem::offset_of!(ScoresList, limit) - 16usize];
+	["Offset of field: ScoresList::scores"][::core::mem::offset_of!(ScoresList, scores) - 20usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct Board {
 	pub boardID: *mut core::ffi::c_char,
@@ -7791,13 +7743,12 @@ pub struct Board {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of Board"][::core::mem::size_of::<Board>() - 16usize];
-	["Alignment of Board"][::core::mem::align_of::<Board>() - 8usize];
+	["Size of Board"][::core::mem::size_of::<Board>() - 8usize];
+	["Alignment of Board"][::core::mem::align_of::<Board>() - 4usize];
 	["Offset of field: Board::boardID"][::core::mem::offset_of!(Board, boardID) - 0usize];
-	["Offset of field: Board::name"][::core::mem::offset_of!(Board, name) - 8usize];
+	["Offset of field: Board::name"][::core::mem::offset_of!(Board, name) - 4usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct BoardsList {
 	pub count: core::ffi::c_uint,
@@ -7806,8 +7757,8 @@ pub struct BoardsList {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of BoardsList"][::core::mem::size_of::<BoardsList>() - 16usize];
-	["Alignment of BoardsList"][::core::mem::align_of::<BoardsList>() - 8usize];
+	["Size of BoardsList"][::core::mem::size_of::<BoardsList>() - 12usize];
+	["Alignment of BoardsList"][::core::mem::align_of::<BoardsList>() - 4usize];
 	["Offset of field: BoardsList::count"][::core::mem::offset_of!(BoardsList, count) - 0usize];
 	["Offset of field: BoardsList::lastUpdated"][::core::mem::offset_of!(BoardsList, lastUpdated) - 4usize];
 	["Offset of field: BoardsList::boards"][::core::mem::offset_of!(BoardsList, boards) - 8usize];
@@ -7821,7 +7772,6 @@ pub type BoardsListCallback =
 pub type ScoresCallback =
 	::core::option::Option<unsafe extern "C" fn(scores: *mut ScoresList, errorMessage: *const core::ffi::c_char)>;
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct PlaydateScoreboards {
 	pub addScore: unsafe extern "C" fn(boardId: *const core::ffi::c_char,
@@ -7839,25 +7789,24 @@ pub struct PlaydateScoreboards {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of PlaydateScoreboards"][::core::mem::size_of::<PlaydateScoreboards>() - 56usize];
-	["Alignment of PlaydateScoreboards"][::core::mem::align_of::<PlaydateScoreboards>() - 8usize];
+	["Size of PlaydateScoreboards"][::core::mem::size_of::<PlaydateScoreboards>() - 28usize];
+	["Alignment of PlaydateScoreboards"][::core::mem::align_of::<PlaydateScoreboards>() - 4usize];
 	["Offset of field: PlaydateScoreboards::addScore"]
 		[::core::mem::offset_of!(PlaydateScoreboards, addScore) - 0usize];
 	["Offset of field: PlaydateScoreboards::getPersonalBest"]
-		[::core::mem::offset_of!(PlaydateScoreboards, getPersonalBest) - 8usize];
+		[::core::mem::offset_of!(PlaydateScoreboards, getPersonalBest) - 4usize];
 	["Offset of field: PlaydateScoreboards::freeScore"]
-		[::core::mem::offset_of!(PlaydateScoreboards, freeScore) - 16usize];
+		[::core::mem::offset_of!(PlaydateScoreboards, freeScore) - 8usize];
 	["Offset of field: PlaydateScoreboards::getScoreboards"]
-		[::core::mem::offset_of!(PlaydateScoreboards, getScoreboards) - 24usize];
+		[::core::mem::offset_of!(PlaydateScoreboards, getScoreboards) - 12usize];
 	["Offset of field: PlaydateScoreboards::freeBoardsList"]
-		[::core::mem::offset_of!(PlaydateScoreboards, freeBoardsList) - 32usize];
+		[::core::mem::offset_of!(PlaydateScoreboards, freeBoardsList) - 16usize];
 	["Offset of field: PlaydateScoreboards::getScores"]
-		[::core::mem::offset_of!(PlaydateScoreboards, getScores) - 40usize];
+		[::core::mem::offset_of!(PlaydateScoreboards, getScores) - 20usize];
 	["Offset of field: PlaydateScoreboards::freeScoresList"]
-		[::core::mem::offset_of!(PlaydateScoreboards, freeScoresList) - 48usize];
+		[::core::mem::offset_of!(PlaydateScoreboards, freeScoresList) - 24usize];
 };
 #[repr(C)]
-#[derive(Hash, PartialOrd, Ord, PartialEq, Eq)]
 #[must_use]
 pub struct Playdate {
 	pub system: &'static PlaydateSys,
@@ -7872,22 +7821,22 @@ pub struct Playdate {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-	["Size of Playdate"][::core::mem::size_of::<Playdate>() - 72usize];
-	["Alignment of Playdate"][::core::mem::align_of::<Playdate>() - 8usize];
+	["Size of Playdate"][::core::mem::size_of::<Playdate>() - 36usize];
+	["Alignment of Playdate"][::core::mem::align_of::<Playdate>() - 4usize];
 	["Offset of field: Playdate::system"][::core::mem::offset_of!(Playdate, system) - 0usize];
-	["Offset of field: Playdate::file"][::core::mem::offset_of!(Playdate, file) - 8usize];
-	["Offset of field: Playdate::graphics"][::core::mem::offset_of!(Playdate, graphics) - 16usize];
-	["Offset of field: Playdate::sprite"][::core::mem::offset_of!(Playdate, sprite) - 24usize];
-	["Offset of field: Playdate::display"][::core::mem::offset_of!(Playdate, display) - 32usize];
-	["Offset of field: Playdate::sound"][::core::mem::offset_of!(Playdate, sound) - 40usize];
-	["Offset of field: Playdate::lua"][::core::mem::offset_of!(Playdate, lua) - 48usize];
-	["Offset of field: Playdate::json"][::core::mem::offset_of!(Playdate, json) - 56usize];
-	["Offset of field: Playdate::scoreboards"][::core::mem::offset_of!(Playdate, scoreboards) - 64usize];
+	["Offset of field: Playdate::file"][::core::mem::offset_of!(Playdate, file) - 4usize];
+	["Offset of field: Playdate::graphics"][::core::mem::offset_of!(Playdate, graphics) - 8usize];
+	["Offset of field: Playdate::sprite"][::core::mem::offset_of!(Playdate, sprite) - 12usize];
+	["Offset of field: Playdate::display"][::core::mem::offset_of!(Playdate, display) - 16usize];
+	["Offset of field: Playdate::sound"][::core::mem::offset_of!(Playdate, sound) - 20usize];
+	["Offset of field: Playdate::lua"][::core::mem::offset_of!(Playdate, lua) - 24usize];
+	["Offset of field: Playdate::json"][::core::mem::offset_of!(Playdate, json) - 28usize];
+	["Offset of field: Playdate::scoreboards"][::core::mem::offset_of!(Playdate, scoreboards) - 32usize];
 };
-#[repr(u32)]
+#[repr(u8)]
 #[must_use]
 #[cfg_attr(feature = "const-types", derive(::core::marker::ConstParamTy))]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Eq)]
 pub enum SystemEvent {
 	Init = 0,
 	InitLua = 1,
@@ -7899,34 +7848,4 @@ pub enum SystemEvent {
 	KeyPressed = 7,
 	KeyReleased = 8,
 	LowPower = 9,
-}
-pub type __builtin_va_list = [__va_list_tag; 1usize];
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
-#[must_use]
-pub struct __va_list_tag {
-	pub gp_offset: core::ffi::c_uint,
-	pub fp_offset: core::ffi::c_uint,
-	pub overflow_arg_area: *mut core::ffi::c_void,
-	pub reg_save_area: *mut core::ffi::c_void,
-}
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-	["Size of __va_list_tag"][::core::mem::size_of::<__va_list_tag>() - 24usize];
-	["Alignment of __va_list_tag"][::core::mem::align_of::<__va_list_tag>() - 8usize];
-	["Offset of field: __va_list_tag::gp_offset"][::core::mem::offset_of!(__va_list_tag, gp_offset) - 0usize];
-	["Offset of field: __va_list_tag::fp_offset"][::core::mem::offset_of!(__va_list_tag, fp_offset) - 4usize];
-	["Offset of field: __va_list_tag::overflow_arg_area"]
-		[::core::mem::offset_of!(__va_list_tag, overflow_arg_area) - 8usize];
-	["Offset of field: __va_list_tag::reg_save_area"]
-		[::core::mem::offset_of!(__va_list_tag, reg_save_area) - 16usize];
-};
-impl Default for __va_list_tag {
-	fn default() -> Self {
-		let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
-		unsafe {
-			::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-			s.assume_init()
-		}
-	}
 }
