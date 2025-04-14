@@ -38,13 +38,10 @@ jobs:
   sys:
     name: >-
       Sys (${{ matrix.os.name }}${{ matrix.bindgen.install && ' +bindgen' || '' }})
-      ${{ matrix.bindgen.features }}
+      ${{ matrix.features }}
     permissions:
       contents: read
     env:
-      FEATURES_1: bindgen-runtime
-      FEATURES_2: bindgen-runtime,bindings-derive-debug
-      FEATURES_3: bindgen-runtime,bindings-derive-debug,sys/bindings-documentation,sys/error-ctx
       BUILD_STD_ARGS: -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
     defaults:
       run:
@@ -59,22 +56,13 @@ jobs:
           - { name: linux, key: ubuntu-latest }
         sdk:
           - ${{ inputs.sdk || 'latest' }}
+        features:
+          - "" # default
+          - bindgen
+          - alloc,lang-items,allocator-api,const-types
         bindgen:
           - install: false
-          - install: false
-            features: bindings-derive-debug
-          - install: false
-            features: bindgen-runtime
-          - install: false
-            features: bindgen-runtime,bindings-derive-debug
           - install: true
-          - install: true
-            features: bindings-derive-debug
-          - install: true
-            features: bindgen-runtime
-          - install: true
-            features: bindgen-runtime,bindings-derive-debug
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -99,17 +87,17 @@ jobs:
         run: which pdc && pdc --version
 
       - name: Test (host)
-        run: cargo test -p=playdate-sys --features=${{ matrix.bindgen.features }} -- --nocapture
+        run: cargo test -p=playdate-sys --features=${{ matrix.features }} -- --nocapture
 
       - name: Build (host)
         run: |
-          cargo build -p=playdate-sys --features=${{ matrix.bindgen.features }} --example=hello-world --features=lang-items
-          cargo build -p=playdate-sys --features=${{ matrix.bindgen.features }} --example=handler --features=lang-items,entry-point
+          cargo build -p=playdate-sys --features=${{ matrix.features }} --example=hello-world --features=lang-items
+          cargo build -p=playdate-sys --features=${{ matrix.features }} --example=handler --features=lang-items,entry-point
 
       - name: Build (device)
         run: |
-          cargo build -p=playdate-sys --features=${{ matrix.bindgen.features }} ${{ env.BUILD_STD_ARGS }} --example=hello-world --features=lang-items
-          cargo build -p=playdate-sys --features=${{ matrix.bindgen.features }} ${{ env.BUILD_STD_ARGS }} --example=handler --features=lang-items,entry-point
+          cargo build -p=playdate-sys --features=${{ matrix.features }} ${{ env.BUILD_STD_ARGS }} --example=hello-world --features=lang-items
+          cargo build -p=playdate-sys --features=${{ matrix.features }} ${{ env.BUILD_STD_ARGS }} --example=handler --features=lang-items,entry-point
 
   sys-miri:
     name: "Sys: Miri"
@@ -132,6 +120,9 @@ jobs:
 
       - name: Test (host)
         run: cargo miri test -p=playdate-sys --features=lang-items --lib
+
+      - name: Test (host, all-features)
+        run: cargo miri test -p=playdate-sys --all-features --lib
 
       - name: Run (host)
         run: |
@@ -173,15 +164,8 @@ jobs:
     name: >-
       Mock (${{ matrix.os.name }})
       ${{ matrix.features }}
-    #   Mock (${{ matrix.os.name }}${{ matrix.bindgen.install && ' +bindgen' || '' }})
-    #   ${{ matrix.bindgen.features }}
     permissions:
       contents: read
-    # env:
-    #   FEATURES_1: bindgen-runtime
-    #   FEATURES_2: bindgen-runtime,bindings-derive-debug
-    #   FEATURES_3: bindgen-runtime,bindings-derive-debug,sys/bindings-documentation,sys/error-ctx
-    #   BUILD_STD_ARGS: -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
     defaults:
       run:
         shell: bash
@@ -197,23 +181,6 @@ jobs:
           - default
           - sim
           - std
-        # sdk:
-        #   - ${{ inputs.sdk || 'latest' }}
-        # bindgen:
-        #   - install: false
-        #   - install: false
-        #     features: bindings-derive-debug
-        #   - install: false
-        #     features: bindgen-runtime
-        #   - install: false
-        #     features: bindgen-runtime,bindings-derive-debug
-        #   - install: true
-        #   - install: true
-        #     features: bindings-derive-debug
-        #   - install: true
-        #     features: bindgen-runtime
-        #   - install: true
-        #     features: bindgen-runtime,bindings-derive-debug
 
     steps:
       - uses: actions/checkout@v4
@@ -222,21 +189,6 @@ jobs:
 
       - name: Config
         uses: ./.github/actions/init-cfg
-
-      # - name: Install bindgen
-      #   if: matrix.bindgen.install
-      #   uses: ./.github/actions/install-bindgen
-
-      # - name: Install SDK (${{ matrix.sdk }})
-      #   uses: ./.github/actions/install-sdk
-      #   with:
-      #     version: ${{ matrix.sdk }}
-      #     mac: ${{ secrets.SDK_BETA_MACOS }}
-      #     win: ${{ secrets.SDK_BETA_WINDOWS }}
-      #     linux: ${{ secrets.SDK_BETA_LINUX }}
-
-      # - name: SDK ${{ steps.sdk.outputs.version }} installed
-      #   run: which pdc && pdc --version
 
       - name: Test
         run: cargo test -p=playdate-sys-mock --features=${{ matrix.features }}
