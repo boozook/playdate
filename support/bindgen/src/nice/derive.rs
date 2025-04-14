@@ -16,16 +16,7 @@ impl DeriveConstParamTy {
 
 impl ParseCallbacks for DeriveConstParamTy {
 	fn add_attributes(&self, info: &AttributeInfo<'_>) -> Vec<String> {
-		const TYPES: &[&str] = &[
-		                         "PDButtons",
-		                         "FileOptions",
-		                         "LCDPattern",
-		                         "CollisionPoint",
-		                         "CollisionVector",
-		                         "LCDRect",
-		                         "PDRect",
-		];
-
+		const TYPES: &[&str] = &["PDButtons", "FileOptions", "LCDPattern"];
 		const ATTR: &str = r#"#[cfg_attr(feature="const-types", derive(::core::marker::ConstParamTy))]"#;
 
 		match info.kind {
