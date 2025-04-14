@@ -214,7 +214,7 @@ fn is_env_without_sdk() -> bool {
 }
 
 fn is_bundled_rebuild_requested() -> bool {
-	// TODO: replace with cfg
+	// TODO: Probably replace with cfg
 	cargo::watch_env(BINDINGS_BUILD_BUNDLED);
 	env::is_set(BINDINGS_BUILD_BUNDLED)
 }

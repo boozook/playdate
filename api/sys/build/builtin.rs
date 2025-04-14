@@ -43,7 +43,11 @@ pub fn highest_version(all: bool) -> String {
 			if let Some(highest) = result {
 				highest.to_string_lossy().into_owned()
 			} else {
-				panic!("Bundled bindings not found: {err}");
+				let all = all.then_some("including betas").unwrap_or("excluding betas");
+				let target = target.map(|t| t.to_string())
+				                   .map(Cow::from)
+				                   .unwrap_or("unknown-target".into());
+				panic!("Bundled bindings not found: {err} (looked for built-in version {all} for {target})");
 			}
 		},
 	}
@@ -51,7 +55,7 @@ pub fn highest_version(all: bool) -> String {
 
 
 /// Simple per-comp cmp.
-// XXX: this is sort of stupid absolutelly not optimal implementation.
+// XXX: this is a sort of stupid absolutelly not optimal implementation.
 fn cmp_versions(a: impl AsRef<[u8]>, b: impl AsRef<[u8]>) -> Ordering {
 	let a = a.as_ref().split(|v| *v == b'.');
 	let b = b.as_ref().split(|v| *v == b'.');
