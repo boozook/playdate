@@ -9,9 +9,7 @@
 #![cfg_attr(feature = "allocator", feature(alloc_layout_extra))]
 #![cfg_attr(feature = "allocator-api", feature(allocator_api, slice_ptr_get))]
 // const features:
-#![cfg_attr(feature = "bindings-derive-constparamty",
-            feature(adt_const_params),
-            allow(incomplete_features))]
+#![cfg_attr(feature = "const-types", feature(adt_const_params))]
 // error, ctrl-flow:
 #![feature(try_trait_v2)]
 // heapless on-stack formatting for print, panic and oom:
@@ -115,7 +113,7 @@ cfg_match! {
 mod allocation {
 	//! Just to ensure that all basics is working.
 	//! Testing testing system including mock integration.
-	use super::*;
+	// use super::*;
 
 
 	#[test]

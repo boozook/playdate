@@ -288,12 +288,12 @@ unsafe fn dealloc(ptr: *mut u8, layout: Layout) {
 #[cfg(feature = "allocator")]
 fn alloc_error(layout: Layout) -> ! {
 	if let Some(api) = crate::api() {
-		use crate::print::allocless::*;
+		use crate::print::fmt::*;
 
 		// rendes size to ascii inplace:
 		let mut s = [79, 111, 77, 58, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 98, 0]; // "OoM: {u32::MAX}b"
 		let mut index = s.len() - 3;
-		n2s(layout.size(), &mut index, &mut s);
+		n2ascii(layout.size(), &mut index, &mut s);
 		s[5..].rotate_left(index.wrapping_sub(3));
 
 		// alloc-less panic via pd-err

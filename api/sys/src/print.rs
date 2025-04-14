@@ -14,7 +14,7 @@ pub fn print(api: &'static crate::ffi::Playdate, fmt: core::fmt::Arguments<'_>) 
 		#[cfg(not(feature = "alloc"))]
 		{
 			use core::fmt::Write;
-			let mut buf = allocless::FmtBufDef::new();
+			let mut buf = fmt::FmtBufDef::new();
 			if buf.write_fmt(fmt).is_ok() {
 				print_str(api, buf.as_str());
 			} else {
@@ -57,7 +57,8 @@ extern "Rust" {
 }
 
 
-pub(crate) mod allocless {
+/// Heapless ASCII formatting.
+pub mod fmt {
 	use core::mem::MaybeUninit;
 	use core::{fmt, str};
 
@@ -84,7 +85,17 @@ pub(crate) mod allocless {
 	/// - `i16` requires at least 6 bytes
 	/// - `i32` requires at least 11 bytes
 	/// - `i64` requires at least 20 bytes
-	pub fn n2s(num: usize, index: &mut usize, buf: &mut [u8]) {
+	///
+	/// ## Example
+	/// ```rust
+	/// use playdate_sys::print::fmt::*;
+	/// let mut buf = [0u8; 10];
+	/// let mut i = buf.len() - 1;
+	/// n2ascii(42, &mut i, &mut buf);
+	/// assert_eq!(7, i);
+	/// assert_eq!(&[b'4', b'2'], &buf[8..]);
+	/// ```
+	pub fn n2ascii(num: usize, index: &mut usize, buf: &mut [u8]) {
 		let mut v = num;
 		// Decode four characters at the same time
 		while v > 9999 {
@@ -121,6 +132,9 @@ pub(crate) mod allocless {
 
 
 	/// On-stack format buffer with default length (inner on-stack buffer size) determined by cfg.
+	///
+	/// Allowed `cfg` values for `format_buffer` are: `0`, `128`, `256`, `512`, `1024`.
+	/// Default value is `1024`.
 	pub type FmtBufDef = FmtBuf<FMT_BUF_LEN>;
 
 	/// Default buffer length determined by cfg.

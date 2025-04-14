@@ -62,7 +62,7 @@ mod norm {
 	#[track_caller]
 	fn error_fmt(api: &Playdate, m: Arguments<'_>, l: Option<&Location<'_>>) -> ! {
 		let error = api.system.error;
-		let mut buf = crate::print::allocless::FmtBufDef::new();
+		let mut buf = crate::print::fmt::FmtBufDef::new();
 
 		if buf.write_fmt(m).is_ok() {
 			let m = buf.as_str();
@@ -113,7 +113,7 @@ mod miri {
 			}
 			#[cfg(not(feature = "alloc"))]
 			unsafe {
-				let mut buf = crate::print::allocless::FmtBufDef::new();
+				let mut buf = crate::print::fmt::FmtBufDef::new();
 				if buf.write_fmt(format_args!("{}", info.message())).is_ok() {
 					let s = buf.as_str().trim();
 					if !s.is_empty() {
@@ -126,10 +126,10 @@ mod miri {
 
 		let print_location = |l: &Location<'_>, pre: &[u8], post: &[u8]| {
 			for v in [l.line(), l.column()] {
-				use crate::print::allocless::*;
+				use crate::print::fmt::*;
 				let mut buf = [0u8; 10];
 				let mut index = buf.len() - 1;
-				n2s(v as _, &mut index, &mut buf);
+				n2ascii(v as _, &mut index, &mut buf);
 
 				unsafe {
 					if !pre.is_empty() {
