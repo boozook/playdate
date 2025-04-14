@@ -12,16 +12,6 @@ homepage.workspace = true
 repository.workspace = true
 
 
-[features]
-default = ["sys/default"]
-
-# playdate-sys features, should be shared because it's build configuration:
-
-bindgen-runtime = ["sys/bindgen-runtime"]
-bindgen-static = ["sys/bindgen-static"]
-bindings-derive-debug = ["sys/bindings-derive-debug"]
-
-
 [dependencies]
 sys = { workspace = true, default-features = false }
 erased_set = "0.8"
@@ -42,8 +32,7 @@ bundle-id = "rs.playdate.scoreboards"
 
 
 [package.metadata.docs.rs]
-all-features = false
-features = ["bindings-derive-debug"]
+all-features = true
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]

@@ -12,8 +12,7 @@ use sys::ffi::LCDPattern;
 use sys::ffi::LCDSolidColor;
 
 
-#[derive(PartialEq, Clone)]
-#[cfg_attr(feature = "bindings-derive-debug", derive(Debug))]
+#[derive(PartialEq, Clone, Debug)]
 pub enum Color<'t> {
 	Solid(LCDSolidColor),
 	Pattern(&'t LCDPattern),
