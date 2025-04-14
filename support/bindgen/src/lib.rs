@@ -294,7 +294,11 @@ fn create_builder(_target: &str,
 	                          "SoundChannel",
 	];
 	for name in NO_DER {
-		builder = builder.no_copy(*name).no_debug(*name).no_default(*name);
+		builder = builder.no_copy(*name)
+		                 .no_debug(*name)
+		                 .no_default(*name)
+		                 .no_partialeq(*name)
+		                 .no_hash(*name);
 	}
 
 
