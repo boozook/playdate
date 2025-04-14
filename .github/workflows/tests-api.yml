@@ -52,8 +52,8 @@ jobs:
       matrix:
         os:
           - { name: mac, key: macos-14 }
-          - { name: win, key: windows-latest }
           - { name: linux, key: ubuntu-latest }
+          - { name: win, key: windows-latest }
         sdk:
           - ${{ inputs.sdk || 'latest' }}
         features:
@@ -87,7 +87,7 @@ jobs:
         run: which pdc && pdc --version
 
       - name: Test (host)
-        run: cargo test -p=playdate-sys --features=${{ matrix.features }} -- --nocapture
+        run: cargo test -p=playdate-sys --lib --features=${{ matrix.features }} -- --nocapture
 
       - name: Build (host)
         run: |
@@ -119,10 +119,10 @@ jobs:
         run: rustup component add miri
 
       - name: Test (host)
-        run: cargo miri test -p=playdate-sys --features=lang-items --lib
+        run: cargo miri test --lib -p=playdate-sys --features=lang-items
 
       - name: Test (host, all-features)
-        run: cargo miri test -p=playdate-sys --all-features --lib
+        run: cargo miri test --lib -p=playdate-sys --all-features
 
       - name: Run (host)
         run: |
@@ -153,12 +153,12 @@ jobs:
       - name: Test (mock on alloc)
         env:
           RUSTFLAGS: --cfg mockrt="alloc"
-        run: cargo test -p=playdate-sys --features=lang-items --lib
+        run: cargo test --lib -p=playdate-sys --features=lang-items
 
       - name: Test (mock on std)
         env:
           RUSTFLAGS: --cfg mockrt="std"
-        run: cargo test -p=playdate-sys --features=lang-items --lib
+        run: cargo test --lib -p=playdate-sys --features=lang-items
 
   mock:
     name: >-
