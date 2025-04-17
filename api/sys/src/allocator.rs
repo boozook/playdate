@@ -40,7 +40,7 @@ unsafe impl GlobalAlloc for System {
 
 
 	#[inline]
-	unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
+	unsafe fn realloc(&self, ptr: *mut u8, _layout: Layout, new_size: usize) -> *mut u8 {
 		let res = realloc(ptr as *mut c_void, new_size) as *mut u8;
 
 		// default mem-copy- behavior if new != old:
@@ -50,13 +50,11 @@ unsafe impl GlobalAlloc for System {
 				miri_pointer_name(res.cast(), 0, c"global".to_bytes());
 			}
 
-
-			// SAFETY: the previously allocated block cannot overlap the newly allocated block.
-			// The safety contract for `dealloc` must be upheld by the caller.
-			unsafe {
-				core::ptr::copy_nonoverlapping(ptr, res, core::cmp::min(layout.size(), new_size));
-				self.dealloc(ptr, layout);
-			}
+			// NOTE: In this case PdOs's system allocator returns new memory
+			// with already copied data from old memory,
+			// and tail is not-zeroed.
+			// So, we don't need to copy anything, e.g. copy_nonoverlapping(old, new).
+			// Also, we don't need to deallocate the old memory.
 		} // otherwise if new == old => so this is normal re-allocation, grow.
 
 		res
@@ -221,29 +219,6 @@ mod local {
 }
 
 
-#[cfg(miri)]
-extern "Rust" {
-	/// Miri-provided extern function to allocate memory from the interpreter.
-	///
-	/// This is useful when no fundamental way of allocating memory is
-	/// available, e.g. when using `no_std` + `alloc`.
-	fn miri_alloc(size: usize, align: usize) -> *mut u8;
-
-	/// Miri-provided extern function to deallocate memory.
-	fn miri_dealloc(ptr: *mut u8, size: usize, align: usize);
-
-	/// Miri-provided extern function to associate a name to the nth parent of a tag.
-	/// Typically the name given would be the name of the program variable that holds the pointer.
-	/// Unreachable tags can still be named by using nonzero `nth_parent` and a child tag.
-	///
-	/// This function does nothing under Stacked Borrows, since Stacked Borrows's implementation
-	/// of `miri_print_borrow_state` does not show the names.
-	///
-	/// Under Tree Borrows, the names also appear in error messages.
-	pub fn miri_pointer_name(ptr: *const (), nth_parent: u8, name: &[u8]);
-}
-
-
 #[track_caller]
 #[inline(always)]
 unsafe fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void {
@@ -308,4 +283,27 @@ fn alloc_error(layout: Layout) -> ! {
 			panic!("OoM")
 		}
 	}
+}
+
+
+#[cfg(miri)]
+extern "Rust" {
+	/// Miri-provided extern function to allocate memory from the interpreter.
+	///
+	/// This is useful when no fundamental way of allocating memory is
+	/// available, e.g. when using `no_std` + `alloc`.
+	fn miri_alloc(size: usize, align: usize) -> *mut u8;
+
+	/// Miri-provided extern function to deallocate memory.
+	fn miri_dealloc(ptr: *mut u8, size: usize, align: usize);
+
+	/// Miri-provided extern function to associate a name to the nth parent of a tag.
+	/// Typically the name given would be the name of the program variable that holds the pointer.
+	/// Unreachable tags can still be named by using nonzero `nth_parent` and a child tag.
+	///
+	/// This function does nothing under Stacked Borrows, since Stacked Borrows's implementation
+	/// of `miri_print_borrow_state` does not show the names.
+	///
+	/// Under Tree Borrows, the names also appear in error messages.
+	pub fn miri_pointer_name(ptr: *const (), nth_parent: u8, name: &[u8]);
 }
