@@ -250,12 +250,13 @@ pub mod ctrl {
 
 	/// Update Loop return value.
 	///
-	/// This should be returned from update-callback registerd with [`ffi::PlaydateSys::setUpdateCallback`].
+	/// This should be returned from update-callback registerd with [`setUpdateCallback`].
 	///
 	/// Starting from [PdOs v1.12][changelog] the update function should return a non-zero number to tell the system to update the display,
 	/// or zero if update isn’t needed.
 	///
 	/// [changelog]: https://sdk.play.date/changelog/#_1_12_0
+	/// [`setUpdateCallback`]: crate::ffi::PlaydateSys::setUpdateCallback
 	#[repr(i32)]
 	#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 	pub enum UpdateDisplayCtrl {
