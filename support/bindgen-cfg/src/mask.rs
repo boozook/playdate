@@ -191,6 +191,35 @@ mod tests {
 		assert_eq!("111111111", &mask.to_string());
 	}
 
+	#[test]
+	fn order() {
+		macro_rules! derive {
+			($($field:ident)?) => {{
+				#[allow(unused_mut)]
+				let mut d = Derive::empty();
+				$(d.$field = true;)?
+				d
+			}};
+		}
+
+		const TEST: [(Derive, &str); 10] = [
+		                                    (derive!(), "000000000"),
+		                                    (derive!(default), "100000000"),
+		                                    (derive!(eq), "010000000"),
+		                                    (derive!(copy), "001000000"),
+		                                    (derive!(debug), "000100000"),
+		                                    (derive!(hash), "000010000"),
+		                                    (derive!(ord), "000001000"),
+		                                    (derive!(partialeq), "000000100"),
+		                                    (derive!(partialord), "000000010"),
+		                                    (derive!(constparamty), "000000001"),
+		];
+
+		for (d, expected) in TEST {
+			assert_eq!(expected, DerivesMask::from(d).to_string());
+		}
+	}
+
 
 	#[test]
 	fn err() {
