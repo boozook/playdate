@@ -15,15 +15,21 @@ repository.workspace = true
 [dependencies.sys]
 workspace = true
 default-features = false
+features = ["alloc"]
 
-[dev-dependencies]
-system = { workspace = true, default-features = false, features = ["try-trait-v2"] }
 
 [[example]]
 name = "simple"
 crate-type = ["dylib", "staticlib"]
 path = "examples/simple.rs"
 required-features = ["sys/lang-items", "sys/entry-point"]
+
+[[example]]
+name = "simple-bin"
+crate-type = ["bin"]
+path = "examples/simple.rs"
+required-features = ["sys/lang-items", "sys/entry-point"]
+
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.fs"

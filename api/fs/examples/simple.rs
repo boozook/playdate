@@ -1,34 +1,43 @@
 #![no_std]
+#![no_main]
 #[macro_use]
 extern crate alloc;
 #[macro_use]
 extern crate sys;
 extern crate playdate_fs as fs;
 
-use core::ptr::NonNull;
 use alloc::string::String;
+use core::ptr::null_mut;
 
-use sys::EventLoopCtrl;
 use sys::ffi::*;
+use sys::ctrl::EventLoopCtrl;
+use fs::error::ReadUtf8Error;
 use fs::prelude::*;
-use system::prelude::*;
 
 
-fn list_bundle_dir() -> Result<(), fs::error::ApiError> {
-	let fs = Fs::Default();
+fn list_bundle_dir() -> Result<(), FsError> {
+	let fs = Fs::default();
 	let include_hidden = true;
 	println!("Listing root dir...");
-	fs.read_dir("/", |path| println!("  {path}"), include_hidden)?;
+	let mut num_files = 0;
+	fs.read_dir(
+	            c"/",
+	            |path| {
+		            num_files += 1;
+		            println!("  {path:?}");
+	            },
+	            include_hidden,
+	)?;
+	println!("{num_files} files root dir.");
 	Ok(())
 }
 
+const DIR: &Path = c"temp";
+const FILE: &Path = c"temp/temp-file";
 
-const DIR: &Path = "temp";
-const FILE: &Path = "temp/temp-file";
 
-
-fn write_file() -> Result<(), fs::error::ApiError> {
-	let fs = Fs::Cached();
+fn write_file() -> Result<(), FsError> {
+	let fs = Fs::default();
 
 	let exists = fs.metadata(FILE).is_ok();
 
@@ -42,23 +51,22 @@ fn write_file() -> Result<(), fs::error::ApiError> {
 	}
 
 	let text = "Hello, World!";
-	println!("writing '{text}' to '{FILE}'");
+	println!("writing {text:?} to {FILE:?}");
 
 	let mut file = fs.open(FILE, FileOptions::new().write(true))?;
-	let bytes_written = fs.write(&mut file, text.as_bytes())?;
-	println!("written {bytes_written} bytes");
-
+	fs.write(&mut file, text.as_bytes())
+	  .inspect(|bytes_written| println!("written {bytes_written} bytes"))
+	  .map(|_| ())?;
 	Ok(())
 }
 
 
-fn read_file() -> Result<(), fs::error::ApiError> {
-	let fs = Fs::Cached();
+fn read_file() -> Result<(), ReadUtf8Error> {
+	let fs = Fs::default();
 
 	println!("reading file metadata");
-	let info = fs.metadata(&FILE)?;
-	println!("info: {info:?}");
-
+	let info = fs.metadata(FILE)?;
+	println!("info: {info:#?}");
 
 	// Prepare prefilled buffer:
 	println!("preparing buffer for {} bytes", info.size);
@@ -66,19 +74,20 @@ fn read_file() -> Result<(), fs::error::ApiError> {
 
 	let mut file = fs.open(FILE, FileOptions::new().read(true).read_data(true))?;
 
-	println!("reading '{FILE}'");
+	println!("reading {FILE:?}");
 	let bytes_read = file.read(&mut buf, info.size)?;
 	println!("read {bytes_read} bytes");
 
 	let result = String::from_utf8(buf)?;
-	println!("content:\n{result}");
+	println!("content: {result:?}");
+
 	Ok(())
 }
 
 
-fn read_package_info() -> Result<(), fs::error::ApiError> {
-	println!("reading pdxinfo");
-	let text = fs::read_to_string("pdxinfo", false)?;
+fn read_package_info() -> Result<(), ReadUtf8Error> {
+	println!("reading pdxinfo:");
+	let text = fs::read_to_string(c"pdxinfo", false)?;
 	println!("{text}");
 	Ok(())
 }
@@ -86,23 +95,26 @@ fn read_package_info() -> Result<(), fs::error::ApiError> {
 
 /// Entry point / event handler
 #[no_mangle]
-fn event_handler(_: NonNull<PlaydateAPI>, event: SystemEvent, _: u32) -> EventLoopCtrl {
+fn event_handler(api: &'static Playdate, event: SystemEvent, _: u32) -> EventLoopCtrl {
 	// Ignore any other events, just for this minimalistic example
-	if !matches!(event, SystemEvent::Init) {
-		return EventLoopCtrl::Continue;
+	if matches!(event, SystemEvent::Init) {
+		list_bundle_dir().expect("list_bundle_dir");
+		write_file().expect("write_file");
+		read_file().expect("read_file");
+		read_package_info().expect("read_package_info");
+
+		// Set no-op update callback
+		unsafe { (api.system.setUpdateCallback)(None, null_mut()) };
 	}
 
-	list_bundle_dir().expect("list_bundle_dir");
-	write_file().expect("write_file");
-	read_file().expect("read_file");
-	read_package_info().expect("read_package_info");
-
-	// Set no-op update callback
-	system::System::Default().set_update_callback_boxed(|_| UpdateCtrl::Continue, ());
-
-	EventLoopCtrl::Continue
+	EventLoopCtrl::Stop
 }
 
 
-// Needed for debug build
-ll_symbols!();
+#[cfg(miri)]
+#[no_mangle]
+fn miri_start(_argc: isize, _argv: *const *const u8) -> isize { sys::mock::executor::minimal() }
+
+
+// Needed for device target when building with arm-gcc and linking with its stdlib.
+// ll_symbols!();
