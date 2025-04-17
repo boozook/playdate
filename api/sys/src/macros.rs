@@ -112,7 +112,7 @@ pub use crate::{api, api_opt, try_api};
 
 #[cfg(test)]
 mod tests {
-	mod panicing {
+	mod panicking {
 		#![cfg_attr(
 		            not(debug_assertions),
 		            ignore = "we wouldn't want SIGSEGV, it's just must build."
