@@ -18,6 +18,7 @@ env:
   RUSTUP_MAX_RETRIES: 10
   CARGO_TERM_COLOR: always
   CARGO_TERM_PROGRESS_WHEN: never
+  MIRIFLAGS: -Zmiri-symbolic-alignment-check -Zmiri-track-alloc-accesses -Zmiri-report-progress -Zmiri-unique-is-unique -Zmiri-tree-borrows -Zmiri-backtrace=full -Zmiri-strict-provenance
 
 jobs:
   # Final no-op job as result of all deps-jobs, needed as finalisation step of complex/dynamic matrix.
@@ -83,9 +84,6 @@ jobs:
           win: ${{ secrets.SDK_BETA_WINDOWS }}
           linux: ${{ secrets.SDK_BETA_LINUX }}
 
-      - name: SDK ${{ steps.sdk.outputs.version }} installed
-        run: which pdc && pdc --version
-
       - name: Test (host)
         run: cargo test -p=playdate-sys --lib --features=${{ matrix.features }} -- --nocapture
 
@@ -101,7 +99,7 @@ jobs:
 
   sys-miri:
     name: "Sys: Miri"
-    runs-on: ubuntu-latest # macos-14
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     defaults:
@@ -198,3 +196,85 @@ jobs:
 
       - name: Test (miri)
         run: cargo miri test -p=playdate-sys-mock --features=${{ matrix.features }}
+
+  sys-dependers:
+    name: ${{ matrix.crate.name }} (${{ matrix.os.name }}, ${{ matrix.features.name }} features)
+    permissions:
+      contents: read
+    env:
+      MIRIFLAGS: ${{ matrix.crate.miri-flags || env.MIRIFLAGS }}
+      BUILD_STD_ARGS: -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
+    defaults:
+      run:
+        shell: bash
+    runs-on: ${{ matrix.os.key }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - { name: mac, key: macos-14 }
+          - { name: linux, key: ubuntu-latest }
+          - { name: win, key: windows-latest }
+        sdk:
+          - ${{ inputs.sdk || 'latest' }}
+        crate:
+          - name: playdate-color
+            miri-flags: -Zmiri-symbolic-alignment-check -Zmiri-track-alloc-accesses -Zmiri-report-progress -Zmiri-backtrace=full -Zmiri-permissive-provenance
+          - name: playdate-controls
+            # miri-flags: ''
+          - name: playdate-display
+            # miri-flags: ''
+          - name: playdate-fs
+            # miri-flags: ''
+          - name: playdate-graphics
+            # miri-flags: ''
+          - name: playdate-menu
+            # miri-flags: ''
+          - name: playdate-scoreboards
+            # miri-flags: ''
+          - name: playdate-sound
+            # miri-flags: ''
+          - name: playdate-sprite
+            # miri-flags: ''
+          - name: playdate-system
+            # miri-flags: ''
+          - name: playdate
+            # miri-flags: ''
+        features:
+          - { arg: "", name: default }
+          - { arg: --all-features, name: all }
+          - { arg: --no-default-features, name: "no" }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Config
+        uses: ./.github/actions/init-cfg
+
+      - name: Install bindgen
+        if: inputs.ref || (matrix.sdk != 'latest')
+        uses: ./.github/actions/install-bindgen
+
+      - name: Install SDK (${{ matrix.sdk }})
+        uses: ./.github/actions/install-sdk
+        with:
+          version: ${{ matrix.sdk }}
+          mac: ${{ secrets.SDK_BETA_MACOS }}
+          win: ${{ secrets.SDK_BETA_WINDOWS }}
+          linux: ${{ secrets.SDK_BETA_LINUX }}
+
+      - name: Build (host)
+        run: cargo build -p=${{ matrix.crate.name }} ${{ matrix.features.arg }} --examples --lib
+
+      - name: Build (device)
+        run: cargo build -p=${{ matrix.crate.name }} ${{ matrix.features.arg }} ${{ env.BUILD_STD_ARGS }} --examples --lib
+
+      - name: Test
+        run: cargo test -p=${{ matrix.crate.name }} ${{ matrix.features.arg }}
+
+      - name: Install miri
+        run: rustup component add miri
+
+      - name: Test (miri)
+        run: cargo miri test -p=${{ matrix.crate.name }} ${{ matrix.features.arg }}
