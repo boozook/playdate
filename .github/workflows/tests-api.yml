@@ -22,21 +22,22 @@ env:
 
 jobs:
   # Final no-op job as result of all deps-jobs, needed as finalisation step of complex/dynamic matrix.
-  success:
+  Success:
     name: Done
     permissions:
       contents: read
     needs:
-      - sys
-      - mock
-      - sys-mock
-      - sys-miri
+      - Sys
+      - Mock
+      - Sys-Mock
+      - Sys-Miri
+      - Crates
     runs-on: ubuntu-latest
     steps:
       - name: success
         run: "true"
 
-  sys:
+  Sys:
     name: >-
       Sys (${{ matrix.os.name }}${{ matrix.bindgen.install && ' +bindgen' || '' }})
       ${{ matrix.features }}
@@ -97,7 +98,7 @@ jobs:
           cargo build -p=playdate-sys --features=${{ matrix.features }} ${{ env.BUILD_STD_ARGS }} --example=hello-world --features=lang-items
           cargo build -p=playdate-sys --features=${{ matrix.features }} ${{ env.BUILD_STD_ARGS }} --example=handler --features=lang-items,entry-point
 
-  sys-miri:
+  Sys-Miri:
     name: "Sys: Miri"
     runs-on: ubuntu-latest
     permissions:
@@ -132,7 +133,7 @@ jobs:
           cargo miri run -p=playdate-sys --example=hello-world-bin --features=lang-items --target=thumbv7em-none-eabihf
           cargo miri run -p=playdate-sys --example=handler-bin --features=lang-items,entry-point --target=thumbv7em-none-eabihf
 
-  sys-mock:
+  Sys-Mock:
     name: "Sys: Mock"
     runs-on: ubuntu-latest
     permissions:
@@ -158,7 +159,7 @@ jobs:
           RUSTFLAGS: --cfg mockrt="std"
         run: cargo test --lib -p=playdate-sys --features=lang-items
 
-  mock:
+  Mock:
     name: >-
       Mock (${{ matrix.os.name }})
       ${{ matrix.features }}
@@ -197,7 +198,8 @@ jobs:
       - name: Test (miri)
         run: cargo miri test -p=playdate-sys-mock --features=${{ matrix.features }}
 
-  sys-dependers:
+  # sys-dependers:
+  Crates:
     name: ${{ matrix.crate.name }} (${{ matrix.os.name }}, ${{ matrix.features.name }} features)
     permissions:
       contents: read
