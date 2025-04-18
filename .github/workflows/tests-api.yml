@@ -202,7 +202,6 @@ jobs:
     permissions:
       contents: read
     env:
-      MIRIFLAGS: ${{ matrix.crate.miri-flags || env.MIRIFLAGS }}
       BUILD_STD_ARGS: -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
     defaults:
       run:
@@ -277,4 +276,6 @@ jobs:
         run: rustup component add miri
 
       - name: Test (miri)
+        env:
+          MIRIFLAGS: ${{ matrix.crate.miri-flags || env.MIRIFLAGS }}
         run: cargo miri test -p=${{ matrix.crate.name }} ${{ matrix.features.arg }}
