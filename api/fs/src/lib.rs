@@ -198,9 +198,14 @@ impl Fs {
 	///
 	/// Caution: Vector must be prefilled with `0`s.
 	/// ```no_run
+	/// # use playdate_fs::prelude::*;
+	/// # let mut fs = Fs::default();
+	/// # let size: usize = todo!("size of file, e.g. determined from fs.metadata");
 	/// let mut buf = Vec::<u8>::with_capacity(size);
 	/// buf.resize(size, 0);
-	/// fs.read(&mut file, &mut buf, size)?;
+	/// # let mut file: File = todo!("e.g. fs.open(...)");
+	/// fs.read(&mut file, &mut buf, size as u32)?;
+	/// # Ok::<_, FsError>(())
 	/// ```
 	///
 	/// Equivalent to [`sys::ffi::PlaydateFile::read`]
@@ -455,16 +460,20 @@ pub mod scoped {
 			crate::op::seek(self.0, file, pos, whence)
 		}
 
-
 		/// Reads up to `len` bytes from the file into the buffer `to`.
 		///
 		/// Returns the number of bytes read (0 indicating end of file).
 		///
 		/// Caution: Vector must be prefilled with `0`s.
 		/// ```no_run
+		/// # use playdate_fs::{prelude::*, scoped::Fs};
+		/// # let mut fs = Fs::default();
+		/// # let size: usize = todo!("size of file, e.g. determined from fs.metadata");
 		/// let mut buf = Vec::<u8>::with_capacity(size);
 		/// buf.resize(size, 0);
-		/// fs.read(&mut file, &mut buf, size)?;
+		/// # let mut file: File = todo!("e.g. fs.open(...)");
+		/// fs.read(&mut file, &mut buf, size as u32)?;
+		/// # Ok::<_, FsError>(())
 		/// ```
 		///
 		/// Equivalent to [`sys::ffi::PlaydateFile::read`]
