@@ -277,5 +277,6 @@ jobs:
 
       - name: Test (miri)
         env:
-          MIRIFLAGS: ${{ matrix.crate.miri-flags || env.MIRIFLAGS }}
+          # MIRIFLAGS: ${{ matrix.crate.miri-flags || env.MIRIFLAGS }}
+          MIRIFLAGS: ${{ matrix.crate.miri-flags }}
         run: cargo miri test -p=${{ matrix.crate.name }} ${{ matrix.features.arg }}
