@@ -18,7 +18,7 @@ env:
   RUSTUP_MAX_RETRIES: 10
   CARGO_TERM_COLOR: always
   CARGO_TERM_PROGRESS_WHEN: never
-  MIRIFLAGS: -Zmiri-symbolic-alignment-check -Zmiri-track-alloc-accesses -Zmiri-report-progress -Zmiri-unique-is-unique -Zmiri-tree-borrows -Zmiri-backtrace=full -Zmiri-strict-provenance
+  MIRIFLAGS: -Zmiri-symbolic-alignment-check -Zmiri-track-alloc-accesses -Zmiri-unique-is-unique -Zmiri-tree-borrows -Zmiri-strict-provenance
 
 jobs:
   # Final no-op job as result of all deps-jobs, needed as finalisation step of complex/dynamic matrix.
