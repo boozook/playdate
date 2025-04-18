@@ -1,4 +1,5 @@
-#![cfg_attr(not(test), no_std)]
+#![no_std]
+#![cfg_attr(not(test), no_main)]
 #![feature(const_trait_impl)]
 #![feature(const_deref)]
 
