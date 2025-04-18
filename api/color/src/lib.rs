@@ -1,205 +1,127 @@
-#![cfg_attr(not(test), no_std)]
-#![feature(const_trait_impl)]
-#![feature(impl_trait_in_assoc_type)]
+#![no_std]
+#![cfg_attr(not(test), no_main)]
+#![feature(const_trait_impl, const_deref, ptr_as_uninit)]
 
 extern crate sys;
+use core::marker::PhantomData;
+use core::mem::MaybeUninit;
+use core::ops::Deref;
+use core::ops::DerefMut;
 use core::ptr::NonNull;
-use core::usize;
 
-use sys::error::NullPtrError;
-use sys::ffi::LCDColor;
-use sys::ffi::LCDPattern;
-use sys::ffi::LCDSolidColor;
+use sys::ffi::Color as UnsafeLcdColor;
+use sys::ffi::Pattern;
+use sys::ffi::SolidColor;
+
+pub mod fmt;
+pub mod pattern;
 
 
-#[derive(PartialEq, Clone, Debug)]
+/// Safe impl of [`LcdColor`](sys::ffi::Color) with preserved lifetime of [`Pattern`].
+#[derive(Debug, Clone, Copy)]
+#[repr(transparent)]
+// May be better to use PhantomInvariantLifetime in a future
+pub struct LcdColor<'t>(UnsafeLcdColor, PhantomData<&'t ()>);
+
+impl LcdColor<'_> {
+	const fn new(value: UnsafeLcdColor) -> Self { Self(value, PhantomData) }
+}
+impl From<UnsafeLcdColor> for LcdColor<'_> {
+	fn from(value: UnsafeLcdColor) -> Self { Self::new(value) }
+}
+impl Into<UnsafeLcdColor> for LcdColor<'_> {
+	fn into(self) -> UnsafeLcdColor { self.0 }
+}
+impl const Deref for LcdColor<'_> {
+	type Target = UnsafeLcdColor;
+	fn deref(&self) -> &Self::Target { &self.0 }
+}
+impl const DerefMut for LcdColor<'_> {
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+}
+
+
+#[derive(Clone, Debug)]
 pub enum Color<'t> {
-	Solid(LCDSolidColor),
-	Pattern(&'t LCDPattern),
+	Solid(SolidColor),
+	Pattern(&'t MaybeUninit<Pattern>),
 }
 
-impl Color<'_> {
-	pub const WHITE: Self = Self::Solid(LCDSolidColor::kColorWhite);
-	pub const BLACK: Self = Self::Solid(LCDSolidColor::kColorBlack);
-	pub const CLEAR: Self = Self::Solid(LCDSolidColor::kColorClear);
-	pub const XOR: Self = Self::Solid(LCDSolidColor::kColorXOR);
-}
-
-impl<'t> From<Color<'t>> for LCDColor
-	where Self: 't,
-	      LCDColor: 't
-{
-	fn from(color: Color) -> Self {
-		match color {
-			Color::Solid(color) => color as LCDColor,
-			Color::Pattern(pattern) => (pattern as *const u8) as LCDColor,
+impl<'a, 'b> PartialEq<Color<'b>> for Color<'a> {
+	fn eq(&self, other: &Color<'b>) -> bool {
+		match (self, other) {
+			(Self::Solid(a), Color::Solid(b)) => a == b,
+			(Self::Pattern(a), Color::Pattern(b)) => core::ptr::eq(a.as_ptr(), b.as_ptr()),
+			_ => false,
 		}
 	}
 }
 
-impl<'t> TryFrom<LCDColor> for Color<'t>
-	where LCDColor: 't,
-	      Self: 't
-{
-	type Error = NullPtrError;
+impl Color<'_> {
+	pub const WHITE: Self = Self::Solid(SolidColor::White);
+	pub const BLACK: Self = Self::Solid(SolidColor::Black);
+	pub const CLEAR: Self = Self::Solid(SolidColor::Clear);
+	pub const XOR: Self = Self::Solid(SolidColor::XOR);
+}
 
-	fn try_from(color: LCDColor) -> Result<Self, Self::Error> {
+impl<'t> From<Color<'t>> for LcdColor<'t> where Self: 't {
+	fn from(color: Color) -> Self {
 		match color {
-			0 => Ok(Self::Solid(LCDSolidColor::BLACK)),
-			1 => Ok(Self::Solid(LCDSolidColor::WHITE)),
-			2 => Ok(Self::Solid(LCDSolidColor::CLEAR)),
-			3 => Ok(Self::Solid(<LCDSolidColor as LCDColorConst>::XOR)),
+			Color::Solid(color) => Self::from(color as UnsafeLcdColor),
+			Color::Pattern(pattern) => Self::from(pattern.as_ptr() as UnsafeLcdColor),
+		}
+	}
+}
+
+impl<'t> From<LcdColor<'t>> for Color<'t> where Self: 't {
+	fn from(color: LcdColor) -> Self {
+		match color.0 {
+			0 => Self::Solid(SolidColor::Black),
+			1 => Self::Solid(SolidColor::White),
+			2 => Self::Solid(SolidColor::Clear),
+			3 => Self::Solid(SolidColor::XOR),
 			color => {
-				NonNull::new(color as *mut LCDPattern).ok_or(NullPtrError)
-				                                      .map(|nn| Self::Pattern(unsafe { nn.as_ref() }))
+				// SAFETY: The value `color` is already checked and is not zero, so is not null-ptr.
+				// Of course it may be misaligned. 🤷🏻‍♂️
+				let ptr = unsafe { NonNull::new_unchecked(color as *mut Pattern) };
+				Self::Pattern(unsafe { ptr.as_uninit_ref() })
 			},
 		}
 	}
 }
 
-impl<'t> From<&'t LCDPattern> for Color<'t> {
-	fn from(pattern: &'t LCDPattern) -> Self { Color::Pattern(pattern) }
+impl<'t> From<&'t Pattern> for Color<'t> {
+	fn from(pattern: &'t Pattern) -> Self {
+		// Same as MaybeUninit::transpose.
+		// SAFETY: T and MaybeUninit<T> have the same layout
+		#[allow(clippy::missing_transmute_annotations)]
+		Color::Pattern(unsafe { core::mem::transmute(pattern) })
+	}
 }
 
 
-// TODO: LCDColorExt should be const_trait
-#[deprecated = "Useless until const_trait is experimental and incomplete. Use LCDColorConst instead."]
-pub trait LCDColorExt {
-	#![allow(non_snake_case)]
-	fn White() -> Self;
-	fn Black() -> Self;
-	fn Clear() -> Self;
-	fn XOR() -> Self;
-}
-
-#[allow(deprecated)]
-impl LCDColorExt for LCDColor {
-	#![allow(non_snake_case)]
-	fn White() -> Self { LCDSolidColor::kColorWhite as Self }
-	fn Black() -> Self { LCDSolidColor::kColorBlack as Self }
-	fn Clear() -> Self { LCDSolidColor::kColorClear as Self }
-	fn XOR() -> Self { LCDSolidColor::kColorXOR as Self }
-}
-
-#[allow(deprecated)]
-impl LCDColorExt for LCDSolidColor {
-	#![allow(non_snake_case)]
-	fn White() -> Self { LCDSolidColor::kColorWhite }
-	fn Black() -> Self { LCDSolidColor::kColorBlack }
-	fn Clear() -> Self { LCDSolidColor::kColorClear }
-	fn XOR() -> Self { LCDSolidColor::kColorXOR }
-}
-
-pub trait LCDColorConst {
-	const WHITE: Self;
-	const BLACK: Self;
-	const CLEAR: Self;
-	const XOR: Self;
-}
-
-impl LCDColorConst for LCDColor {
-	const WHITE: Self = LCDSolidColor::kColorWhite as Self;
-	const BLACK: Self = LCDSolidColor::kColorBlack as Self;
-	const CLEAR: Self = LCDSolidColor::kColorClear as Self;
-	const XOR: Self = LCDSolidColor::kColorXOR as Self;
-}
-
-impl LCDColorConst for LCDSolidColor {
-	const WHITE: Self = LCDSolidColor::kColorWhite as Self;
-	const BLACK: Self = LCDSolidColor::kColorBlack as Self;
-	const CLEAR: Self = LCDSolidColor::kColorClear as Self;
-	const XOR: Self = LCDSolidColor::kColorXOR as Self;
-}
-
-
-// TODO: LCDColorIs should be const_trait
-pub trait LCDColorIs {
+#[const_trait]
+pub trait ColorExt {
 	fn is_solid(&self) -> bool;
 	fn is_pattern(&self) -> bool;
 }
 
-impl LCDColorIs for LCDColor {
-	fn is_solid(&self) -> bool {
-		let color = *self as usize;
-		color >= LCDSolidColor::kColorBlack as _ && color <= LCDSolidColor::kColorXOR as _
-	}
+impl const ColorExt for LcdColor<'_> {
+	fn is_solid(&self) -> bool { self.0 >= SolidColor::Black as _ && self.0 <= SolidColor::XOR as _ }
 	fn is_pattern(&self) -> bool { !self.is_solid() }
 }
 
 
-// TODO: IntoLCDColor should be const_trait
-pub trait IntoLCDColor {
-	fn into_color(self) -> LCDColor;
+#[const_trait]
+pub trait IntoColor<'t> {
+	fn into_color(self) -> LcdColor<'t>;
 }
 
-impl IntoLCDColor for LCDSolidColor {
-	fn into_color(self) -> LCDColor { self as LCDColor }
+impl const IntoColor<'static> for SolidColor {
+	fn into_color(self) -> LcdColor<'static> { LcdColor::new(self as UnsafeLcdColor) }
 }
 
-impl<'t> IntoLCDColor for &'t LCDPattern where LCDColor: 't {
+impl<'t> IntoColor<'t> for &'t Pattern {
 	#[inline(always)]
-	fn into_color(self) -> LCDColor { self as *const u8 as _ }
-}
-
-
-// TODO: LCDColorFmt should be const_trait
-pub trait LCDColorFmt<'t> {
-	type Display: 't + core::fmt::Debug + core::fmt::Display;
-	fn display(&'t self) -> Self::Display;
-}
-
-impl<'t> LCDColorFmt<'t> for LCDSolidColor {
-	type Display = LCDColorDisplay<'t, Self>;
-	fn display(&self) -> LCDColorDisplay<'_, Self> { LCDColorDisplay(self) }
-}
-
-pub struct LCDColorDisplay<'t, T>(&'t T);
-
-impl core::fmt::Debug for LCDColorDisplay<'_, LCDSolidColor> {
-	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-		f.write_str("Solid")?;
-		let name = match self.0 {
-			LCDSolidColor::kColorBlack => "Black",
-			LCDSolidColor::kColorWhite => "White",
-			LCDSolidColor::kColorClear => "Clear",
-			LCDSolidColor::kColorXOR => "XOR",
-		};
-		f.write_str(name)
-	}
-}
-
-impl core::fmt::Display for LCDColorDisplay<'_, LCDSolidColor> {
-	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-		let ch = match self.0 {
-			LCDSolidColor::kColorBlack => 'B',
-			LCDSolidColor::kColorWhite => 'W',
-			LCDSolidColor::kColorClear => 'C',
-			LCDSolidColor::kColorXOR => 'X',
-		};
-		write!(f, "{ch}")
-	}
-}
-
-impl core::fmt::Debug for LCDColorDisplay<'_, LCDColor> {
-	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-		match self.0 {
-			n if *n == LCDSolidColor::kColorBlack as _ => LCDSolidColor::kColorBlack.display().fmt(f),
-			n if *n == LCDSolidColor::kColorWhite as _ => LCDSolidColor::kColorWhite.display().fmt(f),
-			n if *n == LCDSolidColor::kColorClear as _ => LCDSolidColor::kColorClear.display().fmt(f),
-			n if *n == LCDSolidColor::kColorXOR as _ => LCDSolidColor::kColorXOR.display().fmt(f),
-			p => write!(f, "Pattern({:p})", *p as *const u8),
-		}
-	}
-}
-
-impl core::fmt::Display for LCDColorDisplay<'_, LCDColor> {
-	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-		match self.0 {
-			n if *n == LCDSolidColor::kColorBlack as _ => LCDSolidColor::kColorBlack.display().fmt(f),
-			n if *n == LCDSolidColor::kColorWhite as _ => LCDSolidColor::kColorWhite.display().fmt(f),
-			n if *n == LCDSolidColor::kColorClear as _ => LCDSolidColor::kColorClear.display().fmt(f),
-			n if *n == LCDSolidColor::kColorXOR as _ => LCDSolidColor::kColorXOR.display().fmt(f),
-			_ => write!(f, "Pattern"),
-		}
-	}
+	fn into_color(self) -> LcdColor<'t> { LcdColor::new(self.as_ptr() as _) }
 }
