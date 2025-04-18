@@ -29,6 +29,7 @@ impl LcdColor<'_> {
 impl From<UnsafeLcdColor> for LcdColor<'_> {
 	fn from(value: UnsafeLcdColor) -> Self { Self::new(value) }
 }
+#[allow(clippy::from_over_into)]
 impl Into<UnsafeLcdColor> for LcdColor<'_> {
 	fn into(self) -> UnsafeLcdColor { self.0 }
 }

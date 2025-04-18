@@ -228,23 +228,23 @@ pub mod ctrl {
 		Stop = 1,
 	}
 
-	impl Into<c_int> for EventLoopCtrl {
-		fn into(self) -> c_int { self as _ }
+	impl From<EventLoopCtrl> for c_int {
+		fn from(v: EventLoopCtrl) -> Self { v as _ }
 	}
 	impl From<c_int> for EventLoopCtrl {
-		fn from(value: c_int) -> Self { if value == 0 { Self::Continue } else { Self::Stop } }
+		fn from(v: c_int) -> Self { if v == 0 { Self::Continue } else { Self::Stop } }
 	}
-	impl Into<c_uint> for EventLoopCtrl {
-		fn into(self) -> c_uint { self as _ }
+	impl From<EventLoopCtrl> for c_uint {
+		fn from(v: EventLoopCtrl) -> Self { v as _ }
 	}
 	impl From<c_uint> for EventLoopCtrl {
-		fn from(value: c_uint) -> Self { if value == 0 { Self::Continue } else { Self::Stop } }
+		fn from(v: c_uint) -> Self { if v == 0 { Self::Continue } else { Self::Stop } }
 	}
-	impl Into<bool> for EventLoopCtrl {
-		fn into(self) -> bool { matches!(self, Self::Continue) }
+	impl From<EventLoopCtrl> for bool {
+		fn from(v: EventLoopCtrl) -> Self { matches!(v, EventLoopCtrl::Continue) }
 	}
 	impl From<bool> for EventLoopCtrl {
-		fn from(value: bool) -> Self { unsafe { core::mem::transmute(value as i32) } }
+		fn from(v: bool) -> Self { unsafe { core::mem::transmute(v as i32) } }
 	}
 
 
@@ -267,23 +267,23 @@ pub mod ctrl {
 	}
 
 
-	impl Into<c_int> for UpdateDisplayCtrl {
-		fn into(self) -> c_int { self as _ }
+	impl From<UpdateDisplayCtrl> for c_int {
+		fn from(v: UpdateDisplayCtrl) -> Self { v as _ }
 	}
 	impl From<c_int> for UpdateDisplayCtrl {
-		fn from(value: c_int) -> Self { if value == 0 { Self::Nope } else { Self::Needed } }
+		fn from(v: c_int) -> Self { if v == 0 { Self::Nope } else { Self::Needed } }
 	}
-	impl Into<c_uint> for UpdateDisplayCtrl {
-		fn into(self) -> c_uint { self as _ }
+	impl From<UpdateDisplayCtrl> for c_uint {
+		fn from(v: UpdateDisplayCtrl) -> Self { v as _ }
 	}
 	impl From<c_uint> for UpdateDisplayCtrl {
-		fn from(value: c_uint) -> Self { if value == 0 { Self::Nope } else { Self::Needed } }
+		fn from(v: c_uint) -> Self { if v == 0 { Self::Nope } else { Self::Needed } }
 	}
-	impl Into<bool> for UpdateDisplayCtrl {
-		fn into(self) -> bool { matches!(self, Self::Needed) }
+	impl From<UpdateDisplayCtrl> for bool {
+		fn from(v: UpdateDisplayCtrl) -> Self { matches!(v, UpdateDisplayCtrl::Needed) }
 	}
 	impl From<bool> for UpdateDisplayCtrl {
-		fn from(value: bool) -> Self { unsafe { core::mem::transmute(value as i32) } }
+		fn from(v: bool) -> Self { unsafe { core::mem::transmute(v as i32) } }
 	}
 
 
