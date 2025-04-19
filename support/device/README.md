@@ -25,7 +25,7 @@ Supported platforms:
 
 ## Prerequisites
 
-1. Rust __nightly__ toolchain
+1. [Common prerequisites described in the wiki](https://github.com/boozook/playdate/wiki#prerequisites)
 1. Linux only:
   - `libudev`, follow [instructions for udev crate][udev-crate-deps].
 1. Windows only:

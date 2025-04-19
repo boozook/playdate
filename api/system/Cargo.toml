@@ -13,14 +13,7 @@ repository.workspace = true
 
 
 [features]
-default = ["sys/default"]
-try-trait-v2 = ["sys/try-trait-v2"] # impl `FromResidual` for `UpdateCtrl`
-
-# playdate-sys features, should be shared because it's build configuration:
-
-bindgen-runtime = ["sys/bindgen-runtime"]
-bindgen-static = ["sys/bindgen-static"]
-bindings-derive-debug = ["sys/bindings-derive-debug"]
+try-trait-v2 = [] # impl `FromResidual` for `UpdateCtrl` # TODO: remove `try-trait-v2` feature
 
 
 [dependencies.sys]
@@ -62,17 +55,7 @@ bundle-id = "rs.playdate.system"
 
 
 [package.metadata.docs.rs]
-all-features = false
-features = [
-	"sys/bindings-derive-default",
-	"sys/bindings-derive-eq",
-	"sys/bindings-derive-copy",
-	"bindings-derive-debug",
-	"sys/bindings-derive-hash",
-	"sys/bindings-derive-ord",
-	"sys/bindings-derive-partialeq",
-	"sys/bindings-derive-partialord",
-]
+all-features = true
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]

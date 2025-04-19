@@ -173,7 +173,7 @@ jobs:
             -p=playdate-sprite
             -p=playdate-system
             -p=playdate
-          FEATURES: --features=bindings-derive-debug,sys/bindings-documentation,sys/error-ctx
+          FEATURES: --all-features
         run: >-
           cargo llvm-cov test ${{ env.CRATES }}
           --lib --tests --no-default-features
@@ -183,7 +183,7 @@ jobs:
           --lcov --output-path api-no-default.lcov.info
 
           cargo llvm-cov test ${{ env.CRATES }}
-          --lib --tests --no-default-features ${{ env.FEATURES }}
+          --lib --tests ${{ env.FEATURES }}
           --no-fail-fast --ignore-rust-version --include-ffi
           --remap-path-prefix --show-instantiations
           --branch --mcdc

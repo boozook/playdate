@@ -1,4 +1,4 @@
-use core::ffi::c_int;
+use core::ffi::{c_uint, c_int};
 
 
 #[derive(Debug, Clone, Copy)]
@@ -8,7 +8,7 @@ pub enum SeekFrom {
 	///
 	/// Same as [`std::io::SeekFrom::Start`].
 	#[doc(alias = "sys::ffi::SEEK_SET")]
-	Start(c_int),
+	Start(c_uint),
 
 	/// Sets the offset to the current position plus the specified number of
 	/// bytes.
@@ -35,7 +35,7 @@ impl SeekFrom {
 	/// Split into [`whence`](Whence) and position.
 	pub const fn into_parts(self) -> (Whence, c_int) {
 		match self {
-			SeekFrom::Start(pos) => (Whence::Start, pos),
+			SeekFrom::Start(pos) => (Whence::Start, pos as _),
 			SeekFrom::Current(pos) => (Whence::Current, pos),
 			SeekFrom::End(pos) => (Whence::End, pos),
 		}

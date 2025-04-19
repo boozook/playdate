@@ -19,8 +19,7 @@ impl Api for Default {}
 /// Stores one reference, so size on stack is eq `usize`.
 ///
 /// All calls approximately costs ~1 deref.
-#[derive(Clone, Copy)]
-#[cfg_attr(feature = "bindings-derive-debug", derive(Debug))]
+#[derive(Clone, Copy, Debug)]
 pub struct Cache(&'static playdate_sys);
 
 impl core::default::Default for Cache {
