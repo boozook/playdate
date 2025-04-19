@@ -19,6 +19,9 @@ pub mod pattern;
 
 
 /// Safe impl of [`LcdColor`](sys::ffi::Color) with preserved lifetime of [`Pattern`].
+///
+/// In case of this containts a pattern ("pointer" to the pattern),
+/// for each function taking an `LCDColor` the pattern is freeable immediately after returning.
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(transparent)]
 // May be better to use PhantomInvariantLifetime in a future
@@ -140,6 +143,8 @@ extern crate std;
 #[cfg(test)]
 mod tests {
 	use core::assert_matches::assert_matches;
+	use core::ptr;
+	use std::thread::spawn;
 
 	use super::*;
 	use crate::pattern::opaque;
@@ -196,17 +201,10 @@ mod tests {
 
 		let provenance_b = STATIC.as_ptr().expose_provenance();
 
-		{
-			// This is not acceptable for the compiler, so great as should be:
-			// let pat = opaque([0xf, 0x6f, 0x6f, 0xf, 0xf0, 0xf6, 0xf6, 0xf0]);
-			// let c = pat.into_color();
-			// see pattern_into_color_stack test.
-		}
-
 		for _ in 0..100 {
 			for (c, provenance) in [(a, provenance_a), (b, provenance_b)] {
-				accept_any(c, provenance);
-				accept_static_only(c, provenance);
+				deferred_pattern_use(c, provenance);
+				immediate_pattern_use(c, provenance);
 			}
 		}
 	}
@@ -218,25 +216,26 @@ mod tests {
 
 		for _ in 0..100 {
 			let c = pat.into_color();
-			accept_any(c, provenance);
+			immediate_pattern_use(c, provenance);
 		}
 	}
 
 
-	fn accept_any(c: LcdColor<'_>, provenance: usize) {
+	fn immediate_pattern_use(c: LcdColor<'_>, provenance: usize) {
 		assert!(c.is_pattern());
 		// simulate pattern internal usage
 		// let ptr = c.0 as *const Pattern;
 
 		// instead, for test we using strict provenance api:
-		let ptr: *const Pattern = core::ptr::with_exposed_provenance::<Pattern>(provenance).with_addr(c.0);
+		let ptr: *const Pattern = ptr::with_exposed_provenance::<Pattern>(provenance).with_addr(c.0);
 		assert!(core::ptr::addr_eq(c.0 as *const (), ptr));
 
-		let pat = unsafe { core::ptr::read(ptr) };
+		let pat = unsafe { ptr::read(ptr) };
 		assert_eq!(PAT, pat);
 	}
 
-	fn accept_static_only(c: LcdColor<'static>, provenance: usize) {
-		std::thread::spawn(move || accept_any(c, provenance)).join().ok();
+	fn deferred_pattern_use(c: LcdColor<'static>, provenance: usize) {
+		spawn(move || immediate_pattern_use(c, provenance)).join()
+		                                                   .unwrap();
 	}
 }
