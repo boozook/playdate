@@ -30,6 +30,8 @@ Follow the instructions for:
 1. [cargo-playdate](https://github.com/boozook/playdate/blob/main/cargo/README.md#prerequisites)
 1. [playdate-sys](https://github.com/boozook/playdate/tree/main/api/sys#prerequisites)
 
+[Common prerequisites described in the wiki](https://github.com/boozook/playdate/wiki#prerequisites).
+
 
 ## Compatibility
 

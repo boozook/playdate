@@ -4,21 +4,10 @@ High-level controls API built on-top of [playdate-sys][].
 
 Covered components: buttons, accelerometer and crank.
 
-⚠️ Prior to the version `1.0` API is unstable and can be changed without deprecation period.
-
-
-## Prerequisites
-
-1. Rust __nightly__ toolchain (rustup is optional)
-1. [Playdate SDK][sdk]
-1. Follow the [official documentation][doc-prerequisites]
-1. Follow the instructions for [playdate-sys][]
-
-[sdk]: https://play.date/dev/#cardSDK
-[doc-prerequisites]: https://sdk.play.date/Inside%20Playdate%20with%20C.html#_prerequisites
-
 
 ## Usage
+
+[Common prerequisites described in the wiki](https://github.com/boozook/playdate/wiki#prerequisites).
 
 Buttons:
 ```rust
@@ -52,7 +41,8 @@ See more in [examples][playdate-controls-examples].
 
 
 
-
 - - -
+
+⚠️ Prior to the version `1.0` API is unstable and can be changed without deprecation period.
 
 This software is not sponsored or supported by Panic.

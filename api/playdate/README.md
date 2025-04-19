@@ -35,6 +35,8 @@ Plus some extensions to make it all more rust-ish.
 
 ## How to start
 
+[Common prerequisites described in the wiki](https://github.com/boozook/playdate/wiki#prerequisites).
+
 Look at the [examples][gh-playdate-examples].
 
 
@@ -54,14 +56,6 @@ More information how to use [cargo-playdate][] in help: `cargo playdate --help`.
 
 
 [gh-playdate-examples]: https://github.com/boozook/playdate/tree/main/api/gfx/examples
-
-
-### Prerequisites
-
-Follow the instructions for:
-1. [SDK](https://sdk.play.date/Inside%20Playdate%20with%20C.html#_prerequisites)
-1. [cargo-playdate](https://github.com/boozook/playdate/blob/main/cargo/README.md#prerequisites)
-1. [playdate-sys](https://github.com/boozook/playdate/tree/main/api/sys#prerequisites) (prerequisites only)
 
 
 ### Hello World

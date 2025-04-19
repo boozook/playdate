@@ -23,13 +23,15 @@ _I've experimented enough with wrapping the entire API with results at every ste
 
 ## Prerequisites
 
-<abbr title="Minimal Nightly Rust Version">MNRV</abbr> is [`1.81.0` from 2024-06-30][rust-toolchain.toml]
+<abbr title="Minimal Nightly Rust Version">MNRV</abbr> is [there][rust-toolchain.toml]
 
 1. Rust __nightly__ toolchain (rustup is optional)
 1. [Playdate SDK][sdk]
    - Ensure that env var `PLAYDATE_SDK_PATH` points to the SDK root
 1. Follow the [official documentation][doc-prerequisites]
    - Ensure that `arm-none-eabi-gcc` or `gcc-arm-none-eabi` in your `PATH`
+
+[Common prerequisites described in the wiki](https://github.com/boozook/playdate/wiki#prerequisites).
 
 [sdk]: https://play.date/dev/#cardSDK
 [doc-prerequisites]: https://sdk.play.date/Inside%20Playdate%20with%20C.html#_prerequisites
