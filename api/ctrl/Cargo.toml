@@ -14,24 +14,25 @@ repository.workspace = true
 
 [dependencies]
 sys = { workspace = true, default-features = false }
-system = { workspace = true, default-features = false }
+# system = { workspace = true, default-features = false }
 
-[dev-dependencies]
-gfx = { workspace = true, default-features = false }
-display = { workspace = true, default-features = false }
-system = { workspace = true, default-features = false, features = ["try-trait-v2"] }
+# [dev-dependencies]
+# # gfx = { workspace = true, default-features = false }
+# display = { workspace = true, default-features = false }
+# # system = { workspace = true, default-features = false, features = ["try-trait-v2"] }
 
-[[example]]
-name = "buttons"
-crate-type = ["dylib", "staticlib"]
-path = "examples/buttons.rs"
-required-features = ["sys/lang-items", "sys/entry-point"]
+# [[example]]
+# name = "buttons"
+# crate-type = ["dylib", "staticlib"]
+# path = "examples/buttons.rs"
+# required-features = ["sys/lang-items", "sys/entry-point"]
+# required-features = ["sys/lang-items", "sys/entry-point"]
 
-[[example]]
-name = "accelerometer"
-crate-type = ["dylib", "staticlib"]
-path = "examples/accelerometer.rs"
-required-features = ["sys/lang-items", "sys/entry-point"]
+# [[example]]
+# name = "accelerometer"
+# crate-type = ["dylib", "staticlib"]
+# path = "examples/accelerometer.rs"
+# required-features = ["sys/lang-items", "sys/entry-point"]
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.ctrl"
