@@ -18,7 +18,7 @@ fs = { workspace = true, default-features = false }
 
 [dev-dependencies]
 gfx = { workspace = true, default-features = false }
-system = { workspace = true, default-features = false, features = ["try-trait-v2"] }
+system = { workspace = true, default-features = false }
 
 [[example]]
 name = "sp"

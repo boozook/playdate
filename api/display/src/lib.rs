@@ -34,7 +34,7 @@ impl Display {
 	pub const ROWS: u32 = sys::ffi::LCD_ROWS;
 	pub const ROW_SIZE: u32 = sys::ffi::LCD_ROWSIZE;
 
-	pub fn new(api: Api) -> Self { Self(api) }
+	pub const fn new(api: Api) -> Self { Self(api) }
 }
 
 

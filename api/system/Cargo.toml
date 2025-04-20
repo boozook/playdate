@@ -12,8 +12,8 @@ homepage.workspace = true
 repository.workspace = true
 
 
-[features]
-try-trait-v2 = [] # impl `FromResidual` for `UpdateCtrl` # TODO: remove `try-trait-v2` feature
+# [features]
+# try-trait-v2 = [] # impl `FromResidual` for `UpdateCtrl` # TODO: remove `try-trait-v2` feature
 
 
 [dependencies.sys]

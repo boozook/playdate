@@ -18,7 +18,7 @@ erased_set = "0.8"
 
 
 [dev-dependencies]
-system = { workspace = true, default-features = false, features = ["try-trait-v2"] }
+system = { workspace = true, default-features = false }
 
 
 [[example]]
