@@ -39,55 +39,55 @@ impl Default for System {
 impl System {
 	pub const fn new(api: Api) -> Self { Self(api) }
 
-	pub const fn input(&self) -> ctrl::api::Ctrl { ctrl::api::Ctrl::new(self.0) }
-
 	pub const fn time(&self) -> time::Time { time::Time::new(self.0) }
+	pub const fn input(&self) -> ctrl::api::Ctrl { ctrl::api::Ctrl::new(self.0) }
 }
 
 
 impl System {
-	/// Equivalent to [`sys::ffi::playdateSys::getLanguage`]
-	#[doc(alias = "sys::ffi::playdateSys::getLanguage")]
+	/// Returns the current language of the system.
+	#[doc(alias = "sys::ffi::PlaydateSys::getLanguage")]
 	#[inline(always)]
 	pub fn language(&self) -> sys::ffi::Language { unsafe { (self.0.getLanguage)() } }
 
-	/// Equivalent to [`sys::ffi::playdateSys::drawFPS`]
-	#[doc(alias = "sys::ffi::playdateSys::drawFPS")]
+	/// Calculates the current frames per second and draws that value at `x, y`.
+	#[doc(alias = "sys::ffi::PlaydateSys::drawFPS")]
 	#[inline(always)]
 	pub fn draw_fps(&self, x: c_int, y: c_int) { unsafe { (self.0.drawFPS)(x, y) } }
 
-	/// Equivalent to [`sys::ffi::playdateSys::getFlipped`]
-	#[doc(alias = "sys::ffi::playdateSys::getFlipped")]
+	/// Returns `true` if the global "flipped" system setting is set.
+	#[doc(alias = "sys::ffi::PlaydateSys::getFlipped")]
 	#[inline(always)]
 	pub fn flipped(&self) -> bool { unsafe { (self.0.getFlipped)() != 0 } }
 
 	/// Disables or enables the 3 minute auto lock feature.
 	/// When called, the timer is reset to 3 minutes.
-	/// Equivalent to [`sys::ffi::playdateSys::setAutoLockDisabled`]
-	#[doc(alias = "sys::ffi::playdateSys::setAutoLockDisabled")]
+	#[doc(alias = "sys::ffi::PlaydateSys::setAutoLockDisabled")]
 	#[inline(always)]
 	pub fn set_auto_lock(&self, disable: bool) { unsafe { (self.0.setAutoLockDisabled)(disable as _) } }
 
-	/// Equivalent to [`sys::ffi::playdateSys::getReduceFlashing`]
-	#[doc(alias = "sys::ffi::playdateSys::getReduceFlashing")]
+	/// Returns `true` if the global "reduce flashing" system setting is set.
+	#[doc(alias = "sys::ffi::PlaydateSys::getReduceFlashing")]
 	#[inline(always)]
 	pub fn reduce_flashing(&self) -> bool { unsafe { (self.0.getReduceFlashing)() == 1 } }
 
 
-	/// Equivalent to [`sys::ffi::playdateSys::getBatteryPercentage`]
-	#[doc(alias = "sys::ffi::playdateSys::getBatteryPercentage")]
+	/// Returns a value from `0-100` denoting the current level of battery charge.
+	/// `0` = empty;
+	/// `100` = full.
+	#[doc(alias = "sys::ffi::PlaydateSys::getBatteryPercentage")]
 	#[inline(always)]
 	pub fn battery_percentage(&self) -> c_float { unsafe { (self.0.getBatteryPercentage)() } }
 
 
-	/// Equivalent to [`sys::ffi::playdateSys::getBatteryVoltage`]
-	#[doc(alias = "sys::ffi::playdateSys::getBatteryVoltage")]
+	/// Returns the battery’s current voltage level.
+	#[doc(alias = "sys::ffi::PlaydateSys::getBatteryVoltage")]
 	#[inline(always)]
 	pub fn battery_voltage(&self) -> c_float { unsafe { (self.0.getBatteryVoltage)() } }
 
 
-	/// Equivalent to [`sys::ffi::playdateSys::setSerialMessageCallback`]
-	#[doc(alias = "sys::ffi::playdateSys::setSerialMessageCallback")]
+	/// Equivalent to [`sys::ffi::PlaydateSys::setSerialMessageCallback`]
+	#[doc(alias = "sys::ffi::PlaydateSys::setSerialMessageCallback")]
 	pub fn set_serial_message_callback<F>(&self, callback: Option<F>)
 		where F: 'static + FnMut(String) + Sized {
 		use core::ffi::c_char;
@@ -133,8 +133,8 @@ impl System {
 
 	/// Pauses execution for the given number of milliseconds.
 	///
-	/// Equivalent to [`sys::ffi::playdateSys::delay`]
-	#[doc(alias = "sys::ffi::playdateSys::delay")]
+	/// Equivalent to [`sys::ffi::PlaydateSys::delay`]
+	#[doc(alias = "sys::ffi::PlaydateSys::delay")]
 	#[inline(always)]
 	pub fn delay(&self, ms: time::Milliseconds) { unsafe { (self.0.delay)(ms.0) } }
 
