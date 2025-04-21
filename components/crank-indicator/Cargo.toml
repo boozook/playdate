@@ -19,7 +19,6 @@ sprite = { workspace = true, default-features = false }
 
 
 [dev-dependencies]
-ctrl = { workspace = true, default-features = false }
 menu = { workspace = true, default-features = false }
 
 

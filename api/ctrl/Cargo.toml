@@ -1,0 +1,18 @@
+[package]
+name = "playdate-controls"
+version = "0.4.0"
+readme = "README.md"
+description = "High-level controls API built on-top of Playdate API, merged into playdate-system."
+keywords = ["playdate", "sdk", "api", "gamedev"]
+categories = ["game-development", "api-bindings", "no-std"]
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[lib]
+path = "_"
+
+[package.metadata.playdate]
+bundle-id = "rs.playdate.ctrl"

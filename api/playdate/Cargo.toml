@@ -13,7 +13,6 @@ repository.workspace = true
 
 
 [dependencies]
-ctrl = { workspace = true, default-features = false }
 display = { workspace = true, default-features = false }
 fs = { workspace = true, default-features = false }
 gfx = { workspace = true, default-features = false }
