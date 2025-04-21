@@ -16,3 +16,7 @@ path = "_"
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.ctrl"
+
+
+[badges.maintenance]
+status = "deprecated"
