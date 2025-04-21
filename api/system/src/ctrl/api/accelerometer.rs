@@ -47,12 +47,12 @@ impl Accelerometer {
 	///
 	/// Accelerometer data is not available until the next update cycle after it’s enabled.
 	#[doc(alias = "sys::ffi::PlaydateSys::setPeripheralsEnabled")]
-	pub fn enable(api: Api) { unsafe { (api.setPeripheralsEnabled)(Peripherals::Accelerometer) } }
+	pub fn enable(&self) { unsafe { (self.0.setPeripheralsEnabled)(Peripherals::Accelerometer) } }
 
 	/// Disables accelerometer.
 	///
 	/// _Functionally it disables all peripherals, but
 	/// currently there's only one peripheral - accelerometer._
 	#[doc(alias = "sys::ffi::PlaydateSys::setPeripheralsEnabled")]
-	pub fn disable(api: Api) { unsafe { (api.setPeripheralsEnabled)(Peripherals::None) } }
+	pub fn disable(&self) { unsafe { (self.0.setPeripheralsEnabled)(Peripherals::None) } }
 }

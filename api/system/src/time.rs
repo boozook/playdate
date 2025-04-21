@@ -21,7 +21,7 @@ pub struct Epoch {
 impl Epoch {
 	pub const fn new(sec: c_uint, ms: Option<c_uint>) -> Self {
 		Self { sec,
-		       ms: ms.unwrap_or_default() }
+		       ms: if let Some(ms) = ms { ms } else { 0 } }
 	}
 }
 

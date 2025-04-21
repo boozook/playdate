@@ -21,34 +21,34 @@ workspace = true
 default-features = false
 
 
-[[example]]
-name = "handler-boxed"
-crate-type = ["dylib", "staticlib"]
-path = "examples/handler-boxed.rs"
-required-features = ["sys/entry-point", "sys/lang-items"]
+# [[example]]
+# name = "handler-boxed"
+# crate-type = ["dylib", "staticlib"]
+# path = "examples/handler-boxed.rs"
+# required-features = ["sys/entry-point", "sys/lang-items"]
 
-[[example]]
-name = "handler-static"
-crate-type = ["dylib", "staticlib"]
-path = "examples/handler-static.rs"
-required-features = ["sys/entry-point", "sys/lang-items"]
+# [[example]]
+# name = "handler-static"
+# crate-type = ["dylib", "staticlib"]
+# path = "examples/handler-static.rs"
+# required-features = ["sys/entry-point", "sys/lang-items"]
 
-[[example]]
-name = "handler-pinned"
-crate-type = ["dylib", "staticlib"]
-path = "examples/handler-pinned.rs"
-required-features = ["sys/entry-point", "sys/lang-items"]
+# [[example]]
+# name = "handler-pinned"
+# crate-type = ["dylib", "staticlib"]
+# path = "examples/handler-pinned.rs"
+# required-features = ["sys/entry-point", "sys/lang-items"]
 
-[[example]]
-name = "set-serial-message-callback"
-crate-type = ["dylib", "staticlib"]
-path = "examples/set-serial-message-callback.rs"
+# [[example]]
+# name = "set-serial-message-callback"
+# crate-type = ["dylib", "staticlib"]
+# path = "examples/set-serial-message-callback.rs"
 
-[[example]]
-name = "update-state-in-serial-message-callback"
-crate-type = ["dylib", "staticlib"]
-path = "examples/update-state-in-serial-message-callback.rs"
-required-features = ["sys/entry-point", "sys/lang-items"]
+# [[example]]
+# name = "update-state-in-serial-message-callback"
+# crate-type = ["dylib", "staticlib"]
+# path = "examples/update-state-in-serial-message-callback.rs"
+# required-features = ["sys/entry-point", "sys/lang-items"]
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.system"

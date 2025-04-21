@@ -130,7 +130,7 @@ impl State {
 
 impl core::fmt::Debug for State {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-		use crate::buttons::Buttons;
+		use crate::ctrl::buttons::Buttons;
 
 		f.debug_struct("Buttons")
 		 .field("current", &self.current.display())

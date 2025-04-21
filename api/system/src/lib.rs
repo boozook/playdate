@@ -1,9 +1,13 @@
 #![no_std]
 #![cfg_attr(not(test), no_main)]
+#![feature(const_trait_impl)]
+#![feature(impl_trait_in_assoc_type)]
+
 
 #[macro_use]
-extern crate sys;
 extern crate alloc;
+#[macro_use]
+extern crate sys;
 
 use core::ffi::c_float;
 use core::ffi::c_int;
@@ -11,12 +15,14 @@ use alloc::string::String;
 
 
 pub mod time;
-pub mod update;
+pub mod ctrl;
+// pub mod update;
 
 pub mod prelude {
 	pub use crate::System;
 	pub use crate::time::*;
-	pub use crate::update::*;
+	pub use crate::ctrl::buttons::*;
+	// pub use crate::update::*;
 }
 
 
@@ -32,6 +38,10 @@ impl Default for System {
 
 impl System {
 	pub const fn new(api: Api) -> Self { Self(api) }
+
+	pub const fn input(&self) -> ctrl::api::Ctrl { ctrl::api::Ctrl::new(self.0) }
+
+	pub const fn time(&self) -> time::Time { time::Time::new(self.0) }
 }
 
 
