@@ -43,7 +43,8 @@ Follow the instructions for:
 
 Run example:
 ```bash
-cargo run -p=cargo-playdate -- run -p=playdate-controls --example=buttons --features="sys/lang-items sys/entry-point"
+cargo playdate run -p=playdate-fs --example=simple --features=sys/lang-items,sys/entry-point
+# or with cargo run -p=cargo-playdate -- ...
 ```
 
 Install `cargo-playdate` and build & run another example:

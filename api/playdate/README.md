@@ -14,7 +14,6 @@ Usage with [cargo-playdate][cargo-playdate] is strongly recommended.
 
 ### Covered parts of API:
 
-- [controls](https://crates.io/crates/playdate-controls)
 - [display](https://crates.io/crates/playdate-display)
 - [file system](https://crates.io/crates/playdate-fs)
 - [graphics](https://crates.io/crates/playdate-graphics) (with [color](https://crates.io/crates/playdate-color))
@@ -22,7 +21,7 @@ Usage with [cargo-playdate][cargo-playdate] is strongly recommended.
 - [scoreboards](https://crates.io/crates/playdate-scoreboards)
 - [sound](https://crates.io/crates/playdate-sound)
 - [sprite](https://crates.io/crates/playdate-sprite)
-- [system](https://crates.io/crates/playdate-system) (with [menu](https://crates.io/crates/playdate-menu))
+- [system](https://crates.io/crates/playdate-system) (with controls & [menu](https://crates.io/crates/playdate-menu))
 - [sys](https://crates.io/crates/playdate-sys) - base, low-level cffi bindings
 
 Plus some extensions to make it all more rust-ish.

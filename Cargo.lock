@@ -4103,7 +4103,6 @@ checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 name = "playdate"
 version = "0.2.6"
 dependencies = [
- "playdate-controls",
  "playdate-display",
  "playdate-fs",
  "playdate-graphics",
@@ -4182,13 +4181,7 @@ dependencies = [
 
 [[package]]
 name = "playdate-controls"
-version = "0.3.9"
-dependencies = [
- "playdate-display",
- "playdate-graphics",
- "playdate-sys",
- "playdate-system",
-]
+version = "0.4.0"
 
 [[package]]
 name = "playdate-device"
@@ -4232,7 +4225,6 @@ name = "playdate-fs"
 version = "0.2.12"
 dependencies = [
  "playdate-sys",
- "playdate-system",
 ]
 
 [[package]]
@@ -4369,7 +4361,6 @@ dependencies = [
 name = "playdate-ui-crank-indicator"
 version = "0.1.7"
 dependencies = [
- "playdate-controls",
  "playdate-display",
  "playdate-graphics",
  "playdate-menu",

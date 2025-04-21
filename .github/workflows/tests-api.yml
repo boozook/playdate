@@ -221,8 +221,6 @@ jobs:
         crate:
           - name: playdate-color
             miri-flags: -Zmiri-symbolic-alignment-check -Zmiri-track-alloc-accesses -Zmiri-report-progress -Zmiri-backtrace=full -Zmiri-permissive-provenance
-          - name: playdate-controls
-            # miri-flags: ''
           - name: playdate-display
             # miri-flags: ''
           - name: playdate-fs

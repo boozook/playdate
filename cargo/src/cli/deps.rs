@@ -22,7 +22,6 @@ impl Dependency<'_> {
 					DependencyName::Sys => Some(GIT),
 					DependencyName::System => Some(GIT),
 					DependencyName::Menu => Some(GIT),
-					DependencyName::Controls => Some(GIT),
 					DependencyName::Fs => Some(GIT),
 					DependencyName::Sound => Some(GIT),
 					DependencyName::Display => Some(GIT),
@@ -52,9 +51,6 @@ impl ValueEnum for Dependency<'_> {
 
 						Self { name: Name::System, source: Src::CratesIo, },
 						Self { name: Name::System, source: Src::Git, },
-
-						Self { name: Name::Controls, source: Src::CratesIo, },
-		            Self { name: Name::Controls, source: Src::Git, },
 
 						Self { name: Name::Menu, source: Src::CratesIo, },
 						Self { name: Name::Menu, source: Src::Git, },
@@ -146,7 +142,6 @@ impl std::fmt::Display for Dependency<'_> {
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum DependencyName<'t> {
 	Color,
-	Controls,
 	Display,
 	Fs,
 	Graphics,
@@ -164,7 +159,6 @@ impl<'t> DependencyName<'t> {
 		match self {
 			DependencyName::Sys => "playdate-sys".into(),
 			DependencyName::System => "playdate-system".into(),
-			DependencyName::Controls => "playdate-controls".into(),
 			DependencyName::Menu => "playdate-menu".into(),
 			DependencyName::Fs => "playdate-fs".into(),
 			DependencyName::Sound => "playdate-sound".into(),
@@ -181,7 +175,6 @@ impl<'t> DependencyName<'t> {
 		match self {
 			DependencyName::Sys => "Low-level Playdate API".into(),
 			DependencyName::System => "Playdate system API".into(),
-			DependencyName::Controls => "Playdate controls API".into(),
 			DependencyName::Menu => "Playdate menu API".into(),
 			DependencyName::Fs => "Playdate file-system API".into(),
 			DependencyName::Sound => "Playdate sound API".into(),
@@ -198,7 +191,6 @@ impl<'t> DependencyName<'t> {
 		match self {
 			DependencyName::Sys => &["sys"][..],
 			DependencyName::System => &["system"],
-			DependencyName::Controls => &["controls", "ctrl"],
 			DependencyName::Menu => &["menu"],
 			DependencyName::Fs => &["fs"],
 			DependencyName::Sound => &["sound"],
@@ -230,7 +222,6 @@ impl FromStr for DependencyName<'_> {
 			"" => Sys, // default empty case
 			n if n == Sys.as_str() || Sys.aliases().any(|a| a == n) => Sys,
 			n if n == System.as_str() || System.aliases().any(|a| a == n) => System,
-			n if n == Controls.as_str() || Controls.aliases().any(|a| a == n) => Controls,
 			n if n == Menu.as_str() || Menu.aliases().any(|a| a == n) => Menu,
 			n if n == Fs.as_str() || Fs.aliases().any(|a| a == n) => Fs,
 			n if n == Sound.as_str() || Sound.aliases().any(|a| a == n) => Sound,
@@ -284,7 +275,6 @@ impl DependencyName<'_> {
 		static ALL: &[Name] = &[
 		                        Name::Sys,
 		                        Name::System,
-		                        Name::Controls,
 		                        Name::Menu,
 		                        Name::Fs,
 		                        Name::Sound,
