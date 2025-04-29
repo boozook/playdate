@@ -138,15 +138,15 @@ mod local {
 			};
 
 			if ptr != new_ptr.as_non_null_ptr() {
-				// SAFETY: because `new_layout.size()` must be greater than or equal to
-				// `old_layout.size()`, both the old and new memory allocation are valid for reads and
-				// writes for `old_layout.size()` bytes. Also, because the old allocation wasn't yet
-				// deallocated, it cannot overlap `new_ptr`. Thus, the call to `copy_nonoverlapping` is
-				// safe. The safety contract for `dealloc` must be upheld by the caller.
-				unsafe {
-					core::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_mut_ptr(), old_layout.size());
-					self.deallocate(ptr, old_layout);
-				}
+				// NOTE: In this case PdOs's system allocator returns new memory
+				// with already copied data from old memory,
+				// and tail is not-zeroed.
+				// So, we don't need to copy anything, e.g. copy_nonoverlapping(old, new).
+				// Also, we don't need to deallocate the old memory.
+				// unsafe {
+				// 	core::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_mut_ptr(), old_layout.size());
+				// 	self.deallocate(ptr, old_layout);
+				// }
 			}
 
 			#[cfg(miri)]
@@ -221,7 +221,7 @@ mod local {
 
 #[track_caller]
 #[inline(always)]
-unsafe fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void {
+pub unsafe fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void {
 	if let Some(api) = crate::api() {
 		(api.system.realloc)(ptr, size)
 	} else {

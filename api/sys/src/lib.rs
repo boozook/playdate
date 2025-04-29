@@ -175,12 +175,14 @@ mod allocation {
 /// ```
 #[no_mangle]
 #[cfg(feature = "entry-point")]
+// TODO: `eventHandlerShim` could be `naked` fn ([stabilization][] 🎉)
+// [stabilization](https://github.com/rust-lang/rust/pull/134213).
 pub extern "C" fn eventHandlerShim(api: *const ffi::Playdate,
                                    event: ffi::SystemEvent,
                                    arg: u32)
                                    -> core::ffi::c_int {
-	extern "Rust" {
-		fn event_handler(api: *const ffi::Playdate, event: ffi::SystemEvent, arg: u32) -> ctrl::EventLoopCtrl;
+	unsafe extern "Rust" {
+		safe fn event_handler(api: *const ffi::Playdate, event: ffi::SystemEvent, arg: u32) -> ctrl::EventLoopCtrl;
 	}
 
 	if let ffi::SystemEvent::Init = event {
@@ -195,7 +197,7 @@ pub extern "C" fn eventHandlerShim(api: *const ffi::Playdate,
 	if api.is_null() {
 		ctrl::EventLoopCtrl::Stop.into()
 	} else {
-		unsafe { event_handler(api, event, arg) }.into()
+		event_handler(api, event, arg).into()
 	}
 }
 

@@ -14,7 +14,7 @@ use pd::ffi::{Playdate, SystemEvent};
 /// Entry point / event handler
 #[no_mangle]
 fn event_handler(api: &'static Playdate, event: SystemEvent, _key: u32) -> EventLoopCtrl {
-	if event == SystemEvent::Init {
+	if dbg!(event) == SystemEvent::Init {
 		// 💡 Note that api endpoint is already set by the caller - `eventHandlerShim` in the crate.
 		// Of course we can use the one we got as a parameter `api` - it's the same thing,
 		// the only difference is that when the `api` function (or macro) is called, the extra option-match will happen.
