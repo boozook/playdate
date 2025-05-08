@@ -2,8 +2,8 @@
 name = "playdate-bindgen-cfg"
 version = "0.4.0"
 readme = "README.md"
-description = "Minimal configuration for playdate-bindgen."
-keywords = ["playdate", "bindings", "ffi", "code-generation"]
+description = "Minimal configuration end cli-executor for playdate-bindgen."
+keywords = ["playdate"]
 categories = ["development-tools::ffi", "development-tools::build-utils"]
 edition.workspace = true
 license.workspace = true
