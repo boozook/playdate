@@ -175,7 +175,6 @@ mod set_update_callback {
 	fn no_ud() {
 		set_update_callback_fn(|| 0);
 
-
 		let mut state = Vec::<u8>::new();
 		set_update_callback_mut(move || {
 			state.push(0);

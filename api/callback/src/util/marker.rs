@@ -7,6 +7,7 @@ pub(crate) trait IsFnPtr {}
 impl<T: core::marker::FnPtr> IsFnPtr for T {}
 
 
+#[must_use = "Userdata is a pointer to a context"]
 #[repr(transparent)]
 pub struct Ud<T>(pub(crate) *mut T);
 impl<T> From<*mut T> for Ud<T> {

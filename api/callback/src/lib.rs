@@ -19,5 +19,5 @@ pub mod util;
 pub mod arg;
 mod storage;
 
-mod proto;
-pub use proto::*;
+pub mod into;
+pub mod proxy;

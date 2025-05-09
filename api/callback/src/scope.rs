@@ -1,5 +1,5 @@
 use crate::arg;
-use crate::proto::proxy;
+use crate::proxy;
 use crate::storage;
 
 
@@ -21,6 +21,7 @@ impl Scope for Deferred {
 	type Proxy<C, CIn, COut, R, RIn, ROut> = proxy::default::Default<R, Self::Storage<R>, Self::Adapter<CIn, RIn>>;
 }
 
+
 /// Deferred execution in main thread, unique like singleton subscribtion.
 pub(crate) struct Unique<const ID: u64>;
 impl<const ID: u64> Scope for Unique<ID> {
@@ -32,7 +33,9 @@ impl<const ID: u64> Scope for Unique<ID> {
 /// Deferred execution in other thread.
 /// Used in sound and network.
 pub(crate) struct Async;
-impl Scope for Async {
+impl Scope for Async
+// could be with non_lifetime_binders: where for <In, Out> Self::Adapter<In, Out>::Params: 'static
+{
 	type Storage<Key> = ();
 	type Adapter<In, Out> = ();
 	type Proxy<C, CIn, COut, R, RIn, ROut> = ();
@@ -42,8 +45,7 @@ impl Scope for Async {
 /// C-side executions scope.
 ///
 /// See predefined scopes: [`Immediate`], [`Deferred`], [`Unique`], [`Async`] _or implement your own_.
-pub trait Scope // where for<In, Out> Self::Adapter<In, Out>: crate::arg::Adapter
-{
+pub trait Scope {
 	/// Storage for the function as `Key`
 	type Storage<Key>;
 

@@ -2,6 +2,9 @@ use core::marker::PhantomData;
 use core::marker::Tuple;
 
 
+#[diagnostic::on_unimplemented(label = "convertion for the set of parameters of this function is not implemented",
+                               message = "the trait Adapter<Args = (parameters of the function)> is not implemented",
+                               note = "this is reqirement for the c-proxy function if used, otherwise it could be mismatch of c-parameters and arguments of given function")]
 /// Converts parameters to arguments.
 pub trait Adapter {
 	/// Parameters of a C-function _usually_.
@@ -48,7 +51,6 @@ pub mod default {
 		};
 
 		(@impl ($( $A:ident )*) ($( $B:ident )*)) => { ::pastey::paste!{
-			#[diagnostic::do_not_recommend]
 			impl<$($A,)* $($B),*> Adapter for Into<($($A,)*), ($($B,)*)>
 				where $( $B: core::convert::From<$A> ),*
 			{
@@ -112,6 +114,7 @@ pub mod default {
 				use super::*;
 
 
+				#[diagnostic::do_not_recommend]
 				impl<$($A,)* UD, $( $($REST,)* )? $($B),*> Adapter for Into<($($A,)* Ud<UD>, $($($REST,)*)?), ($($B,)*)>
 					where Into<($($A,)* $($($REST,)*)?), ($($B,)*)>: Adapter<Params = ($($A,)* $($($REST,)*)?), Args = ($($B,)*)>
 				{
@@ -170,6 +173,7 @@ pub mod default {
 				}
 
 				// spec for extra ud as `Ud<F + Extra>` `opt &Extra`:
+				#[diagnostic::do_not_recommend]
 				impl<'t, F, $($A,)* UD, $( $($REST,)* )? $($B),*> Adapter for Into<($($A,)* Ud<(F, UD)>, $($($REST,)*)?), ($($B,)* Option<&'t UD>,)>
 					where
 						Into<($($A,)* $($($REST,)*)?), ($($B,)*)>: Adapter<Params = ($($A,)* $($($REST,)*)?), Args = ($($B,)*)>,
@@ -190,6 +194,7 @@ pub mod default {
 				}
 
 				// spec for extra ud as `Ud<F + Extra>` `opt &mut Extra`:
+				#[diagnostic::do_not_recommend]
 				impl<'t, F, $($A,)* UD, $( $($REST,)* )? $($B),*> Adapter for Into<($($A,)* Ud<(F, UD)>, $($($REST,)*)?), ($($B,)* Option<&'t mut UD>,)>
 					where
 						Into<($($A,)* $($($REST,)*)?), ($($B,)*)>: Adapter<Params = ($($A,)* $($($REST,)*)?), Args = ($($B,)*)>,

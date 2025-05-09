@@ -1,16 +1,28 @@
 use core::marker::Tuple;
 
 
+#[diagnostic::on_unimplemented(label = "the trait bounds for `FnIntoCallback` is not satisfied",
+                               message = "the trait `FnIntoCallback` is not implemented for {Self}",
+                               note = "this error is about sealed trait and outward, see notes with unsatisfied bounds of public traits",
+                               note = r"this is may be a bug or just not implemented yet ¯\_(ツ)_/¯")]
 pub(crate) trait FnIntoCallback<Scope, Target, Args: Tuple, Ret>:
 	FnMutIntoCallback<Scope, Target, Args, Ret> {
 	fn into_callback(self) -> Target;
 }
 
+#[diagnostic::on_unimplemented(label = "the trait bounds for `FnMutIntoCallback` is not satisfied",
+                               message = "the trait `FnMutIntoCallback` is not implemented for {Self}",
+                               note = "this error is about sealed trait and outward, see notes with unsatisfied bounds of public traits",
+                               note = r"this is may be a bug or just not implemented yet ¯\_(ツ)_/¯")]
 pub(crate) trait FnMutIntoCallback<Ctx, Target, Args: Tuple, Ret>:
 	FnOnceIntoCallback<Ctx, Target, Args, Ret> {
 	fn into_callback_mut(self) -> Target;
 }
 
+#[diagnostic::on_unimplemented(label = "the trait bounds for `FnOnceIntoCallback` is not satisfied",
+                               message = "the trait `FnOnceIntoCallback` is not implemented for {Self}",
+                               note = "this error is about sealed trait and outward, see notes with unsatisfied bounds of public traits",
+                               note = r"this is may be a bug or just not implemented yet ¯\_(ツ)_/¯")]
 pub(crate) trait FnOnceIntoCallback<Ctx, Target, Args: Tuple, Ret> {
 	fn into_callback_once(self) -> Target;
 }
@@ -64,7 +76,7 @@ mod as_is {
 
 
 				#[cfg(test)]
-				#[duplicate::duplicate_item( Scope; [Deferred]; [Async]; )] // TODO: [Immediate]; [Unique...]
+				#[duplicate::duplicate_item( Scope; [Deferred]; [Async]; [Immediate]; /* TODO: Unique<...> */)]
 				mod c {
 					use super::*;
 					use crate::scope::*;
@@ -126,7 +138,6 @@ mod r#unsafe {
 				type Safe<$($T,)* R> = extern "C" fn($($T),*) -> R;
 				type Unsafe<$($T,)* R> = unsafe extern "C" fn($($T),*) -> R;
 
-
 				impl<Ctx, $($T,)* R, RFn, RArgs: Tuple, RRet > [<$trait IntoCallback>]<Ctx, Unsafe<$($T,)* R>, RArgs, RRet> for RFn
 					where RFn: [<$trait IntoCallback>]<Ctx, Safe<$($T,)* R>, RArgs, RRet>
 				{
@@ -149,7 +160,7 @@ pub mod base {
 	use core::marker::Tuple;
 
 	use crate::storage::Store;
-	use crate::proto::proxy::{self, Proxy};
+	use crate::proxy::{self, Proxy};
 	use crate::scope;
 	use super::*;
 
@@ -187,7 +198,6 @@ pub mod base {
 				use super::*;
 
 				type CFn<$($T,)* R> = extern "C" fn($($T),*) -> R;
-
 
 				impl<Scope, $($T,)* CR, RFn, RArgs: Tuple> [<$trait IntoCallback>]<Scope, CFn<$($T,)* CR>, RArgs, RFn::Output> for RFn
 					where RFn: $trait<RArgs>,
@@ -329,7 +339,7 @@ mod ud {
 
 				use $crate::util::macros::tlen;
 				use $crate::util::marker::{Ud, UdPtr, UdFn, FnWith};
-				use $crate::proto::proxy::{self, Proxy};
+				use $crate::proxy::{self, Proxy};
 				use $crate::scope;
 				use super::[<$trait IntoCallback>];
 
@@ -341,6 +351,7 @@ mod ud {
 
 
 				// spec for Ud with just F
+				#[diagnostic::do_not_recommend]
 				impl<Scope, $($T,)* $($($REST,)*)? CR, RFn, RArgs: Tuple>
 					[<$trait IntoCallback>]<Scope, UdFn<Safe<$($T,)* $($($REST,)*)? CR>, RFn, I>, RArgs, RFn::Output> for RFn
 					where RFn: $trait<RArgs> + 'static, // this 'static is brokes scope::Immediate :(
@@ -373,6 +384,7 @@ mod ud {
 
 
 				// spec for Ud with (F, Ext)
+				#[diagnostic::do_not_recommend]
 				impl<Scope, $($T,)* $($($REST,)*)? CR, RFn, RArgs: Tuple, Ext>
 					[<$trait IntoCallback>]<Scope, UdFn<Safe<$($T,)* $($($REST,)*)? CR>, (RFn, Ext), I>, RArgs, RFn::Output> for FnWith<RFn, Ext>
 					where RFn: $trait<RArgs> + 'static,
@@ -417,7 +429,7 @@ mod ud {
 						<Self as [<$trait IntoCallback>]<Scope, UdFn<Safe<$($T,)* $($($REST,)*)? CR>, RFn, I>, RArgs, RFn::Output>>::$fn(self).into()
 					}
 				}
-				// TODO: safe -> unsafe for FnWith
+				// safe -> unsafe for FnWith
 				impl<Scope, $($T,)* $($($REST,)*)? CR, RFn, RArgs: Tuple, Ext>
 					[<$trait IntoCallback>]<Scope, UdFn<Unsafe<$($T,)* $($($REST,)*)? CR>, (RFn, Ext), I>, RArgs, RFn::Output> for FnWith<RFn, Ext>
 					where FnWith<RFn, Ext>:
