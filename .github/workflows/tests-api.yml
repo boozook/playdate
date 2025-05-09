@@ -198,7 +198,7 @@ jobs:
       - name: Test (miri)
         run: cargo miri test -p=playdate-sys-mock --features=${{ matrix.features }}
 
-  # sys-dependers:
+  # sys-dependers and other api-crates:
   Crates:
     name: ${{ matrix.crate.name }} (${{ matrix.os.name }}, ${{ matrix.features.name }} features)
     permissions:
@@ -221,6 +221,8 @@ jobs:
         crate:
           - name: playdate-color
             miri-flags: -Zmiri-symbolic-alignment-check -Zmiri-track-alloc-accesses -Zmiri-report-progress -Zmiri-backtrace=full -Zmiri-permissive-provenance
+          - name: playdate-callback
+            # miri-flags: ''
           - name: playdate-display
             # miri-flags: ''
           - name: playdate-fs

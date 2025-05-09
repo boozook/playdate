@@ -1,0 +1,35 @@
+[package]
+name = "playdate-callback"
+version = "0.1.0"
+readme = "README.md"
+description = "Callback-related utils for Playdate API."
+keywords = ["playdate", "api", "gamedev", "callback", "cffi"]
+categories = ["game-development", "no-std"]
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+
+[features]
+jit = []          # closures through CFFI via jit instead of full-fledged proxy functions
+default = ["jit"]
+
+
+[dependencies]
+# paste = "1.0"
+pastey = "0.1"
+duplicate = { version = "2.0.0", features = ["module_disambiguation", "pretty_errors", "fail-on-warnings"] }
+# module_disambiguation
+
+# [dependencies.sys]
+# workspace = true
+# default-features = false
+
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
+default-target = "thumbv7em-none-eabihf"
+cargo-args = ["-Zunstable-options", "-Zbuild-std=core,alloc"]
