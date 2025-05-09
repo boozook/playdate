@@ -38,7 +38,7 @@ fn event_handler(api: NonNull<PlaydateAPI>, event: SystemEvent, _sim_key_code: u
 	}
 
 	// Set FPS
-	api.display().set_refresh_rate(20.0);
+	api.display().set_fps(20.0);
 
 	// Create video player
 	let player = api.graphics().video().load(VIDEO_PATH).unwrap();

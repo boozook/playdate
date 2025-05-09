@@ -12,15 +12,8 @@ homepage.workspace = true
 repository.workspace = true
 
 
-[features]
-default = ["sys/default"]
-try-trait-v2 = ["sys/try-trait-v2"] # impl `FromResidual` for `UpdateCtrl`
-
-# playdate-sys features, should be shared because it's build configuration:
-
-bindgen-runtime = ["sys/bindgen-runtime"]
-bindgen-static = ["sys/bindgen-static"]
-bindings-derive-debug = ["sys/bindings-derive-debug"]
+# [features]
+# try-trait-v2 = [] # impl `FromResidual` for `UpdateCtrl` # TODO: remove `try-trait-v2` feature
 
 
 [dependencies.sys]
@@ -28,51 +21,41 @@ workspace = true
 default-features = false
 
 
-[[example]]
-name = "handler-boxed"
-crate-type = ["dylib", "staticlib"]
-path = "examples/handler-boxed.rs"
-required-features = ["sys/entry-point", "sys/lang-items"]
+# [[example]]
+# name = "handler-boxed"
+# crate-type = ["dylib", "staticlib"]
+# path = "examples/handler-boxed.rs"
+# required-features = ["sys/entry-point", "sys/lang-items"]
 
-[[example]]
-name = "handler-static"
-crate-type = ["dylib", "staticlib"]
-path = "examples/handler-static.rs"
-required-features = ["sys/entry-point", "sys/lang-items"]
+# [[example]]
+# name = "handler-static"
+# crate-type = ["dylib", "staticlib"]
+# path = "examples/handler-static.rs"
+# required-features = ["sys/entry-point", "sys/lang-items"]
 
-[[example]]
-name = "handler-pinned"
-crate-type = ["dylib", "staticlib"]
-path = "examples/handler-pinned.rs"
-required-features = ["sys/entry-point", "sys/lang-items"]
+# [[example]]
+# name = "handler-pinned"
+# crate-type = ["dylib", "staticlib"]
+# path = "examples/handler-pinned.rs"
+# required-features = ["sys/entry-point", "sys/lang-items"]
 
-[[example]]
-name = "set-serial-message-callback"
-crate-type = ["dylib", "staticlib"]
-path = "examples/set-serial-message-callback.rs"
+# [[example]]
+# name = "set-serial-message-callback"
+# crate-type = ["dylib", "staticlib"]
+# path = "examples/set-serial-message-callback.rs"
 
-[[example]]
-name = "update-state-in-serial-message-callback"
-crate-type = ["dylib", "staticlib"]
-path = "examples/update-state-in-serial-message-callback.rs"
-required-features = ["sys/entry-point", "sys/lang-items"]
+# [[example]]
+# name = "update-state-in-serial-message-callback"
+# crate-type = ["dylib", "staticlib"]
+# path = "examples/update-state-in-serial-message-callback.rs"
+# required-features = ["sys/entry-point", "sys/lang-items"]
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.system"
 
 
 [package.metadata.docs.rs]
-all-features = false
-features = [
-	"sys/bindings-derive-default",
-	"sys/bindings-derive-eq",
-	"sys/bindings-derive-copy",
-	"bindings-derive-debug",
-	"sys/bindings-derive-hash",
-	"sys/bindings-derive-ord",
-	"sys/bindings-derive-partialeq",
-	"sys/bindings-derive-partialord",
-]
+all-features = true
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]

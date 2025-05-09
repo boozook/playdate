@@ -15,7 +15,6 @@ repository = "https://github.com/boozook/playdate.git"
 
 [workspace.dependencies]
 color = { version = "0.2", path = "api/color", package = "playdate-color", default-features = false }
-ctrl = { version = "0.3", path = "api/ctrl", package = "playdate-controls", default-features = false }
 display = { version = "0.3", path = "api/display", package = "playdate-display", default-features = false }
 fs = { version = "0.2", path = "api/fs", package = "playdate-fs", default-features = false }
 gfx = { version = "0.6", path = "api/gfx", package = "playdate-graphics", default-features = false }
@@ -32,7 +31,7 @@ build = { version = "0.4", path = "support/build", package = "playdate-build", d
 utils = { version = "0.3", path = "support/utils", package = "playdate-build-utils", default-features = false }
 device = { version = "0.2", path = "support/device", package = "playdate-device" }
 simulator = { version = "0.1", path = "support/sim-ctrl", package = "playdate-simulator-utils", default-features = false }
-bindgen = { version = "0.4", path = "support/bindgen", package = "playdate-bindgen", default-features = false }
+bindgen = { version = "0.5", path = "support/bindgen", package = "playdate-bindgen", default-features = false }
 bindgen-cfg = { version = "0.4", path = "support/bindgen-cfg", package = "playdate-bindgen-cfg", default-features = false }
 
 # Deps that used multiple times,
@@ -60,3 +59,7 @@ overwrite = false
 
 [workspace.metadata.vet]
 store = { path = ".vet" }
+
+
+# [workspace.lints.cargo]
+# unknown-lints = "warn"

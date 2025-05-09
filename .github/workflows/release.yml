@@ -67,7 +67,6 @@ jobs:
         continue-on-error: true
         run: rustup target add x86_64-apple-darwin
 
-
       - name: prepare names
         id: names
         shell: bash
@@ -77,11 +76,9 @@ jobs:
           echo "suffix=${{ (runner.os == 'Windows' && format('-{0}', runner.arch)) || format('-{0}-{1}', runner.os, runner.arch) }}" >> "$GITHUB_OUTPUT"
           echo "full=${{ (runner.os == 'Windows' && format('-{0}.exe', runner.arch)) || format('-{0}-{1}', runner.os, runner.arch) }}" >> "$GITHUB_OUTPUT"
 
-
       - name: prepare dir
         shell: bash
         run: mkdir -p target/upload
-
 
       - name: symbolizer ${{ runner.os == 'macOS' && '(both targets)' || '' }}
         id: symbolizer
@@ -115,7 +112,7 @@ jobs:
         continue-on-error: true
         run: >-
           cargo build --release --bin=pdbindgen --no-default-features
-          --features=cli,documentation,extra-codegen,logging,pretty-please,which-rustfmt,runtime
+          --features=cli,documentation,extra-codegen,logging,pretty,runtime
 
       - name: bindgen to upload
         if: steps.bindgen.outcome == 'success' && runner.os != 'macOS'
@@ -131,7 +128,6 @@ jobs:
         if: steps.cargo.outcome == 'success' && runner.os != 'macOS'
         shell: bash
         run: cp target/release/cargo-playdate${{ steps.names.outputs.ext }} target/upload/cargo-playdate${{ steps.names.outputs.full }}
-
 
       - name: merge universal
         if: runner.os == 'macOS'
@@ -159,7 +155,6 @@ jobs:
           if-no-files-found: warn
           retention-days: 1
           overwrite: false
-
 
   build-universal:
     continue-on-error: true
@@ -191,7 +186,7 @@ jobs:
         continue-on-error: true
         run: >-
           cargo build --release --bin=pdbindgen
-          --features=cli,documentation,extra-codegen,logging,pretty-please,which-rustfmt,runtime
+          --features=cli,documentation,extra-codegen,logging,pretty,runtime
           --no-default-features
       # fallback: if build fails => upload downloaded build:
       - if: steps.bindgen.outcome == 'failure'

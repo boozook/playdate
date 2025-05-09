@@ -1,0 +1,29 @@
+[package]
+name = "playdate-sys-mock"
+version = "0.0.0"
+readme = "README.md"
+description = "Runtime mock for testing playdate-sys and dependent crates. Contains own bindings until it fully covers & implements the full functionality of the Playdate's runtime."
+keywords = ["playdate", "gamedev", "mock", "test"]
+categories = ["development-tools::testing", "external-ffi-bindings", "game-development", "no-std"]
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+
+[features]
+default = ["executor"]
+executor = []          # Entrypoint which is executes playdate entrypoint. Supports miri.
+sim = []               # Mock structure as it is by simulator, simulating simulator environment.
+std = []               # Use std for threads, print, etc. Otherwise has limited functionality with alloc only.
+
+
+[dependencies]
+
+
+[package.metadata.docs.rs]
+all-features = true
+
+[badges.maintenance]
+status = "actively-developed"

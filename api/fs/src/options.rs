@@ -1,13 +1,13 @@
 use alloc::borrow::ToOwned;
 use sys::ffi::FileOptions;
 
-use crate::api;
+use crate::error::Owned;
+use crate::Api;
 use crate::Path;
-use crate::error::ApiError;
 
 
 /// Extension for [`sys::ffi::FileOptions`] make it looks like [`std::fs::OpenOptions`].
-// TODO: FileOptionsExt should be const_trait
+#[const_trait]
 pub trait FileOptionsExt: Into<FileOptions> {
 	/// Creates new empty file options.
 	fn new() -> Self;
@@ -30,40 +30,34 @@ pub trait FileOptionsExt: Into<FileOptions> {
 
 pub trait OpenOptions: Into<FileOptions> {
 	/// Open file with this options.
-	fn open<P: AsRef<Path>>(&self, path: P) -> Result<crate::file::File<api::Cache>, ApiError>;
+	fn open<P: AsRef<Path>>(&self, path: P) -> Result<crate::file::File, Owned>;
 
 	/// Open file with this options, using given `api`.
-	fn open_using<Api: api::Api, P: AsRef<Path>>(&self,
-	                                             api: Api,
-	                                             path: P)
-	                                             -> Result<crate::file::File<Api>, ApiError>;
+	fn open_with<P: AsRef<Path>>(&self, api: Api, path: P) -> Result<crate::file::File, Owned>;
 }
 
 impl OpenOptions for FileOptions {
 	#[inline(always)]
-	fn open<P: AsRef<Path>>(&self, path: P) -> Result<crate::file::File<api::Cache>, ApiError> {
-		crate::ops::open(api::Cache::default(), path, self.to_owned())
+	fn open<P: AsRef<Path>>(&self, path: P) -> Result<crate::file::File, Owned> {
+		self.open_with(api!(file), path)
 	}
 
 	#[inline(always)]
-	fn open_using<Api: api::Api, P: AsRef<Path>>(&self,
-	                                             api: Api,
-	                                             path: P)
-	                                             -> Result<crate::file::File<Api>, ApiError> {
-		crate::ops::open(api, path, self.to_owned())
+	fn open_with<P: AsRef<Path>>(&self, api: Api, path: P) -> Result<crate::file::File, Owned> {
+		crate::op::open(api, path, self.to_owned()).map_err(Owned::from)
 	}
 }
 
 
-impl FileOptionsExt for FileOptions {
+impl const FileOptionsExt for FileOptions {
 	fn new() -> Self { FileOptions(0) }
 
 	/// Read access to Game’s package (bundle) directory.
 	fn read(mut self, read: bool) -> Self {
 		if read {
-			self.0 |= FileOptions::kFileRead.0;
+			self.0 |= FileOptions::Read.0;
 		} else {
-			self.0 &= 255 - FileOptions::kFileRead.0;
+			self.0 &= 255 - FileOptions::Read.0;
 		}
 		self
 	}
@@ -71,9 +65,9 @@ impl FileOptionsExt for FileOptions {
 	/// Read access to Game’s data directory.
 	fn read_data(mut self, read: bool) -> Self {
 		if read {
-			self.0 |= FileOptions::kFileReadData.0;
+			self.0 |= FileOptions::ReadData.0;
 		} else {
-			self.0 &= 255 - FileOptions::kFileReadData.0;
+			self.0 &= 255 - FileOptions::ReadData.0;
 		}
 		self
 	}
@@ -81,9 +75,9 @@ impl FileOptionsExt for FileOptions {
 	/// Write access to Game’s data directory.
 	fn write(mut self, write: bool) -> Self {
 		if write {
-			self.0 |= FileOptions::kFileWrite.0;
+			self.0 |= FileOptions::Write.0;
 		} else {
-			self.0 &= 255 - FileOptions::kFileWrite.0;
+			self.0 &= 255 - FileOptions::Write.0;
 		}
 		self
 	}
@@ -91,19 +85,19 @@ impl FileOptionsExt for FileOptions {
 	/// Write access to Game’s data directory.
 	fn append(mut self, append: bool) -> Self {
 		if append {
-			self.0 |= FileOptions::kFileAppend.0;
+			self.0 |= FileOptions::Append.0;
 		} else {
-			self.0 &= 255 - FileOptions::kFileAppend.0;
+			self.0 &= 255 - FileOptions::Append.0;
 		}
 		self
 	}
 
 
 	fn is_empty(&self) -> bool { self.0 == 0 }
-	fn is_read(&self) -> bool { (self.0 & FileOptions::kFileRead.0) != 0 }
-	fn is_read_data(&self) -> bool { (self.0 & FileOptions::kFileReadData.0) != 0 }
-	fn is_write(&self) -> bool { (self.0 & FileOptions::kFileWrite.0) != 0 }
-	fn is_append(&self) -> bool { (self.0 & FileOptions::kFileAppend.0) != 0 }
+	fn is_read(&self) -> bool { (self.0 & FileOptions::Read.0) != 0 }
+	fn is_read_data(&self) -> bool { (self.0 & FileOptions::ReadData.0) != 0 }
+	fn is_write(&self) -> bool { (self.0 & FileOptions::Write.0) != 0 }
+	fn is_append(&self) -> bool { (self.0 & FileOptions::Append.0) != 0 }
 
 	fn is_read_any(&self) -> bool { self.is_read() || self.is_read_data() }
 	fn is_write_any(&self) -> bool { self.is_write() || self.is_append() }
@@ -128,7 +122,7 @@ mod tests {
 	#[test]
 	fn fo_read() {
 		let fo = FO::new().read(true);
-		assert_eq!(fo.0, FO::kFileRead.0);
+		assert_eq!(fo.0, FO::Read.0);
 		assert!(fo.is_read());
 		assert!(!fo.is_read_data());
 		assert!(!fo.is_write());
@@ -139,8 +133,8 @@ mod tests {
 	#[test]
 	fn fo_read_data() {
 		let fo = FO::new().read_data(true);
-		assert_ne!(fo.0, FO::kFileRead.0);
-		assert_eq!(fo.0, FO::kFileReadData.0);
+		assert_ne!(fo.0, FO::Read.0);
+		assert_eq!(fo.0, FO::ReadData.0);
 		assert!(!fo.is_read());
 		assert!(fo.is_read_data());
 		assert!(!fo.is_write());
@@ -148,8 +142,8 @@ mod tests {
 		assert!(!fo.is_empty());
 
 		let fo = FO::new().read(true).read_data(true);
-		assert_ne!(fo.0, FO::kFileRead.0);
-		assert_ne!(fo.0, FO::kFileReadData.0);
+		assert_ne!(fo.0, FO::Read.0);
+		assert_ne!(fo.0, FO::ReadData.0);
 		assert!(fo.is_read());
 		assert!(fo.is_read_data());
 		assert!(!fo.is_write());
