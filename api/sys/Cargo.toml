@@ -108,6 +108,7 @@ check-cfg = [
 	'cfg(playdate)',                                                # FIXME: refactor `cfg playdate`
 	'cfg(mockrt, values("alloc", "std", none()))',                  # enable runtime-mock for tests
 	'cfg(format_buffer, values("0", "128", "256", "512", "1024"))', # configure size of on-stack buffer used for formatting
+	'cfg(pdtrace, values("all", "stack", "alloc"))',
 ]
 
 [lints.rust]

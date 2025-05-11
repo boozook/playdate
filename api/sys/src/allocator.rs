@@ -2,6 +2,7 @@
 
 use core::alloc::{GlobalAlloc, Layout};
 use core::ffi::c_void;
+use crate::macros::trace::trace_alloc;
 
 
 /// PlaydateOs system allocator.
@@ -20,6 +21,8 @@ pub static GLOBAL: System = System;
 unsafe impl GlobalAlloc for System {
 	#[inline]
 	unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+		trace_alloc!(global::alloc size=layout.size());
+
 		#[cfg(not(miri))]
 		{
 			realloc(core::ptr::null_mut(), layout.size()) as *mut u8
@@ -36,11 +39,17 @@ unsafe impl GlobalAlloc for System {
 
 
 	#[inline]
-	unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) { dealloc(ptr, layout); }
+	unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+		trace_alloc!(global::dealloc ptr=ptr, size=layout.size());
+
+		dealloc(ptr, layout);
+	}
 
 
 	#[inline]
 	unsafe fn realloc(&self, ptr: *mut u8, _layout: Layout, new_size: usize) -> *mut u8 {
+		trace_alloc!(global::realloc ptr=ptr, size=_layout.size(), size=new_size);
+
 		let res = realloc(ptr as *mut c_void, new_size) as *mut u8;
 
 		// default mem-copy- behavior if new != old:
@@ -74,7 +83,7 @@ mod local {
 	use core::ptr::null_mut;
 	use core::ptr::slice_from_raw_parts_mut;
 	use core::ptr::NonNull;
-	use super::{System, realloc, dealloc};
+	use super::{System, realloc, dealloc, trace_alloc};
 
 
 	unsafe impl Allocator for System {
@@ -91,6 +100,8 @@ mod local {
 		///
 		/// See more details on [`Allocator`](core::alloc::Allocator::allocate).
 		fn allocate(&self, layout: Layout) -> Result<NonNull<[u8]>, AllocError> {
+			trace_alloc!(local::allocate size=layout.size());
+
 			let ptr = unsafe { realloc(null_mut(), layout.size()) };
 
 			if ptr.is_null() {
@@ -110,7 +121,11 @@ mod local {
 		/// Note: ignores layout, just deallocates region which is internally associated with given ptr.
 		///
 		/// See more details on [`Allocator`](core::alloc::Allocator::deallocate).
-		unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout) { dealloc(ptr.as_ptr().cast(), layout) }
+		unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout) {
+			trace_alloc!(local::deallocate ptr=ptr.as_ptr(), size=layout.size());
+
+			dealloc(ptr.as_ptr().cast(), layout)
+		}
 
 
 		// `allocate_zeroed` is default impl because Playdate's system allocator
@@ -123,6 +138,7 @@ mod local {
 		               old_layout: Layout,
 		               new_layout: Layout)
 		               -> Result<NonNull<[u8]>, AllocError> {
+			trace_alloc!(local::grow ptr=ptr, size=old_layout.size(), size=new_layout.size());
 			debug_assert!(
 			              new_layout.size() >= old_layout.size(),
 			              "`new_layout.size()` must be greater than or equal to `old_layout.size()`"
@@ -162,6 +178,7 @@ mod local {
 		                      old_layout: Layout,
 		                      new_layout: Layout)
 		                      -> Result<NonNull<[u8]>, AllocError> {
+			trace_alloc!(local::grow_zeroed ptr=ptr, size=old_layout.size(), size=new_layout.size());
 			debug_assert!(
 			              new_layout.size() >= old_layout.size(),
 			              "`new_layout.size()` must be greater than or equal to `old_layout.size()`"
@@ -182,6 +199,7 @@ mod local {
 		                 old_layout: Layout,
 		                 new_layout: Layout)
 		                 -> Result<NonNull<[u8]>, AllocError> {
+			trace_alloc!(local::shrink ptr=ptr, size=old_layout.size(), size=new_layout.size());
 			debug_assert!(
 			              new_layout.size() <= old_layout.size(),
 			              "`new_layout.size()` must be smaller than or equal to `old_layout.size()`"
@@ -223,6 +241,7 @@ mod local {
 #[inline(always)]
 pub unsafe fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void {
 	if let Some(api) = crate::api() {
+		trace_alloc!(realloc ptr=ptr, size=size);
 		(api.system.realloc)(ptr, size)
 	} else {
 		#[cfg(debug_assertions)]

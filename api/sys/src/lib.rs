@@ -5,22 +5,24 @@
 #![allow(internal_features)]
 #![feature(lang_items, core_intrinsics)]
 // allocator:
-#![cfg_attr(feature = "allocator", feature(alloc_error_handler))]
-#![cfg_attr(feature = "allocator", feature(alloc_layout_extra))]
+#![cfg_attr(feature = "allocator", feature(alloc_error_handler, alloc_layout_extra))]
 #![cfg_attr(feature = "allocator-api", feature(allocator_api, slice_ptr_get))]
 // const features:
 #![cfg_attr(feature = "const-types", feature(adt_const_params))]
 // error, ctrl-flow:
 #![feature(try_trait_v2)]
 // heapless on-stack formatting for print, panic and oom:
-#![feature(maybe_uninit_slice)]
-#![feature(maybe_uninit_write_slice)]
+#![feature(maybe_uninit_slice, maybe_uninit_write_slice)]
 // cfg values, format_buffer, target, mock:
 #![feature(cfg_match)]
 // docs:
 #![doc(issue_tracker_base_url = "https://github.com/boozook/playdate/issues/")]
 // testing:
 #![cfg_attr(test, feature(test, try_with_capacity))]
+// tracing:
+#![feature(const_type_name)]
+
+
 #[cfg(test)]
 extern crate test;
 
@@ -181,12 +183,21 @@ pub extern "C" fn eventHandlerShim(api: *const ffi::Playdate,
                                    event: ffi::SystemEvent,
                                    arg: u32)
                                    -> core::ffi::c_int {
-	unsafe extern "Rust" {
-		safe fn event_handler(api: *const ffi::Playdate, event: ffi::SystemEvent, arg: u32) -> ctrl::EventLoopCtrl;
+	if let ffi::SystemEvent::Init = event {
+		// save location of the stack bottom for tracing,
+		// old-school way to get local (fn's) stack size at runtime.
+		#[cfg(any(pdtrace = "all", pdtrace = "stack"))]
+		{
+			let v = ();
+			unsafe { BOTTOM = core::ptr::addr_of!(v).cast() };
+		}
+
+
+		unsafe { API = api }
 	}
 
-	if let ffi::SystemEvent::Init = event {
-		unsafe { API = api }
+	unsafe extern "Rust" {
+		safe fn event_handler(api: *const ffi::Playdate, event: ffi::SystemEvent, arg: u32) -> ctrl::EventLoopCtrl;
 	}
 
 	#[cfg(not(playdate))]
@@ -204,6 +215,11 @@ pub extern "C" fn eventHandlerShim(api: *const ffi::Playdate,
 // This is atomic because the env is the simulator that is asymchronous and built on SDL.
 #[cfg(all(feature = "entry-point", not(playdate)))]
 static PANICKED: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
+
+
+#[cfg(any(pdtrace = "all", pdtrace = "stack"))]
+#[export_name = "pdtrace_stack_bottom"]
+static mut BOTTOM: *const () = core::ptr::null();
 
 
 pub mod ctrl {

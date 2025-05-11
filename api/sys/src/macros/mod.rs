@@ -1,3 +1,6 @@
+pub mod trace;
+
+
 /// Print line simulator's console or device's output channel.
 ///
 /// Woks like [`std::println!`](https://doc.rust-lang.org/std/macro.println.html).
@@ -106,8 +109,11 @@ macro_rules! try_api {
 }
 
 
-pub use crate::{println, dbg};
-pub use crate::{api, api_opt, try_api};
+pub use println;
+pub use dbg;
+pub use crate::api;
+pub use crate::api_opt;
+pub use crate::try_api;
 
 
 #[cfg(test)]
