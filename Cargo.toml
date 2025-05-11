@@ -25,6 +25,7 @@ sound = { version = "0.4", path = "api/sound", package = "playdate-sound", defau
 sprite = { version = "0.3", path = "api/sprite", package = "playdate-sprite", default-features = false }
 system = { version = "0.3", path = "api/system", package = "playdate-system", default-features = false }
 sys = { version = "0.5", path = "api/sys", package = "playdate-sys", default-features = false }
+callback = { version = "0.1", path = "api/callback", package = "playdate-callback", default-features = false }
 
 tool = { version = "0.1", path = "support/tool", package = "playdate-tool" }
 build = { version = "0.4", path = "support/build", package = "playdate-build", default-features = false }
