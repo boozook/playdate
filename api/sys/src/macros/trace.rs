@@ -39,6 +39,7 @@ macro_rules! trace_alloc {
 	}};
 
 	(@print $pat:literal $(($(len:$len:expr, s:$s:ident)? $(o:$o:ident)? $(p:$p:expr)?)),+) => {{
+		#![cfg(any(pdtrace = "all", pdtrace = "stack"))]
 		if let Some(f) = $crate::macros::api_opt!(system.logToConsole) {
 			unsafe {
 				f(
@@ -56,6 +57,7 @@ macro_rules! trace_alloc {
 
 	// api:
 	(realloc ptr=$ptr:ident, size=$size:ident) => {{
+		#![cfg(any(pdtrace = "all", pdtrace = "alloc"))]
 		let pre = c"⎣alloc⎦ api.realloc";
 		$crate::macros::trace::trace_alloc!(@print c"%.*s\t%ob\t\t%#x" (len:pre.count_bytes(), s:pre), (o:$size), (p:$ptr));
 	}};
@@ -64,16 +66,19 @@ macro_rules! trace_alloc {
 	// global:
 	//
 	(global::alloc size=$size:expr) => {{
+		#![cfg(any(pdtrace = "all", pdtrace = "alloc"))]
 		let pre = c"⎡alloc⎤ global.alloc"; // ⎟
 		let size = $size;
 		$crate::macros::trace::trace_alloc!(@print c"%.*s\t%ob" (len:pre.count_bytes(), s:pre), (o:size));
 	}};
 	(global::dealloc ptr=$ptr:ident, size=$size:expr) => {{
+		#![cfg(any(pdtrace = "all", pdtrace = "alloc"))]
 		let pre = c"|alloc| global.dealloc";
 		let size = $size;
 		$crate::macros::trace::trace_alloc!(@print c"%.*s\t%ob\t\t%#x" (len:pre.count_bytes(), s:pre), (o:size), (p:$ptr));
 	}};
 	(global::realloc ptr=$ptr:ident, size=$size:expr, size=$aim:expr) => {{
+		#![cfg(any(pdtrace = "all", pdtrace = "alloc"))]
 		let pre = c"|alloc| global.realloc";
 		let size = $size;
 		let aim = $aim;
@@ -84,30 +89,33 @@ macro_rules! trace_alloc {
 	// local:
 	//
 	(local::allocate size=$size:expr) => {{
+		#![cfg(any(pdtrace = "all", pdtrace = "alloc"))]
 		let pre = c"⎡alloc⎤ local.allocate";
-		// let size = $crate::macros::trace::trace_alloc!(@fmt $size);
-		// $crate::macros::trace::trace_alloc!(@print c"%.*s%.*s %#x" (len:pre.count_bytes(), s:pre), (len:size.len(), s:size));
 		let size = $size;
 		$crate::macros::trace::trace_alloc!(@print c"%.*s\t%ob" (len:pre.count_bytes(), s:pre), (o:size));
 	}};
 	(local::deallocate ptr=$ptr:expr, size=$size:expr) => {{
+		#![cfg(any(pdtrace = "all", pdtrace = "alloc"))]
 		let pre = c"|alloc| local.deallocate";
 		let size = $size;
 		$crate::macros::trace::trace_alloc!(@print c"%.*s\t%ob\t\t%#x" (len:pre.count_bytes(), s:pre), (o:size), (p:$ptr));
 	}};
 	(local::grow ptr=$ptr:expr, size=$size:expr, size=$aim:expr) => {{
+		#![cfg(any(pdtrace = "all", pdtrace = "alloc"))]
 		let pre = c"|alloc| local.grow";
 		let size = $size;
 		let aim = $aim;
 		$crate::macros::trace::trace_alloc!(@print c"%.*s\t%ob -> %ob\t%#x" (len:pre.count_bytes(), s:pre), (o:size), (o:aim), (p:$ptr));
 	}};
 	(local::grow_zeroed ptr=$ptr:expr, size=$size:expr, size=$aim:expr) => {{
+		#![cfg(any(pdtrace = "all", pdtrace = "alloc"))]
 		let pre = c"|alloc| local.grow_zeroed";
 		let size = $size;
 		let aim = $aim;
 		$crate::macros::trace::trace_alloc!(@print c"%.*s\t%ob -> %ob\t%#x" (len:pre.count_bytes(), s:pre), (o:size), (o:aim), (p:$ptr));
 	}};
 	(local::shrink ptr=$ptr:expr, size=$size:expr, size=$aim:expr) => {{
+		#![cfg(any(pdtrace = "all", pdtrace = "alloc"))]
 		let pre = c"|alloc| local::shrink";
 		let size = $size;
 		let aim = $aim;
@@ -125,12 +133,40 @@ macro_rules! trace {
 	}};
 	(alloc $(: $($arg:tt)*)?) => {{ compile_error!("use `trace_alloc` instead"); }};
 
-	// trace fmt unification:
+	// fmt unification:
+	($kind:literal: [t=$t:ident]) => {{
+		use $crate::macros::trace::{type_name_of, trace};
+		trace!($kind: "{}", type_name_of(&$t))
+	}};
+	// ($kind:literal: [t=$t:ident] $arg:tt) => {{
+	// 	use $crate::macros::trace::{type_name_of, trace};
+	// 	trace!($kind: "{} {}", type_name_of(&$t), format_args!($arg))
+	// }};
+	($kind:literal: [t=$t:ident] $($arg:tt)+) => {{
+		use $crate::macros::trace::{type_name_of, trace};
+		trace!($kind: "{} {}", type_name_of(&$t), format_args!($($arg)+))
+	}};
+
+
+	($kind:literal: [t:$t:ty]) => {{
+		$crate::macros::trace::trace!($kind: "{}", core::any::type_name::<$t>())
+	}};
+	// ($kind:literal: [t:$t:ty] $arg:tt) => {{
+	// 	$crate::macros::trace::trace!($kind: "{} {}", core::any::type_name::<$t>(), format_args!($arg))
+	// }};
+	($kind:literal: [t:$t:ty] $($arg:tt)+) => {{
+		$crate::macros::trace::trace!($kind: "{} {}", core::any::type_name::<$t>(), format_args!($($arg)+))
+	}};
+
+
 	($kind:literal: $($arg:tt)+) => {{
-		#![allow(unexpected_cfgs)]
+		#![deny(unexpected_cfgs)] // XXX, TODO: allow unexpected cfgs here <--- before publish!
 		#[cfg(any(pdtrace="all", pdtrace=$kind))] {
 			use $crate::macros::{println, trace};
-			println!("[{}] {} at {}", $kind, format_args!($($arg)*), trace::caller_location())
+			#[cfg(debug_assertions)]
+			println!("[{}] {} at {}", $kind, format_args!($($arg)*), trace::caller_location());
+			#[cfg(not(debug_assertions))]
+			println!("[{}] {}", $kind, format_args!($($arg)*));
 		}
 	}};
 }
