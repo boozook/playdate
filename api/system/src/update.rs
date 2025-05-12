@@ -5,7 +5,6 @@ use core::pin::Pin;
 use alloc::boxed::Box;
 use sys::ctrl::UpdateDisplayCtrl;
 
-use crate::api;
 use crate::System;
 
 
