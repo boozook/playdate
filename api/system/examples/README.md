@@ -10,7 +10,8 @@ cargo playdate run -p=playdate-system --example=handler-boxed --features=sys/lan
 
 cargo playdate run -p=playdate-system --example=handler-pinned --features=sys/lang-items,sys/entry-point
 
-cargo playdate run -p=playdate-system --example=set-serial-message-callback --features=sys/lang-items,sys/entry-point
+cargo playdate run -p=playdate-system --example=serial-message --features=sys/lang-items,sys/entry-point
+# then type in simulator's console: "!msg foobar" four times
 
 cargo playdate run -p=playdate-system --example=update-state-in-serial-message-callback --features=sys/lang-items,sys/entry-point
 ```

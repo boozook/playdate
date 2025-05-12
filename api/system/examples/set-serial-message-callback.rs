@@ -1,47 +1,47 @@
 #![no_std]
+#![no_main]
 extern crate alloc;
 
 #[macro_use]
 extern crate sys;
 extern crate playdate_system as system;
 
-use core::ptr::NonNull;
 
-use sys::EventLoopCtrl;
 use sys::ffi::*;
+use sys::ctrl::*;
 use system::System;
-use system::event::SystemEventExt as _;
-use system::update::UpdateCtrl;
 
 
 /// Entry point, event handler
 #[no_mangle]
-fn event_handler(_api: NonNull<PlaydateAPI>, event: PDSystemEvent, _: u32) -> EventLoopCtrl {
+fn event_handler(api: &'static Playdate, e: SystemEvent, _: u32) -> EventLoopCtrl {
 	// Just for this example, ignore all events except init:
-	if event != PDSystemEvent::Init {
+	if e != SystemEvent::Init {
 		return EventLoopCtrl::Continue;
 	}
 
+	// Our api-endpoint:
+	let system = System::new(api.system);
 
+	// Just counter to give a size (ctx) for the callback, just for example:
 	let mut counter: u32 = 0;
 
-	let callback = move |msg| {
+	let on_msg = move |msg: &CStr, ctrl| {
 		counter += 1;
-
-		println!("[{counter}/3] serial_message_callback: '{}'", msg);
-
-		if counter == 3 {
-			println!("stop receiving serial messages");
-			System::Default().set_serial_message_callback(None::<fn(_)>);
+		println!("msg #{counter}/3: {msg:?}");
+		if counter < 3 {
+			core::mem::forget(ctrl);
+		} else {
+			drop(ctrl);
+			println!("serial message subscription canceled");
 		}
 	};
 
 	// Register callback to start receiving serial messages:
-	System::Default().set_serial_message_callback(Some(callback));
-
+	system.set_serial_message_callback(Some(on_msg));
 
 	// Also set update callback:
-	System::Default().set_update_callback_static(Some(on_update), ());
+	system.set_update_callback(Some(on_update));
 
 	// Continue event-loop:
 	EventLoopCtrl::Continue
@@ -49,10 +49,7 @@ fn event_handler(_api: NonNull<PlaydateAPI>, event: PDSystemEvent, _: u32) -> Ev
 
 
 /// Update handler
-fn on_update(_: &mut ()) -> UpdateCtrl {
-	// Continue updates
-	UpdateCtrl::Continue
-}
+fn on_update() -> UpdateDisplayCtrl { UpdateDisplayCtrl::Nope }
 
 
 // Needed for debug build

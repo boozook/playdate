@@ -12,13 +12,20 @@ homepage.workspace = true
 repository.workspace = true
 
 
-# [features]
-# try-trait-v2 = [] # impl `FromResidual` for `UpdateCtrl` # TODO: remove `try-trait-v2` feature
+[features]
 
 
 [dependencies.sys]
 workspace = true
-default-features = false
+features = ["alloc"]
+
+[dependencies.callback]
+workspace = true
+optional = true
+features = ["sys", "tracing"]
+
+[dev-dependencies.display]
+workspace = true
 
 
 # [[example]]
@@ -39,10 +46,11 @@ default-features = false
 # path = "examples/handler-pinned.rs"
 # required-features = ["sys/entry-point", "sys/lang-items"]
 
-# [[example]]
-# name = "set-serial-message-callback"
-# crate-type = ["dylib", "staticlib"]
-# path = "examples/set-serial-message-callback.rs"
+[[example]]
+name = "serial-message"
+crate-type = ["dylib", "staticlib"]
+path = "examples/set-serial-message-callback.rs"
+required-features = ["sys/entry-point", "sys/lang-items", "callback"]
 
 # [[example]]
 # name = "update-state-in-serial-message-callback"
@@ -59,3 +67,10 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]
+
+
+[lints.rust.unexpected_cfgs]
+level = "deny"
+check-cfg = [
+	'cfg(pdtrace, values("all", "cb-add", "cb-rem", "cb-call"))', # tracing
+]

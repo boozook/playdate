@@ -2,6 +2,11 @@
 #![cfg_attr(not(test), no_main)]
 #![feature(const_trait_impl)]
 #![feature(impl_trait_in_assoc_type)]
+#![cfg_attr(feature = "callback", feature(tuple_trait, min_specialization))]
+// for cont- compile-time tests:
+#![cfg_attr(all(debug_assertions, feature = "callback"),
+            feature(core_intrinsics),
+            allow(internal_features))]
 
 
 #[macro_use]
@@ -9,14 +14,19 @@ extern crate alloc;
 #[macro_use]
 extern crate sys;
 
+#[cfg(feature = "callback")]
+extern crate callback;
+
+
 use core::ffi::c_float;
 use core::ffi::c_int;
-use alloc::string::String;
+use core::ffi::CStr;
 
 
 pub mod time;
 pub mod ctrl;
 // pub mod update;
+mod cb;
 
 pub mod prelude {
 	pub use crate::System;
@@ -86,51 +96,6 @@ impl System {
 	pub fn battery_voltage(&self) -> c_float { unsafe { (self.0.getBatteryVoltage)() } }
 
 
-	/// Equivalent to [`sys::ffi::PlaydateSys::setSerialMessageCallback`]
-	#[doc(alias = "sys::ffi::PlaydateSys::setSerialMessageCallback")]
-	pub fn set_serial_message_callback<F>(&self, callback: Option<F>)
-		where F: 'static + FnMut(String) + Sized {
-		use core::ffi::c_char;
-		use core::ffi::CStr;
-		use alloc::boxed::Box;
-		use alloc::string::String;
-
-
-		type FnSerialMessageCallback = Option<unsafe extern "C" fn(data: *const c_char)>;
-
-		static mut STORE: Option<Box<dyn FnMut(String)>> = None;
-
-		pub unsafe extern "C" fn proxy_serial_message_callback<F: FnMut(String)>(data: *const c_char) {
-			let data = CStr::from_ptr(data as _).to_string_lossy().into_owned();
-			if let Some(ref mut f) = STORE.as_mut() {
-				f(data)
-			} else {
-				// Highly unlikely, mostly impossible case.
-				// Should be unreachable, but still possible in case when
-				// 0. new callback is None, we have to register it in the System;
-				// 1. write callback to `STORE`
-				// 2. interrupt, proxy_serial_message_callback called, BOOM!
-				// 3. call API::set_serial_message_callback to set our new (None) callback
-				// So, see difference in how to store & reg callback at couple lines below.
-				panic!("missed callback")
-			}
-		}
-
-
-		let f = self.0.setSerialMessageCallback;
-
-		if let Some(callback) = callback {
-			let boxed = Box::new(callback);
-			// Store firstly, then register it.
-			unsafe { STORE = Some(boxed as _) }
-			unsafe { f(Some(proxy_serial_message_callback::<F>)) }
-		} else {
-			// Set firstly, then clear the `STORE`.
-			unsafe { f(None) }
-			unsafe { STORE = None }
-		}
-	}
-
 	/// Pauses execution for the given number of milliseconds.
 	///
 	/// Equivalent to [`sys::ffi::PlaydateSys::delay`]
@@ -139,9 +104,35 @@ impl System {
 	pub fn delay(&self, ms: time::Milliseconds) { unsafe { (self.0.delay)(ms.0) } }
 
 
-	// TODO:
-	// getServerTime
-	// sendMirrorData
-	// setButtonCallback - ctrl?
-	// setUpdateCallback - uh
+	/// Reinitializes the Playdate runtime and restarts the currently running program.
+	/// The given `launch_args` string will be available after restart via [`launch_args`](Self::launch_args).
+	///
+	/// Equivalent to [`sys::ffi::PlaydateSys::restartGame`]
+	#[doc(alias = "sys::ffi::PlaydateSys::restartGame")]
+	#[cold]
+	pub fn restart(&self, launch_args: &CStr) { unsafe { (self.0.restartGame)(launch_args.as_ptr()) } }
+
+	/// Returns the string passed in as an argument at launch time,
+	/// either via the command line when launching the simulator,
+	/// the device console run command, or the above [`restart`](Self::restart) function.
+	///
+	/// If outpath is not NULL, the path of the currently loaded game is returned in it.
+	///
+	/// Calls to [`sys::ffi::PlaydateSys::getLaunchArgs`]
+	#[doc(alias = "sys::ffi::PlaydateSys::getLaunchArgs")]
+	#[inline]
+	// TODO: What's the hell is `outpath`?!
+	pub fn launch_args(&self, mut callback: impl FnMut(Option<&CStr>)) {
+		let p = unsafe { (self.0.getLaunchArgs)(core::ptr::null_mut()) };
+		let mut s = if p.is_null() {
+			None
+		} else {
+			Some(unsafe { CStr::from_ptr(p) })
+		};
+		callback(s);
+		let _ = &mut s;
+	}
+
+
+	// TODO: sendMirrorData
 }
