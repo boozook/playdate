@@ -24,7 +24,6 @@ pub enum Fix {
 
 
 pub fn engage(bindings: &mut syn::File, root: &str, _target: &Target, docs: &FixMap) -> Result<()> {
-	// TODO: preserve bindings.attrs
 	let items = Cell::from_mut(&mut bindings.items[..]);
 	let items_cells = items.as_slice_of_cells();
 	if let Some(root) = find_struct(items_cells, root) {

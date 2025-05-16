@@ -30,7 +30,6 @@ default-features = false
 
 [dependencies.system]
 workspace = true
-features = ["try-trait-v2"]
 default-features = false
 
 [dependencies.sys]

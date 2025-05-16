@@ -172,6 +172,7 @@ impl<Api: api::Api> Bitmap<Api, true> {
 	/// Calls [`sys::ffi::playdate_graphics::loadBitmap`].
 	#[doc(alias = "sys::ffi::playdate_graphics::loadBitmap")]
 	pub fn load_with<P: AsRef<Path>>(api: Api, path: P) -> Result<Self, ApiError> {
+		// TODO: remove Box, use on-stack ref like it is in `System::launch_args_path`
 		let mut err = Box::new(core::ptr::null() as *const c_char);
 		let out_err = Box::into_raw(err);
 
