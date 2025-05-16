@@ -138,10 +138,6 @@ macro_rules! trace {
 		use $crate::macros::trace::{type_name_of, trace};
 		trace!($kind: "{}", type_name_of(&$t))
 	}};
-	// ($kind:literal: [t=$t:ident] $arg:tt) => {{
-	// 	use $crate::macros::trace::{type_name_of, trace};
-	// 	trace!($kind: "{} {}", type_name_of(&$t), format_args!($arg))
-	// }};
 	($kind:literal: [t=$t:ident] $($arg:tt)+) => {{
 		use $crate::macros::trace::{type_name_of, trace};
 		trace!($kind: "{} {}", type_name_of(&$t), format_args!($($arg)+))
@@ -151,9 +147,6 @@ macro_rules! trace {
 	($kind:literal: [t:$t:ty]) => {{
 		$crate::macros::trace::trace!($kind: "{}", core::any::type_name::<$t>())
 	}};
-	// ($kind:literal: [t:$t:ty] $arg:tt) => {{
-	// 	$crate::macros::trace::trace!($kind: "{} {}", core::any::type_name::<$t>(), format_args!($arg))
-	// }};
 	($kind:literal: [t:$t:ty] $($arg:tt)+) => {{
 		$crate::macros::trace::trace!($kind: "{} {}", core::any::type_name::<$t>(), format_args!($($arg)+))
 	}};
