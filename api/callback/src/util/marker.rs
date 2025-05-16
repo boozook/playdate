@@ -7,31 +7,88 @@ pub(crate) trait IsFnPtr {}
 impl<T: core::marker::FnPtr> IsFnPtr for T {}
 
 
-#[must_use = "Userdata is a pointer to a context"]
-#[repr(transparent)]
-pub struct Ud<T>(pub(crate) *mut T);
-impl<T> From<*mut T> for Ud<T> {
-	fn from(p: *mut T) -> Self { Self(p) }
-}
-impl<T> Ud<T> {
-	pub const fn into_ptr(self) -> *mut T { self.0 }
-	pub const fn as_udptr(&self) -> UdPtr { self.0.cast() }
-}
+pub use ud::*;
+mod ud {
+	use alloc::boxed::Box;
+
+	use crate::util::macros::trace;
+	use super::*;
 
 
-impl<'t, T> Into<Option<&'t mut T>> for Ud<T> {
-	fn into(self) -> Option<&'t mut T> { unsafe { self.as_udptr().cast::<T>().as_mut() } }
-}
-impl<'t, T> Into<Option<&'t T>> for Ud<T> {
-	fn into(self) -> Option<&'t T> { unsafe { self.as_udptr().cast::<T>().as_ref() } }
-}
+	#[must_use = "Userdata is a pointer to a context"]
+	#[repr(transparent)]
+	pub struct Ud<T>(pub(crate) *mut T);
+	impl<T> From<*mut T> for Ud<T> {
+		fn from(p: *mut T) -> Self { Self(p) }
+	}
+	impl<T> Ud<T> {
+		pub const fn into_ptr(self) -> *mut T { self.0 }
+		pub const fn as_udptr(&self) -> UdPtr { self.0.cast() }
+	}
 
-// impl<'t, T, U> Into<Option<&'t mut U>> for Ud<(T, U)> {
-// 	fn into(self) -> Option<&'t mut U> { unsafe { self.into_ptr().as_mut().map(|(_, u)| u) } }
-// }
-// impl<'t, T, U> Into<Option<&'t U>> for Ud<(T, U)> {
-// 	fn into(self) -> Option<&'t U> { unsafe { self.into_ptr().as_ref().map(|(_, u)| u) } }
-// }
+
+	impl<'t, T> Into<Option<&'t mut T>> for Ud<T> {
+		fn into(self) -> Option<&'t mut T> { unsafe { self.as_udptr().cast::<T>().as_mut() } }
+	}
+	impl<'t, T> Into<Option<&'t T>> for Ud<T> {
+		fn into(self) -> Option<&'t T> { unsafe { self.as_udptr().cast::<T>().as_ref() } }
+	}
+
+	// This is probably error:
+	impl<'t, T, U> Into<Option<&'t mut U>> for &'t Ud<(T, U)> {
+		fn into(self) -> Option<&'t mut U> { unsafe { self.as_udptr().cast::<(T, U)>().as_mut().map(|(_, u)| u) } }
+	}
+	impl<'t, T, U> Into<Option<&'t U>> for &'t Ud<(T, U)> {
+		fn into(self) -> Option<&'t U> { unsafe { self.as_udptr().cast::<(T, U)>().as_ref().map(|(_, u)| u) } }
+	}
+
+
+	// Store:
+	impl<T> Ud<T> {
+		pub fn new(v: T) -> Self {
+			trace!(add: (Box<T> as T => Ud<T>));
+			Self(Box::into_raw(Box::new(v)))
+		}
+
+		pub fn new_in<A: alloc::alloc::Allocator>(v: T, alloc: A) -> Self {
+			trace!(add: (Box<T, A> as T => Ud<T>));
+			Self(Box::into_raw(Box::new_in(v, alloc)))
+		}
+
+
+		pub const fn is_empty(&self) -> bool { self.0.is_null() }
+
+		pub fn get<'t>(&self) -> Option<&'t T> {
+			trace!(get: (&T as Box => Ud<T>));
+			unsafe { self.as_udptr().cast::<T>().as_ref() }
+		}
+
+		pub fn get_mut<'t>(&self) -> Option<&'t mut T> {
+			trace!(get: (&mut T as Box => Ud<T>));
+			unsafe { self.as_udptr().cast::<T>().as_mut() }
+		}
+
+		pub fn take(self) -> Option<T> {
+			trace!(rem: (T as Box => Ud<T>));
+			if self.0.is_null() {
+				None
+			} else {
+				Some(*unsafe { Box::from_raw(self.0) })
+			}
+		}
+
+		#[doc(hidden)]
+		pub unsafe fn drop_ptr(ptr: *mut ()) -> bool {
+			trace!(rem: (T as Box => Ud<T>));
+			if ptr.is_null() {
+				false
+			} else {
+				drop(unsafe { Box::from_raw(ptr.cast::<T>()) });
+				true
+			}
+		}
+	}
+}
 
 
 #[repr(transparent)]

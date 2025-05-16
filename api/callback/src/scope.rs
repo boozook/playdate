@@ -24,7 +24,7 @@ impl Scope for Deferred {
 }
 
 
-/// Deferred execution in main thread, unique like singleton subscribtion.
+/// Deferred execution in main thread, unique like singleton subscription.
 pub struct Unique<K>(PhantomData<K>);
 impl<K> Scope for Unique<K> {
 	type Adapter<In, Out> = <Deferred as Scope>::Adapter<In, Out>;

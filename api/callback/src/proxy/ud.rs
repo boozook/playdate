@@ -208,6 +208,7 @@ macro_rules! impl_ud {
 							let ud = Ud::<Ext>::from(addr_of!(fud.1).cast_mut());
 							let args = Conv::convert(($([<$T:lower>],)* ud, $($([<$REST:lower>]),*)?));
 							let ret = fud.0.call_once(args).into();
+							// drop(fud.1);
 							ret
 						} else {
 							panic!("missed callback: {}", type_name::<F>())

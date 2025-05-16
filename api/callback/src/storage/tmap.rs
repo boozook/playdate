@@ -22,9 +22,9 @@ use super::Store;
 /// ⚠️ Requires unique key for each function, so unique usage of a stored function.
 /// Be really careful with coerced functions because of "type as key" is not unique for various functions with same signature.
 /// For example this storage can contain only one function with `fn() -> ()` signature.
-pub struct Static;
+pub struct Storage;
 
-impl Static {
+impl Storage {
 	// ... impl Store<T> + use<'static, T>
 	pub const fn for_key<T>(_: &T) -> impl Store<T> + 'static
 		where Self: Store<T> {
@@ -39,29 +39,6 @@ type Map = BTreeMap<Key, Box<dyn Any>>;
 
 type LocMap = BTreeMap<Key, FnLoc>;
 
-
-// #[inline(never)]
-// #[cfg(not(test))]
-// fn store_mut() -> &'static mut Map {
-// 	static mut STORE: Map = Map::new();
-// 	#[allow(static_mut_refs)]
-// 	unsafe {
-// 		&mut STORE
-// 	}
-// }
-
-// #[inline(never)]
-// #[cfg(test)]
-// fn store_mut() -> &'static mut Map {
-// 	#[thread_local]
-// 	static mut STORE: Map = Map::new();
-// 	// LOCAL.with(|x: &String| unsafe { &*(x as *const String) })
-
-// 	#[allow(static_mut_refs)]
-// 	unsafe {
-// 		&mut STORE
-// 	}
-// }
 
 #[inline(never)]
 fn store_mut() -> &'static mut Map {
@@ -78,11 +55,10 @@ fn store() -> &'static Map { self::store_mut() }
 
 
 mod r#static {
-
 	use super::*;
 
 
-	impl<T: 'static> Store<T> for Static {
+	impl<T: 'static> Store<T> for Storage {
 		default fn is_empty() -> bool {
 			let s = store();
 			s.is_empty() || !s.contains_key(&Key::of::<T>())
@@ -130,11 +106,13 @@ mod r#static {
 				                        unsafe { *Box::from_raw(ptr) }
 			                        })
 		}
+
+		default fn remove() -> bool { store_mut().remove(&Key::of::<T>()).is_some() }
 	}
 
 
 	/// Spec for static fn-ptrs.
-	mod coerced {
+	pub(super) mod coerced {
 		use super::*;
 
 
@@ -196,7 +174,7 @@ mod r#static {
 			};
 
 			(@impl $( $T:ident )*) => { ::pastey::paste!{
-				impl<$($T,)* R> Store<fn($($T,)*) -> R> for Static
+				impl<$($T,)* R> Store<fn($($T,)*) -> R> for Storage
 					where R: 'static,
 						$( $T: 'static),*
 				{
@@ -241,6 +219,8 @@ mod r#static {
 												*(loc.cast_ref())
 											})
 					}
+
+					fn remove() -> bool { store_loc_mut().remove(&Key::of::<fn($($T,)*) -> R>()).is_some() }
 				}
 
 
@@ -249,7 +229,7 @@ mod r#static {
 				mod [<tests_ $($T)*>] {
 					use core::ptr::fn_addr_eq;
 					use crate::storage::ext::StoreExt as _;
-					use super::Static as S;
+					use super::Storage as S;
 
 					$(type $T = ();)*
 					type TEST = fn($($T),*) -> u8;
@@ -303,7 +283,7 @@ mod r#static {
 
 	#[cfg(test)]
 	mod tests {
-		use super::Static as S;
+		use super::Storage as S;
 		use crate::storage::ext::StoreExt as _;
 
 
@@ -349,7 +329,7 @@ mod r#static {
 		}
 
 		#[test]
-		#[cfg_attr(miri, ignore = "false-positive leak")]
+		#[cfg_attr(miri, ignore = "leak false-positive?")]
 		fn various() {
 			let a = |v: u8| v + 1;
 			let b = || 42;
@@ -383,7 +363,7 @@ mod associated {
 	use crate::storage::associate::Associated;
 
 
-	impl<K: 'static> Associated<K> for Static {
+	impl<K: 'static> Associated<K> for Storage {
 		fn is_empty(k: &K) -> bool {
 			let s = store();
 			s.is_empty() || !s.contains_key(&Self::key(k))
@@ -439,63 +419,63 @@ mod associated {
 	#[cfg(test)]
 	mod tests {
 		use crate::storage::key::AsKey;
-		use super::{Static, Associated};
+		use super::{Storage, Associated};
 
 
 		#[test]
 		#[cfg_attr(miri, ignore = "false-positive leak")]
 		fn empty() {
 			// for fn-item
-			assert!(Static::is_empty(&empty));
-			assert!(matches!(Static::get(&empty), None::<&()>));
-			assert!(matches!(Static::get_mut(&empty), None::<&mut ()>));
-			assert!(matches!(Static::take(&empty), None::<()>));
+			assert!(Storage::is_empty(&empty));
+			assert!(matches!(Storage::get(&empty), None::<&()>));
+			assert!(matches!(Storage::get_mut(&empty), None::<&mut ()>));
+			assert!(matches!(Storage::take(&empty), None::<()>));
 
-			Static::set(&empty, 42);
-			assert!(!Static::is_empty(&empty));
-			let v = Static::get(&empty);
+			Storage::set(&empty, 42);
+			assert!(!Storage::is_empty(&empty));
+			let v = Storage::get(&empty);
 			assert_eq!(Some(&42), v);
 
 
 			// for coerced (must be empty now)
 			let f: fn() = empty;
-			assert!(Static::is_empty(&f));
+			assert!(Storage::is_empty(&f));
 
-			Static::set(&f, 101);
-			assert!(!Static::is_empty(&f));
-			let v = Static::get(&f);
+			Storage::set(&f, 101);
+			assert!(!Storage::is_empty(&f));
+			let v = Storage::get(&f);
 			assert_eq!(Some(&101), v);
 		}
 
 		#[test]
 		#[cfg_attr(debug_assertions, should_panic)]
 		fn wrong() {
-			Static::set(&wrong, 42);
-			Static::take::<(/* not i32 */)>(&wrong);
+			Storage::set(&wrong, 42);
+			Storage::take::<(/* not i32 */)>(&wrong);
 		}
 
 		#[test]
 		#[cfg_attr(miri, ignore = "false-positive leak")]
 		fn take() {
-			Static::set(&take, 42);
-			assert!(!Static::is_empty(&take));
-			Static::take::<i32>(&take);
-			assert!(Static::is_empty(&take));
+			Storage::set(&take, 42);
+			assert!(!Storage::is_empty(&take));
+			Storage::take::<i32>(&take);
+			assert!(Storage::is_empty(&take));
 		}
 
 
 		#[test]
 		fn key() {
 			let key = key.key();
-			let add = |v: u8| v + Static::get(&key).unwrap_or(&0);
+			let add = |v: u8| v + Storage::get(&key).unwrap_or(&0);
 
-			Static::set(&key, 42_u8);
+			Storage::set(&key, 42_u8);
 			assert_eq!(43, add(1));
 
-			Static::get_mut::<u8>(&key).map(|v| *v += 1);
+			Storage::get_mut::<u8>(&key).map(|v| *v += 1);
 			assert_eq!(44, add(1));
 
-			Static::take::<u8>(&key);
+			Storage::take::<u8>(&key);
 			assert_eq!(1, add(1));
 		}
 	}

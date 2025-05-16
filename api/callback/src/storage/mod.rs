@@ -1,10 +1,10 @@
-mod key;
+pub mod key;
 
 /// Associated KV storage
 pub mod associate;
 
 /// Simple storage for K
-pub mod unique;
+pub mod kmap;
 
 /// Implementations
 pub(crate) mod tmap;
@@ -26,6 +26,12 @@ pub trait Store<T: ?Sized> {
 	/// Remove from the storage and return.
 	fn take() -> Option<T>
 		where T: Sized;
+
+	/// Remove from the storage and drop,
+	/// returns `true` if the value was and so removed.
+	///
+	/// Removes value without checking if the value type, depending on implementation.
+	fn remove() -> bool;
 }
 
 
