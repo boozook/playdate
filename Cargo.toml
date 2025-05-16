@@ -62,5 +62,34 @@ overwrite = false
 store = { path = ".vet" }
 
 
-# [workspace.lints.cargo]
-# unknown-lints = "warn"
+[workspace.lints.cargo]
+unknown-lints = "warn"
+
+
+[workspace.lints.rust.unexpected_cfgs]
+level = "deny"
+check-cfg = [
+	'cfg(pdtrace, values("all", "alloc", "stack", "cb-add", "cb-rem", "cb-call", "cb-get", "cb-into"))',
+	# use with RUSTFLAGS='--cfg trace="cb-add" --cfg trace="stack"'
+]
+
+
+[profile.dev]
+rustflags = [
+	# '--cfg=pdtrace="alloc"',
+	'--cfg=pdtrace="stack"',
+	'--cfg=pdtrace="cb-add"',
+	'--cfg=pdtrace="cb-rem"',
+	# '--cfg=pdtrace="cb-get"',
+	# '--cfg=pdtrace="cb-call"',
+	'--cfg=pdtrace="cb-into"',
+]
+
+[profile.release]
+rustflags = [
+	'--cfg=pdtrace="stack"',
+	'--cfg=pdtrace="cb-add"',
+	'--cfg=pdtrace="cb-rem"',
+	# '--cfg=pdtrace="cb-into"',
+]
+lto = true
