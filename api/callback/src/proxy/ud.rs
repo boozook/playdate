@@ -41,18 +41,21 @@ macro_rules! impl_ud {
 					#[inline(always)]
 					default fn fn_fn() -> extern "C" fn($($T,)* UdPtr $(,$($REST),*)?) -> CR
 						where F: Fn<RArgs, Output = RR> {
+						trace!(get: (extern "C" fn($($T,)* UdPtr $(,$($REST),*)?) -> CR as ProxyFn => Self));
 						proxy_fn::<$($T,)* $($($REST,)*)? CR, Adapter, F, RArgs, RR>
 					}
 
 					#[inline(always)]
 					default fn fn_mut() -> extern "C" fn($($T,)* UdPtr $(,$($REST),*)?) -> CR
 						where F: FnMut<RArgs, Output = RR> {
+						trace!(get: (extern "C" fn($($T,)* UdPtr $(,$($REST),*)?) -> CR as ProxyMut => Self));
 						proxy_mut::<$($T,)* $($($REST,)*)? CR, Adapter, F, RArgs, RR>
 					}
 
 					#[inline(always)]
 					default fn fn_once() -> extern "C" fn($($T,)* UdPtr $(,$($REST),*)?) -> CR
 						where F: FnOnce<RArgs, Output = RR> {
+						trace!(get: (extern "C" fn($($T,)* UdPtr $(,$($REST),*)?) -> CR as ProxyOnce => Self));
 						proxy_once::<$($T,)* $($($REST,)*)? CR, Adapter, F, RArgs, RR>
 					}
 				}
@@ -65,12 +68,9 @@ macro_rules! impl_ud {
 					let ud: Ud<F> = Ud::from(ud.cast());
 
 					let p: *const F = ud.0.cast();
+					trace!(get: (&F as Fn => Ud<F>));
 					if let Some(f) = unsafe { p.as_ref() } {
-						trace!(
-								"Proxy call: {} from UD:{}",
-								type_name::<F>(),
-								type_name::<Ud<F>>()
-						);
+						trace!(call: (F as Fn => Ud<F>));
 						let args = Conv::convert(($([<$T:lower>],)* ud, $($([<$REST:lower>]),*)?));
 						f.call(args).into()
 					} else {
@@ -86,12 +86,9 @@ macro_rules! impl_ud {
 					let ud: Ud<F> = Ud::from(ud.cast());
 
 					let p: *mut F = ud.0.cast();
+					trace!(get: (&mut F as FnMut => Ud<F>));
 					if let Some(f) = unsafe { p.as_mut() } {
-						trace!(
-								"Proxy call: {} from UD:{}",
-								type_name::<F>(),
-								type_name::<Ud<F>>()
-						);
+						trace!(call: (F as FnMut => Ud<F>));
 						let args = Conv::convert(($([<$T:lower>],)* ud, $($([<$REST:lower>]),*)?));
 						f.call_mut(args).into()
 					} else {
@@ -108,13 +105,10 @@ macro_rules! impl_ud {
 						use alloc::boxed::Box;
 
 						let ud: Ud<F> = Ud::from(ud.cast());
+						trace!(rem: (F as FnOnce => Ud<F>));
 						let f = unsafe { Box::from_raw(ud.0) };
 
-						trace!(
-								"Proxy call: {} from UD:{}",
-								type_name::<F>(),
-								type_name::<Ud<F>>()
-						);
+						trace!(call: (F as FnOnce => Ud<F>));
 						let args = Conv::convert(($([<$T:lower>],)* ud, $($([<$REST:lower>]),*)?));
 						f.call_once(args).into()
 					} else {
@@ -137,18 +131,21 @@ macro_rules! impl_ud {
 						#[inline(always)]
 						default fn fn_fn() -> extern "C" fn($($T,)* UdPtr $(,$($REST),*)?) -> CR
 							where F: Fn<RArgs, Output = RR> {
+							trace!(get: (extern "C" fn($($T,)* UdPtr $(,$($REST),*)?) -> CR as ProxyFn => Self));
 							proxy_fn::<$($T,)* $($($REST,)*)? CR, Adapter, F, RArgs, RR, Ext>
 						}
 
 						#[inline(always)]
 						default fn fn_mut() -> extern "C" fn($($T,)* UdPtr $(,$($REST),*)?) -> CR
 							where F: FnMut<RArgs, Output = RR> {
+							trace!(get: (extern "C" fn($($T,)* UdPtr $(,$($REST),*)?) -> CR as ProxyMut => Self));
 							proxy_mut::<$($T,)* $($($REST,)*)? CR, Adapter, F, RArgs, RR, Ext>
 						}
 
 						#[inline(always)]
 						default fn fn_once() -> extern "C" fn($($T,)* UdPtr $(,$($REST),*)?) -> CR
 							where F: FnOnce<RArgs, Output = RR> {
+							trace!(get: (extern "C" fn($($T,)* UdPtr $(,$($REST),*)?) -> CR as ProxyOnce => Self));
 							proxy_once::<$($T,)* $($($REST,)*)? CR, Adapter, F, RArgs, RR, Ext>
 						}
 					}
@@ -162,12 +159,9 @@ macro_rules! impl_ud {
 						let ud: Ud<(F, Ext)> = Ud::from(ud.cast());
 
 						let p: *mut (F, Ext) = ud.0.cast();
+						trace!(get: (&F as Fn => Ud<(F, Ext)>));
 						if let Some((f, ext)) = unsafe { p.as_mut() } {
-							trace!(
-									"Proxy call: {} from UD:{}",
-									type_name::<F>(),
-									type_name::<Ud<(F, Ext)>>()
-							);
+							trace!(call: (F as Fn => Ud<(F, Ext)>));
 							let ud: Ud<Ext> = Ud::<Ext>::from(ext as *mut Ext);
 							let args = Conv::convert(($([<$T:lower>],)* ud, $($([<$REST:lower>]),*)?));
 							f.call(args).into()
@@ -184,12 +178,9 @@ macro_rules! impl_ud {
 						let ud: Ud<(F, Ext)> = Ud::from(ud.cast());
 
 						let p: *mut (F, Ext) = ud.0.cast();
+						trace!(get: (&mut F as Fn => Ud<(F, Ext)>));
 						if let Some((f, ext)) = unsafe { p.as_mut() } {
-							trace!(
-									"Proxy call: {} from UD:{}",
-									type_name::<F>(),
-									type_name::<Ud<(F, Ext)>>()
-							);
+							trace!(call: (F as FnMut => Ud<(F, Ext)>));
 							let ud: Ud<Ext> = Ud::<Ext>::from(ext as *mut Ext);
 							let args = Conv::convert(($([<$T:lower>],)* ud, $($([<$REST:lower>]),*)?));
 							f.call_mut(args).into()
@@ -208,19 +199,15 @@ macro_rules! impl_ud {
 
 						if !ud.is_null() {
 							let ud: Ud<(F, Ext)> = Ud::from(ud.cast());
+
+							trace!(rem: (F as FnOnce => Ud<(F, Ext)>));
 							let fud = unsafe { Box::from_raw(ud.0) };
 
-							trace!(
-									"Proxy call: {} from UD:{}",
-									type_name::<F>(),
-									type_name::<Ud<(F, Ext)>>()
-							);
+							trace!(call: (F as FnOnce => Ud<(F, Ext)>));
+
 							let ud = Ud::<Ext>::from(addr_of!(fud.1).cast_mut());
-							// let ext = addr_of!(fud.1).cast_mut();
-							// let ud = Ud::<Ext>::from(ext);
 							let args = Conv::convert(($([<$T:lower>],)* ud, $($([<$REST:lower>]),*)?));
 							let ret = fud.0.call_once(args).into();
-							drop(fud.1);
 							ret
 						} else {
 							panic!("missed callback: {}", type_name::<F>())

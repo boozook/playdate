@@ -13,8 +13,7 @@ use crate::util::marker::IsFnPtr;
 /// Can be created for/from any safe rust-abi functions uniquely.
 ///
 /// Also see [`FromFn`][] and [`FnKey`].
-#[cfg_attr(test, derive(Debug))]
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 // TODO: May be better to use only second part of `TypeId` as it is in the std, instead of entire `TypeId`, or some short hash of it?
 pub enum Key {
 	/// Unique type of fn-item.
@@ -22,6 +21,7 @@ pub enum Key {
 	/// Type of fn-ptr with pointer itself, so hopefully unique.
 	/// Actually, it doesn't matter if it has been inlined
 	/// - we just need to identify it to be able to associate one function with another.
+	#[allow(private_interfaces)]
 	Ptr(TypeId, FnLoc),
 }
 
@@ -30,10 +30,17 @@ impl<T: AsKey> From<T> for Key {
 }
 
 impl Key {
-	pub const fn to_any(self) -> (Self, Option<FnLoc>) {
+	pub(crate) const fn to_any(self) -> (Self, Option<FnLoc>) {
 		match self {
 			Key::Ptr(id, loc) => (Self::Any(id), Some(loc)),
 			key => (key, None),
+		}
+	}
+
+	pub(crate) const fn to_loc(self) -> Option<FnLoc> {
+		match self {
+			Key::Ptr(_, loc) => Some(loc),
+			_ => None,
 		}
 	}
 

@@ -1,3 +1,5 @@
+use core::marker::PhantomData;
+
 use crate::arg;
 use crate::proxy;
 use crate::storage;
@@ -17,26 +19,26 @@ impl Scope for Immediate {
 pub struct Deferred;
 impl Scope for Deferred {
 	type Adapter<In, Out> = arg::default::Into<In, Out>;
-	type Storage<Key> = storage::tmap::Static;
+	type Storage<Key> = storage::tmap::Storage;
 	type Proxy<C, CIn, COut, R, RIn, ROut> = proxy::default::Default<R, Self::Storage<R>, Self::Adapter<CIn, RIn>>;
 }
 
 
 /// Deferred execution in main thread, unique like singleton subscribtion.
-pub(crate) struct Unique<const ID: u64>;
-impl<const ID: u64> Scope for Unique<ID> {
+pub struct Unique<K>(PhantomData<K>);
+impl<K> Scope for Unique<K> {
 	type Adapter<In, Out> = <Deferred as Scope>::Adapter<In, Out>;
-	type Storage<Key> = storage::unique::Storage<Key>;
+	type Storage<Key> = storage::kmap::Storage<K>;
 	type Proxy<C, CIn, COut, R, RIn, ROut> = ();
 }
 
 /// Deferred execution in other thread.
 /// Used in sound and network.
-pub(crate) struct Async;
+pub struct Async;
 impl Scope for Async
 // could be with non_lifetime_binders: where for <In, Out> Self::Adapter<In, Out>::Params: 'static
 {
-	type Storage<Key> = ();
+	type Storage<Key> = storage::tmap::Storage;
 	type Adapter<In, Out> = ();
 	type Proxy<C, CIn, COut, R, RIn, ROut> = ();
 }

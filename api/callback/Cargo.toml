@@ -13,19 +13,16 @@ repository.workspace = true
 
 
 [features]
-jit = []          # closures through CFFI via jit instead of full-fledged proxy functions
-default = ["jit"]
+jit = [] # closures through CFFI via JIT instead of full-fledged proxy functions
 
 
 [dependencies]
-# paste = "1.0"
 pastey = "0.1"
 duplicate = { version = "2.0.0", features = ["module_disambiguation", "pretty_errors", "fail-on-warnings"] }
-# module_disambiguation
 
-# [dependencies.sys]
-# workspace = true
-# default-features = false
+[dependencies.sys]
+workspace = true
+optional = true
 
 
 [package.metadata.docs.rs]
@@ -33,3 +30,10 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
 cargo-args = ["-Zunstable-options", "-Zbuild-std=core,alloc"]
+
+
+[lints.rust.unexpected_cfgs]
+level = "deny"
+check-cfg = [
+	'cfg(pdtrace, values("all", "cb-add", "cb-rem", "cb-get", "cb-call", "cb-into"))', # tracing
+]

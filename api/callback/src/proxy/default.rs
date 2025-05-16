@@ -39,18 +39,21 @@ macro_rules! impl_def {
 					#[inline(always)]
 					default fn fn_fn() -> extern "C" fn($($T,)*) -> CR
 						where F: Fn<RArgs, Output = RR> {
+						trace!(get: (extern "C" fn($($T,)*) -> CR as ProxyFn => Self));
 						proxy_fn::<$($T,)* CR, Storage, Adapter, F, RArgs, RR>
 					}
 
 					#[inline(always)]
 					default fn fn_mut() -> extern "C" fn($($T,)*) -> CR
 						where F: FnMut<RArgs, Output = RR> {
+						trace!(get: (extern "C" fn($($T,)*) -> CR as ProxyMut => Self));
 						proxy_mut::<$($T,)* CR, Storage, Adapter, F, RArgs, RR>
 					}
 
 					#[inline(always)]
 					default fn fn_once() -> extern "C" fn($($T,)*) -> CR
 						where F: FnOnce<RArgs, Output = RR> {
+						trace!(get: (extern "C" fn($($T,)*) -> CR as ProxyOnce => Self));
 						proxy_once::<$($T,)* CR, Storage, Adapter, F, RArgs, RR>
 					}
 				}
@@ -63,7 +66,7 @@ macro_rules! impl_def {
 							Args: Tuple,
 							Ret: Into<R> {
 					if let Some(f) = S::get() {
-						trace!("Proxy call: {} from {}", type_name::<F>(), type_name::<S>());
+						trace!(call: (F as Fn => S));
 						f.call(Conv::convert(($([<$T:lower>],)*))).into()
 					} else {
 						panic!("missed callback: {}", type_name::<F>())
@@ -77,7 +80,7 @@ macro_rules! impl_def {
 							Args: Tuple,
 							Ret: Into<R> {
 					if let Some(f) = S::get_mut() {
-						trace!("Proxy call: {} from {}", type_name::<F>(), type_name::<S>());
+						trace!(call: (F as FnMut => S));
 						f.call_mut(Conv::convert(($([<$T:lower>],)*))).into()
 					} else {
 						panic!("missed callback: {}", type_name::<F>())
@@ -91,7 +94,7 @@ macro_rules! impl_def {
 							Args: Tuple,
 							Ret: Into<R> {
 					if let Some(f) = S::take() {
-						trace!("Proxy call: {} from {}", type_name::<F>(), type_name::<S>());
+						trace!(call: (F as FnOnce => S));
 						f.call_once(Conv::convert(($([<$T:lower>],)*))).into()
 					} else {
 						panic!("missed callback: {}", type_name::<F>())

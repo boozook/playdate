@@ -5,8 +5,7 @@ use core::marker::FnPtr;
 /// Unsafe pointer protecter. Contains pointer to the fn body.
 /// We must not deref it, never.
 /// But better way to deal with ptrs is as-is - not to cast to usize and miss meta & provenance.
-#[cfg_attr(test, derive(Debug))]
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub(crate) struct FnLoc(*const ());
 
 impl FnLoc {
