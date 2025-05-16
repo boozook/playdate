@@ -2,6 +2,7 @@ use alloc::collections::BTreeMap;
 use alloc::boxed::Box;
 use core::any::Any;
 
+use crate::util::macros::trace;
 use crate::storage::key::Key;
 use crate::util::ptr::FnLoc;
 use super::Store;
@@ -90,14 +91,19 @@ mod r#static {
 		/// Insert value replacing the old one.
 		default fn set(v: T) {
 			let key = Key::of::<T>();
-			crate::util::macros::trace!("stored FnItem: {}", core::any::type_name::<T>());
-			store_mut().insert(key, Box::new(v));
+			let prev = store_mut().insert(key, Box::new(v));
+			if prev.is_some() {
+				trace!(re-add: (T as FnItem => Self));
+			} else {
+				trace!(add: (T as FnItem => Self));
+			}
 		}
 
 
 		default fn get<'t>() -> Option<&'t T> {
 			let key = Key::of::<T>();
 			store().get(&key).map(|v: &Box<dyn Any>| {
+				                 trace!(get: (&T as FnItem => Self));
 				                 // Sanity check
 				                 debug_assert!(v.as_ref().is::<T>());
 				                 let ptr = (v.as_ref() as *const dyn Any).cast::<T>();
@@ -107,6 +113,7 @@ mod r#static {
 		default fn get_mut<'t>() -> Option<&'t mut T> {
 			let key = Key::of::<T>();
 			store_mut().get_mut(&key).map(|v: &mut Box<dyn Any>| {
+				                         trace!(get: (&mut T as FnItem => Self));
 				                         // Sanity check
 				                         debug_assert!(v.as_ref().is::<T>());
 				                         let ptr = (v.as_mut() as *mut dyn Any).cast::<T>();
@@ -116,10 +123,7 @@ mod r#static {
 		default fn take() -> Option<T> {
 			let key = Key::of::<T>();
 			store_mut().remove(&key).map(|v: Box<dyn Any>| {
-				                        crate::util::macros::trace!(
-				                                                    "removed FnItem: {}",
-				                                                    core::any::type_name::<T>()
-				);
+				                        trace!(rem: (T as FnItem => Self));
 				                        // Sanity check
 				                        debug_assert!(v.as_ref().is::<T>());
 				                        let ptr = Box::into_raw(v).cast::<T>();
@@ -149,7 +153,7 @@ mod r#static {
 
 		/// Gen spec for static fn-ptrs, e.g.:
 		/// ```text,ignore
-		/// impl<R> Store<fn() -> R> for Static where R: 'static {
+		/// impl<R> Store<fn() -> R> for Storage where R: 'static {
 		/// 	fn is_empty() -> bool {
 		/// 		let s = store_loc();
 		/// 		s.is_empty() || !s.contains_key(&Key::of::<fn() -> R>())
@@ -159,7 +163,6 @@ mod r#static {
 		/// 		let (key, Some(loc)) = Key::of_ptr(&v).to_any() else {
 		/// 			unreachable!()
 		/// 		};
-		/// 		crate::util::macros::trace!("stored fn: {}", core::any::type_name::<fn() -> R>());
 		/// 		store_loc_mut().insert(key, loc);
 		/// 	}
 		///
@@ -175,10 +178,7 @@ mod r#static {
 		/// 	fn take() -> Option<fn() -> R>
 		/// 		where fn() -> R: Sized {
 		/// 		store_loc_mut().remove(&Key::of::<fn() -> R>())
-		/// 		               .map(|loc| {
-		/// 								crate::util::macros::trace!("removed fn: {}", core::any::type_name::<fn() -> R>());
-		/// 								*(loc.cast_ref())
-		/// 							})
+		/// 		               .map(|loc| *(loc.cast_ref()))
 		/// 	}
 		/// }
 		/// ```
@@ -209,24 +209,35 @@ mod r#static {
 						let (key, Some(loc)) = Key::of_ptr(&v).to_any() else {
 							unreachable!()
 						};
-						crate::util::macros::trace!("stored fn: {}", core::any::type_name::<fn($($T,)*) -> R>());
-						store_loc_mut().insert(key, loc);
+						let _prev = store_loc_mut().insert(key, loc);
+
+						if _prev.is_some() {
+							trace!(re-add: (fn($($T,)*) -> R as FnPtr => Self));
+						} else {
+							trace!(add: (fn($($T,)*) -> R as FnPtr => Self));
+						}
 					}
 
 					fn get<'t>() -> Option<&'t fn($($T,)*) -> R> {
-						store_loc().get(&Key::of::<fn($($T,)*) -> R>()).map(|loc| loc.cast_ref())
+						store_loc().get(&Key::of::<fn($($T,)*) -> R>()).map(|loc| {
+							trace!(get: (&fn($($T,)*) -> R as FnPtr => Self));
+							loc.cast_ref()
+						})
 					}
 
 					fn get_mut<'t>() -> Option<&'t mut fn($($T,)*) -> R> {
 						store_loc_mut().get_mut(&Key::of::<fn($($T,)*) -> R>())
-											.map(|loc| loc.cast_mut())
+											.map(|loc| {
+												trace!(get: (&mut fn($($T,)*) -> R as FnPtr => Self));
+												loc.cast_mut()
+											})
 					}
 
 					fn take() -> Option<fn($($T,)*) -> R>
 						where fn($($T,)*) -> R: Sized {
 						store_loc_mut().remove(&Key::of::<fn($($T,)*) -> R>())
 											.map(|loc| {
-												crate::util::macros::trace!("removed fn: {}", core::any::type_name::<fn($($T,)*) -> R>());
+												trace!(rem: (fn($($T,)*) -> R as FnPtr => Self));
 												*(loc.cast_ref())
 											})
 					}

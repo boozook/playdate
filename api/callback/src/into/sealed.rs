@@ -62,13 +62,8 @@ mod as_is {
 					#[inline(always)]
 					fn $fn(self) -> CFn<$($T,)* R> {
 						{
-							use $crate::util::macros::*;
-							trace!(
-								"C({})::{name}: default (as-is) ... -> {}",
-								tlen!($($T),*),
-								core::any::type_name::<Self>(),
-								name=stringify!($fn),
-							);
+							use $crate::util::macros::trace;
+							trace!(into: $trait::$fn(($($T,)*), R => ($($T,)*), R), Self, ());
 						}
 						self
 					}
@@ -212,20 +207,9 @@ pub mod base {
 				{
 					#[inline]
 					default fn $fn(self) -> CFn<$($T,)* CR> {
-						#[cfg(debug_assertions)]
 						{
-							use $crate::util::macros::*;
-							#[rustfmt::skip]
-							trace!(
-									"{trait}::{fn}: [{r}] --> C fn[{c}] (size: {size}, ty: {ty}), using {adapter}",
-									trait = stringify!($trait),
-									fn = stringify!($fn),
-									ty = core::any::type_name::<Self>(),
-									size = size_of::<Self>(),
-									c = format_args!("{} -> {}", core::any::type_name::<($($T,)*)>(), core::any::type_name::<CR>()),
-									r = format_args!("{} -> {}", core::any::type_name::<RArgs>(), core::any::type_name::<RFn::Output>()),
-									adapter = core::any::type_name::<<Scope as crate::scope::Scope>::Adapter<($($T,)*), RArgs>>(),
-							);
+							use $crate::util::macros::trace;
+							trace!(into: $trait::$fn(($($T,)*), CR => RArgs, RFn::Output), Self, <Scope as scope::Scope> ::Adapter<($($T,)*), RArgs>);
 						}
 
 						Scope::Storage::<Self>::set(self);
@@ -362,21 +346,11 @@ mod ud {
 								proxy::Proxy<Safe<$($T,)* $($($REST,)*)? CR>, ($($T,)* Ud<RFn>, $($($REST),*)?), CR, RFn, RArgs, RFn::Output>
 				{
 					default fn $fn(self) -> UdFn<Safe<$($T,)* $($($REST,)*)? CR>, RFn, I> {
-						#[cfg(debug_assertions)]
 						{
-							use $crate::util::macros::*;
-							#[rustfmt::skip]
-							trace!(
-									"UD+{trait}::{fn}: [{r}] --> C fn[{c}] (size: {}, ty: {}), using {adapter}",
-									size_of::<Self>(),
-									core::any::type_name::<Self>(),
-									trait = stringify!($trait),
-									fn = stringify!($fn),
-									c = format_args!("{} -> {}", core::any::type_name::<($($T,)* UdPtr, $($($REST,)*)?)>(), core::any::type_name::<CR>()),
-									r = format_args!("{} -> {}", core::any::type_name::<RArgs>(), core::any::type_name::<RFn::Output>()),
-									adapter = core::any::type_name::<<Scope as crate::scope::Scope>::Adapter<($($T,)* Ud<RFn>, $($($REST,)*)?), RArgs>>(),
-							);
+							use $crate::util::macros::trace;
+							trace!(into: $trait::$fn(($($T,)* UdPtr, $($($REST,)*)?), CR => RArgs, RFn::Output), Self, <Scope as crate::scope::Scope> ::Adapter<($($T,)* Ud<RFn>, $($($REST,)*)?), RArgs>);
 						}
+
 						// for scope::Immediate here should be raw-ref
 						$crate::util::macros::trace!(add: (RFn as $trait => Ud<RFn>));
 						let ud = Ud::new(self);
@@ -398,20 +372,9 @@ mod ud {
 							Scope::Adapter<($($T,)* Ud<Ext>, $($($REST,)*)?), RArgs>: $crate::arg::Adapter<Params = ($($T,)* Ud<Ext>, $($($REST),*)?), Args = RArgs>,
 				{
 					default fn $fn(self) -> UdFn<Safe<$($T,)* $($($REST,)*)? CR>, (RFn, Ext), I> {
-						#[cfg(debug_assertions)]
 						{
-							use $crate::util::macros::*;
-							#[rustfmt::skip]
-							trace!(
-									"UD+{trait}::{fn}: [{r}] --> C fn[{c}] (size: {}, ty: {}), using {adapter}",
-									size_of::<Self>(),
-									core::any::type_name::<Self>(),
-									trait = stringify!($trait),
-									fn = stringify!($fn),
-									c = format_args!("{} -> {}", core::any::type_name::<($($T,)* UdPtr, $($($REST,)*)?)>(), core::any::type_name::<CR>()),
-									r = format_args!("{} -> {}", core::any::type_name::<RArgs>(), core::any::type_name::<RFn::Output>()),
-									adapter = core::any::type_name::<<Scope as crate::scope::Scope>::Adapter<($($T,)* Ud<(RFn, Ext)>, $($($REST,)*)?), RArgs>>(),
-							);
+							use $crate::util::macros::trace;
+							trace!(into: $trait::$fn(($($T,)* UdPtr, $($($REST,)*)?), CR => RArgs, RFn::Output), Self, <Scope as scope::Scope> ::Adapter<($($T,)* Ud<(RFn, Ext)>, $($($REST,)*)?), RArgs>);
 						}
 
 						let FnWith(cb, ud) = self;
