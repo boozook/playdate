@@ -1,22 +1,24 @@
 # Examples
 
 
-# How to run
+## How to run
 
 ```bash
-cargo playdate run -p=playdate-system --example=handler-static --features=sys/lang-items,sys/entry-point
+cargo playdate run -p=playdate-system --example=update-callback --features=sys/lang-items,sys/entry-point
 
-cargo playdate run -p=playdate-system --example=handler-boxed --features=sys/lang-items,sys/entry-point
-
-cargo playdate run -p=playdate-system --example=handler-pinned --features=sys/lang-items,sys/entry-point
+cargo playdate run -p=playdate-system --example=server-time --features=sys/lang-items,sys/entry-point
 
 cargo playdate run -p=playdate-system --example=serial-message --features=sys/lang-items,sys/entry-point
-# then type in simulator's console: "!msg foobar" four times
+# then type in simulator's console: "!msg foobar" five times
 
-cargo playdate run -p=playdate-system --example=update-state-in-serial-message-callback --features=sys/lang-items,sys/entry-point
+cargo playdate run -p=playdate-system --example=buttons --features=sys/lang-items,sys/entry-point
+
+cargo playdate run -p=playdate-system --example=accelerometer --features=sys/lang-items,sys/entry-point
+
+cargo playdate run -p=playdate-system --example=launch-args --features=sys/lang-items,sys/entry-point
 ```
 
-More information how to use [cargo-playdate][] in help: `cargo playdate --help`.
+More information how to use [cargo-playdate][]: `cargo playdate --help`.
 
 
 

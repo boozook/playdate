@@ -89,7 +89,7 @@ mod duration {
 
 
 #[derive(Clone, Copy)]
-pub struct Time(Api);
+pub struct Time(pub(crate) Api);
 
 impl Default for Time {
 	fn default() -> Self { Self(api!(system)) }

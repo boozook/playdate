@@ -1,38 +1,32 @@
 #![no_std]
 #![cfg_attr(not(test), no_main)]
 #![feature(const_trait_impl)]
-#![feature(impl_trait_in_assoc_type)]
-#![cfg_attr(feature = "callback", feature(tuple_trait, min_specialization))]
-// for cont- compile-time tests:
-#![cfg_attr(all(debug_assertions, feature = "callback"),
-            feature(core_intrinsics),
-            allow(internal_features))]
+#![feature(tuple_trait)]
+// for compile-time tests:
+#![cfg_attr(debug_assertions, feature(core_intrinsics), allow(internal_features))]
 
 
 #[macro_use]
 extern crate alloc;
+
 #[macro_use]
 extern crate sys;
 
-#[cfg(feature = "callback")]
 extern crate callback;
 
 
-use core::ffi::c_float;
-use core::ffi::c_int;
-use core::ffi::CStr;
+use core::ffi::{CStr, c_float, c_int, c_char};
 
 
 pub mod time;
 pub mod ctrl;
-// pub mod update;
 mod cb;
 
 pub mod prelude {
 	pub use crate::System;
 	pub use crate::time::*;
 	pub use crate::ctrl::buttons::*;
-	// pub use crate::update::*;
+	pub use crate::cb::btn::ButtonQueueResult;
 }
 
 
@@ -82,8 +76,8 @@ impl System {
 	pub fn reduce_flashing(&self) -> bool { unsafe { (self.0.getReduceFlashing)() == 1 } }
 
 
-	/// Returns a value from `0-100` denoting the current level of battery charge.
-	/// `0` = empty;
+	/// Returns a value from `0-100` denoting the current level of battery charge. \
+	/// `0` = empty; \
 	/// `100` = full.
 	#[doc(alias = "sys::ffi::PlaydateSys::getBatteryPercentage")]
 	#[inline(always)]
@@ -112,27 +106,70 @@ impl System {
 	#[cold]
 	pub fn restart(&self, launch_args: &CStr) { unsafe { (self.0.restartGame)(launch_args.as_ptr()) } }
 
+
 	/// Returns the string passed in as an argument at launch time,
 	/// either via the command line when launching the simulator,
 	/// the device console run command, or the above [`restart`](Self::restart) function.
 	///
-	/// If outpath is not NULL, the path of the currently loaded game is returned in it.
+	/// Returned reference is only valid in the closure body, so use it inplace or make owned to move it out.
 	///
-	/// Calls to [`sys::ffi::PlaydateSys::getLaunchArgs`]
+	/// Calls to [`sys::ffi::PlaydateSys::getLaunchArgs`].
+	///
+	/// See also [`launch_args_path`](Self::launch_args_path).
+	///
+	/// ### Example: _(or how to move it out of closure)_
+	/// ```no_run
+	/// # extern crate alloc;
+	/// # extern crate playdate_system as system;
+	/// # use alloc::borrow::ToOwned;
+	/// # use system::*;
+	/// # let system = System::default();
+	/// let mut args = None;
+	/// system.launch_args(|v| *&mut args = v.map(ToOwned::to_owned));
+	/// args.take(); // use owned args out of closure
+	/// ```
+	///
+	/// Wrong example, should not be passed through borrow-checker:
+	/// ```compile_fail
+	/// # extern crate playdate_system as system;
+	/// # use system::*;
+	/// # let system = System::default();
+	/// let mut args = None;
+	/// system.launch_args(|v| *&mut args = v);
+	/// # args.take();
+	/// ```
 	#[doc(alias = "sys::ffi::PlaydateSys::getLaunchArgs")]
-	#[inline]
-	// TODO: What's the hell is `outpath`?!
-	pub fn launch_args(&self, mut callback: impl FnMut(Option<&CStr>)) {
+	pub fn launch_args(&self, callback: impl FnOnce(Option<&CStr>)) {
 		let p = unsafe { (self.0.getLaunchArgs)(core::ptr::null_mut()) };
-		let mut s = if p.is_null() {
+		let s = if p.is_null() {
 			None
 		} else {
 			Some(unsafe { CStr::from_ptr(p) })
 		};
 		callback(s);
-		let _ = &mut s;
+	}
+
+	/// Same as [`launch_args`](Self::launch_args), but also returns the path of the currently loaded program.
+	#[doc(alias = "sys::ffi::PlaydateSys::getLaunchArgs")]
+	pub fn launch_args_path(&self, callback: impl FnOnce(Option<&CStr>, Option<&CStr>)) {
+		let mut path: *const c_char = core::ptr::null();
+		let args = unsafe { (self.0.getLaunchArgs)(&raw mut path) };
+
+		let args = if args.is_null() {
+			None
+		} else {
+			Some(unsafe { CStr::from_ptr(args) })
+		};
+
+		let path = if path.is_null() {
+			None
+		} else {
+			Some(unsafe { CStr::from_ptr(path) })
+		};
+
+		callback(args, path);
 	}
 
 
-	// TODO: sendMirrorData
+	// TODO: `System::sendMirrorData`
 }

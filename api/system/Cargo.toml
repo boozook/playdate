@@ -12,51 +12,62 @@ homepage.workspace = true
 repository.workspace = true
 
 
-[features]
-
-
 [dependencies.sys]
 workspace = true
 features = ["alloc"]
 
 [dependencies.callback]
 workspace = true
-optional = true
-features = ["sys", "tracing"]
+features = ["sys"]
 
 [dev-dependencies.display]
 workspace = true
 
 
-# [[example]]
-# name = "handler-boxed"
-# crate-type = ["dylib", "staticlib"]
-# path = "examples/handler-boxed.rs"
-# required-features = ["sys/entry-point", "sys/lang-items"]
+[[example]]
+name = "update-callback"
+crate-type = ["dylib", "staticlib"]
+path = "examples/update-callback.rs"
+required-features = ["sys/entry-point", "sys/lang-items"]
 
-# [[example]]
-# name = "handler-static"
-# crate-type = ["dylib", "staticlib"]
-# path = "examples/handler-static.rs"
-# required-features = ["sys/entry-point", "sys/lang-items"]
 
-# [[example]]
-# name = "handler-pinned"
-# crate-type = ["dylib", "staticlib"]
-# path = "examples/handler-pinned.rs"
-# required-features = ["sys/entry-point", "sys/lang-items"]
+[[example]]
+name = "server-time"
+crate-type = ["dylib", "staticlib"]
+path = "examples/server-time-callback.rs"
+required-features = ["sys/entry-point", "sys/lang-items"]
+
+# temp, until make default no-gcc build and build via `cargo rustc`.
+[[example]]
+name = "server-time-bin"
+crate-type = ["bin"]
+path = "examples/server-time-callback.rs"
+required-features = ["sys/entry-point", "sys/lang-items"]
 
 [[example]]
 name = "serial-message"
 crate-type = ["dylib", "staticlib"]
-path = "examples/set-serial-message-callback.rs"
-required-features = ["sys/entry-point", "sys/lang-items", "callback"]
+path = "examples/serial-message-callback.rs"
+required-features = ["sys/entry-point", "sys/lang-items"]
 
-# [[example]]
-# name = "update-state-in-serial-message-callback"
-# crate-type = ["dylib", "staticlib"]
-# path = "examples/update-state-in-serial-message-callback.rs"
-# required-features = ["sys/entry-point", "sys/lang-items"]
+[[example]]
+name = "buttons"
+crate-type = ["dylib", "staticlib"]
+path = "examples/buttons-callback.rs"
+required-features = ["sys/entry-point", "sys/lang-items"]
+
+[[example]]
+name = "accelerometer"
+crate-type = ["dylib", "staticlib"]
+path = "examples/accelerometer.rs"
+required-features = ["sys/entry-point", "sys/lang-items"]
+
+[[example]]
+name = "launch-args"
+crate-type = ["dylib", "staticlib"]
+path = "examples/launch-args.rs"
+required-features = ["sys/entry-point", "sys/lang-items"]
+
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.system"
@@ -71,6 +82,3 @@ cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=co
 
 [lints.rust.unexpected_cfgs]
 level = "deny"
-check-cfg = [
-	'cfg(pdtrace, values("all", "cb-add", "cb-rem", "cb-call"))', # tracing
-]

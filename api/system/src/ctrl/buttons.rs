@@ -13,7 +13,7 @@ pub trait Buttons: ButtonsExt + BitOr + BitAnd + BitOrAssign + BitAndAssign {
 
 #[const_trait]
 pub trait ButtonsExt: Sized {
-	fn raw(&self) -> u32;
+	fn raw(&self) -> u8;
 
 
 	/// Semantically same as `PartialEq`.
@@ -112,7 +112,7 @@ impl const ButtonsExt for ffi::Buttons {
 	const Down: Self = ffi::Buttons::Down;
 	const Menu: Self = ffi::Buttons(ffi::Buttons::A.0 << 1); // 01000000
 
-	fn raw(&self) -> u32 { self.0 }
+	fn raw(&self) -> u8 { self.0 as _ }
 }
 
 impl const Buttons for ffi::Buttons {
@@ -150,7 +150,7 @@ impl const ButtonsExt for Button {
 	const Down: Self = Button::Down;
 	const Menu: Self = Button::Menu;
 
-	fn raw(&self) -> u32 { self.to_buttons().0 }
+	fn raw(&self) -> u8 { self.to_buttons().0 as u8 }
 }
 
 impl ButtonsIntoIter for Button {

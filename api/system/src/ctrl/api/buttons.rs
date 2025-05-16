@@ -17,7 +17,7 @@ impl Default for Buttons {
 }
 
 impl Buttons {
-	pub fn new(api: Api) -> Self { Self(api) }
+	pub const fn new(api: Api) -> Self { Self(api) }
 }
 
 impl Buttons {
