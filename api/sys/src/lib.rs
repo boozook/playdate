@@ -66,10 +66,9 @@ pub fn set_api(api: *const crate::ffi::Playdate) { unsafe { API = api } }
 #[cfg(not(all(test, mockrt = "alloc")))]
 #[cfg(not(all(test, mockrt = "std")))]
 pub mod ffi {
-	#![allow(non_upper_case_globals)]
-	#![allow(non_camel_case_types)]
-	#![allow(non_snake_case)]
 	#![cfg_attr(test, allow(deref_nullptr))]
+	#![allow(non_upper_case_globals, non_camel_case_types, non_snake_case)]
+	#![allow(unnecessary_transmutes)]
 	#![allow(clippy::all, clippy::pedantic, clippy::nursery)]
 	//! Low-level Playdate C-API.
 	//!
