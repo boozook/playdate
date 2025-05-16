@@ -1,10 +1,10 @@
 [unstable]
 unstable-options = true
 config-include = true
-# check-cfg = true # TODO: enable after stabilized definition
 panic-abort-tests = true
 mtime-on-use = true
 avoid-dev-deps = true
+profile-rustflags = true
 
 
 [env]
