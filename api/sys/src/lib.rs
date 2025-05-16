@@ -192,7 +192,6 @@ pub extern "C" fn eventHandlerShim(api: *const ffi::Playdate,
 			unsafe { BOTTOM = core::ptr::addr_of!(v).cast() };
 		}
 
-
 		unsafe { API = api }
 	}
 
@@ -215,7 +214,6 @@ pub extern "C" fn eventHandlerShim(api: *const ffi::Playdate,
 // This is atomic because the env is the simulator that is asymchronous and built on SDL.
 #[cfg(all(feature = "entry-point", not(playdate)))]
 static PANICKED: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
-
 
 #[cfg(any(pdtrace = "all", pdtrace = "stack"))]
 #[export_name = "pdtrace_stack_bottom"]
@@ -266,7 +264,7 @@ pub mod ctrl {
 	}
 
 
-	/// Update Loop return value.
+	/// Update callback return value - signal to update the display for the PdOs.
 	///
 	/// This should be returned from update-callback registerd with [`setUpdateCallback`].
 	///
@@ -284,6 +282,9 @@ pub mod ctrl {
 		Needed = 1,
 	}
 
+	impl From<()> for UpdateDisplayCtrl {
+		fn from(_: ()) -> Self { Self::Nope }
+	}
 
 	impl From<UpdateDisplayCtrl> for c_int {
 		fn from(v: UpdateDisplayCtrl) -> Self { v as _ }
