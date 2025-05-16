@@ -76,10 +76,13 @@ mod as_is {
 
 
 				#[cfg(test)]
-				#[duplicate::duplicate_item( Scope; [Deferred]; [Async]; [Immediate]; /* TODO: Unique<...> */)]
+				type Unique = crate::scope::Unique<()>;
+				#[cfg(test)]
+				#[duplicate::duplicate_item( Scope; [Deferred]; [Async]; [Immediate]; [Unique];)]
 				mod c {
 					use super::*;
-					use crate::scope::*;
+					#[allow(unused_imports)]
+					use crate::scope::{Deferred, Async, Immediate};
 					use core::marker::Tuple;
 
 					#[test]
@@ -156,6 +159,19 @@ mod r#unsafe {
 }
 
 
+macro_rules! proxy_fn_iddent {
+	(Fn of $t:ty) => {
+		<$t>::fn_fn
+	};
+	(FnMut of $t:ty) => {
+		<$t>::fn_mut
+	};
+	(FnOnce of $t:ty) => {
+		<$t>::fn_once
+	};
+}
+
+
 pub mod base {
 	use core::marker::Tuple;
 
@@ -163,19 +179,6 @@ pub mod base {
 	use crate::proxy::{self, Proxy};
 	use crate::scope;
 	use super::*;
-
-
-	macro_rules! proxy_fn_iddent {
-		(Fn of $t:ty) => {
-			<$t>::fn_fn
-		};
-		(FnMut of $t:ty) => {
-			<$t>::fn_mut
-		};
-		(FnOnce of $t:ty) => {
-			<$t>::fn_once
-		};
-	}
 
 
 	macro_rules! impl_base {
@@ -334,7 +337,6 @@ mod ud {
 			#[allow(non_snake_case)]
 
 			mod [< $trait _ $($T)* $(_ $($REST)*)? >] {
-				use alloc::boxed::Box;
 				use core::marker::Tuple;
 
 				use $crate::util::macros::tlen;
@@ -376,8 +378,10 @@ mod ud {
 							);
 						}
 						// for scope::Immediate here should be raw-ref
-						let ud = Ud::from(Box::into_raw(Box::new(self)));
-						let f = Scope::Proxy::<Safe<$($T,)* $($($REST,)*)? CR>, ($($T,)* Ud<RFn>, $($($REST),*)?), CR, RFn, RArgs, RFn::Output>::fn_once();
+						$crate::util::macros::trace!(add: (RFn as $trait => Ud<RFn>));
+						let ud = Ud::new(self);
+
+						let f = proxy_fn_iddent!($trait of Scope::Proxy::<Safe<$($T,)* $($($REST,)*)? CR>, ($($T,)* Ud<RFn>, $($($REST),*)?), CR, RFn, RArgs, RFn::Output>)();
 						UdFn(f, ud)
 					}
 				}
@@ -411,8 +415,11 @@ mod ud {
 						}
 
 						let FnWith(cb, ud) = self;
-						let ud = Ud::from(Box::into_raw(Box::new((cb, ud))));
-						let f = Scope::Proxy::<Safe<$($T,)* $($($REST,)*)? CR>, ($($T,)* Ud<(RFn, Ext)>, $($($REST),*)?), CR, RFn, RArgs, RFn::Output>::fn_once();
+
+						$crate::util::macros::trace!(add: (RFn as $trait => Ud<(RFn, Ext)>));
+						let ud = Ud::new((cb, ud));
+
+						let f = proxy_fn_iddent!($trait of Scope::Proxy::<Safe<$($T,)* $($($REST,)*)? CR>, ($($T,)* Ud<(RFn, Ext)>, $($($REST),*)?), CR, RFn, RArgs, RFn::Output>)();
 						UdFn::<_, _, I>(f, ud)
 					}
 				}
@@ -422,7 +429,8 @@ mod ud {
 				// safe -> unsafe
 				impl<Scope, $($T,)* $($($REST,)*)? CR, RFn, RArgs: Tuple>
 					[<$trait IntoCallback>]<Scope, UdFn<Unsafe<$($T,)* $($($REST,)*)? CR>, RFn, I>, RArgs, RFn::Output> for RFn
-					where RFn: FnOnce<RArgs> + [<$trait IntoCallback>]<Scope, UdFn<Safe<$($T,)* $($($REST,)*)? CR>, RFn, I>, RArgs, RFn::Output>
+					where RFn: [<$trait IntoCallback>]<Scope, UdFn<Safe<$($T,)* $($($REST,)*)? CR>, RFn, I>, RArgs, RFn::Output>
+							+ $trait<RArgs>
 				{
 					#[inline(always)]
 					default fn $fn(self) -> UdFn<Unsafe<$($T,)* $($($REST,)*)? CR>, RFn, I> {
@@ -434,7 +442,7 @@ mod ud {
 					[<$trait IntoCallback>]<Scope, UdFn<Unsafe<$($T,)* $($($REST,)*)? CR>, (RFn, Ext), I>, RArgs, RFn::Output> for FnWith<RFn, Ext>
 					where FnWith<RFn, Ext>:
 						[<$trait IntoCallback>]<Scope, UdFn<Safe<$($T,)* $($($REST,)*)? CR>, (RFn, Ext), I>, RArgs, RFn::Output>,
-						RFn:FnOnce<RArgs>
+						RFn: $trait<RArgs>
 				{
 					#[inline(always)]
 					default fn $fn(self) -> UdFn<Unsafe<$($T,)* $($($REST,)*)? CR>, (RFn, Ext), I> {
