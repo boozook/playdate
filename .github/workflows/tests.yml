@@ -421,6 +421,9 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.ref }}
 
+      - name: Config
+        uses: ./.github/actions/init-cfg
+
       - name: Check
         id: check-rs
         continue-on-error: true # do not failt before suggestions
@@ -558,6 +561,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Config
+        uses: ./.github/actions/init-cfg
+
       - name: Check
         id: check
         continue-on-error: true
@@ -590,11 +597,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Config
+        uses: ./.github/actions/init-cfg
+
       - name: Check
         id: crates
         uses: katyo/publish-crates@v2
         with:
           dry-run: true
+
       - name: Output
         if: fromJSON(steps.crates.outputs.published).*
         run: |
