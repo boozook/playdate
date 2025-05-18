@@ -29,6 +29,8 @@ pub struct LcdColor<'t>(UnsafeLcdColor, PhantomData<&'t ()>);
 
 impl LcdColor<'_> {
 	const fn new(value: UnsafeLcdColor) -> Self { Self(value, PhantomData) }
+
+	pub const fn into_raw(self) -> UnsafeLcdColor { unsafe { core::mem::transmute(self) } }
 }
 impl From<SolidColor> for LcdColor<'static> {
 	fn from(value: SolidColor) -> Self { Self::new(value as UnsafeLcdColor) }
@@ -125,13 +127,18 @@ pub trait IntoColor<'t> {
 	fn into_color(self) -> LcdColor<'t>;
 }
 
-impl const IntoColor<'static> for SolidColor {
+impl const IntoColor<'_> for SolidColor {
 	fn into_color(self) -> LcdColor<'static> { LcdColor::new(self as UnsafeLcdColor) }
 }
 
 impl<'t> IntoColor<'t> for &'t Pattern {
 	#[inline(always)]
-	fn into_color(self) -> LcdColor<'t> { LcdColor::new(self.as_ptr() as _) }
+	fn into_color(self) -> LcdColor<'t> { LcdColor::new(self.as_ptr().addr()) }
+}
+
+impl<'t> IntoColor<'t> for Color<'t> {
+	#[inline(always)]
+	fn into_color(self) -> LcdColor<'t> { LcdColor::from(self) }
 }
 
 
