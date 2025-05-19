@@ -11,7 +11,7 @@ use core::ptr::null_mut;
 
 use sys::ffi::*;
 use sys::ctrl::EventLoopCtrl;
-use fs::error::ReadUtf8Error;
+use fs::error::ReadError;
 use fs::prelude::*;
 
 
@@ -61,7 +61,7 @@ fn write_file() -> Result<(), FsError> {
 }
 
 
-fn read_file() -> Result<(), ReadUtf8Error> {
+fn read_file() -> Result<(), ReadError> {
 	let fs = Fs::default();
 
 	println!("reading file metadata");
@@ -85,7 +85,7 @@ fn read_file() -> Result<(), ReadUtf8Error> {
 }
 
 
-fn read_package_info() -> Result<(), ReadUtf8Error> {
+fn read_package_info() -> Result<(), ReadError> {
 	println!("reading pdxinfo:");
 	let text = fs::read_to_string(c"pdxinfo", false)?;
 	println!("{text}");

@@ -13,7 +13,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use error::Owned;
-use error::ReadUtf8Error;
+use error::ReadError;
 use options::FileOptionsExt;
 use options::OpenOptions;
 use seek::Whence;
@@ -68,9 +68,9 @@ pub fn read<P: AsRef<Path>>(path: P, data_dir: bool) -> Result<Vec<u8>, Owned> {
 
 /// Read the entire contents of a file into a string.
 /// Works similarly to [`std::fs::read_to_string`].
-pub fn read_to_string<P: AsRef<Path>>(path: P, data_dir: bool) -> Result<String, ReadUtf8Error> {
-	let buf = read(path, data_dir).map_err(ReadUtf8Error::Fs)?;
-	alloc::string::String::from_utf8(buf).map_err(ReadUtf8Error::Utf8)
+pub fn read_to_string<P: AsRef<Path>>(path: P, data_dir: bool) -> Result<String, ReadError> {
+	let buf = read(path, data_dir).map_err(ReadError::Fs)?;
+	alloc::string::String::from_utf8(buf).map_err(ReadError::Utf8)
 }
 
 

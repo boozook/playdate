@@ -1,4 +1,5 @@
 use core::ffi::c_uint;
+use core::ptr::NonNull;
 use alloc::vec::Vec;
 
 use sys::ffi::FileOptions;
@@ -15,6 +16,10 @@ use crate::error::err_code_on_drop;
 #[derive(Debug)]
 #[must_use = "File will be closed on drop"]
 pub struct File(pub(crate) *mut SdFile);
+
+impl From<NonNull<SdFile>> for File {
+	fn from(ptr: NonNull<SdFile>) -> Self { Self(ptr.as_ptr()) }
+}
 
 
 impl File {
