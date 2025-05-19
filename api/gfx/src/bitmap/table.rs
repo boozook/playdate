@@ -1,56 +1,43 @@
 //! Playdate bitmap-table API
 
-use alloc::boxed::Box;
 use core::ffi::c_char;
 use core::ffi::c_int;
+use core::ptr::null_mut;
+use core::ptr::NonNull;
 
-use sys::ffi::CString;
-use sys::ffi::LCDBitmapTable;
-use fs::Path;
+use sys::ffi::BitmapTable as SysBitmapTable;
+use sys::macros::api_opt;
+use fs::path::Path;
 
-use crate::error::ApiError;
-use crate::error::Error;
+use crate::error;
+use crate::Api;
 use super::Bitmap;
-use super::api::Api as BitmapApi;
 
 
-#[cfg_attr(feature = "bindings-derive-debug", derive(Debug))]
-pub struct BitmapTable<Api: api::Api = api::Default, const FREE_ON_DROP: bool = true>(*mut LCDBitmapTable, Api);
+#[must_use]
+#[repr(transparent)]
+pub struct BitmapTable(pub(super) NonNull<SysBitmapTable>);
 
-impl<Api: api::Api, const FOD: bool> Drop for BitmapTable<Api, FOD> {
+impl Drop for BitmapTable {
 	fn drop(&mut self) {
-		if FOD && !self.0.is_null() {
-			let f = self.1.free_bitmap_table();
-			unsafe { f(self.0) };
-			self.0 = core::ptr::null_mut();
+		if let Some(f) = api_opt!(graphics.freeBitmapTable) {
+			unsafe { f(self.0.as_ptr()) };
 		}
 	}
 }
 
 
-impl<Api: api::Api> BitmapTable<Api, true> {
+impl BitmapTable {
 	/// Allocates and returns a new [`BitmapTable`] that can hold count `width` by `height` [`Bitmap`]s.
 	///
-	/// Equivalent to [`sys::ffi::playdate_graphics::newBitmapTable`].
-	#[doc(alias = "sys::ffi::playdate_graphics::newBitmapTable")]
-	pub fn new(count: c_int, width: c_int, height: c_int) -> Result<Self, Error>
-		where Api: Default {
-		let api = Api::default();
-		Self::new_with(api, count, width, height)
-	}
-
-	/// Allocates and returns a new [`BitmapTable`] that can hold count `width` by `height` [`Bitmap`]s,
-	/// using the given `api`.
-	///
-	/// Equivalent to [`sys::ffi::playdate_graphics::newBitmapTable`].
-	#[doc(alias = "sys::ffi::playdate_graphics::newBitmapTable")]
-	pub fn new_with(api: Api, count: c_int, width: c_int, height: c_int) -> Result<Self, Error> {
-		let f = api.new_bitmap_table();
-		let ptr = unsafe { f(count, width, height) };
+	/// Equivalent to [`sys::ffi::PlaydateGraphics::newBitmapTable`].
+	#[doc(alias = "sys::ffi::PlaydateGraphics::newBitmapTable")]
+	pub fn new(api: Api, count: c_int, width: c_int, height: c_int) -> Result<Self, error::Alloc> {
+		let ptr = unsafe { (api.newBitmapTable)(count, width, height) };
 		if ptr.is_null() {
-			Err(Error::Alloc)
+			Err(error::Alloc)
 		} else {
-			Ok(Self(ptr, api))
+			Ok(Self(unsafe { NonNull::new_unchecked(ptr) }))
 		}
 	}
 
@@ -59,57 +46,39 @@ impl<Api: api::Api> BitmapTable<Api, true> {
 	///
 	/// If there is no file at `path`, the function returns error.
 	///
-	/// Calls [`sys::ffi::playdate_graphics::loadBitmapTable`].
-	#[doc(alias = "sys::ffi::playdate_graphics::loadBitmapTable")]
-	pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, ApiError>
-		where Api: Default {
-		let api = Api::default();
-		Self::load_with(api, path)
-	}
+	/// Calls [`sys::ffi::PlaydateGraphics::loadBitmapTable`].
+	#[doc(alias = "sys::ffi::PlaydateGraphics::loadBitmapTable")]
+	pub fn load<P: AsRef<Path>>(api: Api, path: P) -> Result<Self, error::LoadError> {
+		let path = path.as_ref();
+		let mut err: *const c_char = core::ptr::null();
 
-	/// Allocates and returns a new [`BitmapTable`] from the file at `path`.
-	///
-	/// If there is no file at `path`, the function returns error.
-	///
-	/// Calls [`sys::ffi::playdate_graphics::loadBitmapTable`].
-	#[doc(alias = "sys::ffi::playdate_graphics::loadBitmapTable")]
-	pub fn load_with<P: AsRef<Path>>(api: Api, path: P) -> Result<Self, ApiError> {
-		let mut err = Box::new(core::ptr::null() as *const c_char);
-		let out_err = Box::into_raw(err);
+		let ptr = unsafe { (api.loadBitmapTable)(path.as_ptr(), &raw mut err) };
 
-		let path = CString::new(path.as_ref())?;
-
-		let f = api.load_bitmap_table();
-		let ptr = unsafe { f(path.as_ptr() as *mut c_char, out_err as _) };
 		if ptr.is_null() {
-			err = unsafe { Box::from_raw(out_err) };
-			if let Some(err) = fs::error::Error::from_ptr(*err) {
-				Err(Error::Fs(err).into())
+			if let Some(err) = unsafe { fs::error::Owned::from_ptr(err) } {
+				Err(error::LoadError::Fs(err))
 			} else {
-				Err(Error::Alloc.into())
+				Err(error::LoadError::Alloc(error::Alloc))
 			}
 		} else {
-			Ok(Self(ptr, api))
+			Ok(Self(unsafe { NonNull::new_unchecked(ptr) }))
 		}
 	}
-}
 
-impl<Api: api::Api, const FOD: bool> BitmapTable<Api, FOD> {
+
 	/// Loads the image-table at `path` into the previously allocated this table.
 	///
-	/// Equivalent to [`sys::ffi::playdate_graphics::loadIntoBitmapTable`].
-	#[doc(alias = "sys::ffi::playdate_graphics::loadIntoBitmapTable")]
-	pub fn load_into<P: AsRef<Path>>(&mut self, path: P) -> Result<(), ApiError> {
-		let mut err = Box::new(core::ptr::null() as *const c_char);
-		let out_err = Box::into_raw(err);
+	/// Equivalent to [`sys::ffi::PlaydateGraphics::loadIntoBitmapTable`].
+	#[doc(alias = "sys::ffi::PlaydateGraphics::loadIntoBitmapTable")]
+	#[must_use = "Error message is borrowed from C part, must be used immediately or converted to owned string."]
+	pub fn load_into<'t, P: AsRef<Path>>(&'t mut self, api: Api, path: P) -> Result<(), fs::error::Borrowed<'t>> {
+		let path = path.as_ref();
+		let mut err: *const c_char = core::ptr::null();
 
-		let path = CString::new(path.as_ref())?;
+		unsafe { (api.loadIntoBitmapTable)(path.as_ptr(), self.0.as_ptr(), &raw mut err) };
 
-		let f = self.1.load_into_bitmap_table();
-		unsafe { f(path.as_ptr() as *mut c_char, self.0, out_err as _) };
-		err = unsafe { Box::from_raw(out_err) };
-		if let Some(err) = fs::error::Error::from_ptr(*err) {
-			Err(Error::Fs(err).into())
+		if let Some(err) = unsafe { fs::error::Error::from_ptr(err) } {
+			Err(err)
 		} else {
 			Ok(())
 		}
@@ -119,124 +88,50 @@ impl<Api: api::Api, const FOD: bool> BitmapTable<Api, FOD> {
 	/// Returns the `index` bitmap in this table,
 	/// if `index` is out of bounds, the function returns `None`.
 	///
-	/// Creates new default api access-point.
-	///
-	/// Equivalent to [`sys::ffi::playdate_graphics::getTableBitmap`].
-	#[doc(alias = "sys::ffi::playdate_graphics::getTableBitmap")]
-	pub fn get<'table, BitApi: BitmapApi>(&'table self, index: c_int) -> Option<Bitmap<BitApi, true>>
-		where Bitmap<BitApi, true>: 'table,
-		      BitApi: Default {
-		self.get_with(BitApi::default(), index)
-	}
-
-	/// Returns the `index` bitmap in this table,
-	/// if `index` is out of bounds, the function returns `None`.
-	///
-	/// Produced `Bitmap` uses passed `api` access-point.
-	///
-	/// Equivalent to [`sys::ffi::playdate_graphics::getTableBitmap`].
-	#[doc(alias = "sys::ffi::playdate_graphics::getTableBitmap")]
-	pub fn get_with<'table, BitApi: BitmapApi>(&'table self,
-	                                           api: BitApi,
-	                                           index: c_int)
-	                                           -> Option<Bitmap<BitApi, true>>
-		where Bitmap<BitApi, true>: 'table
-	{
-		let f = self.1.get_table_bitmap();
-		let ptr = unsafe { f(self.0, index) };
+	/// Equivalent to [`sys::ffi::PlaydateGraphics::getTableBitmap`].
+	#[doc(alias = "sys::ffi::PlaydateGraphics::getTableBitmap")]
+	pub fn get(&self, api: Api, index: c_int) -> Option<Bitmap> {
+		let ptr = unsafe { (api.getTableBitmap)(self.0.as_ptr(), index) };
 		if ptr.is_null() {
 			None
 		} else {
-			Some(Bitmap(ptr, api))
+			Some(Bitmap(unsafe { NonNull::new_unchecked(ptr) }))
 		}
+	}
+
+	/// Returns `(count, width)` - the bitmap table’s image count
+	/// and number of cells across in the `width`.
+	///
+	/// Calls [`sys::ffi::PlaydateGraphics::getBitmapTableInfo`].
+	#[doc(alias = "sys::ffi::PlaydateGraphics::getBitmapTableInfo")]
+	pub fn info(&self, api: Api) -> (c_int, c_int) {
+		let mut count = 0;
+		let mut width = 0;
+		self.info_to(api, &mut count, &mut width);
+		(count, width)
 	}
 
 	/// Returns the bitmap table’s image count in the `count` if not `None`
 	/// and number of cells across in the `width` (ditto) if not `None` .
 	///
-	/// Equivalent to [`sys::ffi::playdate_graphics::getTableBitmap`].
-	#[doc(alias = "sys::ffi::playdate_graphics::getTableBitmap")]
-	pub fn info<'table, BitApi: BitmapApi>(&'table self, count: Option<&mut c_int>, width: Option<&mut c_int>) {
-		let f = self.1.get_bitmap_table_info();
-		unsafe {
-			use core::ptr::null_mut;
-			f(
-			  self.0,
-			  count.map_or(null_mut() as _, |v| v as *mut _),
-			  width.map_or(null_mut() as _, |v| v as *mut _),
-			)
-		}
+	/// Equivalent to [`sys::ffi::PlaydateGraphics::getBitmapTableInfo`].
+	#[doc(alias = "sys::ffi::PlaydateGraphics::getBitmapTableInfo")]
+	pub fn info_to(&self, api: Api, count: &mut c_int, width: &mut c_int) {
+		unsafe { (api.getBitmapTableInfo)(self.0.as_ptr(), count, width) }
 	}
-}
 
-
-pub mod api {
-	use core::ffi::c_char;
-	use core::ffi::c_int;
-	use sys::ffi::LCDBitmap;
-	use sys::ffi::LCDBitmapTable;
-
-
-	/// Default graphics bitmap table api end-point, ZST.
+	/// Returns the bitmap table’s image count in the `count` if not `None`
+	/// and number of cells across in the `width` (ditto) if not `None` .
 	///
-	/// All calls approximately costs ~3 derefs.
-	pub type Default = crate::api::Default;
-
-	/// Cached graphics bitmap table api end-point.
-	///
-	/// Stores one reference, so size on stack is eq `usize`.
-	///
-	/// All calls approximately costs ~1 deref.
-	pub type Cache = crate::api::Cache;
-
-
-	/// End-point with methods about ops over bitmap-table.
-	pub trait Api {
-		/// Equivalent to [`sys::ffi::playdate_graphics::newBitmapTable`]
-		#[doc(alias = "sys::ffi::playdate_graphics::newBitmapTable")]
-		fn new_bitmap_table(
-			&self)
-			-> unsafe extern "C" fn(count: c_int, width: c_int, height: c_int) -> *mut LCDBitmapTable {
-			*sys::api!(graphics.newBitmapTable)
-		}
-
-
-		/// Equivalent to [`sys::ffi::playdate_graphics::freeBitmapTable`]
-		#[doc(alias = "sys::ffi::playdate_graphics::freeBitmapTable")]
-		fn free_bitmap_table(&self) -> unsafe extern "C" fn(table: *mut LCDBitmapTable) {
-			*sys::api!(graphics.freeBitmapTable)
-		}
-
-
-		/// Equivalent to [`sys::ffi::playdate_graphics::loadBitmapTable`]
-		#[doc(alias = "sys::ffi::playdate_graphics::loadBitmapTable")]
-		fn load_bitmap_table(
-			&self)
-			-> unsafe extern "C" fn(path: *const c_char, out_err: *mut *const c_char) -> *mut LCDBitmapTable {
-			*sys::api!(graphics.loadBitmapTable)
-		}
-
-		/// Equivalent to [`sys::ffi::playdate_graphics::loadIntoBitmapTable`]
-		#[doc(alias = "sys::ffi::playdate_graphics::loadIntoBitmapTable")]
-		fn load_into_bitmap_table(
-			&self)
-			-> unsafe extern "C" fn(path: *const c_char, table: *mut LCDBitmapTable, out_err: *mut *const c_char) {
-			*sys::api!(graphics.loadIntoBitmapTable)
-		}
-
-		/// Equivalent to [`sys::ffi::playdate_graphics::getTableBitmap`]
-		#[doc(alias = "sys::ffi::playdate_graphics::getTableBitmap")]
-		fn get_table_bitmap(&self)
-		                    -> unsafe extern "C" fn(table: *mut LCDBitmapTable, idx: c_int) -> *mut LCDBitmap {
-			*sys::api!(graphics.getTableBitmap)
-		}
-
-		/// Equivalent to [`sys::ffi::playdate_graphics::getBitmapTableInfo`]
-		#[doc(alias = "sys::ffi::playdate_graphics::getBitmapTableInfo")]
-		fn get_bitmap_table_info(
-			&self)
-			-> unsafe extern "C" fn(table: *mut LCDBitmapTable, count: *mut c_int, width: *mut c_int) {
-			*sys::api!(graphics.getBitmapTableInfo)
+	/// Equivalent to [`sys::ffi::PlaydateGraphics::getBitmapTableInfo`].
+	#[doc(alias = "sys::ffi::PlaydateGraphics::getBitmapTableInfo")]
+	pub fn info_to_opt(&self, api: Api, count: Option<&mut c_int>, width: Option<&mut c_int>) {
+		unsafe {
+			(api.getBitmapTableInfo)(
+			                         self.0.as_ptr(),
+			                         count.map_or(null_mut(), |v| v),
+			                         width.map_or(null_mut(), |v| v),
+			)
 		}
 	}
 }

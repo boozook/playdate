@@ -4,6 +4,8 @@ pub use core::str::Utf8Error;
 
 /// Represents null-ptr-error relative to API,
 /// which means that API is not initialized.
+///
+/// Or that API is not available for the target platform, such as Simulator.
 #[derive(Debug, Clone, Copy)]
 pub struct ApiError;
 
