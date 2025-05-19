@@ -74,7 +74,12 @@ check-cfg = [
 ]
 
 
+[profile.dev.package.playdate-callback]
+opt-level = 3
+
+
 [profile.dev]
+lto = true
 rustflags = [
 	# '--cfg=pdtrace="alloc"',
 	'--cfg=pdtrace="stack"',
@@ -86,10 +91,10 @@ rustflags = [
 ]
 
 [profile.release]
+lto = true
 rustflags = [
 	'--cfg=pdtrace="stack"',
 	'--cfg=pdtrace="cb-add"',
 	'--cfg=pdtrace="cb-rem"',
 	# '--cfg=pdtrace="cb-into"',
 ]
-lto = true

@@ -32,6 +32,10 @@ default-target = "thumbv7em-none-eabihf"
 cargo-args = ["-Zunstable-options", "-Zbuild-std=core,alloc"]
 
 
+[badges.maintenance]
+status = "actively-developed"
+
+
 [lints.rust.unexpected_cfgs]
 level = "deny"
 check-cfg = [
