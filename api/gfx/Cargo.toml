@@ -45,11 +45,17 @@ crate-type = ["dylib", "staticlib"]
 path = "examples/video.rs"
 required-features = ["sys/lang-items", "sys/entry-point"]
 
-# [[example]]
-# name = "font"
-# crate-type = ["dylib", "staticlib"]
-# path = "examples/font.rs"
-# required-features = ["sys/lang-items", "sys/entry-point"]
+[[example]]
+name = "text"
+crate-type = ["dylib", "staticlib"]
+path = "examples/text.rs"
+required-features = ["sys/lang-items", "sys/entry-point"]
+
+[[example]]
+name = "font"
+crate-type = ["dylib", "staticlib"]
+path = "examples/font.rs"
+required-features = ["sys/lang-items", "sys/entry-point"]
 
 
 [package.metadata.playdate]
@@ -59,6 +65,9 @@ bundle-id = "rs.playdate.menu"
 "tiles-table-16-16.png" = "examples/assets/rundom_tileset_from_web-table-16-16.png"
 # used in video example
 "video.pdv" = "${PLAYDATE_SDK_PATH}/Disk/System/Setup.pdx/videos/outro.pdv"
+# used in font example
+"/System/Settings.pdx/fonts/font-Cuberick-Bold.pft" = "${PLAYDATE_SDK_PATH}/Disk/System/Settings.pdx/fonts/font-Cuberick-Bold.pft"
+"/System/InputTest.pdx/images/Nontendo-Bold-Mono.pft" = "${PLAYDATE_SDK_PATH}/Disk/System/InputTest.pdx/images/Nontendo-Bold-Mono.pft"
 
 
 [package.metadata.docs.rs]

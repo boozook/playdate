@@ -17,10 +17,9 @@ use crate::error::err_code_on_drop;
 #[must_use = "File will be closed on drop"]
 pub struct File(pub(crate) *mut SdFile);
 
-impl From<NonNull<SdFile>> for File {
-	fn from(ptr: NonNull<SdFile>) -> Self { Self(ptr.as_ptr()) }
+impl File {
+	pub unsafe fn as_raw(&self) -> *mut SdFile { self.0 }
 }
-
 
 impl File {
 	/// Creates a blank new set of options ready for configuration.

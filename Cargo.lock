@@ -4237,6 +4237,7 @@ dependencies = [
 name = "playdate-graphics"
 version = "0.6.1"
 dependencies = [
+ "playdate-callback",
  "playdate-color",
  "playdate-display",
  "playdate-fs",
@@ -4256,6 +4257,7 @@ dependencies = [
 name = "playdate-menu"
 version = "0.3.1"
 dependencies = [
+ "playdate-callback",
  "playdate-graphics",
  "playdate-sys",
  "playdate-system",

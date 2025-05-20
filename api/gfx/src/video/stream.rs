@@ -62,14 +62,13 @@ impl StreamPlayer {
 	}
 
 
-	// /// Equivalent to [`sys::ffi::PlaydateVideoStream::setFile`].
-	// #[doc(alias = "sys::ffi::PlaydateVideoStream::setFile")]
-	// pub fn set_file(&mut self, api: Api, file: &mut fs::file::File) {
-	// 	unsafe { (api.setFile)(self.0.as_ptr(), file.0.as_ptr()) };
-	// }
+	/// Equivalent to [`sys::ffi::PlaydateVideoStream::setFile`].
+	#[doc(alias = "sys::ffi::PlaydateVideoStream::setFile")]
+	pub fn set_file(&mut self, api: Api, file: &mut fs::file::File) {
+		unsafe { (api.setFile)(self.0.as_ptr(), file.as_raw()) };
+	}
 
 	/* TODO: impl methods
-		setFile (no way to get ptr)
 		setHTTPConnection
 		setTCPConnection
 		getFilePlayer

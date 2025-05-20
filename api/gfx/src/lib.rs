@@ -2,6 +2,7 @@
 #![no_std]
 #![cfg_attr(not(test), no_main)]
 #![feature(allocator_api)]
+#![feature(where_clause_attrs)]
 
 
 extern crate sys;
@@ -10,8 +11,8 @@ extern crate callback;
 pub extern crate color;
 
 pub mod error;
-// pub mod text;
 pub mod bitmap;
+pub mod text;
 pub mod video;
 
 use core::ffi::c_float;
