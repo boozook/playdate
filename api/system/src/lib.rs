@@ -24,8 +24,8 @@ mod cb;
 
 pub mod prelude {
 	pub use crate::System;
-	pub use crate::time::*;
-	pub use crate::ctrl::buttons::*;
+	pub use crate::time::{DateTime, Epoch, FloatingSeconds, Milliseconds, Seconds, SecondsOffset, Time};
+	pub use crate::ctrl::buttons::{Button, Buttons as _, ButtonsExt, ButtonsIntoIter, IterButtons};
 	pub use crate::cb::btn::ButtonQueueResult;
 }
 
