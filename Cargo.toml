@@ -51,6 +51,7 @@ futures-lite = "2.6"
 thiserror = "2.0"
 tokio = { version = "1.45", default-features = false }
 async-std = { version = "1.13", default-features = false }
+duplicate = "2.0"
 
 
 [workspace.metadata.playdate.options.assets]
@@ -74,6 +75,14 @@ check-cfg = [
 ]
 
 
+[profile.dev.package.playdate-color]
+opt-level = 3
+[profile.dev.package.playdate-graphics]
+opt-level = 3
+[profile.dev.package.playdate-sound]
+opt-level = 3
+[profile.dev.package.playdate-system]
+opt-level = 3
 [profile.dev.package.playdate-callback]
 opt-level = 3
 

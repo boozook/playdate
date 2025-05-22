@@ -32,10 +32,11 @@ pub mod tilemap;
 
 
 mod sealed {
+	use core::ops::Deref;
+
 	use sys::ffi;
 
 	use super::NonNull;
-	use super::ManuallyDrop;
 	use super::AsBitmap;
 	use super::Bitmap;
 	use super::BitmapRef;
@@ -58,7 +59,8 @@ mod sealed {
 		#[inline(always)]
 		unsafe fn as_raw(&self) -> NonNull<ffi::Bitmap> { self.0.0 }
 	}
-	impl AnyBitmap for ManuallyDrop<Bitmap> {
+
+	impl<T: Deref<Target = Bitmap>> AnyBitmap for T {
 		#[inline(always)]
 		unsafe fn as_raw(&self) -> NonNull<ffi::Bitmap> { self.0 }
 	}

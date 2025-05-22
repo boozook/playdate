@@ -15,7 +15,7 @@ extern crate sys;
 extern crate callback;
 
 
-use core::ffi::{CStr, c_float, c_int, c_char};
+use core::{ffi::{c_char, c_float, c_int, CStr}, ops::Deref};
 
 
 pub mod time;
@@ -35,6 +35,11 @@ type Api = &'static sys::ffi::PlaydateSys;
 
 #[derive(Clone, Copy)]
 pub struct System(Api);
+
+impl Deref for System {
+	type Target = Api;
+	fn deref(&self) -> &Self::Target { &self.0 }
+}
 
 impl Default for System {
 	fn default() -> Self { Self(api!(system)) }

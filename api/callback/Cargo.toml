@@ -18,7 +18,10 @@ jit = [] # closures through CFFI via JIT instead of full-fledged proxy functions
 
 [dependencies]
 pastey = "0.1"
-duplicate = { version = "2.0.0", features = ["module_disambiguation", "pretty_errors", "fail-on-warnings"] }
+
+[dependencies.duplicate]
+features = ["module_disambiguation", "pretty_errors", "fail-on-warnings"]
+workspace = true
 
 [dependencies.sys]
 workspace = true

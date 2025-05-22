@@ -13,13 +13,13 @@ repository.workspace = true
 
 
 [dependencies]
-sys = { workspace = true, default-features = false }
-gfx = { workspace = true, default-features = false } # only AsBitmap used
-duplicate = "2.0.0"
+sys.workspace = true
+gfx.workspace = true # only AsBitmap used
 
+duplicate.workspace = true
 
 [dev-dependencies]
-system = { workspace = true, default-features = false }
+system.workspace = true
 
 
 [[example]]

@@ -1,5 +1,4 @@
 use core::fmt;
-// use sys::ffi::CString;
 
 
 /// Causes when allocation failed and/or null-ptr returned.

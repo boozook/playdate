@@ -24,6 +24,7 @@ macro_rules! trace {
 	}};
 
 	(into: $trait:ident::$fn:ident($c:ty, $res:ty => $r:ty, $ret:ty), $F:ty, $Adapter:ty) => {{
+		#![allow(unused_imports)]
 		use core::any::type_name;
 		use $crate::util::macros::trace;
 		trace!("cb-into": "{trait}::{fn}: C fn[{c}] <-- [{r}], size: {s}, ty: {ty}, using {adapter}"

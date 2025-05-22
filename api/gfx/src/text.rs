@@ -278,6 +278,7 @@ pub trait AsRawStr: Debug {
 
 trait AsRawStrValidate: AsRawStr {
 	#[inline(always)]
+	#[allow(unused_variables)]
 	fn debug_validate(&self, len: usize, enc: StringEncoding) {
 		#[cfg(debug_assertions)]
 		{
