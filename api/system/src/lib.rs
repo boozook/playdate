@@ -15,7 +15,8 @@ extern crate sys;
 extern crate callback;
 
 
-use core::{ffi::{c_char, c_float, c_int, CStr}, ops::Deref};
+use core::ops::Deref;
+use core::ffi::{c_char, c_float, c_int, CStr};
 
 
 pub mod time;
