@@ -1,12 +1,12 @@
 //! Playdate graphics API
 #![no_std]
 #![cfg_attr(not(test), no_main)]
+#![feature(const_trait_impl, const_deref)]
 #![feature(allocator_api)]
-#![feature(where_clause_attrs)]
 
 
-extern crate sys;
 extern crate alloc;
+extern crate sys;
 extern crate callback;
 pub extern crate color;
 
@@ -49,7 +49,7 @@ type Api = &'static sys::ffi::PlaydateGraphics;
 #[derive(Clone, Copy)]
 pub struct Graphics(Api);
 
-impl Deref for Graphics {
+impl const Deref for Graphics {
 	type Target = Api;
 	fn deref(&self) -> &Self::Target { &self.0 }
 }

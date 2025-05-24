@@ -15,7 +15,7 @@ pub use sys::ffi::TextWrappingMode;
 pub use sys::ffi::TextAlignment;
 
 use crate::{Api, Graphics};
-use crate::bitmap::BitmapRef;
+use crate::bitmap::Borrowed;
 
 
 // /// Draws the given `text` using the provided coords `x`, `y`.
@@ -518,14 +518,14 @@ impl Page {
 	                             api: Api,
 	                             c: u32,
 	                             advance: &mut c_int)
-	                             -> Result<(Glyph, Option<BitmapRef<'p>>), error::FontError> {
+	                             -> Result<(Glyph, Option<Borrowed<'p>>), error::FontError> {
 		let mut bitmap: *mut SysBitmap = null_mut();
 
 		let f = api.getPageGlyph;
 		let ptr = unsafe { f(self.0.as_ptr(), c, &raw mut bitmap, advance) };
 
 		NonNull::new(ptr).map(Glyph)
-		                 .map(|g| (g, NonNull::new(bitmap).map(BitmapRef::new)))
+		                 .map(|g| (g, NonNull::new(bitmap).map(Borrowed::from_ptr)))
 		                 .ok_or(error::FontError)
 	}
 }

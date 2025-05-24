@@ -25,91 +25,138 @@ use crate::error;
 
 pub use sys::ffi::BitmapFlip;
 pub use sys::ffi::BitmapDrawMode;
+pub use any::AsBitmap;
 
 
 pub mod table;
 pub mod tilemap;
 
+mod any {
+	use sys::utils::AsRaw;
+	use super::*;
 
-mod sealed {
+
+	#[const_trait]
+	pub trait AsBitmap: AsRaw<Output = SysBitmap> {}
+	impl<T: ~const AsRaw<Output = SysBitmap>> const AsBitmap for T {}
+}
+
+
+pub use ty::*;
+mod ty {
+	use core::marker::PhantomData;
+	use core::mem::ManuallyDrop;
 	use core::ops::Deref;
-
-	use sys::ffi;
-
-	use super::NonNull;
-	use super::AsBitmap;
-	use super::Bitmap;
-	use super::BitmapRef;
+	use core::ptr::NonNull;
+	use sys::utils::AsRaw;
+	use sys::ffi::Bitmap as SysBitmap;
 
 
-	pub(crate) trait AnyBitmap {
-		unsafe fn as_raw(&self) -> NonNull<ffi::Bitmap>;
+	#[must_use]
+	#[repr(transparent)]
+	pub struct Bitmap(NonNull<SysBitmap>);
+
+	impl Bitmap {
+		pub const unsafe fn from_ptr(ptr: NonNull<SysBitmap>) -> Self { Self(ptr) }
+		pub(super) const fn as_ptr(&self) -> *mut SysBitmap { self.0.as_ptr() }
 	}
 
-	impl<T: AnyBitmap> AsBitmap for T {
+	impl const AsRaw for Bitmap {
+		type Output = SysBitmap;
 		#[inline(always)]
-		unsafe fn as_raw(&self) -> NonNull<ffi::Bitmap> { AnyBitmap::as_raw(self) }
+		unsafe fn as_raw(&self) -> NonNull<Self::Output> { self.0 }
 	}
 
-	impl AnyBitmap for Bitmap {
+
+	#[must_use]
+	#[repr(transparent)]
+	pub struct Borrowed<'owner>(ManuallyDrop<Bitmap>, PhantomData<&'owner ()>);
+
+	impl Borrowed<'_> {
+		pub const fn from_ptr(ptr: NonNull<SysBitmap>) -> Self { Self(ManuallyDrop::new(Bitmap(ptr)), PhantomData) }
+	}
+
+	impl<'o> const AsRef<'o, Bitmap> for Borrowed<'o> where ManuallyDrop<Bitmap>: ~const Deref {
+		fn as_ref<'t>(&'t self) -> &'t Bitmap
+			where 'o: 't {
+			&self.0
+		}
+	}
+
+	impl<'t, 'l> const Deref for Borrowed<'t> where Self: ~const AsRef<'t, Bitmap> {
+		type Target = Bitmap;
+		fn deref(&self) -> &Self::Target { self.as_ref() }
+	}
+
+	impl const AsRaw for Borrowed<'_> where ManuallyDrop<Bitmap>: ~const Deref {
+		type Output = SysBitmap;
 		#[inline(always)]
-		unsafe fn as_raw(&self) -> NonNull<ffi::Bitmap> { self.0 }
+		unsafe fn as_raw(&self) -> NonNull<Self::Output> { self.0.0 }
 	}
-	impl AnyBitmap for BitmapRef<'_> {
+
+
+	/// Owned [`Bitmap`], internally pointing to other bitmap's internals.
+	#[must_use]
+	#[repr(transparent)]
+	pub struct Pointing<'owner>(Bitmap, PhantomData<&'owner Bitmap>);
+
+	impl Pointing<'_> {
+		pub const unsafe fn from_ptr(ptr: NonNull<SysBitmap>) -> Self { Self(Bitmap(ptr), PhantomData) }
+	}
+
+	impl<'o> const AsRef<'o, Bitmap> for Pointing<'o> {
 		#[inline(always)]
-		unsafe fn as_raw(&self) -> NonNull<ffi::Bitmap> { self.0.0 }
+		fn as_ref<'t>(&'t self) -> &'t Bitmap
+			where 'o: 't {
+			&self.0
+		}
 	}
 
-	impl<T: Deref<Target = Bitmap>> AnyBitmap for T {
+	impl<'t, 'l> const Deref for Pointing<'t> where Self: ~const AsRef<'t, Bitmap> {
+		type Target = Bitmap;
+		fn deref(&self) -> &Self::Target { self.as_ref() }
+	}
+
+	impl const AsRaw for Pointing<'_> where ManuallyDrop<Bitmap>: ~const Deref {
+		type Output = SysBitmap;
 		#[inline(always)]
-		unsafe fn as_raw(&self) -> NonNull<ffi::Bitmap> { self.0 }
+		unsafe fn as_raw(&self) -> NonNull<Self::Output> { self.0.0 }
+	}
+
+
+	#[const_trait]
+	trait AsRef<'ext, T: ?Sized> {
+		fn as_ref<'t>(&'t self) -> &'t T
+			where 'ext: 't;
 	}
 }
 
 
-pub trait AsBitmap {
-	unsafe fn as_raw(&self) -> NonNull<SysBitmap>;
-}
+// impl<'src: 't, 't> AsRef<ManuallyDrop<Bitmap>> for Borrowed<'src> {
+// 	fn as_ref(&self) -> &ManuallyDrop<Bitmap> { &self.0 }
+// }
+// impl<'src: 't, 't> AsMut<ManuallyDrop<Bitmap>> for Borrowed<'src> {
+// 	fn as_mut(&mut self) -> &mut ManuallyDrop<Bitmap> { &mut self.0 }
+// }
 
-
-#[must_use]
-#[repr(transparent)]
-pub struct Bitmap(pub(crate) NonNull<SysBitmap>);
-
-
-#[must_use]
-#[repr(transparent)]
-pub struct BitmapRef<'owner>(ManuallyDrop<Bitmap>, PhantomData<&'owner ()>);
-
-impl BitmapRef<'_> {
-	pub(crate) const fn new(ptr: NonNull<SysBitmap>) -> Self { Self(ManuallyDrop::new(Bitmap(ptr)), PhantomData) }
-}
-
-impl<'src: 't, 't> AsRef<ManuallyDrop<Bitmap>> for BitmapRef<'src> {
-	fn as_ref(&self) -> &ManuallyDrop<Bitmap> { &self.0 }
-}
-impl<'src: 't, 't> AsMut<ManuallyDrop<Bitmap>> for BitmapRef<'src> {
-	fn as_mut(&mut self) -> &mut ManuallyDrop<Bitmap> { &mut self.0 }
-}
-
-impl<'src: 't, 't> Borrow<ManuallyDrop<Bitmap>> for BitmapRef<'src> where for<'l> &'l Self: 't {
-	fn borrow(&self) -> &ManuallyDrop<Bitmap> { &self.0 }
-}
-impl<'src: 't, 't> BorrowMut<ManuallyDrop<Bitmap>> for BitmapRef<'src> where for<'l> &'l mut Self: 't {
-	fn borrow_mut(&mut self) -> &mut ManuallyDrop<Bitmap> { &mut self.0 }
-}
+// impl<'src: 't, 't> Borrow<ManuallyDrop<Bitmap>> for Borrowed<'src> where for<'l> &'l Self: 't {
+// 	fn borrow(&self) -> &ManuallyDrop<Bitmap> { &self.0 }
+// }
+// impl<'src: 't, 't> BorrowMut<ManuallyDrop<Bitmap>> for Borrowed<'src> where for<'l> &'l mut Self: 't {
+// 	fn borrow_mut(&mut self) -> &mut ManuallyDrop<Bitmap> { &mut self.0 }
+// }
 
 // impl ToOwned for BitmapRef<'_> {
 // 	type Owned = Bitmap;
 // 	fn to_owned(&self) -> Self::Owned { self.0.clone(api!(graphics)).unwrap() }
 // }
 
-impl<'src> Borrow<BitmapRef<'src>> for Bitmap {
-	fn borrow(&self) -> &BitmapRef<'src> { unsafe { core::mem::transmute(self) } }
-}
-impl<'src> BorrowMut<BitmapRef<'src>> for Bitmap {
-	fn borrow_mut(&mut self) -> &mut BitmapRef<'src> { unsafe { core::mem::transmute(self) } }
-}
+// impl<'src> Borrow<Borrowed<'src>> for Bitmap {
+// 	fn borrow(&self) -> &Borrowed<'src> { unsafe { core::mem::transmute(self) } }
+// }
+// impl<'src> BorrowMut<Borrowed<'src>> for Bitmap {
+// 	fn borrow_mut(&mut self) -> &mut Borrowed<'src> { unsafe { core::mem::transmute(self) } }
+// }
 
 
 impl Bitmap {
@@ -122,7 +169,7 @@ impl Bitmap {
 		if ptr.is_null() {
 			Err(error::Alloc)
 		} else {
-			Ok(Self(unsafe { NonNull::new_unchecked(ptr) }))
+			Ok(unsafe { Self::from_ptr(NonNull::new_unchecked(ptr)) })
 		}
 	}
 
@@ -144,7 +191,7 @@ impl Bitmap {
 				Err(error::LoadError::Alloc(error::Alloc))
 			}
 		} else {
-			Ok(Self(unsafe { NonNull::new_unchecked(ptr) }))
+			Ok(unsafe { Self::from_ptr(NonNull::new_unchecked(ptr)) })
 		}
 	}
 }
@@ -160,7 +207,7 @@ impl Bitmap {
 		let path = path.as_ref();
 		let mut err: *const c_char = core::ptr::null();
 
-		unsafe { (api.loadIntoBitmap)(path.as_ptr(), self.0.as_ptr(), &raw mut err) };
+		unsafe { (api.loadIntoBitmap)(path.as_ptr(), self.as_ptr(), &raw mut err) };
 
 		if let Some(err) = unsafe { fs::error::Error::from_ptr(err) } {
 			Err(err)
@@ -174,7 +221,7 @@ impl Bitmap {
 impl Drop for Bitmap {
 	fn drop(&mut self) {
 		if let Some(f) = api_opt!(graphics.freeBitmap) {
-			unsafe { f(self.0.as_ptr()) };
+			unsafe { f(self.as_ptr()) };
 		}
 	}
 }
@@ -183,15 +230,18 @@ impl Bitmap {
 	/// Allocates and returns a new `Bitmap` that is an exact copy of `self`,
 	/// __not a reference__.
 	///
+	/// For [`Pointing`] bitmap it also copies data of the pointed bitmap into the new bitmap,
+	/// so the _clone of "pointing bitmap" is not a pointing, but normal owned bitmap_.
+	///
 	/// Equivalent to [`sys::ffi::PlaydateGraphics::copyBitmap`].
 	#[doc(alias = "sys::ffi::PlaydateGraphics::copyBitmap")]
 	pub fn clone(&self, api: Api) -> Result<Self, error::Alloc> {
 		let f = api.copyBitmap;
-		let ptr = unsafe { f(self.0.as_ptr()) };
+		let ptr = unsafe { f(self.as_ptr()) };
 		if ptr.is_null() {
 			Err(error::Alloc)
 		} else {
-			Ok(Self(unsafe { NonNull::new_unchecked(ptr) }))
+			Ok(unsafe { Self::from_ptr(NonNull::new_unchecked(ptr)) })
 		}
 	}
 }
@@ -204,7 +254,7 @@ impl Bitmap {
 	#[doc(alias = "sys::ffi::PlaydateGraphics::clearBitmap")]
 	pub fn clear<'c>(&mut self, api: Api, bg: impl IntoColor<'c>) {
 		let f = api.clearBitmap;
-		unsafe { f(self.0.as_ptr(), bg.into_color().into_raw()) };
+		unsafe { f(self.as_ptr(), bg.into_color().into_raw()) };
 	}
 
 
@@ -222,7 +272,7 @@ impl Bitmap {
 		let f = api.getBitmapData;
 		unsafe {
 			f(
-			  self.0.as_ptr(),
+			  self.as_ptr(),
 			  &mut width,
 			  &mut height,
 			  &mut row_bytes,
@@ -248,7 +298,7 @@ impl Bitmap {
 		let f = api.getBitmapData;
 		unsafe {
 			f(
-			  self.0.as_ptr(),
+			  self.as_ptr(),
 			  &mut width,
 			  &mut height,
 			  &mut row_bytes,
@@ -280,22 +330,29 @@ impl Bitmap {
 	/// Sets a mask image for the bitmap.
 	/// The set mask must be the same size as the `self` bitmap.
 	///
+	/// Behaviour:
+	/// internally __copies__ the `mask`'s data to the `self` bitmap.
+	/// The `mask` is not borrowed, so it can be freed or modified freely.
+	///
 	/// Calls [`sys::ffi::PlaydateGraphics::setBitmapMask`].
 	#[doc(alias = "sys::ffi::PlaydateGraphics::setBitmapMask")]
-	pub fn set_mask(&mut self, api: Api, mask: &mut impl AsBitmap) -> Result<(), error::InvalidMask> {
-		// TODO: investigate is it correct "res == 0 => Ok"
-		let res = unsafe { (api.setBitmapMask)(self.0.as_ptr(), mask.as_raw().as_ptr()) };
-		if res == 0 { Ok(()) } else { Err(error::InvalidMask) }
+	pub fn set_mask(&mut self, api: Api, mask: &impl AsBitmap) -> Result<(), error::InvalidMask> {
+		let res = unsafe { (api.setBitmapMask)(self.as_ptr(), mask.as_raw().as_ptr()) };
+		if res == 0 { Err(error::InvalidMask) } else { Ok(()) }
 	}
 
-	/// Gets a mask image for the given bitmap.
-	/// If the image doesn’t have a mask, returns None.
+	/// Gets a mask layer wrapped into `Bitmap` for the `self` bitmap.
+	/// If the `self` bitmap doesn’t have a mask layer, returns None.
+	///
+	/// The returned bitmap points to bitmap's data, so drawing into that bitmap affects the source (`self`) bitmap's mask directly.
+	///
+	/// See also [`bitmap_data`](Self::bitmap_data), it doesn’t allocates new `Bitmap`.
 	///
 	/// Calls [`sys::ffi::PlaydateGraphics::getBitmapMask`].
 	#[doc(alias = "sys::ffi::PlaydateGraphics::getBitmapMask")]
-	pub fn mask<'t>(&'t self, api: Api) -> Option<BitmapRef<'t>> {
-		let ptr = unsafe { (api.getBitmapMask)(self.0.as_ptr()) };
-		NonNull::new(ptr).map(BitmapRef::new)
+	pub fn mask<'t>(&'t self, api: Api) -> Option<Pointing<'t>> {
+		let ptr = unsafe { (api.getBitmapMask)(self.as_ptr()) };
+		NonNull::new(ptr).map(|ptr| unsafe { Pointing::from_ptr(ptr) })
 	}
 
 
@@ -308,15 +365,15 @@ impl Bitmap {
 	                     rotation: c_float,
 	                     x_scale: c_float,
 	                     y_scale: c_float)
-	                     -> Result<Bitmap, error::Alloc> {
+	                     -> Result<Self, error::Alloc> {
 		let mut alloced_size: c_int = 0;
 		let f = api.rotatedBitmap;
-		let ptr = unsafe { f(self.0.as_ptr(), rotation, x_scale, y_scale, &raw mut alloced_size) };
+		let ptr = unsafe { f(self.as_ptr(), rotation, x_scale, y_scale, &raw mut alloced_size) };
 
 		if alloced_size == 0 || ptr.is_null() {
 			Err(error::Alloc)
 		} else {
-			Ok(Bitmap(unsafe { NonNull::new_unchecked(ptr) }))
+			Ok(unsafe { Self::from_ptr(NonNull::new_unchecked(ptr)) })
 		}
 	}
 
@@ -328,7 +385,7 @@ impl Bitmap {
 	#[doc(alias = "sys::ffi::PlaydateGraphics::drawBitmap")]
 	#[inline(always)]
 	pub fn draw(&self, api: Api, x: c_int, y: c_int, flip: BitmapFlip) {
-		unsafe { (api.drawBitmap)(self.0.as_ptr(), x, y, flip) }
+		unsafe { (api.drawBitmap)(self.as_ptr(), x, y, flip) }
 	}
 
 	/// Draws `self` with its upper-left corner at location `x`, `y`
@@ -338,7 +395,7 @@ impl Bitmap {
 	#[doc(alias = "sys::ffi::PlaydateGraphics::tileBitmap")]
 	#[inline(always)]
 	pub fn draw_tiled(&self, api: Api, x: c_int, y: c_int, width: c_int, height: c_int, flip: BitmapFlip) {
-		unsafe { (api.tileBitmap)(self.0.as_ptr(), x, y, width, height, flip) }
+		unsafe { (api.tileBitmap)(self.as_ptr(), x, y, width, height, flip) }
 	}
 
 	/// Draws the *bitmap* scaled to `x_scale` and `y_scale`
@@ -360,18 +417,7 @@ impl Bitmap {
 	                    center_y: c_float,
 	                    x_scale: c_float,
 	                    y_scale: c_float) {
-		unsafe {
-			(api.drawRotatedBitmap)(
-			                        self.0.as_ptr(),
-			                        x,
-			                        y,
-			                        degrees,
-			                        center_x,
-			                        center_y,
-			                        x_scale,
-			                        y_scale,
-			)
-		}
+		unsafe { (api.drawRotatedBitmap)(self.as_ptr(), x, y, degrees, center_x, center_y, x_scale, y_scale) }
 	}
 
 	/// Draws this bitmap scaled to `x_scale` and `y_scale` with its upper-left corner at location `x`, `y`.
@@ -382,7 +428,7 @@ impl Bitmap {
 	#[doc(alias = "sys::ffi::PlaydateGraphics::drawScaledBitmap")]
 	#[inline(always)]
 	pub fn draw_scaled(&self, api: Api, x: c_int, y: c_int, x_scale: c_float, y_scale: c_float) {
-		unsafe { (api.drawScaledBitmap)(self.0.as_ptr(), x, y, x_scale, y_scale) }
+		unsafe { (api.drawScaledBitmap)(self.as_ptr(), x, y, x_scale, y_scale) }
 	}
 
 
@@ -407,7 +453,7 @@ impl Bitmap {
 	                            -> bool {
 		unsafe {
 			(api.checkMaskCollision)(
-			                         self.0.as_ptr(),
+			                         self.as_ptr(),
 			                         x,
 			                         y,
 			                         flip,
@@ -434,7 +480,7 @@ impl Bitmap {
 		let f = api.setColorToPattern;
 
 		unsafe {
-			f(&raw mut color, self.0.as_ptr(), x, y);
+			f(&raw mut color, self.as_ptr(), x, y);
 			*(color as *mut u8 as *mut Pattern)
 		}
 	}
@@ -449,7 +495,7 @@ impl Bitmap {
 	/// Equivalent to [`sys::ffi::PlaydateGraphics::setColorToPattern`].
 	#[doc(alias = "sys::ffi::PlaydateGraphics::setColorToPattern")]
 	pub fn set_color_to_pattern(&self, api: Api, color: &mut Color, x: c_int, y: c_int) {
-		unsafe { (api.setColorToPattern)(color, self.0.as_ptr(), x, y) }
+		unsafe { (api.setColorToPattern)(color, self.as_ptr(), x, y) }
 	}
 
 	/// Gets the color of the pixel at `(x,y)` in this bitmap.
@@ -462,7 +508,7 @@ impl Bitmap {
 	#[doc(alias = "sys::ffi::PlaydateGraphics::getBitmapPixel")]
 	#[inline(always)]
 	pub fn pixel_at(&self, api: Api, x: c_int, y: c_int) -> SolidColor {
-		unsafe { (api.getBitmapPixel)(self.0.as_ptr(), x, y) }
+		unsafe { (api.getBitmapPixel)(self.as_ptr(), x, y) }
 	}
 }
 
@@ -547,13 +593,13 @@ impl Graphics {
 	///
 	/// Equivalent to [`sys::ffi::PlaydateGraphics::getDebugBitmap`].
 	#[doc(alias = "sys::ffi::PlaydateGraphics::getDebugBitmap")]
-	pub fn debug_frame_buffer(&self) -> Result<BitmapRef<'static>, error::ApiError> {
+	pub fn debug_frame_buffer(&self) -> Result<Borrowed<'static>, error::ApiError> {
 		let f = self.0.getDebugBitmap.ok_or(ApiError)?;
 		let ptr = unsafe { f() };
 		if ptr.is_null() {
 			Err(error::ApiError)
 		} else {
-			Ok(BitmapRef::new(unsafe { NonNull::new_unchecked(ptr) }))
+			Ok(Borrowed::from_ptr(unsafe { NonNull::new_unchecked(ptr) }))
 		}
 	}
 
@@ -563,12 +609,12 @@ impl Graphics {
 	///
 	/// Equivalent to [`sys::ffi::PlaydateGraphics::getDisplayBufferBitmap`].
 	#[doc(alias = "sys::ffi::PlaydateGraphics::getDisplayBufferBitmap")]
-	pub fn frame_buffer(&self) -> Result<BitmapRef<'static>, error::Alloc> {
+	pub fn frame_buffer(&self) -> Result<Borrowed<'static>, error::Alloc> {
 		let ptr = unsafe { (self.0.getDisplayBufferBitmap)() };
 		if ptr.is_null() {
 			Err(error::Alloc)
 		} else {
-			Ok(BitmapRef::new(unsafe { NonNull::new_unchecked(ptr) }))
+			Ok(Borrowed::from_ptr(unsafe { NonNull::new_unchecked(ptr) }))
 		}
 	}
 
@@ -583,7 +629,7 @@ impl Graphics {
 		if ptr.is_null() {
 			Err(error::Alloc)
 		} else {
-			Ok(Bitmap(unsafe { NonNull::new_unchecked(ptr) }))
+			Ok(unsafe { Bitmap::from_ptr(NonNull::new_unchecked(ptr)) })
 		}
 	}
 

@@ -10,7 +10,7 @@ use sys::ffi::CStr;
 use fs::path::Path;
 
 use crate::Graphics;
-use crate::bitmap::{AsBitmap, BitmapRef};
+use crate::bitmap::{AsBitmap, Borrowed};
 
 
 pub mod stream;
@@ -95,12 +95,12 @@ impl VideoPlayer {
 	///
 	/// Calls [`sys::ffi::PlaydateVideo::getContext`].
 	#[doc(alias = "sys::ffi::PlaydateVideo::getContext")]
-	pub fn get_context(&self, api: Api) -> Result<BitmapRef<'_>, error::Alloc> {
+	pub fn get_context(&self, api: Api) -> Result<Borrowed<'_>, error::Alloc> {
 		let ptr = unsafe { (api.getContext)(self.0.as_ptr()) };
 		if ptr.is_null() {
 			Err(error::Alloc)
 		} else {
-			Ok(BitmapRef::new(unsafe { NonNull::new_unchecked(ptr) }))
+			Ok(Borrowed::from_ptr(unsafe { NonNull::new_unchecked(ptr) }))
 		}
 	}
 

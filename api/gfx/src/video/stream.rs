@@ -6,6 +6,7 @@ use core::ptr::NonNull;
 
 use sys::macros::api_opt;
 use sys::ffi::StreamPlayer as SysStreamPlayer;
+use sys::utils::AsRaw;
 
 use crate::Graphics;
 use super::error;
@@ -65,7 +66,7 @@ impl StreamPlayer {
 	/// Equivalent to [`sys::ffi::PlaydateVideoStream::setFile`].
 	#[doc(alias = "sys::ffi::PlaydateVideoStream::setFile")]
 	pub fn set_file(&mut self, api: Api, file: &mut fs::file::File) {
-		unsafe { (api.setFile)(self.0.as_ptr(), file.as_raw()) };
+		unsafe { (api.setFile)(self.0.as_ptr(), file.as_raw().as_ptr()) };
 	}
 
 	/* TODO: impl methods

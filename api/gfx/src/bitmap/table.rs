@@ -95,7 +95,7 @@ impl BitmapTable {
 		if ptr.is_null() {
 			None
 		} else {
-			Some(Bitmap(unsafe { NonNull::new_unchecked(ptr) }))
+			Some(unsafe { Bitmap::from_ptr(NonNull::new_unchecked(ptr)) })
 		}
 	}
 
