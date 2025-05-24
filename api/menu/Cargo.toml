@@ -24,8 +24,8 @@ system.workspace = true
 
 [[example]]
 name = "menu"
-crate-type = ["dylib", "staticlib"]
 path = "examples/menu.rs"
+crate-type = ["dylib", "staticlib"]
 required-features = ["sys/lang-items", "sys/entry-point"]
 
 [package.metadata.playdate]

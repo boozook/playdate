@@ -1,5 +1,6 @@
 #![no_std]
 #![cfg_attr(not(test), no_main)]
+#![feature(const_trait_impl, const_deref)]
 #![feature(allocator_api)]
 
 #[macro_use]
@@ -192,7 +193,7 @@ impl<Params> MenuItem {
 #[derive(Clone, Copy)]
 pub struct Menu(Api);
 
-impl Deref for Menu {
+impl const Deref for Menu {
 	type Target = Api;
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
