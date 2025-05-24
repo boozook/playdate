@@ -222,25 +222,15 @@ jobs:
           - name: playdate-color
             miri-flags: -Zmiri-symbolic-alignment-check -Zmiri-track-alloc-accesses -Zmiri-report-progress -Zmiri-backtrace=full -Zmiri-permissive-provenance
           - name: playdate-callback
-            # miri-flags: ''
           - name: playdate-display
-            # miri-flags: ''
           - name: playdate-fs
-            # miri-flags: ''
           - name: playdate-graphics
-            # miri-flags: ''
           - name: playdate-menu
-            # miri-flags: ''
           - name: playdate-scoreboards
-            # miri-flags: ''
           - name: playdate-sound
-            # miri-flags: ''
           - name: playdate-sprite
-            # miri-flags: ''
           - name: playdate-system
-            # miri-flags: ''
           - name: playdate
-            # miri-flags: ''
         features:
           - { arg: "", name: default }
           - { arg: --all-features, name: all }
@@ -275,9 +265,11 @@ jobs:
         run: cargo test -p=${{ matrix.crate.name }} ${{ matrix.features.arg }}
 
       - name: Install miri
+        if: matrix.crate.miri-flags
         run: rustup component add miri
 
       - name: Test (miri)
+        if: matrix.crate.miri-flags
         env:
           # MIRIFLAGS: ${{ matrix.crate.miri-flags || env.MIRIFLAGS }}
           MIRIFLAGS: ${{ matrix.crate.miri-flags }}
