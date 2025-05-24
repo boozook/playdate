@@ -1,7 +1,6 @@
 #![no_std]
 #![cfg_attr(not(test), no_main)]
-#![feature(const_trait_impl)]
-#![feature(const_deref)]
+#![feature(const_trait_impl, const_deref)]
 
 #[macro_use]
 extern crate sys;

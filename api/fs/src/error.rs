@@ -93,6 +93,7 @@ pub fn latest<'t>(api: Api) -> Option<&'t CStr> {
 /// Used in drop impls.
 ///
 /// Does not reads error, just checks if code is negative and ptr is not null.
+#[cold]
 #[track_caller]
 pub(crate) fn err_code_on_drop(code: c_int, api: Api) {
 	const ERR: &CStr = c"on-drop";
