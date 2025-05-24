@@ -1,12 +1,8 @@
 //! Playdate bitmap API
 
-use core::borrow::Borrow;
-use core::borrow::BorrowMut;
 use core::ffi::c_char;
 use core::ffi::c_float;
 use core::ffi::c_int;
-use core::marker::PhantomData;
-use core::mem::ManuallyDrop;
 use core::ptr::NonNull;
 
 use ::color::IntoColor;
@@ -42,7 +38,10 @@ mod any {
 }
 
 
-pub use ty::*;
+pub use ty::{Bitmap, Borrowed, Pointing as BitmapView};
+use ty::*;
+
+
 mod ty {
 	use core::marker::PhantomData;
 	use core::mem::ManuallyDrop;
@@ -146,7 +145,7 @@ mod ty {
 // 	fn borrow_mut(&mut self) -> &mut ManuallyDrop<Bitmap> { &mut self.0 }
 // }
 
-// impl ToOwned for BitmapRef<'_> {
+// impl ToOwned for Borrowed<'_> {
 // 	type Owned = Bitmap;
 // 	fn to_owned(&self) -> Self::Owned { self.0.clone(api!(graphics)).unwrap() }
 // }
@@ -669,7 +668,7 @@ impl Graphics {
 
 	/// Push a new drawing context for drawing into the given bitmap.
 	///
-	/// If `target` is [`BitmapRef::null()`], the drawing functions will use the display framebuffer.
+	/// If `target` is [`Borrowed::null()`], the drawing functions will use the display framebuffer.
 	///
 	/// To push framebuffer to context use [`push_framebuffer_to_context`](Self::push_framebuffer_to_context).
 	///
