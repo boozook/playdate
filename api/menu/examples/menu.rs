@@ -1,88 +1,125 @@
 #![no_std]
+#![no_main]
+#![allow(unused_must_use)]
+
 extern crate alloc;
 
 #[macro_use]
 extern crate sys;
-extern crate playdate_menu as menu;
+extern crate gfx;
+extern crate system;
 
-use core::ffi::*;
-use core::ptr::NonNull;
-
-use sys::ffi::*;
-use sys::EventLoopCtrl;
-use system::prelude::*;
-use gfx::color::Color;
-
-use menu::*;
+use core::ffi::CStr;
+use alloc::format;
+use playdate_menu::{Menu, SimpleMenuItem, CheckMenuItem, OptionsMenuItem};
+use sys::ffi::{Playdate, SystemEvent};
+use sys::ctrl::{EventLoopCtrl, UpdateDisplayCtrl};
+use system::System;
 
 
-const INITIAL_X: u32 = LCD_COLUMNS / 2;
-const INITIAL_Y: u32 = (LCD_ROWS - TEXT_HEIGHT) / 2;
-const TEXT_HEIGHT: u32 = 16;
-const LABEL: &str = "Use System Menu";
-
-
-/// App state
-struct State {
-	first: Option<SimpleMenuItem<u32>>,
-	second: Option<CheckMenuItem<u32>>,
-	third: Option<OptionsMenuItem>,
-}
-
-
-fn update(state: &mut State) -> UpdateCtrl {
-	// remove third menu item if requested
-	if let Some((_, value)) = state.third.as_ref().map(|item| (item, item.selected_option())) {
-		if value != 0 {
-			state.third.take();
-			println!("Third menu item removed.")
-		}
-	}
-
-
-	let graphics = gfx::Graphics::Cached();
-	graphics.clear(Color::WHITE);
-
-	// Get width (screen-size) of text
-	let font = Default::default();
-	let text_width = graphics.get_text_width(LABEL, font, 0)?;
-	// render text
-	graphics.draw_text(
-	                   LABEL,
-	                   INITIAL_X as c_int - text_width / 2,
-	                   INITIAL_Y.try_into().unwrap(),
-	)?;
-
-	UpdateCtrl::Continue
-}
-
-
-/// Entry point / event handler
 #[no_mangle]
-fn event_handler(_: NonNull<PlaydateAPI>, event: SystemEvent, _: u32) -> EventLoopCtrl {
-	// Ignore any other events, just for this minimalistic example
-	if !matches!(event, SystemEvent::Init) {
+fn event_handler(api: &'static Playdate, e: SystemEvent, _: u32) -> EventLoopCtrl {
+	dbg!(e);
+
+	let SystemEvent::Init = e else {
 		return EventLoopCtrl::Continue;
-	}
+	};
+
+	let system = System::new(api.system);
+	let menu = Menu::new(api.system);
+
+	let opts = [c"one", c"two", c"three", c"four"];
+
+	let _ = SimpleMenuItem::new(&system, c"a", Userdata).unwrap();
+
+	let mut count = ClosureCtx(0);
+	let _ = SimpleMenuItem::new_with(&system, c"", move || {
+		        count.0 += 1;
+	        }).unwrap();
 
 
-	fn on_change(userdata: &mut u32) {
-		println!("Menu item changed {userdata} times.");
-		*userdata += 1;
-	}
+	let _ = OptionsMenuItem::new(&system, c"", &opts, Userdata).unwrap();
+	let _ = OptionsMenuItem::new_exact(&system, c"", &opts, Userdata).unwrap();
 
-	let first = SimpleMenuItem::new("Check Me", Some(on_change), 0)?.into();
-	let second = CheckMenuItem::new("Check", false, Some(on_change), 0)?.into();
-	let third = OptionsMenuItem::new("Del me?", ["No", "Yes"], None, ())?.into();
+	let mut count = ClosureCtx(0);
+	let _ = OptionsMenuItem::new_with(&system, c"b", &opts, move || {
+		        count.0 += 1;
+	        }).unwrap();
 
-	let state = State { first, second, third };
 
-	// Set no-op update callback
-	system::System::Default().set_update_callback_boxed(update, state);
+	let mut count = ClosureCtx(0);
+	let a = SimpleMenuItem::new_with_ctx(&system, c"a", move |this| {
+		        count.0 += 1;
+		        let title = this.title(&system);
+		        let value = this.value(&system);
+		        println!("A called {count:?} times, ({title:?}, {value:?})");
+	        }).unwrap();
 
+
+	let mut count = ClosureCtx(0);
+	let b = CheckMenuItem::new_with_ctx(&system, c"b", false, move |this: &_| {
+		        count.0 += 1;
+		        let title = this.title(&system);
+		        let value = this.is_checked(&system);
+		        println!("B called {count:?} times, ({title:?}, {value:?})");
+	        }).unwrap();
+
+
+	let mut count = ClosureCtx(0);
+	let c = OptionsMenuItem::new_with_ctx(&system, c"c", &opts, move |this: &_| {
+		        count.0 += 1;
+		        let title = this.title(&system);
+		        let value = this.value(&system);
+		        println!("C called {count:?} times, ({title:?}, {value:?})");
+
+		        // change itself title:
+		        {
+			        let b = format!("C {}\0", count.0).into_bytes();
+			        let s = unsafe { CStr::from_bytes_with_nul_unchecked(&b) };
+			        this.set_title(&system, s);
+		        }
+
+		        if value == 3 {
+			        menu.remove_all_menu_items();
+		        }
+	        }).unwrap();
+
+
+	let mut menu = Some((a, b, c));
+	let mut count = 0;
+	println!("use system menu");
+
+	system.update().set(move || {
+		               count += 1;
+		               if count % 20 == 0 {
+			               println!("count: {count}/200");
+		               }
+
+		               if count == 200 {
+			               println!("dropping all menu items");
+			               let _ = menu.take();
+
+			               system.update().unset();
+		               }
+		               UpdateDisplayCtrl::Nope
+	               });
 	EventLoopCtrl::Continue
 }
 
 
-// Needed for debug build
-ll_symbols!();
+#[derive(Debug)]
+struct ClosureCtx(usize);
+impl Drop for ClosureCtx {
+	fn drop(&mut self) {
+		println!("dropping `ClosureCtx({})`", self.0);
+	}
+}
+
+
+#[derive(Debug)]
+struct Userdata;
+impl Drop for Userdata {
+	fn drop(&mut self) {
+		println!("dropping `Userdata`");
+	}
+}

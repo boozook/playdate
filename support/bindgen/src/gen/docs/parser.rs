@@ -131,24 +131,29 @@ fn walk(handle: &Handle, results: &mut DocsMap) {
 		let mut render = Vec::new();
 		html5ever::serialize(&mut render, &document, Default::default()).expect("serialization failed");
 		let html = std::str::from_utf8(&render).unwrap();
-		let mut node = html2md::parser::safe_parse_html(html.to_owned()).expect("parsing failed");
-		if let Some(node) = node.children.first_mut() {
-			if node.tag_name == Some(html2md::structs::NodeType::Code) &&
-			   node.attributes
-			       .as_ref()
-			       .filter(|a| a.get_class().map(String::as_str) == Some("title"))
-			       .is_some()
-			{
-				node.children.clear();
-			}
-		}
 
-		let mut md = html2md::to_md::to_md(node);
-		md = md.strip_prefix("```\n```\n")
-		       .map(ToString::to_string)
-		       .unwrap_or(md);
-		if !md.trim().is_empty() {
-			results.insert(key, md);
-		}
+		// // parse html and convert to markdown:
+		// let mut node = html2md::parser::safe_parse_html(html.to_owned()).expect("parsing failed");
+		// if let Some(node) = node.children.first_mut() {
+		// 	if node.tag_name == Some(html2md::structs::NodeType::Code) &&
+		// 	   node.attributes
+		// 	       .as_ref()
+		// 	       .filter(|a| a.get_class().map(String::as_str) == Some("title"))
+		// 	       .is_some()
+		// 	{
+		// 		node.children.clear();
+		// 	}
+		// }
+
+		// let mut md = html2md::to_md::to_md(node);
+		// md = md.strip_prefix("```\n```\n")
+		//        .map(ToString::to_string)
+		//        .unwrap_or(md);
+
+		// if !md.trim().is_empty() {
+		// 	results.insert(key, md);
+		// }
+
+		results.insert(key, html.to_owned());
 	}
 }

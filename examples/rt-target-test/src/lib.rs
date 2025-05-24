@@ -11,25 +11,27 @@ extern crate function_name;
 #[macro_use]
 extern crate sys;
 
-use core::ptr::NonNull;
 use display::Display;
-use sys::EventLoopCtrl;
-use sys::ffi::PlaydateAPI;
+use sys::ctrl::EventLoopCtrl;
+use sys::ctrl::UpdateDisplayCtrl;
+use sys::ffi::Playdate;
+use sys::ffi::SystemEvent;
 use system::prelude::*;
 
 
 #[no_mangle]
-fn event_handler(_: NonNull<PlaydateAPI>, event: SystemEvent, _: u32) -> EventLoopCtrl {
+fn event_handler(api: &'static Playdate, event: SystemEvent, _: u32) -> EventLoopCtrl {
 	if matches!(event, SystemEvent::Init) {
-		Display::Default().set_refresh_rate(1.);
-		System::Default().set_update_callback_static(Some(on_update), Default::default());
+		Display::new(api.display).set_fps(1.);
+		System::new(api.system).update()
+		                       .set_with(on_update, Default::default());
 	}
 
 	EventLoopCtrl::Continue
 }
 
 
-fn on_update(frame: &mut usize) -> UpdateCtrl {
+fn on_update(frame: &mut usize) -> UpdateDisplayCtrl {
 	match *frame {
 		0 => dummy_test(),
 
@@ -45,11 +47,11 @@ fn on_update(frame: &mut usize) -> UpdateCtrl {
 		8 => fp64::num_traits(),
 
 		9 => tests_complete(),
-		_ => System::Default().set_update_callback_static(None, ()),
+		_ => System::default().update().unset(),
 	}
 
 	*frame += 1;
-	UpdateCtrl::Continue
+	UpdateDisplayCtrl::Nope
 }
 
 
@@ -136,16 +138,16 @@ pub mod simd {
 
 	#[repr(simd)]
 	#[derive(Clone, Copy, Debug)]
-	struct Simd4<T>(T, T, T, T);
+	struct Simd4<T>([T; 4]);
 
 
 	#[named]
 	pub fn i32() {
 		print_test_name!();
 		unsafe {
-			let a = Simd4(10, 10, 10, 10);
-			let b = Simd4(1, 2, 3, 4);
-			let mut res = Simd4(0, 0, 0, 0);
+			let a = Simd4([10, 10, 10, 10]);
+			let b = Simd4([1, 2, 3, 4]);
+			let mut res = Simd4([0, 0, 0, 0]);
 
 			for _ in 0..101 {
 				res = simd_add(a, simd_add(b, res));
@@ -159,9 +161,9 @@ pub mod simd {
 	pub fn f32() {
 		print_test_name!();
 		unsafe {
-			let a = Simd4::<f32>(10.1, 10.1, 10.1, 10.1);
-			let b = Simd4(1.1, 2.1, 3.1, 4.1);
-			let mut res = Simd4(0.0, 0.0, 0.0, 0.0);
+			let a = Simd4::<f32>([10.1, 10.1, 10.1, 10.1]);
+			let b = Simd4([1.1, 2.1, 3.1, 4.1]);
+			let mut res = Simd4([0.0, 0.0, 0.0, 0.0]);
 
 			for _ in 0..101 {
 				res = simd_add(a, simd_add(b, res));
@@ -171,6 +173,3 @@ pub mod simd {
 		print_test_name!("OK");
 	}
 }
-
-
-ll_symbols!();
