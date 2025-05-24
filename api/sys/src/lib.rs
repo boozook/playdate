@@ -21,6 +21,8 @@
 #![cfg_attr(test, feature(test, try_with_capacity))]
 // tracing:
 #![feature(const_type_name)]
+// utils:
+#![feature(const_trait_impl, const_deref)]
 
 
 #[cfg(test)]
@@ -36,7 +38,7 @@ pub mod allocator;
 pub mod print;
 pub mod macros;
 pub mod error;
-// pub mod traits;
+pub mod utils;
 
 
 //
