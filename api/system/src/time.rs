@@ -1,5 +1,6 @@
 use core::ffi::c_float;
 use core::ffi::c_uint;
+use core::fmt::Write;
 use core::ptr::null_mut;
 
 pub use sys::ffi::DateTime;
@@ -8,7 +9,12 @@ use crate::Api;
 
 
 pub mod primitive {
+	use core::ffi::c_int;
 	use core::ffi::c_uint;
+	use core::fmt::Display;
+	use core::fmt::Write;
+	use core::ops::Add;
+	use core::ops::AddAssign;
 
 
 	#[repr(transparent)]
@@ -16,12 +22,49 @@ pub mod primitive {
 	pub struct Seconds<T>(pub T);
 
 
-	impl Into<Seconds<i32>> for Seconds<c_uint> {
-		fn into(self) -> Seconds<i32> { Seconds::<i32>(self.0 as _) }
+	impl Into<Seconds<c_int>> for Seconds<c_uint> {
+		fn into(self) -> Seconds<c_int> { Seconds::<c_int>(self.0 as _) }
 	}
 
 	impl<T> Seconds<T> {
 		pub const fn new(v: T) -> Self { Self(v) }
+	}
+
+	impl<T: Display> Display for Seconds<T> {
+		fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+			self.0.fmt(f).and_then(|_| f.write_char('s'))
+		}
+	}
+
+
+	impl<T: Add<Output = T>> Add for Seconds<T> {
+		type Output = Seconds<T>;
+
+		fn add(self, rhs: Self) -> Self::Output { Self(self.0 + rhs.0) }
+	}
+
+	impl<T: AddAssign> AddAssign for Seconds<T> {
+		fn add_assign(&mut self, rhs: Self) { self.0 += rhs.0 }
+	}
+
+
+	#[repr(transparent)]
+	#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+	pub struct Milliseconds<T>(pub T);
+
+	impl Into<Milliseconds<c_int>> for Milliseconds<c_uint> {
+		fn into(self) -> Milliseconds<c_int> { Milliseconds::<c_int>(self.0 as _) }
+	}
+
+	impl<T> Milliseconds<T> {
+		pub const fn new(v: T) -> Self { Self(v) }
+	}
+
+
+	impl<T: Display> Display for Milliseconds<T> {
+		fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+			self.0.fmt(f).and_then(|_| f.write_str("ms"))
+		}
 	}
 }
 
@@ -32,10 +75,7 @@ pub type SecondsOffset = primitive::Seconds<i32>;
 /// Seconds value as floating-point with microsecond accuracy.
 pub type FloatingSeconds = primitive::Seconds<c_float>;
 
-
-#[repr(transparent)]
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Milliseconds(pub c_uint);
+pub type Milliseconds = primitive::Milliseconds<c_uint>;
 
 
 /// Time since epoch, `00:00, January 1, 2000`.
@@ -48,7 +88,7 @@ pub struct Epoch {
 impl Epoch {
 	pub const fn new(sec: Seconds, ms: Milliseconds) -> Self { Self { sec, ms } }
 
-	pub const fn from_sec(sec: Seconds) -> Self { Self::new(sec, Milliseconds(0)) }
+	pub const fn from_sec(sec: Seconds) -> Self { Self::new(sec, Milliseconds::new(0)) }
 
 	/// Sum of inner seconds and milliseconds.
 	pub const fn to_sec(&self) -> Seconds { Seconds::new(self.sec.0.wrapping_add(self.ms.0 / 1000)) }
@@ -106,7 +146,9 @@ impl Time {
 	/// This should present a consistent timebase while a game is running,
 	/// but the counter will be __disabled when the device is sleeping__.
 	#[doc(alias = "sys::ffi::PlaydateSys::getCurrentTimeMilliseconds")]
-	pub fn current_time(&self) -> Milliseconds { Milliseconds(unsafe { (self.0.getCurrentTimeMilliseconds)() }) }
+	pub fn current_time(&self) -> Milliseconds {
+		Milliseconds::new(unsafe { (self.0.getCurrentTimeMilliseconds)() })
+	}
 
 
 	// Epoch
@@ -126,7 +168,7 @@ impl Time {
 	#[doc(alias = "sys::ffi::PlaydateSys::getSecondsSinceEpoch")]
 	#[inline(always)]
 	pub fn since_epoch_hp(&self) -> Epoch {
-		let mut ms = Milliseconds(0);
+		let mut ms = Milliseconds::new(0);
 		let sec = self.since_epoch_ms_to(&mut ms);
 		Epoch::new(sec, ms)
 	}

@@ -1,6 +1,6 @@
 #![no_std]
 #![cfg_attr(not(test), no_main)]
-#![feature(const_trait_impl)]
+#![feature(const_trait_impl, const_ops)]
 #![feature(tuple_trait)]
 // for compile-time tests:
 #![cfg_attr(debug_assertions, feature(core_intrinsics), allow(internal_features))]

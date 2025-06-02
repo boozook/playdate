@@ -114,7 +114,7 @@ impl arg::Adapter for Adapter<InBase, (FfiButtons, bool, Milliseconds)> {
 	#[inline]
 	fn convert(src: Self::Params) -> Self::Args {
 		let (btns, down, when) = src;
-		(btns, down != 0, Milliseconds(when))
+		(btns, down != 0, Milliseconds::new(when))
 	}
 }
 
