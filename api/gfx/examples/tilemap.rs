@@ -6,9 +6,9 @@
 extern crate sys;
 extern crate playdate_graphics as gfx;
 
-use core::ffi::{c_int, CStr};
 
 use display::Display;
+use fs::path::Path;
 use gfx::bitmap::table::BitmapTable;
 use gfx::bitmap::tilemap::TileMap;
 use system::System;
@@ -21,14 +21,12 @@ use gfx::Graphics;
 
 const CENTER_X: i32 = LCD_COLUMNS as i32 / 2;
 const CENTER_Y: i32 = LCD_ROWS as i32 / 2;
-const TILEMAP_FILENAME: &CStr = c"tiles";
+const TILEMAP_FILENAME: &Path = c"tiles";
 
 
 #[no_mangle]
 fn event_handler(api: &'static Playdate, e: SystemEvent, _: u32) -> EventLoopCtrl {
-	dbg!(e);
-
-	let SystemEvent::Init = e else {
+	let SystemEvent::Init = dbg!(e) else {
 		return EventLoopCtrl::Continue;
 	};
 
@@ -70,7 +68,7 @@ fn as_is(gfx: Graphics, tiles: &mut BitmapTable) -> TileMap {
 	let mut tmap = TileMap::new(&tm).unwrap();
 	tmap.set_image_table(&tm, tiles);
 
-	tmap.set_size(&tm, 8, 8);
+	tmap.set_size(&tm, w, h);
 
 	(0..h).flat_map(|y| (0..w).map(move |x| (x, y)))
 	      .enumerate()

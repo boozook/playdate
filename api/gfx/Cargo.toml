@@ -59,7 +59,7 @@ required-features = ["sys/lang-items", "sys/entry-point"]
 
 
 [package.metadata.playdate]
-bundle-id = "rs.playdate.menu"
+bundle-id = "rs.playdate.gfx"
 [package.metadata.playdate.dev-assets]
 # used in tilemap example
 "tiles-table-16-16.png" = "examples/assets/rundom_tileset_from_web-table-16-16.png"

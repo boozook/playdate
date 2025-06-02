@@ -181,7 +181,9 @@ use crate::bitmap::Borrowed;
 
 mod sealed {
 	use core::ffi::c_char;
+	use alloc::string::String;
 	use sys::ffi::CStr;
+	use sys::ffi::CString;
 	use sys::ffi::StringEncoding;
 	use super::AsRawStr;
 
@@ -193,9 +195,17 @@ mod sealed {
 		#[inline(always)]
 		fn as_ptr(&self) -> *const c_char { StrPtr::as_ptr(*self) }
 	}
+	impl StrPtr for String {
+		#[inline(always)]
+		fn as_ptr(&self) -> *const c_char { str::as_ptr(self).cast() }
+	}
 	impl StrPtr for &str {
 		#[inline(always)]
 		fn as_ptr(&self) -> *const c_char { str::as_ptr(self).cast() }
+	}
+	impl StrPtr for CString {
+		#[inline(always)]
+		fn as_ptr(&self) -> *const c_char { CStr::as_ptr(self.as_c_str()) }
 	}
 	impl StrPtr for &CStr {
 		#[inline(always)]
@@ -218,6 +228,10 @@ mod sealed {
 		#[inline(always)]
 		fn len_max(&self, enc: StringEncoding) -> usize { StrMaxLen::len_max(*self, enc) }
 	}
+	impl StrMaxLen for String {
+		#[inline(always)]
+		fn len_max(&self, enc: StringEncoding) -> usize { self.as_str().len_max(enc) }
+	}
 	impl StrMaxLen for &str {
 		#[inline]
 		fn len_max(&self, enc: StringEncoding) -> usize {
@@ -230,6 +244,10 @@ mod sealed {
 				StringEncoding::UTF16 => 0,
 			}
 		}
+	}
+	impl StrMaxLen for CString {
+		#[inline(always)]
+		fn len_max(&self, enc: StringEncoding) -> usize { self.as_c_str().len_max(enc) }
 	}
 	impl StrMaxLen for &CStr {
 		#[inline(always)]
@@ -305,6 +323,9 @@ impl Graphics {
 	/// Equivalent to [`sys::ffi::PlaydateGraphics::drawText`].
 	#[doc(alias = "sys::ffi::PlaydateGraphics::drawText")]
 	pub fn draw_text(&self, txt: impl AsRawStr, len: usize, enc: StringEncoding, x: c_int, y: c_int) -> c_int {
+		if len == 0 {
+			return 0;
+		}
 		txt.debug_validate(len, enc);
 		unsafe { (self.0.drawText)(txt.as_ptr().cast(), len, enc, x, y) }
 	}

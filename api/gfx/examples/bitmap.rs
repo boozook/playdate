@@ -92,8 +92,7 @@ impl State {
 			);
 			gfx.pop_context();
 
-			let image = dbt.as_mut();
-			let mut data = image.bitmap_data(&gfx);
+			let mut data = dbt.bitmap_data(&gfx);
 			data.data_mut()
 			    .chunks_exact_mut(LCD_ROWSIZE as _)
 			    .step_by(2)
@@ -109,9 +108,7 @@ impl State {
 /// Entry point / event handler
 #[no_mangle]
 fn event_handler(api: &'static Playdate, e: SystemEvent, _: u32) -> EventLoopCtrl {
-	dbg!(e);
-
-	let SystemEvent::Init = e else {
+	let SystemEvent::Init = dbg!(e) else {
 		return EventLoopCtrl::Continue;
 	};
 

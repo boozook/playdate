@@ -6,6 +6,7 @@ use core::ptr::NonNull;
 
 use sys::ffi::TileMap as SysTileMap;
 use sys::macros::api_opt;
+use sys::utils::AsRaw;
 
 use crate::error;
 use super::table::BitmapTable;
@@ -18,11 +19,67 @@ type Api = &'static sys::ffi::PlaydateTilemap;
 #[repr(transparent)]
 pub struct TileMap(NonNull<SysTileMap>);
 
+impl TileMap {
+	pub const unsafe fn from_ptr(ptr: NonNull<SysTileMap>) -> Self { Self(ptr) }
+}
+
+impl const AsRaw for TileMap {
+	type Output = SysTileMap;
+	#[inline]
+	unsafe fn as_raw(&self) -> NonNull<Self::Output> { self.0 }
+}
+
+
 impl Drop for TileMap {
 	fn drop(&mut self) {
 		if let Some(f) = api_opt!(graphics.tilemap.freeTilemap) {
 			unsafe { f(self.0.as_ptr()) };
 		}
+	}
+}
+
+
+pub mod borrow {
+	use core::marker::PhantomData;
+	use core::mem::ManuallyDrop;
+	use core::ops::Deref;
+	use core::ops::DerefMut;
+
+	use super::*;
+	use crate::{AsRef, AsMut};
+
+
+	#[must_use]
+	#[repr(transparent)]
+	pub struct Borrowed<'owner>(ManuallyDrop<TileMap>, PhantomData<&'owner ()>);
+
+	impl Borrowed<'_> {
+		pub const fn from_ptr(ptr: NonNull<SysTileMap>) -> Self {
+			Self(ManuallyDrop::new(TileMap(ptr)), PhantomData)
+		}
+	}
+
+	impl<'o> const AsRef<'o, TileMap> for Borrowed<'o> where ManuallyDrop<TileMap>: ~const Deref {
+		fn as_ref<'t>(&'t self) -> &'t TileMap
+			where 'o: 't {
+			&self.0
+		}
+	}
+	impl<'o> const AsMut<'o, TileMap> for Borrowed<'o> where ManuallyDrop<TileMap>: ~const DerefMut {
+		fn as_mut<'t>(&'t mut self) -> &'t mut TileMap
+			where 'o: 't {
+			&mut self.0
+		}
+	}
+
+	impl<'t, 'l> const Deref for Borrowed<'t> where Self: ~const AsRef<'t, TileMap> {
+		type Target = TileMap;
+		fn deref(&self) -> &Self::Target { self.as_ref() }
+	}
+	impl<'t, 'l> const DerefMut for Borrowed<'t>
+		where Self: ~const AsMut<'t, TileMap> + ~const Deref<Target = TileMap>
+	{
+		fn deref_mut(&mut self) -> &mut Self::Target { self.as_mut() }
 	}
 }
 
@@ -114,14 +171,15 @@ impl TileMap {
 	}
 
 
-	/// Sets the tilemap’s width to `row_width` and height to `count`/`row_width`
-	/// (count must be evenly divisible by `row_width`),
+	/// Sets the tilemap’s width to `row_width` and height to `indexes.len()`/`row_width`
+	/// (len of indexes must be evenly divisible by `row_width`),
 	/// then sets the tiles' indexes to the given list.
 	///
 	/// Equivalent to [`sys::ffi::PlaydateTilemap::setTiles`].
 	#[doc(alias = "sys::ffi::PlaydateTilemap::setTiles")]
-	pub fn set_tiles(&mut self, api: Api, indexes: *mut u16, count: c_int, row_width: c_int) {
-		// TODO: O2-indexes
+	pub fn set_tiles(&mut self, api: Api, indexes: &mut [u16], row_width: c_int) {
+		let count = indexes.len() as _;
+		let indexes = indexes.as_mut_ptr();
 		unsafe { (api.setTiles)(self.0.as_ptr(), indexes, count, row_width) }
 	}
 

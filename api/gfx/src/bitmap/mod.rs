@@ -46,9 +46,12 @@ mod ty {
 	use core::marker::PhantomData;
 	use core::mem::ManuallyDrop;
 	use core::ops::Deref;
+	use core::ops::DerefMut;
 	use core::ptr::NonNull;
 	use sys::utils::AsRaw;
 	use sys::ffi::Bitmap as SysBitmap;
+
+	use crate::{AsRef, AsMut};
 
 
 	#[must_use]
@@ -81,17 +84,28 @@ mod ty {
 			&self.0
 		}
 	}
+	impl<'o> const AsMut<'o, Bitmap> for Borrowed<'o> where ManuallyDrop<Bitmap>: ~const DerefMut {
+		fn as_mut<'t>(&'t mut self) -> &'t mut Bitmap
+			where 'o: 't {
+			&mut self.0
+		}
+	}
 
 	impl<'t, 'l> const Deref for Borrowed<'t> where Self: ~const AsRef<'t, Bitmap> {
 		type Target = Bitmap;
 		fn deref(&self) -> &Self::Target { self.as_ref() }
 	}
-
-	impl const AsRaw for Borrowed<'_> where ManuallyDrop<Bitmap>: ~const Deref {
-		type Output = SysBitmap;
-		#[inline(always)]
-		unsafe fn as_raw(&self) -> NonNull<Self::Output> { self.0.0 }
+	impl<'t, 'l> const DerefMut for Borrowed<'t>
+		where Self: ~const AsMut<'t, Bitmap> + ~const Deref<Target = Bitmap>
+	{
+		fn deref_mut(&mut self) -> &mut Self::Target { self.as_mut() }
 	}
+
+	// impl const AsRaw for Borrowed<'_> where ManuallyDrop<Bitmap>: ~const Deref {
+	// 	type Output = SysBitmap;
+	// 	#[inline(always)]
+	// 	unsafe fn as_raw(&self) -> NonNull<Self::Output> { self.0.0 }
+	// }
 
 
 	/// Owned [`Bitmap`], internally pointing to other bitmap's internals.
@@ -116,18 +130,11 @@ mod ty {
 		fn deref(&self) -> &Self::Target { self.as_ref() }
 	}
 
-	impl const AsRaw for Pointing<'_> where ManuallyDrop<Bitmap>: ~const Deref {
-		type Output = SysBitmap;
-		#[inline(always)]
-		unsafe fn as_raw(&self) -> NonNull<Self::Output> { self.0.0 }
-	}
-
-
-	#[const_trait]
-	trait AsRef<'ext, T: ?Sized> {
-		fn as_ref<'t>(&'t self) -> &'t T
-			where 'ext: 't;
-	}
+	// impl const AsRaw for Pointing<'_> where ManuallyDrop<Bitmap>: ~const Deref {
+	// 	type Output = SysBitmap;
+	// 	#[inline(always)]
+	// 	unsafe fn as_raw(&self) -> NonNull<Self::Output> { self.0.0 }
+	// }
 }
 
 

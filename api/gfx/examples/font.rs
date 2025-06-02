@@ -34,9 +34,7 @@ const TEXT: &[&str] = &["Hello", "こんにちは", "ⒶⒷ🟨⊙🔒🎣✛⬆
 
 #[no_mangle]
 fn event_handler(api: &'static Playdate, e: SystemEvent, _: u32) -> EventLoopCtrl {
-	dbg!(e);
-
-	let SystemEvent::Init = e else {
+	let SystemEvent::Init = dbg!(e) else {
 		return EventLoopCtrl::Continue;
 	};
 

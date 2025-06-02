@@ -8,6 +8,7 @@ use core::ptr::NonNull;
 use sys::ffi::BitmapTable as SysBitmapTable;
 use sys::macros::api_opt;
 use fs::path::Path;
+use sys::utils::AsRaw;
 
 use crate::error;
 use crate::Api;
@@ -17,6 +18,12 @@ use super::Bitmap;
 #[must_use]
 #[repr(transparent)]
 pub struct BitmapTable(pub(super) NonNull<SysBitmapTable>);
+
+impl const AsRaw for BitmapTable {
+	type Output = SysBitmapTable;
+	#[inline]
+	unsafe fn as_raw(&self) -> NonNull<Self::Output> { self.0 }
+}
 
 impl Drop for BitmapTable {
 	fn drop(&mut self) {

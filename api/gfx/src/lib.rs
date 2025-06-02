@@ -285,3 +285,33 @@ impl Graphics {
 		unsafe { (self.0.setLineCapStyle)(end_cap_style) }
 	}
 }
+
+
+#[const_trait]
+trait AsRef<'ext, T: ?Sized> {
+	fn as_ref<'t>(&'t self) -> &'t T
+		where 'ext: 't;
+}
+
+#[const_trait]
+trait AsMut<'ext, T: ?Sized>: AsRef<'ext, T> {
+	fn as_mut<'t>(&'t mut self) -> &'t mut T
+		where 'ext: 't;
+}
+
+
+impl<'e, T: core::convert::AsRef<U>, U> AsRef<'e, U> for T {
+	#[inline]
+	fn as_ref<'t>(&'t self) -> &'t U
+		where 'e: 't {
+		core::convert::AsRef::as_ref(self)
+	}
+}
+
+impl<'e, T, U> AsMut<'e, U> for T where T: core::convert::AsMut<U> + core::convert::AsRef<U> {
+	#[inline]
+	fn as_mut<'t>(&'t mut self) -> &'t mut U
+		where 'e: 't {
+		core::convert::AsMut::as_mut(self)
+	}
+}
