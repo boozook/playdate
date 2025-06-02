@@ -6,7 +6,7 @@ use sys::ffi::CStr;
 use crate::kind;
 use crate::error::Error;
 use crate::Api;
-use super::MenuItem;
+use crate::MenuItem;
 
 
 // Boxed inner callback

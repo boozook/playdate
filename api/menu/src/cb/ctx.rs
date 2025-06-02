@@ -11,9 +11,9 @@ use sys::ffi::MenuItem as PDMenuItem;
 use crate::kind;
 use crate::error::Error;
 use crate::Api;
-use super::MenuItem;
-use super::MenuItemRef;
-use super::RemoveOnDrop;
+use crate::MenuItem;
+use crate::MenuItemRef;
+use crate::RemoveOnDrop;
 
 
 // Boxed self with inner callback and self-ref via c-side userdata

@@ -25,8 +25,11 @@ type Api = &'static sys::ffi::PlaydateSys;
 
 
 mod ud;
-mod cb_ctx;
-mod cb_no_ctx;
+
+mod cb {
+	mod ctx;
+	mod no_ctx;
+}
 
 
 pub type SimpleMenuItem<UserData = ()> = MenuItem<kind::Simple, UserData>;
