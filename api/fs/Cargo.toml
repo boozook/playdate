@@ -17,6 +17,18 @@ workspace = true
 default-features = false
 features = ["alloc"]
 
+[dependencies.no_std_io2] # io-traits implementation
+version = "0.9"
+default-features = false
+features = ["alloc"]
+optional = true
+
+[dependencies.portable-io] # io-traits implementation
+version = "0.0.4"
+default-features = false
+features = ["alloc"]
+optional = true
+
 
 [[example]]
 name = "simple"
