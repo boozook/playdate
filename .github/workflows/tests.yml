@@ -542,6 +542,8 @@ jobs:
 
       - name: remove config
         run: rm -rf .cargo
+      - name: restore lock # I don't need suggestions for it
+        run: git restore Cargo.lock
 
       - name: Suggestions
         continue-on-error: true
