@@ -1,3 +1,5 @@
+cargo-features = ["profile-rustflags"]
+
 [workspace]
 resolver = "2"
 members = ["cargo", "api/*", "support/*", "components/*", "examples/*"]
@@ -63,8 +65,8 @@ overwrite = false
 store = { path = ".vet" }
 
 
-[workspace.lints.cargo]
-unknown-lints = "warn"
+# [workspace.lints.cargo]
+# unknown-lints = "warn"
 
 
 [workspace.lints.rust.unexpected_cfgs]
