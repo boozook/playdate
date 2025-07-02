@@ -47,7 +47,7 @@ env:
   # CARGO_PLAYDATE_LOG: trace
 
 jobs:
-  api-sys:
+  api:
     name: Api
     uses: ./.github/workflows/tests-api.yml
     secrets: inherit
@@ -56,6 +56,7 @@ jobs:
     with:
       sdk: ${{ inputs.sdk || 'latest' }}
       ref: ${{ inputs.ref || github.ref }}
+
   docs:
     name: Docs
     uses: ./.github/workflows/tests-docs.yml
@@ -64,94 +65,6 @@ jobs:
       contents: read
     with:
       ref: ${{ inputs.ref || github.ref }}
-
-  api:
-    name: Api (${{ matrix.os.name }})
-    permissions:
-      contents: read
-    env:
-      FEATURES_1: ""
-      FEATURES_2: bindings-derive-debug
-      FEATURES_3: bindings-derive-debug,sys/bindings-documentation,sys/error-ctx
-      BUILD_STD_ARGS: -Zbuild-std=core,alloc --target=thumbv7em-none-eabihf
-      CRATES: >-
-        -p=playdate-color
-        -p=playdate-controls
-        -p=playdate-display
-        -p=playdate-fs
-        -p=playdate-graphics
-        -p=playdate-menu
-        -p=playdate-scoreboards
-        -p=playdate-sound
-        -p=playdate-sprite
-        -p=playdate-system
-        -p=playdate
-    defaults:
-      run:
-        shell: bash
-    runs-on: ${{ matrix.os.key }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - { name: mac, key: macos-14 }
-          - { name: win, key: windows-latest }
-          - { name: linux, key: ubuntu-latest }
-        sdk:
-          - ${{ inputs.sdk || 'latest' }}
-          # - 2.6.2
-    steps:
-      - run: arch
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref || github.ref }}
-
-      - name: Cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            target/
-            ~/.cargo
-          key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
-
-      # - name: Sweep cache for stale files
-      #   uses: BD103/cargo-sweep@v2
-      - name: Install cargo-binstall
-        uses: cargo-bins/cargo-binstall@main
-      - name: Install cargo-sweep
-        run: cargo binstall cargo-sweep
-      - name: Cache Sweep for stale files
-        run: cargo sweep --recursive --time 2
-
-      - name: Config
-        uses: ./.github/actions/init-cfg
-
-      - name: Install bindgen
-        if: matrix.sdk == 'beta'
-        uses: ./.github/actions/install-bindgen
-
-      - name: Install SDK (${{ matrix.sdk }})
-        uses: ./.github/actions/install-sdk
-        with:
-          version: ${{ matrix.sdk }}
-          mac: ${{ secrets.SDK_BETA_MACOS }}
-          win: ${{ secrets.SDK_BETA_WINDOWS }}
-          linux: ${{ secrets.SDK_BETA_LINUX }}
-
-      - name: Test Crates (host)
-        run: |
-          cargo test ${{ env.CRATES }} --lib --no-default-features --features=$FEATURES_1
-          cargo test ${{ env.CRATES }} --lib --no-default-features --features=$FEATURES_2
-          # cargo test ${{ env.CRATES }} --lib --no-default-features --features=$FEATURES_3
-
-      - name: Check Crates (device)
-        run: cargo check ${{ env.CRATES }} --target=thumbv7em-none-eabihf
-
-      - name: Build Crates (device)
-        run: |
-          cargo build ${{ env.CRATES }} --features=sys/lang-items,$FEATURES_1 ${{ env.BUILD_STD_ARGS }} --examples --lib
-          cargo build ${{ env.CRATES }} --features=sys/lang-items,$FEATURES_2 ${{ env.BUILD_STD_ARGS }} --examples --lib
-          cargo build ${{ env.CRATES }} --features=sys/lang-items,$FEATURES_3 ${{ env.BUILD_STD_ARGS }} --examples --lib
 
   utils:
     name: Utils (${{ matrix.os.name }})
@@ -480,7 +393,6 @@ jobs:
         run: |
           cargo playdate package --features=lang-items,bindings-derive-debug --examples --device --simulator -p=playdate-sys --no-default-features
           cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-color --no-default-features
-          cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-controls --no-default-features
           cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-display --no-default-features
           cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-fs --no-default-features
           cargo playdate package --features=$FEATURES_DEP --examples --device --simulator -p=playdate-graphics --no-default-features
@@ -508,6 +420,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
+
+      - name: Config
+        uses: ./.github/actions/init-cfg
 
       - name: Check
         id: check-rs
@@ -627,6 +542,8 @@ jobs:
 
       - name: remove config
         run: rm -rf .cargo
+      - name: restore lock # I don't need suggestions for it
+        run: git restore Cargo.lock
 
       - name: Suggestions
         continue-on-error: true
@@ -646,6 +563,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Config
+        uses: ./.github/actions/init-cfg
+
       - name: Check
         id: check
         continue-on-error: true
@@ -678,11 +599,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Config
+        uses: ./.github/actions/init-cfg
+
       - name: Check
         id: crates
         uses: katyo/publish-crates@v2
         with:
           dry-run: true
+
       - name: Output
         if: fromJSON(steps.crates.outputs.published).*
         run: |

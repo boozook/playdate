@@ -1,47 +1,58 @@
-#![cfg_attr(not(test), no_std)]
-#![feature(const_trait_impl)]
+#![no_std]
+#![cfg_attr(not(test), no_main)]
+#![feature(const_trait_impl, const_deref)]
 
 #[macro_use]
 extern crate sys;
 extern crate alloc;
 
-use core::ffi::c_char;
 use core::ffi::c_int;
 use core::ffi::c_uint;
-use core::ffi::c_void;
 use alloc::string::String;
 use alloc::vec::Vec;
 
-use error::Error;
-use file::AnyFile;
+use error::Owned;
+use error::ReadError;
 use options::FileOptionsExt;
 use options::OpenOptions;
 use seek::Whence;
 pub use sys::ffi::FileStat;
 pub use sys::ffi::FileOptions;
-use sys::ffi::CString;
-use sys::ffi::CStr;
 
 use file::File;
-use error::ApiError;
+use path::Path;
 
 
-pub mod api;
+mod op;
+pub mod path;
 pub mod file;
 pub mod seek;
 pub mod options;
 pub mod error;
 
 
-pub type Path = str;
+pub mod prelude {
+	pub use sys::ffi::FileStat;
+	pub use sys::ffi::FileOptions;
+	pub use super::Fs;
+	pub use super::path::*;
+	pub use super::file::*;
+	pub use super::seek::*;
+	pub use super::options::*;
+	pub use super::error::Owned as FsError;
+}
+
+
+type Api = &'static sys::ffi::PlaydateFile;
 
 
 /// Read the entire contents of a file into a bytes vector.
-/// > Works similarly to [`std::fs::read`].
-pub fn read<P: AsRef<Path>>(path: P, data_dir: bool) -> Result<Vec<u8>, ApiError> {
-	let fs = Fs::Cached();
+/// Works similarly to [`std::fs::read`].
+pub fn read<P: AsRef<Path>>(path: P, data_dir: bool) -> Result<Vec<u8>, Owned> {
+	let fs = Fs::default();
+
 	let opts = FileOptions::new().read(true).read_data(data_dir);
-	let mut file = fs.open_with(api::Default, &path, opts)?;
+	let mut file = fs.open(&path, opts)?;
 
 	// determine size of file:
 	let size = fs.metadata(path).map(|m| m.size).ok().unwrap_or(0);
@@ -55,10 +66,10 @@ pub fn read<P: AsRef<Path>>(path: P, data_dir: bool) -> Result<Vec<u8>, ApiError
 
 
 /// Read the entire contents of a file into a string.
-/// > Works similarly to [`std::fs::read_to_string`].
-pub fn read_to_string<P: AsRef<Path>>(path: P, data_dir: bool) -> Result<String, ApiError> {
-	let buf = read(path, data_dir)?;
-	alloc::string::String::from_utf8(buf).map_err(Into::into)
+/// Works similarly to [`std::fs::read_to_string`].
+pub fn read_to_string<P: AsRef<Path>>(path: P, data_dir: bool) -> Result<String, ReadError> {
+	let buf = read(path, data_dir).map_err(ReadError::Fs)?;
+	alloc::string::String::from_utf8(buf).map_err(ReadError::Utf8)
 }
 
 
@@ -67,10 +78,10 @@ pub fn read_to_string<P: AsRef<Path>>(path: P, data_dir: bool) -> Result<String,
 /// This function will create a file if it does not exist,
 /// and will entirely replace its contents if it does.
 ///
-/// > Works similarly to [`std::fs::write`].
+/// Works similarly to [`std::fs::write`].
 ///
-/// Uses [`sys::ffi::playdate_file::open`] and [`sys::ffi::playdate_file::write`].
-pub fn write<P: AsRef<Path>, C: AsRef<[u8]>>(path: P, contents: C) -> Result<(), ApiError> {
+/// Uses [`sys::ffi::PlaydateFile::open`] and [`sys::ffi::PlaydateFile::write`].
+pub fn write<P: AsRef<Path>, C: AsRef<[u8]>>(path: P, contents: C) -> Result<(), Owned> {
 	let mut file = File::options().write(true).append(false).open(&path)?;
 	file.write(contents.as_ref())?;
 	Ok(())
@@ -80,17 +91,16 @@ pub fn write<P: AsRef<Path>, C: AsRef<[u8]>>(path: P, contents: C) -> Result<(),
 #[inline(always)]
 /// Removes a file from the filesystem. Directory is a file too.
 ///
-/// > Works similarly to [`std::fs::remove_file`] and [`std::fs::remove_dir`].
+/// Works similarly to [`std::fs::remove_file`] and [`std::fs::remove_dir`].
 ///
-/// Uses [`sys::ffi::playdate_file::unlink`].
-pub fn remove<P: AsRef<Path>>(path: P) -> Result<(), ApiError> { Fs::Default().remove(path) }
+/// Uses [`sys::ffi::PlaydateFile::unlink`].
+pub fn remove<P: AsRef<Path>>(path: P) -> Result<(), Owned> { Fs::default().remove(path) }
 
 
-// TODO: metadata
 /// Given a path, query the file system to get information about a file,
 /// directory, etc.
 #[inline(always)]
-pub fn metadata<P: AsRef<Path>>(path: P) -> Result<FileStat, ApiError> { Fs::Default().metadata(path) }
+pub fn metadata<P: AsRef<Path>>(path: P) -> Result<FileStat, Owned> { Fs::default().metadata(path) }
 
 
 /// Renames the file at `from` to `to`.
@@ -99,214 +109,85 @@ pub fn metadata<P: AsRef<Path>>(path: P) -> Result<FileStat, ApiError> { Fs::Def
 ///
 /// It does not create intermediate folders.
 #[inline(always)]
-pub fn rename<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<(), ApiError> {
-	Fs::Default().rename(from, to)
+pub fn rename<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<(), Owned> {
+	Fs::default().rename(from, to)
 }
 
 /// Creates the given `path` in the `Data/<gameid>` folder.
 ///
 /// It does not create intermediate folders.
 #[inline(always)]
-pub fn create_dir<P: AsRef<Path>>(path: P) -> Result<(), ApiError> { Fs::Default().create_dir(path) }
-
-// TODO: create_dir_all
-// pub fn create_dir_all<P: AsRef<Path>>(path: P) -> Result<()>
+pub fn create_dir<P: AsRef<Path>>(path: P) -> Result<(), Owned> { Fs::default().create_dir(path) }
 
 
-#[inline(always)]
 /// Removes a directory and all of its contents recursively.
-/// > Works similarly to [`std::fs::remove_file`], [`std::fs::remove_dir`] and [`std::fs::remove_dir_all`].
+/// Works similarly to [`std::fs::remove_file`], [`std::fs::remove_dir`] and [`std::fs::remove_dir_all`].
 ///
 /// Caution: it also can delete file without any error, if `path` is a file.
 ///
-/// Calls [`sys::ffi::playdate_file::unlink`] with `recursive`.
-// XXX: TODO: Should we validate that `path` is a directory?
-pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> Result<(), ApiError> { Fs::Default().remove_dir_all(path) }
-
-// TODO: read_dir -> iter ReadDir
-// pub fn read_dir<P: AsRef<Path>>(path: P) -> Result<ReadDir>
+/// Calls [`sys::ffi::PlaydateFile::unlink`] with `recursive`.
+#[inline(always)]
+pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> Result<(), Owned> { Fs::default().remove_dir_all(path) }
 
 
 /// Playdate File-system API.
 ///
 /// Uses inner api end-point for all operations.
-#[derive(Debug, Clone, Copy)]
-pub struct Fs<Api = api::Default>(Api);
+///
+/// Each method returns result with owned (cloned, reallocated) error.
+///
+/// For scoped version of this, that returns borrowed errors, see [`Fs`](scoped::Fs) and [`Fs::scoped()`].
+#[derive(Clone, Copy)]
+pub struct Fs(Api);
 
-impl Fs<api::Default> {
-	/// Creates default [`Fs`] without type parameter requirement.
-	///
-	/// Uses ZST [`api::Default`].
-	#[allow(non_snake_case)]
-	pub fn Default() -> Self { Self(Default::default()) }
+impl Default for Fs {
+	fn default() -> Self { Self(api!(file)) }
 }
 
-impl Fs<api::Cache> {
-	/// Creates [`Fs`] without type parameter requirement.
-	///
-	/// Uses [`api::Cache`].
-	#[allow(non_snake_case)]
-	pub fn Cached() -> Self { Self(Default::default()) }
-}
-
-impl<Api: Default + api::Api> Default for Fs<Api> {
-	fn default() -> Self { Self(Default::default()) }
-}
-
-impl<Api: Default + api::Api> Fs<Api> {
-	pub fn new() -> Self { Self(Default::default()) }
-}
-
-impl<Api: api::Api> Fs<Api> {
-	pub fn new_with(api: Api) -> Self { Self(api) }
+impl Fs {
+	pub const fn new(api: Api) -> Self { Self(api) }
 }
 
 
-mod ops {
-	use super::*;
-
-	pub fn open<Api: api::Api, P: AsRef<Path>, Opts: OpenOptions>(api: Api,
-	                                                              path: P,
-	                                                              options: Opts)
-	                                                              -> Result<File<Api>, ApiError> {
-		let path = CString::new(path.as_ref())?;
-		let f = api.open();
-		let ptr = unsafe { f(path.as_ptr() as _, options.into()) };
-		Ok(File(ptr as _, api))
-	}
-
-	pub fn open_with<UApi: api::Api, FApi: api::Api, P: AsRef<Path>, Opts: OpenOptions>(
-		using: UApi,
-		api: FApi,
-		path: P,
-		options: Opts)
-		-> Result<File<FApi>, ApiError> {
-		let path = CString::new(path.as_ref())?;
-		let f = using.open();
-		let ptr = unsafe { f(path.as_ptr() as _, options.into()) };
-		Ok(File(ptr as _, api))
-	}
-
-	pub fn close<Api: api::Api>(mut file: File<Api>) -> Result<(), Error> {
-		let f = file.1.close();
-		let result = unsafe { f(file.0 as _) };
-		file.0 = core::ptr::null_mut();
-		Error::ok_from_code(result)?;
-		Ok(())
-	}
-
-	pub fn close_with<Api: api::Api, FApi: api::Api>(api: Api, mut file: File<FApi>) -> Result<(), Error> {
-		let f = api.close();
-		let result = unsafe { f(file.0) };
-		file.0 = core::ptr::null_mut();
-		Error::ok_from_code(result)?;
-		Ok(())
-	}
-
-	pub fn seek<Api: api::Api>(file: &mut File<Api>, pos: c_int, whence: Whence) -> Result<(), Error> {
-		let f = file.1.seek();
-		let result = unsafe { f(file.0, pos, whence as _) };
-		Error::ok_from_code(result)?;
-		Ok(())
-	}
-
-	pub fn seek_with<Api: api::Api>(api: Api,
-	                                file: &mut impl AnyFile,
-	                                pos: c_int,
-	                                whence: Whence)
-	                                -> Result<(), Error> {
-		let f = api.seek();
-		let result = unsafe { f(file.as_raw(), pos, whence as _) };
-		Error::ok_from_code(result)?;
-		Ok(())
-	}
-
-	pub fn tell<Api: api::Api>(file: &mut File<Api>) -> Result<c_uint, Error> {
-		let f = file.1.tell();
-		let result = unsafe { f(file.0) };
-		Error::ok_from_code(result)
-	}
-
-	pub fn tell_with<Api: api::Api>(api: Api, file: &mut impl AnyFile) -> Result<c_uint, Error> {
-		let f = api.tell();
-		let result = unsafe { f(file.as_raw()) };
-		Error::ok_from_code(result)
-	}
-
-
-	pub fn read<Api: api::Api>(file: &mut File<Api>, to: &mut Vec<u8>, len: c_uint) -> Result<c_uint, Error> {
-		let f = file.1.read();
-		let result = unsafe { f(file.0, to.as_mut_ptr() as *mut _, len) };
-		Error::ok_from_code(result)
-	}
-
-	pub fn write<Api: api::Api>(file: &mut File<Api>, from: &[u8]) -> Result<c_uint, Error> {
-		let f = file.1.write();
-		let result = unsafe { f(file.0, from.as_ptr() as *mut _, from.len() as _) };
-		Error::ok_from_code(result)
-	}
-
-	pub fn flush<Api: api::Api>(file: &mut File<Api>) -> Result<c_uint, Error> {
-		let f = file.1.flush();
-		let result = unsafe { f(file.0) };
-		Error::ok_from_code(result)
-	}
-}
-
-
-impl<Api: api::Api> Fs<Api> {
+impl Fs {
 	/// Open file for given `options`.
 	///
 	/// Creates new [`File`] instance with copy of inner api end-point.
 	///
-	/// Equivalent to [`sys::ffi::playdate_file::open`]
-	#[doc(alias = "sys::ffi::playdate_file::open")]
+	/// Equivalent to [`sys::ffi::PlaydateFile::open`]
+	#[doc(alias = "sys::ffi::PlaydateFile::open")]
 	#[inline(always)]
-	pub fn open<P: AsRef<Path>, Opts: OpenOptions>(&self, path: P, options: Opts) -> Result<File<Api>, ApiError>
-		where Api: Copy {
-		ops::open(self.0, path, options)
-	}
-
-	/// Open file for given `options`.
-	///
-	/// Creates new [`File`] instance with given `api`.
-	///
-	/// Equivalent to [`sys::ffi::playdate_file::open`]
-	#[doc(alias = "sys::ffi::playdate_file::open")]
-	#[inline(always)]
-	pub fn open_with<T: api::Api, P: AsRef<Path>, Opts: OpenOptions>(&self,
-	                                                                 api: T,
-	                                                                 path: P,
-	                                                                 options: Opts)
-	                                                                 -> Result<File<T>, ApiError> {
-		ops::open_with(&self.0, api, path, options)
+	pub fn open<P: AsRef<Path>, Opts: OpenOptions>(&self, path: P, options: Opts) -> Result<File, Owned> {
+		op::open(self.0, path, options).map_err(Owned::from)
 	}
 
 	/// Closes the given file.
 	///
-	/// Equivalent to [`sys::ffi::playdate_file::close`]
-	#[doc(alias = "sys::ffi::playdate_file::close")]
+	/// Equivalent to [`sys::ffi::PlaydateFile::close`]
+	#[doc(alias = "sys::ffi::PlaydateFile::close")]
 	#[inline(always)]
-	pub fn close<T: api::Api>(&self, file: File<T>) -> Result<(), Error> { ops::close_with(&self.0, file) }
+	pub fn close(&self, file: File) -> Result<(), Owned> { op::close(self.0, file).map_err(Owned::from) }
 
 
 	/// Returns the current read/write offset in the given file.
 	///
-	/// Equivalent to [`sys::ffi::playdate_file::tell`]
-	#[doc(alias = "sys::ffi::playdate_file::tell")]
+	/// Equivalent to [`sys::ffi::PlaydateFile::tell`]
+	#[doc(alias = "sys::ffi::PlaydateFile::tell")]
 	#[inline(always)]
-	pub fn tell(&self, file: &mut impl AnyFile) -> Result<c_uint, Error> { crate::ops::tell_with(&self.0, file) }
+	pub fn tell(&self, file: &mut File) -> Result<c_uint, Owned> {
+		crate::op::tell(self.0, file).map_err(Owned::from)
+	}
 
 	/// Sets the read/write offset in the given file to pos, relative to the `whence`.
 	/// - [`Whence::Start`] is relative to the beginning of the file,
 	/// - [`Whence::Current`] is relative to the current position of the file,
 	/// - [`Whence::End`] is relative to the end of the file.
 	///
-	/// Equivalent to [`sys::ffi::playdate_file::seek`]
-	#[doc(alias = "sys::ffi::playdate_file::seek")]
+	/// Equivalent to [`sys::ffi::PlaydateFile::seek`]
+	#[doc(alias = "sys::ffi::PlaydateFile::seek")]
 	#[inline(always)]
-	pub fn seek_raw(&self, file: &mut impl AnyFile, pos: c_int, whence: Whence) -> Result<(), Error> {
-		crate::ops::seek_with(&self.0, file, pos, whence)
+	pub fn seek_raw(&self, file: &mut File, pos: c_int, whence: Whence) -> Result<(), Owned> {
+		crate::op::seek(self.0, file, pos, whence).map_err(Owned::from)
 	}
 
 
@@ -316,17 +197,21 @@ impl<Api: api::Api> Fs<Api> {
 	///
 	/// Caution: Vector must be prefilled with `0`s.
 	/// ```no_run
+	/// # use playdate_fs::prelude::*;
+	/// # let mut fs = Fs::default();
+	/// # let size: usize = todo!("size of file, e.g. determined from fs.metadata");
 	/// let mut buf = Vec::<u8>::with_capacity(size);
 	/// buf.resize(size, 0);
-	/// fs.read(&mut file, &mut buf, size)?;
+	/// # let mut file: File = todo!("e.g. fs.open(...)");
+	/// fs.read(&mut file, &mut buf, size as u32)?;
+	/// # Ok::<_, FsError>(())
 	/// ```
 	///
-	/// Equivalent to [`sys::ffi::playdate_file::read`]
-	#[doc(alias = "sys::ffi::playdate_file::read")]
-	pub fn read(&self, file: &mut impl AnyFile, to: &mut Vec<u8>, len: c_uint) -> Result<c_uint, Error> {
-		let f = self.0.read();
-		let result = unsafe { f(file.as_raw(), to.as_mut_ptr() as *mut _, len) };
-		Error::ok_from_code(result)
+	/// Equivalent to [`sys::ffi::PlaydateFile::read`]
+	#[doc(alias = "sys::ffi::PlaydateFile::read")]
+	#[inline(always)]
+	pub fn read(&self, file: &mut File, to: &mut [u8], len: c_uint) -> Result<c_uint, Owned> {
+		op::read(self.0, file, to, len).map_err(Owned::from)
 	}
 
 
@@ -334,70 +219,53 @@ impl<Api: api::Api> Fs<Api> {
 	///
 	/// Returns the number of bytes written.
 	///
-	/// Equivalent to [`sys::ffi::playdate_file::write`]
-	#[doc(alias = "sys::ffi::playdate_file::write")]
-	pub fn write(&self, file: &mut impl AnyFile, from: &[u8]) -> Result<c_uint, Error> {
-		let f = self.0.write();
-		let result = unsafe { f(file.as_raw(), from.as_ptr() as *mut _, from.len() as _) };
-		Error::ok_from_code(result)
+	/// Equivalent to [`sys::ffi::PlaydateFile::write`]
+	#[doc(alias = "sys::ffi::PlaydateFile::write")]
+	#[inline(always)]
+	pub fn write(&self, file: &mut File, from: &[u8]) -> Result<c_uint, Owned> {
+		op::write(self.0, file, from).map_err(Owned::from)
 	}
 
 	/// Flushes the output buffer of file immediately.
 	///
 	/// Returns the number of bytes written.
 	///
-	/// Equivalent to [`sys::ffi::playdate_file::flush`]
-	#[doc(alias = "sys::ffi::playdate_file::flush")]
-	pub fn flush(&self, file: &mut impl AnyFile) -> Result<c_uint, Error> {
-		let f = self.0.flush();
-		let result = unsafe { f(file.as_raw()) };
-		Error::ok_from_code(result)
-	}
+	/// Equivalent to [`sys::ffi::PlaydateFile::flush`]
+	#[doc(alias = "sys::ffi::PlaydateFile::flush")]
+	#[inline(always)]
+	pub fn flush(&self, file: &mut File) -> Result<c_uint, Owned> { op::flush(self.0, file).map_err(Owned::from) }
 
 
 	/// Populates the [`FileStat`] stat with information about the file at `path`.
 	///
-	/// Equivalent to [`sys::ffi::playdate_file::stat`]
-	#[doc(alias = "sys::ffi::playdate_file::stat")]
-	pub fn metadata<P: AsRef<Path>>(&self, path: P) -> Result<FileStat, ApiError> {
-		let mut stat = FileStat { isdir: 0,
-		                          size: 0,
-		                          m_year: 0,
-		                          m_month: 0,
-		                          m_day: 0,
-		                          m_hour: 0,
-		                          m_minute: 0,
-		                          m_second: 0 };
-		self.metadata_to(path, &mut stat).map(|_| stat)
+	/// Equivalent to [`sys::ffi::PlaydateFile::stat`]
+	#[doc(alias = "sys::ffi::PlaydateFile::stat")]
+	#[inline(always)]
+	pub fn metadata<P: AsRef<Path>>(&self, path: P) -> Result<FileStat, Owned> {
+		let mut stat = FileStat::default();
+		self.metadata_to(path, &mut stat).map_err(Owned::from)?;
+		Ok(stat)
 	}
 
 	/// Writes into the given `metadata` information about the file at `path`.
 	///
-	/// Equivalent to [`sys::ffi::playdate_file::stat`]
-	#[doc(alias = "sys::ffi::playdate_file::stat")]
-	pub fn metadata_to<P: AsRef<Path>>(&self, path: P, metadata: &mut FileStat) -> Result<(), ApiError> {
-		let path = CString::new(path.as_ref())?;
-		let f = self.0.stat();
-		let result = unsafe { f(path.as_ptr() as _, metadata as *mut _) };
-		Error::ok_from_code(result)?;
-		Ok(())
+	/// Equivalent to [`sys::ffi::PlaydateFile::stat`]
+	#[doc(alias = "sys::ffi::PlaydateFile::stat")]
+	#[inline(always)]
+	pub fn metadata_to<P: AsRef<Path>>(&self, path: P, metadata: &mut FileStat) -> Result<(), Owned> {
+		op::metadata(self.0, path, metadata).map_err(Owned::from)
 	}
 
-
-	// path- fs operations //
 
 	/// Creates the given `path` in the `Data/<gameid>` folder.
 	///
 	/// It does not create intermediate folders.
 	///
-	/// Equivalent to [`sys::ffi::playdate_file::mkdir`]
-	#[doc(alias = "sys::ffi::playdate_file::mkdir")]
-	pub fn create_dir<P: AsRef<Path>>(&self, path: P) -> Result<(), ApiError> {
-		let path = CString::new(path.as_ref())?;
-		let f = self.0.mkdir();
-		let result = unsafe { f(path.as_ptr() as _) };
-		Error::ok_from_code(result)?;
-		Ok(())
+	/// Equivalent to [`sys::ffi::PlaydateFile::mkdir`]
+	#[doc(alias = "sys::ffi::PlaydateFile::mkdir")]
+	#[inline(always)]
+	pub fn create_dir<P: AsRef<Path>>(&self, path: P) -> Result<(), Owned> {
+		op::create_dir(self.0, path).map_err(Owned::from)
 	}
 
 	/// Deletes the file at path.
@@ -405,14 +273,11 @@ impl<Api: api::Api> Fs<Api> {
 	///
 	/// See also [`remove_dir_all`](Fs::remove_dir_all).
 	///
-	/// Equivalent to [`sys::ffi::playdate_file::unlink`]
-	#[doc(alias = "sys::ffi::playdate_file::unlink")]
-	pub fn remove<P: AsRef<Path>>(&self, path: P) -> Result<(), ApiError> {
-		let path = CString::new(path.as_ref())?;
-		let f = self.0.unlink();
-		let result = unsafe { f(path.as_ptr() as _, 0) };
-		Error::ok_from_code(result)?;
-		Ok(())
+	/// Equivalent to [`sys::ffi::PlaydateFile::unlink`]
+	#[doc(alias = "sys::ffi::PlaydateFile::unlink")]
+	#[inline(always)]
+	pub fn remove<P: AsRef<Path>>(&self, path: P) -> Result<(), Owned> {
+		op::remove(self.0, path).map_err(Owned::from)
 	}
 
 	/// Deletes the file at path.
@@ -420,14 +285,11 @@ impl<Api: api::Api> Fs<Api> {
 	/// If the `path` is a folder, this deletes everything inside the folder
 	/// (including folders, folders inside those, and so on) as well as the folder itself.
 	///
-	/// Equivalent to [`sys::ffi::playdate_file::unlink`]
-	#[doc(alias = "sys::ffi::playdate_file::unlink")]
-	pub fn remove_dir_all<P: AsRef<Path>>(&self, path: P) -> Result<(), ApiError> {
-		let path = CString::new(path.as_ref())?;
-		let f = self.0.unlink();
-		let result = unsafe { f(path.as_ptr() as _, 1) };
-		Error::ok_from_code(result)?;
-		Ok(())
+	/// Equivalent to [`sys::ffi::PlaydateFile::unlink`]
+	#[doc(alias = "sys::ffi::PlaydateFile::unlink")]
+	#[inline(always)]
+	pub fn remove_dir_all<P: AsRef<Path>>(&self, path: P) -> Result<(), Owned> {
+		op::remove_dir_all(self.0, path).map_err(Owned::from)
 	}
 
 	/// Renames the file at `from` to `to`.
@@ -436,19 +298,13 @@ impl<Api: api::Api> Fs<Api> {
 	///
 	/// It does not create intermediate folders.
 	///
-	/// Equivalent to [`sys::ffi::playdate_file::rename`]
-	#[doc(alias = "sys::ffi::playdate_file::rename")]
-	pub fn rename<P: AsRef<Path>, Q: AsRef<Path>>(&self, from: P, to: Q) -> Result<(), ApiError> {
-		let from = CString::new(from.as_ref())?;
-		let to = CString::new(to.as_ref())?;
-		let f = self.0.rename();
-		let result = unsafe { f(from.as_ptr() as _, to.as_ptr() as _) };
-		Error::ok_from_code(result)?;
-		Ok(())
+	/// Equivalent to [`sys::ffi::PlaydateFile::rename`]
+	#[doc(alias = "sys::ffi::PlaydateFile::rename")]
+	#[inline(always)]
+	pub fn rename<P: AsRef<Path>, Q: AsRef<Path>>(&self, from: P, to: Q) -> Result<(), Owned> {
+		op::rename(self.0, from, to).map_err(Owned::from)
 	}
 
-
-	// read dir //
 
 	/// Calls the given callback function for every file at `path`.
 	///
@@ -461,50 +317,299 @@ impl<Api: api::Api> Fs<Api> {
 	///
 	/// Returns error if no folder exists at path or it can’t be opened.
 	///
-	/// Equivalent to [`sys::ffi::playdate_file::listfiles`]
-	#[doc(alias = "sys::ffi::playdate_file::listfiles")]
-	pub fn read_dir<P, Fn>(&self, path: P, mut callback: Fn, include_hidden: bool) -> Result<(), ApiError>
+	///
+	/// Argument passed to the callback is a path of a file, for each file.
+	/// It is borrowed from C-side and should be cloned if you want to keep it,
+	/// e.g.: `path.to_owned()` or `path.to_string_lossy().into_owned()`.
+	///
+	/// Equivalent to [`sys::ffi::PlaydateFile::listfiles`]
+	#[doc(alias = "sys::ffi::PlaydateFile::listfiles")]
+	#[inline(always)]
+	pub fn read_dir<P, Fn>(&self, path: P, callback: Fn, include_hidden: bool) -> Result<(), Owned>
 		where P: AsRef<Path>,
-		      Fn: FnMut(String) {
-		unsafe extern "C" fn proxy<Fn: FnMut(String)>(filename: *const c_char, userdata: *mut c_void) {
-			// TODO: are we really need `into_owned` for storing in the temp vec?
-			let filename = CStr::from_ptr(filename as _).to_string_lossy().into_owned();
-
-			if let Some(callback) = (userdata as *mut _ as *mut Fn).as_mut() {
-				callback(filename);
-			} else {
-				panic!("Fs.read_dir: missed callback");
-			}
-		}
-
-		let path = CString::new(path.as_ref())?;
-
-		// NOTE: that's safe because ref dies after internal listfiles() returns.
-		let callback_ref = (&mut callback) as *mut Fn as *mut _;
-
-		let f = self.0.listfiles();
-		let result = unsafe {
-			f(
-			  path.as_ptr() as _,
-			  Some(proxy::<Fn>),
-			  callback_ref,
-			  include_hidden as _,
-			)
-		};
-		Error::ok_from_code(result)?;
-		Ok(())
+		      Fn: FnMut(&Path) {
+		op::read_dir(self.0, path, callback, include_hidden).map_err(Owned::from)
 	}
 }
 
 
-pub mod prelude {
-	pub use sys::ffi::FileStat;
-	pub use sys::ffi::FileOptions;
-	pub use crate::error::ApiError as FsApiError;
-	pub use crate::error::Error as FsError;
-	pub use crate::Path;
-	pub use crate::Fs;
-	pub use crate::file::*;
-	pub use crate::options::*;
-	pub use crate::seek::SeekFrom;
+pub mod scoped {
+	use core::ffi::c_int;
+	use core::ffi::c_uint;
+
+
+	use sys::ffi::FileStat;
+	use crate::error::Borrowed;
+	use crate::file::File;
+	use crate::op;
+	use crate::options::OpenOptions;
+	use crate::seek::Whence;
+	use crate::Api;
+	use crate::Path;
+
+
+	impl super::Fs {
+		/// Creates "scope" with [scoped `Fs`](Fs) with isolated results which are borrowed from C-side.
+		pub fn scoped<F, T, E>(&self, mut op: F) -> Result<T, E>
+			where F: FnMut(&mut Fs) -> Result<T, E> {
+			op(&mut Fs(self.0))
+		}
+
+		pub fn new_scoped() -> Fs { Fs::default() }
+	}
+
+
+	/// Scoped version of [`Fs`](super::Fs).
+	///
+	/// Requires mutability for each call, but as benefit, returns results with borrowed error.
+	pub struct Fs(Api);
+
+	impl Fs {
+		pub const fn new(api: Api) -> Self { Self(api) }
+
+		/// Converts to [`Fs`](crate::Fs), that returns owned results and don't requires mutability.
+		pub const fn unscope(self) -> crate::Fs { crate::Fs(self.0) }
+	}
+
+	impl Default for Fs {
+		fn default() -> Self { Self::new(api!(file)) }
+	}
+
+
+	/// This deref impls gives ability to use `crate::Fs` as `scoped::Fs` hopefully safely.
+	/// ```no_run
+	/// use playdate_fs as fs;
+	/// use fs::prelude::*;
+	///
+	/// const FILE: &Path = c"pdxinfo";
+	///
+	/// fn meta_if_exists(fs: &mut fs::scoped::Fs) -> Option<FileStat> {
+	/// 	fs.metadata(FILE).ok() // does not clones error if it happens
+	/// }
+	///
+	/// let mut fs = fs::Fs::default();
+	/// let meta = meta_if_exists(&mut fs);   // call fs::scoped::Fs::metadata
+	/// let meta = (&mut *fs).metadata(FILE); // call fs::scoped::Fs::metadata
+	/// let meta = fs.metadata(FILE);         // call fs::Fs::metadata, clones error if it caused
+	/// ```
+	mod deref {
+		use core::ops::{Deref, DerefMut};
+		use crate::scoped;
+
+
+		#[allow(clippy::unnecessary_operation)]
+		const _: () = const {
+			["Size of scoped Fs"][core::mem::size_of::<crate::Fs>() - core::mem::size_of::<scoped::Fs>()];
+			["Size of relaxed Fs"][core::mem::size_of::<scoped::Fs>() - core::mem::size_of::<crate::Fs>()];
+		};
+
+		/// Down-conversion from one which returns owned results to this the [scoped](scoped::Fs).
+		impl const Deref for crate::Fs {
+			type Target = scoped::Fs;
+			fn deref(&self) -> &Self::Target { unsafe { core::mem::transmute(self) } }
+		}
+
+		impl const DerefMut for crate::Fs {
+			fn deref_mut(&mut self) -> &mut scoped::Fs { unsafe { core::mem::transmute(self) } }
+		}
+	}
+
+
+	impl Fs {
+		/// Open file for given `options`.
+		///
+		/// Creates new [`File`] instance with copy of inner api end-point.
+		///
+		/// Equivalent to [`sys::ffi::PlaydateFile::open`]
+		#[doc(alias = "sys::ffi::PlaydateFile::open")]
+		#[inline(always)]
+		pub fn open<'t, P: AsRef<Path>, Opts: OpenOptions>(&'t mut self,
+		                                                   path: P,
+		                                                   options: Opts)
+		                                                   -> Result<File, Borrowed<'t>> {
+			op::open(self.0, path, options)
+		}
+
+		/// Closes the given file.
+		///
+		/// Equivalent to [`sys::ffi::PlaydateFile::close`]
+		#[doc(alias = "sys::ffi::PlaydateFile::close")]
+		#[inline(always)]
+		pub fn close<'t>(&'t mut self, file: File) -> Result<(), Borrowed<'t>> { op::close(self.0, file) }
+
+
+		/// Returns the current read/write offset in the given file.
+		///
+		/// Equivalent to [`sys::ffi::PlaydateFile::tell`]
+		#[doc(alias = "sys::ffi::PlaydateFile::tell")]
+		#[inline(always)]
+		pub fn tell<'t>(&'t mut self, file: &mut File) -> Result<c_uint, Borrowed<'t>> {
+			crate::op::tell(self.0, file)
+		}
+
+		/// Sets the read/write offset in the given file to pos, relative to the `whence`.
+		/// - [`Whence::Start`] is relative to the beginning of the file,
+		/// - [`Whence::Current`] is relative to the current position of the file,
+		/// - [`Whence::End`] is relative to the end of the file.
+		///
+		/// Equivalent to [`sys::ffi::PlaydateFile::seek`]
+		#[doc(alias = "sys::ffi::PlaydateFile::seek")]
+		#[inline(always)]
+		pub fn seek_raw<'t>(&'t mut self, file: &mut File, pos: c_int, whence: Whence) -> Result<(), Borrowed<'t>> {
+			crate::op::seek(self.0, file, pos, whence)
+		}
+
+		/// Reads up to `len` bytes from the file into the buffer `to`.
+		///
+		/// Returns the number of bytes read (0 indicating end of file).
+		///
+		/// Caution: Vector must be prefilled with `0`s.
+		/// ```no_run
+		/// # use playdate_fs::{prelude::*, scoped::Fs};
+		/// # let mut fs = Fs::default();
+		/// # let size: usize = todo!("size of file, e.g. determined from fs.metadata");
+		/// let mut buf = Vec::<u8>::with_capacity(size);
+		/// buf.resize(size, 0);
+		/// # let mut file: File = todo!("e.g. fs.open(...)");
+		/// fs.read(&mut file, &mut buf, size as u32)?;
+		/// # Ok::<_, FsError>(())
+		/// ```
+		///
+		/// Equivalent to [`sys::ffi::PlaydateFile::read`]
+		#[doc(alias = "sys::ffi::PlaydateFile::read")]
+		#[inline(always)]
+		pub fn read<'t>(&'t mut self, file: &mut File, to: &mut [u8], len: c_uint) -> Result<c_uint, Borrowed<'t>> {
+			op::read(self.0, file, to, len)
+		}
+
+
+		/// Writes the buffer of bytes buf to the file.
+		///
+		/// Returns the number of bytes written.
+		///
+		/// Equivalent to [`sys::ffi::PlaydateFile::write`]
+		#[doc(alias = "sys::ffi::PlaydateFile::write")]
+		#[inline(always)]
+		pub fn write<'t>(&'t mut self, file: &mut File, from: &[u8]) -> Result<c_uint, Borrowed<'t>> {
+			op::write(self.0, file, from)
+		}
+
+		/// Flushes the output buffer of file immediately.
+		///
+		/// Returns the number of bytes written.
+		///
+		/// Equivalent to [`sys::ffi::PlaydateFile::flush`]
+		#[doc(alias = "sys::ffi::PlaydateFile::flush")]
+		#[inline(always)]
+		pub fn flush<'t>(&'t mut self, file: &mut File) -> Result<c_uint, Borrowed<'t>> { op::flush(self.0, file) }
+
+
+		/// Populates the [`FileStat`] stat with information about the file at `path`.
+		///
+		/// Equivalent to [`sys::ffi::PlaydateFile::stat`]
+		#[doc(alias = "sys::ffi::PlaydateFile::stat")]
+		#[inline(always)]
+		pub fn metadata<'t, P: AsRef<Path>>(&'t mut self, path: P) -> Result<FileStat, Borrowed<'t>> {
+			let mut stat = FileStat::default();
+			self.metadata_to(path, &mut stat)?;
+			Ok(stat)
+		}
+
+		/// Writes into the given `metadata` information about the file at `path`.
+		///
+		/// Equivalent to [`sys::ffi::PlaydateFile::stat`]
+		#[doc(alias = "sys::ffi::PlaydateFile::stat")]
+		#[inline(always)]
+		pub fn metadata_to<'t, P: AsRef<Path>>(&'t mut self,
+		                                       path: P,
+		                                       metadata: &mut FileStat)
+		                                       -> Result<(), Borrowed<'t>> {
+			let path = path.as_ref();
+			let result = unsafe { (self.0.stat)(path.as_ptr(), metadata) };
+			Borrowed::from_code(result, self.0).map(|_| ())
+		}
+
+
+		/// Creates the given `path` in the `Data/<gameid>` folder.
+		///
+		/// It does not create intermediate folders.
+		///
+		/// Equivalent to [`sys::ffi::PlaydateFile::mkdir`]
+		#[doc(alias = "sys::ffi::PlaydateFile::mkdir")]
+		#[inline(always)]
+		pub fn create_dir<'t, P: AsRef<Path>>(&'t mut self, path: P) -> Result<(), Borrowed<'t>> {
+			op::create_dir(self.0, path)
+		}
+
+		/// Deletes the file at path.
+		/// Directory is a file too, definitely.
+		///
+		/// See also [`remove_dir_all`](Fs::remove_dir_all).
+		///
+		/// Equivalent to [`sys::ffi::PlaydateFile::unlink`]
+		#[doc(alias = "sys::ffi::PlaydateFile::unlink")]
+		#[inline(always)]
+		pub fn remove<'t, P: AsRef<Path>>(&'t mut self, path: P) -> Result<(), Borrowed<'t>> {
+			op::remove(self.0, path)
+		}
+
+		/// Deletes the file at path.
+		///
+		/// If the `path` is a folder, this deletes everything inside the folder
+		/// (including folders, folders inside those, and so on) as well as the folder itself.
+		///
+		/// Equivalent to [`sys::ffi::PlaydateFile::unlink`]
+		#[doc(alias = "sys::ffi::PlaydateFile::unlink")]
+		#[inline(always)]
+		pub fn remove_dir_all<'t, P: AsRef<Path>>(&'t mut self, path: P) -> Result<(), Borrowed<'t>> {
+			op::remove_dir_all(self.0, path)
+		}
+
+		/// Renames the file at `from` to `to`.
+		///
+		/// It will overwrite the file at `to`.
+		///
+		/// It does not create intermediate folders.
+		///
+		/// Equivalent to [`sys::ffi::PlaydateFile::rename`]
+		#[doc(alias = "sys::ffi::PlaydateFile::rename")]
+		#[inline(always)]
+		pub fn rename<'t, P: AsRef<Path>, Q: AsRef<Path>>(&'t mut self,
+		                                                  from: P,
+		                                                  to: Q)
+		                                                  -> Result<(), Borrowed<'t>> {
+			op::rename(self.0, from, to)
+		}
+
+
+		/// Calls the given callback function for every file at `path`.
+		///
+		/// Subfolders are indicated by a trailing slash '/' in filename.
+		///
+		/// This method does not recurse into subfolders.
+		///
+		/// If `include_hidden` is set, files beginning with a period will be included;
+		/// otherwise, they are skipped.
+		///
+		/// Returns error if no folder exists at path or it can’t be opened.
+		///
+		///
+		/// Argument passed to the callback is a path of a file, for each file.
+		/// It is borrowed from C-side and should be cloned if you want to keep it,
+		/// e.g.: `path.to_owned()` or `path.to_string_lossy().into_owned()`.
+		///
+		/// Equivalent to [`sys::ffi::PlaydateFile::listfiles`]
+		#[doc(alias = "sys::ffi::PlaydateFile::listfiles")]
+		#[inline(always)]
+		pub fn read_dir<'t, P, Fn>(&'t mut self,
+		                           path: P,
+		                           callback: Fn,
+		                           include_hidden: bool)
+		                           -> Result<(), Borrowed<'t>>
+			where P: AsRef<Path>,
+			      Fn: FnMut(&Path)
+		{
+			op::read_dir(self.0, path, callback, include_hidden)
+		}
+	}
 }

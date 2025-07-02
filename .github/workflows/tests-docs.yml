@@ -42,6 +42,9 @@ jobs:
       - name: Toolchain
         run: rm ./rust-toolchain.toml
 
+      - name: Config
+        uses: ./.github/actions/init-cfg
+
       - name: Metadata
         id: metadata
         run: |
@@ -79,6 +82,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
+
+      - name: Config
+        uses: ./.github/actions/init-cfg
 
       - name: Install Deps
         if: ${{ contains(env.LIBUDEV_DEPENDENTS, matrix.crate.name) }}
