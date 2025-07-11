@@ -30,6 +30,8 @@ Follow the instructions for:
 1. [cargo-playdate](https://github.com/boozook/playdate/blob/main/cargo/README.md#prerequisites)
 1. [playdate-sys](https://github.com/boozook/playdate/tree/main/api/sys#prerequisites)
 
+[Common prerequisites described in the wiki](https://github.com/boozook/playdate/wiki#prerequisites).
+
 
 ## Compatibility
 
@@ -41,7 +43,8 @@ Follow the instructions for:
 
 Run example:
 ```bash
-cargo run -p=cargo-playdate -- run -p=playdate-controls --example=buttons --features="sys/lang-items sys/entry-point"
+cargo playdate run -p=playdate-fs --example=simple --features=sys/lang-items,sys/entry-point
+# or with cargo run -p=cargo-playdate -- ...
 ```
 
 Install `cargo-playdate` and build & run another example:

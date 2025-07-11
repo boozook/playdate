@@ -13,16 +13,20 @@ repository.workspace = true
 
 
 [dependencies]
-sys = { workspace = true, default-features = false }
-system = { workspace = true, default-features = false }
-gfx = { workspace = true, default-features = false }
+sys.workspace = true
+gfx.workspace = true # only AsBitmap used
+
+duplicate.workspace = true
+
+[dev-dependencies]
+system.workspace = true
 
 
 [[example]]
 name = "menu"
-crate-type = ["dylib", "staticlib"]
 path = "examples/menu.rs"
-required-features = ["sys/lang-items", "sys/entry-point", "system/try-trait-v2"]
+crate-type = ["dylib", "staticlib"]
+required-features = ["sys/lang-items", "sys/entry-point"]
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.menu"
@@ -33,3 +37,7 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]
+
+
+[badges.maintenance]
+status = "actively-developed"

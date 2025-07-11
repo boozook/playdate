@@ -13,18 +13,42 @@ repository.workspace = true
 
 
 [dependencies]
-sys = { workspace = true, default-features = false }
-fs = { workspace = true, default-features = false }
-color = { workspace = true, default-features = false }
+sys.workspace = true
+fs.workspace = true
+color.workspace = true
+
+[dependencies.callback]
+workspace = true
+features = ["sys"]
+
 
 [dev-dependencies]
 display = { workspace = true, default-features = false }
-system = { workspace = true, default-features = false, features = ["try-trait-v2"] }
+system = { workspace = true, default-features = false }
+
 
 [[example]]
 name = "bitmap"
 crate-type = ["dylib", "staticlib"]
 path = "examples/bitmap.rs"
+required-features = ["sys/lang-items", "sys/entry-point", "color/gfxp"]
+
+[[example]]
+name = "tilemap"
+crate-type = ["dylib", "staticlib"]
+path = "examples/tilemap.rs"
+required-features = ["sys/lang-items", "sys/entry-point"]
+
+[[example]]
+name = "video"
+crate-type = ["dylib", "staticlib"]
+path = "examples/video.rs"
+required-features = ["sys/lang-items", "sys/entry-point"]
+
+[[example]]
+name = "text"
+crate-type = ["dylib", "staticlib"]
+path = "examples/text.rs"
 required-features = ["sys/lang-items", "sys/entry-point"]
 
 [[example]]
@@ -33,8 +57,17 @@ crate-type = ["dylib", "staticlib"]
 path = "examples/font.rs"
 required-features = ["sys/lang-items", "sys/entry-point"]
 
+
 [package.metadata.playdate]
-bundle-id = "rs.playdate.menu"
+bundle-id = "rs.playdate.gfx"
+[package.metadata.playdate.dev-assets]
+# used in tilemap example
+"tiles-table-16-16.png" = "examples/assets/rundom_tileset_from_web-table-16-16.png"
+# used in video example
+"video.pdv" = "${PLAYDATE_SDK_PATH}/Disk/System/Setup.pdx/videos/outro.pdv"
+# used in font example
+"/System/Settings.pdx/fonts/font-Cuberick-Bold.pft" = "${PLAYDATE_SDK_PATH}/Disk/System/Settings.pdx/fonts/font-Cuberick-Bold.pft"
+"/System/InputTest.pdx/images/Nontendo-Bold-Mono.pft" = "${PLAYDATE_SDK_PATH}/Disk/System/InputTest.pdx/images/Nontendo-Bold-Mono.pft"
 
 
 [package.metadata.docs.rs]
@@ -42,3 +75,7 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]
+
+
+[badges.maintenance]
+status = "actively-developed"

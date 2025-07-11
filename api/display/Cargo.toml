@@ -4,7 +4,7 @@ version = "0.3.9"
 readme = "README.md"
 description = "High-level Display API built on-top of Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
-categories = ["game-development", "api-bindings", "no-std"]
+categories = ["game-development", "api-bindings", "no-std", "no-std::no-alloc"]
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
@@ -22,3 +22,7 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]
+
+
+[badges.maintenance]
+status = "actively-developed"

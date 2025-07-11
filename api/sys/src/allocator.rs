@@ -2,6 +2,7 @@
 
 use core::alloc::{GlobalAlloc, Layout};
 use core::ffi::c_void;
+use crate::macros::trace::trace_alloc;
 
 
 /// PlaydateOs system allocator.
@@ -20,6 +21,8 @@ pub static GLOBAL: System = System;
 unsafe impl GlobalAlloc for System {
 	#[inline]
 	unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+		trace_alloc!(global::alloc size=layout.size());
+
 		#[cfg(not(miri))]
 		{
 			realloc(core::ptr::null_mut(), layout.size()) as *mut u8
@@ -36,11 +39,17 @@ unsafe impl GlobalAlloc for System {
 
 
 	#[inline]
-	unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) { dealloc(ptr, layout); }
+	unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+		trace_alloc!(global::dealloc ptr=ptr, size=layout.size());
+
+		dealloc(ptr, layout);
+	}
 
 
 	#[inline]
-	unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
+	unsafe fn realloc(&self, ptr: *mut u8, _layout: Layout, new_size: usize) -> *mut u8 {
+		trace_alloc!(global::realloc ptr=ptr, size=_layout.size(), size=new_size);
+
 		let res = realloc(ptr as *mut c_void, new_size) as *mut u8;
 
 		// default mem-copy- behavior if new != old:
@@ -50,13 +59,11 @@ unsafe impl GlobalAlloc for System {
 				miri_pointer_name(res.cast(), 0, c"global".to_bytes());
 			}
 
-
-			// SAFETY: the previously allocated block cannot overlap the newly allocated block.
-			// The safety contract for `dealloc` must be upheld by the caller.
-			unsafe {
-				core::ptr::copy_nonoverlapping(ptr, res, core::cmp::min(layout.size(), new_size));
-				self.dealloc(ptr, layout);
-			}
+			// NOTE: In this case PdOs's system allocator returns new memory
+			// with already copied data from old memory,
+			// and tail is not-zeroed.
+			// So, we don't need to copy anything, e.g. copy_nonoverlapping(old, new).
+			// Also, we don't need to deallocate the old memory.
 		} // otherwise if new == old => so this is normal re-allocation, grow.
 
 		res
@@ -76,7 +83,7 @@ mod local {
 	use core::ptr::null_mut;
 	use core::ptr::slice_from_raw_parts_mut;
 	use core::ptr::NonNull;
-	use super::{System, realloc, dealloc};
+	use super::{System, realloc, dealloc, trace_alloc};
 
 
 	unsafe impl Allocator for System {
@@ -93,6 +100,8 @@ mod local {
 		///
 		/// See more details on [`Allocator`](core::alloc::Allocator::allocate).
 		fn allocate(&self, layout: Layout) -> Result<NonNull<[u8]>, AllocError> {
+			trace_alloc!(local::allocate size=layout.size());
+
 			let ptr = unsafe { realloc(null_mut(), layout.size()) };
 
 			if ptr.is_null() {
@@ -112,7 +121,11 @@ mod local {
 		/// Note: ignores layout, just deallocates region which is internally associated with given ptr.
 		///
 		/// See more details on [`Allocator`](core::alloc::Allocator::deallocate).
-		unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout) { dealloc(ptr.as_ptr().cast(), layout) }
+		unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout) {
+			trace_alloc!(local::deallocate ptr=ptr.as_ptr(), size=layout.size());
+
+			dealloc(ptr.as_ptr().cast(), layout)
+		}
 
 
 		// `allocate_zeroed` is default impl because Playdate's system allocator
@@ -125,6 +138,7 @@ mod local {
 		               old_layout: Layout,
 		               new_layout: Layout)
 		               -> Result<NonNull<[u8]>, AllocError> {
+			trace_alloc!(local::grow ptr=ptr, size=old_layout.size(), size=new_layout.size());
 			debug_assert!(
 			              new_layout.size() >= old_layout.size(),
 			              "`new_layout.size()` must be greater than or equal to `old_layout.size()`"
@@ -140,15 +154,15 @@ mod local {
 			};
 
 			if ptr != new_ptr.as_non_null_ptr() {
-				// SAFETY: because `new_layout.size()` must be greater than or equal to
-				// `old_layout.size()`, both the old and new memory allocation are valid for reads and
-				// writes for `old_layout.size()` bytes. Also, because the old allocation wasn't yet
-				// deallocated, it cannot overlap `new_ptr`. Thus, the call to `copy_nonoverlapping` is
-				// safe. The safety contract for `dealloc` must be upheld by the caller.
-				unsafe {
-					core::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_mut_ptr(), old_layout.size());
-					self.deallocate(ptr, old_layout);
-				}
+				// NOTE: In this case PdOs's system allocator returns new memory
+				// with already copied data from old memory,
+				// and tail is not-zeroed.
+				// So, we don't need to copy anything, e.g. copy_nonoverlapping(old, new).
+				// Also, we don't need to deallocate the old memory.
+				// unsafe {
+				// 	core::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_mut_ptr(), old_layout.size());
+				// 	self.deallocate(ptr, old_layout);
+				// }
 			}
 
 			#[cfg(miri)]
@@ -164,6 +178,7 @@ mod local {
 		                      old_layout: Layout,
 		                      new_layout: Layout)
 		                      -> Result<NonNull<[u8]>, AllocError> {
+			trace_alloc!(local::grow_zeroed ptr=ptr, size=old_layout.size(), size=new_layout.size());
 			debug_assert!(
 			              new_layout.size() >= old_layout.size(),
 			              "`new_layout.size()` must be greater than or equal to `old_layout.size()`"
@@ -184,6 +199,7 @@ mod local {
 		                 old_layout: Layout,
 		                 new_layout: Layout)
 		                 -> Result<NonNull<[u8]>, AllocError> {
+			trace_alloc!(local::shrink ptr=ptr, size=old_layout.size(), size=new_layout.size());
 			debug_assert!(
 			              new_layout.size() <= old_layout.size(),
 			              "`new_layout.size()` must be smaller than or equal to `old_layout.size()`"
@@ -221,33 +237,11 @@ mod local {
 }
 
 
-#[cfg(miri)]
-extern "Rust" {
-	/// Miri-provided extern function to allocate memory from the interpreter.
-	///
-	/// This is useful when no fundamental way of allocating memory is
-	/// available, e.g. when using `no_std` + `alloc`.
-	fn miri_alloc(size: usize, align: usize) -> *mut u8;
-
-	/// Miri-provided extern function to deallocate memory.
-	fn miri_dealloc(ptr: *mut u8, size: usize, align: usize);
-
-	/// Miri-provided extern function to associate a name to the nth parent of a tag.
-	/// Typically the name given would be the name of the program variable that holds the pointer.
-	/// Unreachable tags can still be named by using nonzero `nth_parent` and a child tag.
-	///
-	/// This function does nothing under Stacked Borrows, since Stacked Borrows's implementation
-	/// of `miri_print_borrow_state` does not show the names.
-	///
-	/// Under Tree Borrows, the names also appear in error messages.
-	pub fn miri_pointer_name(ptr: *const (), nth_parent: u8, name: &[u8]);
-}
-
-
 #[track_caller]
 #[inline(always)]
-unsafe fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void {
+pub unsafe fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void {
 	if let Some(api) = crate::api() {
+		trace_alloc!(realloc ptr=ptr, size=size);
 		(api.system.realloc)(ptr, size)
 	} else {
 		#[cfg(debug_assertions)]
@@ -308,4 +302,27 @@ fn alloc_error(layout: Layout) -> ! {
 			panic!("OoM")
 		}
 	}
+}
+
+
+#[cfg(miri)]
+extern "Rust" {
+	/// Miri-provided extern function to allocate memory from the interpreter.
+	///
+	/// This is useful when no fundamental way of allocating memory is
+	/// available, e.g. when using `no_std` + `alloc`.
+	fn miri_alloc(size: usize, align: usize) -> *mut u8;
+
+	/// Miri-provided extern function to deallocate memory.
+	fn miri_dealloc(ptr: *mut u8, size: usize, align: usize);
+
+	/// Miri-provided extern function to associate a name to the nth parent of a tag.
+	/// Typically the name given would be the name of the program variable that holds the pointer.
+	/// Unreachable tags can still be named by using nonzero `nth_parent` and a child tag.
+	///
+	/// This function does nothing under Stacked Borrows, since Stacked Borrows's implementation
+	/// of `miri_print_borrow_state` does not show the names.
+	///
+	/// Under Tree Borrows, the names also appear in error messages.
+	pub fn miri_pointer_name(ptr: *const (), nth_parent: u8, name: &[u8]);
 }

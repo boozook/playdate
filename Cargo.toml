@@ -1,3 +1,5 @@
+cargo-features = ["profile-rustflags"]
+
 [workspace]
 resolver = "2"
 members = ["cargo", "api/*", "support/*", "components/*", "examples/*"]
@@ -15,7 +17,6 @@ repository = "https://github.com/boozook/playdate.git"
 
 [workspace.dependencies]
 color = { version = "0.2", path = "api/color", package = "playdate-color", default-features = false }
-ctrl = { version = "0.3", path = "api/ctrl", package = "playdate-controls", default-features = false }
 display = { version = "0.3", path = "api/display", package = "playdate-display", default-features = false }
 fs = { version = "0.2", path = "api/fs", package = "playdate-fs", default-features = false }
 gfx = { version = "0.6", path = "api/gfx", package = "playdate-graphics", default-features = false }
@@ -26,6 +27,7 @@ sound = { version = "0.4", path = "api/sound", package = "playdate-sound", defau
 sprite = { version = "0.3", path = "api/sprite", package = "playdate-sprite", default-features = false }
 system = { version = "0.3", path = "api/system", package = "playdate-system", default-features = false }
 sys = { version = "0.5", path = "api/sys", package = "playdate-sys", default-features = false }
+callback = { version = "0.1", path = "api/callback", package = "playdate-callback", default-features = false }
 
 tool = { version = "0.1", path = "support/tool", package = "playdate-tool" }
 build = { version = "0.4", path = "support/build", package = "playdate-build", default-features = false }
@@ -49,8 +51,9 @@ serde_json = "1.0"
 toml = "0.8"
 futures-lite = "2.6"
 thiserror = "2.0"
-tokio = { version = "1.43", default-features = false }
+tokio = { version = "1.45", default-features = false }
 async-std = { version = "1.13", default-features = false }
+duplicate = "2.0"
 
 
 [workspace.metadata.playdate.options.assets]
@@ -64,3 +67,45 @@ store = { path = ".vet" }
 
 # [workspace.lints.cargo]
 # unknown-lints = "warn"
+
+
+[workspace.lints.rust.unexpected_cfgs]
+level = "deny"
+check-cfg = [
+	'cfg(pdtrace, values("all", "alloc", "stack", "cb-add", "cb-rem", "cb-call", "cb-get", "cb-into"))',
+	# use with RUSTFLAGS='--cfg trace="cb-add" --cfg trace="stack"'
+]
+
+
+[profile.dev.package.playdate-color]
+opt-level = 3
+[profile.dev.package.playdate-graphics]
+opt-level = 3
+[profile.dev.package.playdate-sound]
+opt-level = 3
+[profile.dev.package.playdate-system]
+opt-level = 3
+[profile.dev.package.playdate-callback]
+opt-level = 3
+
+
+[profile.dev]
+lto = true
+rustflags = [
+	# '--cfg=pdtrace="alloc"',
+	'--cfg=pdtrace="stack"',
+	'--cfg=pdtrace="cb-add"',
+	'--cfg=pdtrace="cb-rem"',
+	# '--cfg=pdtrace="cb-get"',
+	# '--cfg=pdtrace="cb-call"',
+	'--cfg=pdtrace="cb-into"',
+]
+
+[profile.release]
+lto = true
+rustflags = [
+	'--cfg=pdtrace="stack"',
+	'--cfg=pdtrace="cb-add"',
+	'--cfg=pdtrace="cb-rem"',
+	# '--cfg=pdtrace="cb-into"',
+]

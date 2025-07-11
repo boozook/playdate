@@ -163,7 +163,6 @@ jobs:
         env:
           CRATES: >-
             -p=playdate-color
-            -p=playdate-controls
             -p=playdate-display
             -p=playdate-fs
             -p=playdate-graphics

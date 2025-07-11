@@ -11,7 +11,7 @@ use core::ptr::NonNull;
 
 use sys::EventLoopCtrl;
 use sys::ffi::PlaydateAPI;
-use ctrl::buttons::PDButtonsExt;
+use ctrl::buttons::ButtonsExt;
 use display::DisplayScale;
 use menu::OptionsMenuItem;
 use ui::CrankIndicator;
@@ -114,7 +114,7 @@ impl State {
 			                                          1 => 50.,
 			                                          _ => 0.,
 			                                       };
-			                                       self.display.set_refresh_rate(fps);
+			                                       self.display.set_fps(fps);
 			                                       *value = false;
 		                                       });
 

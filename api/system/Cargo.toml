@@ -12,43 +12,62 @@ homepage.workspace = true
 repository.workspace = true
 
 
-[features]
-try-trait-v2 = [] # impl `FromResidual` for `UpdateCtrl` # TODO: remove `try-trait-v2` feature
-
-
 [dependencies.sys]
 workspace = true
-default-features = false
+features = ["alloc"]
+
+[dependencies.callback]
+workspace = true
+features = ["sys"]
+
+[dev-dependencies.display]
+workspace = true
 
 
 [[example]]
-name = "handler-boxed"
+name = "update-callback"
 crate-type = ["dylib", "staticlib"]
-path = "examples/handler-boxed.rs"
+path = "examples/update-callback.rs"
+required-features = ["sys/entry-point", "sys/lang-items"]
+
+
+[[example]]
+name = "server-time"
+crate-type = ["dylib", "staticlib"]
+path = "examples/server-time-callback.rs"
+required-features = ["sys/entry-point", "sys/lang-items"]
+
+# temp, until make default no-gcc build and build via `cargo rustc`.
+[[example]]
+name = "server-time-bin"
+crate-type = ["bin"]
+path = "examples/server-time-callback.rs"
 required-features = ["sys/entry-point", "sys/lang-items"]
 
 [[example]]
-name = "handler-static"
+name = "serial-message"
 crate-type = ["dylib", "staticlib"]
-path = "examples/handler-static.rs"
+path = "examples/serial-message-callback.rs"
 required-features = ["sys/entry-point", "sys/lang-items"]
 
 [[example]]
-name = "handler-pinned"
+name = "buttons"
 crate-type = ["dylib", "staticlib"]
-path = "examples/handler-pinned.rs"
+path = "examples/buttons-callback.rs"
 required-features = ["sys/entry-point", "sys/lang-items"]
 
 [[example]]
-name = "set-serial-message-callback"
+name = "accelerometer"
 crate-type = ["dylib", "staticlib"]
-path = "examples/set-serial-message-callback.rs"
+path = "examples/accelerometer.rs"
+required-features = ["sys/entry-point", "sys/lang-items"]
 
 [[example]]
-name = "update-state-in-serial-message-callback"
+name = "launch-args"
 crate-type = ["dylib", "staticlib"]
-path = "examples/update-state-in-serial-message-callback.rs"
+path = "examples/launch-args.rs"
 required-features = ["sys/entry-point", "sys/lang-items"]
+
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.system"
@@ -59,3 +78,11 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]
+
+
+[badges.maintenance]
+status = "actively-developed"
+
+
+[lints.rust.unexpected_cfgs]
+level = "deny"

@@ -5,22 +5,26 @@
 #![allow(internal_features)]
 #![feature(lang_items, core_intrinsics)]
 // allocator:
-#![cfg_attr(feature = "allocator", feature(alloc_error_handler))]
-#![cfg_attr(feature = "allocator", feature(alloc_layout_extra))]
+#![cfg_attr(feature = "allocator", feature(alloc_error_handler, alloc_layout_extra))]
 #![cfg_attr(feature = "allocator-api", feature(allocator_api, slice_ptr_get))]
 // const features:
 #![cfg_attr(feature = "const-types", feature(adt_const_params))]
 // error, ctrl-flow:
 #![feature(try_trait_v2)]
 // heapless on-stack formatting for print, panic and oom:
-#![feature(maybe_uninit_slice)]
-#![feature(maybe_uninit_write_slice)]
+#![feature(maybe_uninit_slice, maybe_uninit_write_slice)]
 // cfg values, format_buffer, target, mock:
 #![feature(cfg_match)]
 // docs:
 #![doc(issue_tracker_base_url = "https://github.com/boozook/playdate/issues/")]
 // testing:
 #![cfg_attr(test, feature(test, try_with_capacity))]
+// tracing:
+#![feature(const_type_name)]
+// utils:
+#![feature(const_trait_impl, const_deref)]
+
+
 #[cfg(test)]
 extern crate test;
 
@@ -34,7 +38,7 @@ pub mod allocator;
 pub mod print;
 pub mod macros;
 pub mod error;
-// pub mod traits;
+pub mod utils;
 
 
 //
@@ -64,10 +68,9 @@ pub fn set_api(api: *const crate::ffi::Playdate) { unsafe { API = api } }
 #[cfg(not(all(test, mockrt = "alloc")))]
 #[cfg(not(all(test, mockrt = "std")))]
 pub mod ffi {
-	#![allow(non_upper_case_globals)]
-	#![allow(non_camel_case_types)]
-	#![allow(non_snake_case)]
 	#![cfg_attr(test, allow(deref_nullptr))]
+	#![allow(non_upper_case_globals, non_camel_case_types, non_snake_case)]
+	#![allow(unnecessary_transmutes)]
 	#![allow(clippy::all, clippy::pedantic, clippy::nursery)]
 	//! Low-level Playdate C-API.
 	//!
@@ -175,16 +178,26 @@ mod allocation {
 /// ```
 #[no_mangle]
 #[cfg(feature = "entry-point")]
+// TODO: `eventHandlerShim` could be `naked` fn ([stabilization][] 🎉)
+// [stabilization](https://github.com/rust-lang/rust/pull/134213).
 pub extern "C" fn eventHandlerShim(api: *const ffi::Playdate,
                                    event: ffi::SystemEvent,
                                    arg: u32)
                                    -> core::ffi::c_int {
-	extern "Rust" {
-		fn event_handler(api: *const ffi::Playdate, event: ffi::SystemEvent, arg: u32) -> ctrl::EventLoopCtrl;
+	if let ffi::SystemEvent::Init = event {
+		// save location of the stack bottom for tracing,
+		// old-school way to get local (fn's) stack size at runtime.
+		#[cfg(any(pdtrace = "all", pdtrace = "stack"))]
+		{
+			let v = ();
+			unsafe { BOTTOM = core::ptr::addr_of!(v).cast() };
+		}
+
+		unsafe { API = api }
 	}
 
-	if let ffi::SystemEvent::Init = event {
-		unsafe { API = api }
+	unsafe extern "Rust" {
+		safe fn event_handler(api: *const ffi::Playdate, event: ffi::SystemEvent, arg: u32) -> ctrl::EventLoopCtrl;
 	}
 
 	#[cfg(not(playdate))]
@@ -195,13 +208,17 @@ pub extern "C" fn eventHandlerShim(api: *const ffi::Playdate,
 	if api.is_null() {
 		ctrl::EventLoopCtrl::Stop.into()
 	} else {
-		unsafe { event_handler(api, event, arg) }.into()
+		event_handler(api, event, arg).into()
 	}
 }
 
 // This is atomic because the env is the simulator that is asymchronous and built on SDL.
 #[cfg(all(feature = "entry-point", not(playdate)))]
 static PANICKED: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
+
+#[cfg(any(pdtrace = "all", pdtrace = "stack"))]
+#[export_name = "pdtrace_stack_bottom"]
+static mut BOTTOM: *const () = core::ptr::null();
 
 
 pub mod ctrl {
@@ -228,34 +245,35 @@ pub mod ctrl {
 		Stop = 1,
 	}
 
-	impl Into<c_int> for EventLoopCtrl {
-		fn into(self) -> c_int { self as _ }
+	impl From<EventLoopCtrl> for c_int {
+		fn from(v: EventLoopCtrl) -> Self { v as _ }
 	}
 	impl From<c_int> for EventLoopCtrl {
-		fn from(value: c_int) -> Self { if value == 0 { Self::Continue } else { Self::Stop } }
+		fn from(v: c_int) -> Self { if v == 0 { Self::Continue } else { Self::Stop } }
 	}
-	impl Into<c_uint> for EventLoopCtrl {
-		fn into(self) -> c_uint { self as _ }
+	impl From<EventLoopCtrl> for c_uint {
+		fn from(v: EventLoopCtrl) -> Self { v as _ }
 	}
 	impl From<c_uint> for EventLoopCtrl {
-		fn from(value: c_uint) -> Self { if value == 0 { Self::Continue } else { Self::Stop } }
+		fn from(v: c_uint) -> Self { if v == 0 { Self::Continue } else { Self::Stop } }
 	}
-	impl Into<bool> for EventLoopCtrl {
-		fn into(self) -> bool { matches!(self, Self::Continue) }
+	impl From<EventLoopCtrl> for bool {
+		fn from(v: EventLoopCtrl) -> Self { matches!(v, EventLoopCtrl::Continue) }
 	}
 	impl From<bool> for EventLoopCtrl {
-		fn from(value: bool) -> Self { unsafe { core::mem::transmute(value as i32) } }
+		fn from(v: bool) -> Self { unsafe { core::mem::transmute(v as i32) } }
 	}
 
 
-	/// Update Loop return value.
+	/// Update callback return value - signal to update the display for the PdOs.
 	///
-	/// This should be returned from update-callback registerd with [`ffi::PlaydateSys::setUpdateCallback`].
+	/// This should be returned from update-callback registerd with [`setUpdateCallback`].
 	///
 	/// Starting from [PdOs v1.12][changelog] the update function should return a non-zero number to tell the system to update the display,
 	/// or zero if update isn’t needed.
 	///
 	/// [changelog]: https://sdk.play.date/changelog/#_1_12_0
+	/// [`setUpdateCallback`]: crate::ffi::PlaydateSys::setUpdateCallback
 	#[repr(i32)]
 	#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 	pub enum UpdateDisplayCtrl {
@@ -265,24 +283,27 @@ pub mod ctrl {
 		Needed = 1,
 	}
 
+	impl From<()> for UpdateDisplayCtrl {
+		fn from(_: ()) -> Self { Self::Nope }
+	}
 
-	impl Into<c_int> for UpdateDisplayCtrl {
-		fn into(self) -> c_int { self as _ }
+	impl From<UpdateDisplayCtrl> for c_int {
+		fn from(v: UpdateDisplayCtrl) -> Self { v as _ }
 	}
 	impl From<c_int> for UpdateDisplayCtrl {
-		fn from(value: c_int) -> Self { if value == 0 { Self::Nope } else { Self::Needed } }
+		fn from(v: c_int) -> Self { if v == 0 { Self::Nope } else { Self::Needed } }
 	}
-	impl Into<c_uint> for UpdateDisplayCtrl {
-		fn into(self) -> c_uint { self as _ }
+	impl From<UpdateDisplayCtrl> for c_uint {
+		fn from(v: UpdateDisplayCtrl) -> Self { v as _ }
 	}
 	impl From<c_uint> for UpdateDisplayCtrl {
-		fn from(value: c_uint) -> Self { if value == 0 { Self::Nope } else { Self::Needed } }
+		fn from(v: c_uint) -> Self { if v == 0 { Self::Nope } else { Self::Needed } }
 	}
-	impl Into<bool> for UpdateDisplayCtrl {
-		fn into(self) -> bool { matches!(self, Self::Needed) }
+	impl From<UpdateDisplayCtrl> for bool {
+		fn from(v: UpdateDisplayCtrl) -> Self { matches!(v, UpdateDisplayCtrl::Needed) }
 	}
 	impl From<bool> for UpdateDisplayCtrl {
-		fn from(value: bool) -> Self { unsafe { core::mem::transmute(value as i32) } }
+		fn from(v: bool) -> Self { unsafe { core::mem::transmute(v as i32) } }
 	}
 
 

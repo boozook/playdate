@@ -1,8 +1,8 @@
 [package]
 name = "playdate-controls"
-version = "0.3.9"
+version = "0.4.0"
 readme = "README.md"
-description = "High-level controls API built on-top of Playdate API"
+description = "High-level controls API built on-top of Playdate API, merged into playdate-system."
 keywords = ["playdate", "sdk", "api", "gamedev"]
 categories = ["game-development", "api-bindings", "no-std"]
 edition.workspace = true
@@ -11,34 +11,12 @@ authors.workspace = true
 homepage.workspace = true
 repository.workspace = true
 
-
-[dependencies]
-sys = { workspace = true, default-features = false }
-system = { workspace = true, default-features = false }
-
-[dev-dependencies]
-gfx = { workspace = true, default-features = false }
-display = { workspace = true, default-features = false }
-system = { workspace = true, default-features = false, features = ["try-trait-v2"] }
-
-[[example]]
-name = "buttons"
-crate-type = ["dylib", "staticlib"]
-path = "examples/buttons.rs"
-required-features = ["sys/lang-items", "sys/entry-point"]
-
-[[example]]
-name = "accelerometer"
-crate-type = ["dylib", "staticlib"]
-path = "examples/accelerometer.rs"
-required-features = ["sys/lang-items", "sys/entry-point"]
+[lib]
+path = "_"
 
 [package.metadata.playdate]
 bundle-id = "rs.playdate.ctrl"
 
 
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
-default-target = "thumbv7em-none-eabihf"
-cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]
+[badges.maintenance]
+status = "deprecated"

@@ -1,6 +1,6 @@
 [package]
 name = "playdate-sys"
-version = "0.5.11"
+version = "0.5.13"
 build = "build/main.rs"
 readme = "README.md"
 description = "Low-level Playdate API bindings"
@@ -106,8 +106,9 @@ cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=co
 level = "deny"
 check-cfg = [
 	'cfg(playdate)',                                                # FIXME: refactor `cfg playdate`
-	'cfg(mockrt, values("alloc", "std", none()))',                  # enable runtime-mock for tests
+	'cfg(mockrt, values(none(), "alloc", "std"))',                  # enable runtime-mock for tests
 	'cfg(format_buffer, values("0", "128", "256", "512", "1024"))', # configure size of on-stack buffer used for formatting
+	'cfg(pdtrace, values("all", "stack", "alloc"))',                # tracing
 ]
 
 [lints.rust]

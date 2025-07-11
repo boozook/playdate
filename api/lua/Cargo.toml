@@ -13,10 +13,10 @@ repository.workspace = true
 
 
 [dependencies]
-sys = { workspace = true, default-features = false }
+sys.workspace = true
 
 [dev-dependencies]
-system = { workspace = true, default-features = false }
+system.workspace = true
 
 
 [[example]]

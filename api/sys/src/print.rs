@@ -4,12 +4,14 @@ use core::ffi::CStr;
 pub fn print(api: &'static crate::ffi::Playdate, fmt: core::fmt::Arguments<'_>) {
 	if let Some(s) = fmt.as_str() {
 		print_str(api, s);
+	// } else if let Some(s) = fmt.as_statically_known_str() { print_str(api, s);
 	} else {
 		#[cfg(feature = "alloc")]
 		{
 			use alloc::string::ToString;
 			let s = fmt.to_string();
 			print_str(api, s.as_str());
+			drop(s);
 		}
 		#[cfg(not(feature = "alloc"))]
 		{

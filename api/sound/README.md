@@ -21,18 +21,10 @@ Not covered things:
 ⚠️ Prior to the version `1.0` API is unstable and can be changed without deprecation period.
 
 
-## Prerequisites
-
-1. Rust __nightly__ toolchain (rustup is optional)
-1. [Playdate SDK][sdk]
-1. Follow the [official documentation][doc-prerequisites]
-1. Follow the instructions for [playdate-sys][]
-
-[sdk]: https://play.date/dev/#cardSDK
-[doc-prerequisites]: https://sdk.play.date/Inside%20Playdate%20with%20C.html#_prerequisites
-
-
 ## Usage
+
+[Common prerequisites described in the wiki](https://github.com/boozook/playdate/wiki#prerequisites).
+
 
 ```rust
 use playdate_sound::sample::*;

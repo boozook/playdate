@@ -37,6 +37,7 @@ mod norm {
 
 	const PWORD: &CStr = c"panic";
 
+	#[cold]
 	#[track_caller]
 	fn error_str(api: &Playdate, m: &str, l: Option<&Location<'_>>) -> ! {
 		let error = api.system.error;
@@ -59,6 +60,7 @@ mod norm {
 		}
 	}
 
+	#[cold]
 	#[track_caller]
 	fn error_fmt(api: &Playdate, m: Arguments<'_>, l: Option<&Location<'_>>) -> ! {
 		let error = api.system.error;
