@@ -7,6 +7,7 @@
 //! Used for generating doc-comments for bindings.
 
 
+use core::cell::RefCell;
 use std::io::{Error as IoError, ErrorKind};
 use std::borrow::BorrowMut;
 use markup5ever_rcdom::NodeData;
@@ -38,7 +39,8 @@ pub fn parse_file(path: &std::path::Path) -> Result<DocsMap, IoError> {
 	let dom = parse_document(RcDom::default(), Default::default()).from_utf8()
 	                                                              .from_file(path)?
 	                                                              .finish();
-	if !dom.errors.is_empty() {
+
+	if !dom.errors.borrow().is_empty() {
 		eprintln!("errors: {:#?}", dom.errors);
 	}
 
@@ -100,7 +102,7 @@ fn walk(handle: &Handle, results: &mut DocsMap) {
 							code.borrow_mut().local = html5ever::LocalName::from("code");
 							NodeData::Element { name: code,
 							                    attrs: attrs.clone(),
-							                    template_contents: template_contents.clone(),
+							                    template_contents: RefCell::clone(template_contents),
 							                    mathml_annotation_xml_integration_point:
 								                    *mathml_annotation_xml_integration_point }.into()
 						},

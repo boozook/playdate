@@ -36,6 +36,7 @@ pub fn engage(bindings: &mut syn::File, root: &str, _target: &Target, docs: &Fix
 }
 
 
+#[allow(clippy::mut_from_ref)]
 fn find_struct<'t>(items: &'t [Cell<Item>], name: &str) -> Option<&'t mut ItemStruct> {
 	items.iter().find_map(|item| {
 		            match unsafe { item.as_ptr().as_mut() }.expect("cell is null, impossible") {
@@ -152,7 +153,7 @@ fn extract_type_from_option(ty: &syn::Type) -> Option<&syn::Type> {
 fn apply(_key: &str, field: &mut syn::Field, fix: &Fix, _underlying: Option<Type>) {
 	match fix {
 		Fix::ReturnNever => {
-			if let Type::BareFn(ref mut ty) = &mut field.ty {
+			if let Type::BareFn(ty) = &mut field.ty {
 				ty.output =
 					ReturnType::Type(
 					                 token::RArrow(ty.output.span()),

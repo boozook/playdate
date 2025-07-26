@@ -1,5 +1,5 @@
 [toolchain]
-channel = "nightly-2025-07-02"
+channel = "nightly" # TODO: specify version like "nightly-2025-07-02"
 profile = "minimal"
 targets = ["thumbv7em-none-eabihf"]
 components = [

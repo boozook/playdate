@@ -16,8 +16,8 @@ repository.workspace = true
 semver.workspace = true
 
 # parser:
-html5ever = { version = "0.27.0", optional = true }
-markup5ever_rcdom = { version = "0.3.0", optional = true }
+html5ever = { version = "0.35.0", optional = true }
+markup5ever_rcdom = { version = "0.35.0+unofficial", optional = true }
 # html2md = { package = "html2md-rs", version = "0.10", optional = true }
 
 # doc-gen, rustification:
@@ -28,13 +28,13 @@ quote = { version = "1.0", optional = true }
 
 log = { workspace = true, optional = true }
 prettyplease = { version = "0.2", optional = true, features = ["verbatim"] }
-which = { version = "7.0", optional = true, default-features = false }
+which = { version = "8.0", optional = true, default-features = false }
 
 utils.workspace = true
 bindgen-cfg = { workspace = true, features = ["clap"] }
 
 [dependencies.bindgen]
-version = "0.71.1"
+version = "0.72.0"
 default-features = false
 
 [dependencies.clap]

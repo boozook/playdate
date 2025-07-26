@@ -7,6 +7,7 @@ use std::sync::RwLock;
 
 use bindgen::callbacks::DiscoveredItem;
 use bindgen::callbacks::DiscoveredItemId;
+use bindgen::callbacks::ItemInfo;
 use convert_case::{Case, Casing};
 
 
@@ -147,7 +148,9 @@ impl bindgen::callbacks::ParseCallbacks for RenameMap {
 		}
 	}
 
-	fn item_name(&self, name: &str) -> Option<String> {
+	fn item_name(&self, info: ItemInfo) -> Option<String> {
+		let name = info.name;
+
 		if name.starts_with("__") ||
 		   name.starts_with("_bindgen_") ||
 		   name.starts_with("ptr_") ||
