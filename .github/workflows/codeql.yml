@@ -211,7 +211,6 @@ jobs:
         if: ""
         env:
           CRATES: -p=cargo-playdate
-          RUSTFLAGS: --cfg init_tests
         run: >-
           cargo llvm-cov test ${{ env.CRATES }}
           --bins --examples --all-targets --lib --tests

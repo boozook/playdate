@@ -9,12 +9,10 @@ use std::collections::HashMap;
 use std::env;
 use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
-use std::rc::Rc;
-use std::str::FromStr;
 
 use clap::error::{ErrorKind, ContextKind, ContextValue};
 use clap::{Arg, ArgMatches, FromArgMatches};
-use cargo::core::{Workspace, VirtualManifest, WorkspaceConfig, WorkspaceRootConfig};
+use cargo::core::Workspace;
 use cargo::core::compiler::{CompileTarget, CompileKind};
 use cargo::ops::CompileOptions;
 use cargo::util::command_prelude::{ArgMatchesExt, CompileMode, ProfileChecking};
@@ -23,7 +21,6 @@ use cargo::util::CargoResult;
 use clap_lex::SeekFrom;
 
 use crate::config::Config;
-use crate::logger::LogErr;
 use self::opts::*;
 use self::cmd::Cmd;
 use self::target::{PlaydateTarget, NeedToReplace};
@@ -31,8 +28,6 @@ use self::target::{PlaydateTarget, NeedToReplace};
 
 pub mod target;
 pub mod opts;
-pub mod deps;
-pub mod ide;
 pub mod cmd;
 
 
@@ -143,35 +138,7 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 
 		let cmd = Cmd::try_from(name)?;
 
-		let workspace = if !matches!(cmd, Cmd::New | Cmd::Init) {
-			matches.workspace(config)?
-		} else {
-			// We should not create real ws for place where potentially nothing.
-			// So, lets create virtual one.
-			let cwd = env::current_dir()?;
-			let fake = cwd.join("Cargo.toml");
-			let ws_cfg = WorkspaceConfig::Root(WorkspaceRootConfig::new(
-				&cwd,
-				&Default::default(),
-				&Default::default(),
-				&Default::default(),
-				&Default::default(),
-				&Default::default(),
-			));
-			let fake_manifest = VirtualManifest::new(
-			                     Rc::default(),
-			                     Rc::new(toml_edit::ImDocument::parse("".to_owned()).expect("empty is valid TOML")),
-			                     Rc::default(),
-			                     Rc::default(),
-			                     Vec::new(),
-			                     Default::default(),
-			                     ws_cfg,
-			                     Default::default(),
-			                     Default::default(),
-			);
-
-			Workspace::new_virtual(cwd, fake, fake_manifest, config)?
-		};
+		let workspace = matches.workspace(config)?;
 
 		log::debug!("ws target_dir: {:?}", workspace.target_dir().as_path_unlocked());
 
@@ -232,35 +199,6 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 		// shorthand for panic behavior:
 		let prevent_unwinding = matches.flag("no-unwinding");
 
-		// path positional arg for new & init:
-		let create_path = matches._contains("path")
-		                         .then(|| matches.get_one::<PathBuf>("path").cloned())
-		                         .flatten();
-		let create_full_config = matches.flag("full-config");
-		let create_local_schema = matches.flag("local-schema");
-		let create_full_metadata = matches.flag("full-metadata");
-		let create_deps_sys_only = matches.flag("sys-only");
-		let create_deps = {
-			let mut create_deps: Vec<_> = matches._values_of("deps")
-			                                     .into_iter()
-			                                     .flat_map(|s| {
-				                                     s.replace(',', " ")
-				                                      .split(' ')
-				                                      .filter(|s| !s.trim().is_empty())
-				                                      .map(|s| deps::Dependency::from_str(s).log_err().unwrap())
-				                                      .collect::<Vec<_>>()
-			                                     })
-			                                     .collect();
-			create_deps.sort();
-			create_deps.dedup();
-			create_deps
-		};
-		let ide = matches._contains("ide")
-		                 .then(|| matches.get_one::<ide::Ide>("ide"))
-		                 .flatten()
-		                 .cloned()
-		                 .unwrap_or_default();
-
 		// TODO: mb. decrease verbosity for underlying cargo by 1.
 
 		// args for future invocation:
@@ -294,13 +232,6 @@ pub fn initialize_from(args: impl IntoIterator<Item = impl Into<OsString> + AsRe
 		                      zip,
 		                      no_info_meta,
 		                      prevent_unwinding,
-		                      create_path,
-		                      create_full_config,
-		                      create_local_schema,
-		                      create_full_metadata,
-		                      create_deps_sys_only,
-		                      create_deps,
-		                      ide,
 		                      workspace,
 		                      host_target,
 		                      compile_options,
@@ -373,25 +304,12 @@ fn compile_options(cmd: &Cmd, matches: &ArgMatches, ws: &Workspace<'_>) -> Cargo
 	let cfg = ws.gctx();
 	let mut compile_options = match cmd {
 		// allow multiple crates:
-		Cmd::Build | Cmd::Package | Cmd::Migrate | Cmd::Assets => {
+		Cmd::Build | Cmd::Package | Cmd::Assets => {
 			matches.compile_options(cfg, CompileMode::Build, Some(ws), ProfileChecking::Custom)?
-		},
-
-		Cmd::New | Cmd::Init => {
-			let mut opts = CompileOptions::new(ws.gctx(), CompileMode::Check { test: false })?;
-			opts.build_config
-			    .requested_kinds
-			    .push(PlaydateTarget::Device.into());
-			opts
 		},
 
 		// allow only one crate:
 		Cmd::Run => {
-			matches.compile_options_for_single_package(cfg, CompileMode::Build, Some(ws), ProfileChecking::Custom)?
-		},
-
-		// allow only one crate?
-		Cmd::Publish => {
 			matches.compile_options_for_single_package(cfg, CompileMode::Build, Some(ws), ProfileChecking::Custom)?
 		},
 	};
@@ -514,11 +432,9 @@ fn adapt_args_for_underlying_cargo<S, I>(cmd: &Cmd,
 			Err(_) => render(target),
 		};
 
-		if !matches!(cmd, Cmd::Init | Cmd::New) {
-			if let Some(s) = s {
-				log::debug!("+arg: {s}");
-				result.push(OsString::from(s))
-			}
+		if let Some(s) = s {
+			log::debug!("+arg: {s}");
+			result.push(OsString::from(s))
 		}
 	}
 
@@ -539,7 +455,7 @@ fn adapt_args_for_underlying_cargo<S, I>(cmd: &Cmd,
 				meet_tool = true;
 				continue;
 			} else if !meet_cmd && cmd_aliases.contains(&raw_arg) {
-				// TODO: ensure that is arg is not onw of globals!
+				// TODO: ensure that is arg is not own of globals!
 				// - get ALL globals with values,
 				// - check: (prev raw_arg is rendered (any of arg's aliases)) && (this `raw_arg` is v)
 				// => so this is NOT a command!
@@ -688,16 +604,7 @@ mod tests {
 	#[test]
 	fn args() -> CargoResult<()> {
 		for cmd in Cmd::ALL {
-			let args = ["cargo", CMD_NAME, &cmd].into_iter()
-			                                    .map(|s| OsStr::new(s))
-			                                    .chain(
-			                                           // add required args:
-			                                           if matches!(cmd, Cmd::New) {
-				                                           vec![OsStr::new("path")]
-			                                           } else {
-				                                           vec![]
-			                                           }.into_iter(),
-			);
+			let args = ["cargo", CMD_NAME, &cmd].into_iter().map(|s| OsStr::new(s));
 			let matches = tool(Some(&aliases())).try_get_matches_from(args)?;
 			let main = matches.subcommand_matches(CMD_NAME)
 			                  .expect(&format!("{CMD_NAME} not matched"));
@@ -729,15 +636,6 @@ mod tests {
 		Ok(())
 	}
 
-	#[test]
-	fn args_new() -> CargoResult<()> {
-		let args = ["cargo", CMD_NAME, &Cmd::New, "path", "-vv"].into_iter()
-		                                                        .map(|s| OsStr::new(s));
-		let matches = tool(Some(&aliases())).try_get_matches_from(args.clone())?;
-		assert!(matches.args_present());
-
-		Ok(())
-	}
 
 	#[test]
 	fn init_cargo() -> CargoResult<()> {
