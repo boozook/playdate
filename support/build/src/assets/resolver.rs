@@ -364,14 +364,14 @@ impl From<Expr<'_>> for PathBuf {
 impl Expr<'_> {
 	pub fn original(&self) -> &str {
 		match self {
-			Expr::Original(ref s) => s,
-			Expr::Modified { ref original, .. } => original,
+			Expr::Original(s) => s,
+			Expr::Modified { original, .. } => original,
 		}
 	}
 	pub fn actual(&self) -> &str {
 		match self {
-			Expr::Original(ref s) => s,
-			Expr::Modified { ref actual, .. } => actual,
+			Expr::Original(s) => s,
+			Expr::Modified { actual, .. } => actual,
 		}
 	}
 }
