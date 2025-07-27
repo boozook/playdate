@@ -13,7 +13,8 @@ repository.workspace = true
 
 
 [features]
-jit = [] # closures through CFFI via JIT instead of full-fledged proxy functions
+jit = []           # closures through CFFI via JIT instead of full-fledged proxy functions
+allocator-api = []
 
 
 [dependencies]

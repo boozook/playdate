@@ -50,10 +50,11 @@ mod ud {
 			Self(Box::into_raw(Box::new(v)))
 		}
 
-		pub fn new_in<A: alloc::alloc::Allocator>(v: T, alloc: A) -> Self {
-			trace!(add: (Box<T, A> as T => Ud<T>));
-			Self(Box::into_raw(Box::new_in(v, alloc)))
-		}
+		// #[cfg(feature = "allocator-api")]
+		// pub fn new_in<A: alloc::alloc::Allocator>(v: T, alloc: A) -> Self {
+		// 	// trace!(add: (Box<T, A> as T => Ud<T>));
+		// 	Self(Box::into_raw(Box::<_, A>::new_in(v, alloc)))
+		// }
 
 
 		pub const fn is_empty(&self) -> bool { self.0.is_null() }

@@ -54,7 +54,7 @@ macro_rules! trace {
 
 	($kind:literal: $tmt:literal $($arg:tt)*) => {{
 		#[cfg(any(pdtrace = "all", pdtrace = $kind))]
-		cfg_match! {
+		cfg_select! {
 			feature = "sys" => {
 				::sys::macros::trace::trace!($kind: $tmt, $($arg)*);
 			}
