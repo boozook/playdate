@@ -16,7 +16,7 @@ pub trait AsRaw {
 	unsafe fn as_raw(&self) -> NonNull<Self::Output>;
 }
 
-impl<T: ~const Deref<Target = U>, U: ~const AsRaw> const AsRaw for T {
+impl<T: [const] Deref<Target = U>, U: [const] AsRaw> const AsRaw for T {
 	type Output = <U as AsRaw>::Output;
 	#[inline(always)]
 	unsafe fn as_raw(&self) -> NonNull<Self::Output> { Deref::deref(self).as_raw() }

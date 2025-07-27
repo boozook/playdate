@@ -140,14 +140,22 @@ pub mod fmt {
 	pub type FmtBufDef = FmtBuf<FMT_BUF_LEN>;
 
 	/// Default buffer length determined by cfg.
-	const FMT_BUF_LEN: usize = cfg_match! {{
+	// const FMT_BUF_LEN: usize = cfg_select! {{
+	// 	format_buffer = "0" => { 0 }
+	// 	format_buffer = "128" => { 128 }
+	// 	format_buffer = "256" => { 256 }
+	// 	format_buffer = "512" => { 512 }
+	// 	format_buffer = "1024" => { 1024 }
+	// 	_ => { 1024 }
+	// }};
+	const FMT_BUF_LEN: usize = cfg_select! {
 		format_buffer = "0" => { 0 }
 		format_buffer = "128" => { 128 }
 		format_buffer = "256" => { 256 }
 		format_buffer = "512" => { 512 }
 		format_buffer = "1024" => { 1024 }
 		_ => { 1024 }
-	}};
+	};
 
 	/// On-stack format buffer with constant length.
 	pub struct FmtBuf<const LEN: usize> {

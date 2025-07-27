@@ -11,10 +11,10 @@
 #![cfg_attr(feature = "const-types", feature(adt_const_params))]
 // error, ctrl-flow:
 #![feature(try_trait_v2)]
-// heapless on-stack formatting for print, panic and oom:
+// heap-less on-stack formatting for print, panic and OoM:
 #![feature(maybe_uninit_slice, maybe_uninit_write_slice)]
 // cfg values, format_buffer, target, mock:
-#![feature(cfg_match)]
+#![feature(cfg_select)]
 // docs:
 #![doc(issue_tracker_base_url = "https://github.com/boozook/playdate/issues/")]
 // testing:
@@ -98,7 +98,7 @@ pub mod ffi {
 
 
 // Mock:
-cfg_match! {
+cfg_select! {
 	// Replace bindings with mock's for miri or "test with mock" only:
 	any(miri, all(test, any(mockrt, mockrt = "alloc", mockrt = "std"))) => {
 		/// Runtime Mock
@@ -176,7 +176,7 @@ mod allocation {
 /// 	EventLoopCtrl::Stop
 /// }
 /// ```
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[cfg(feature = "entry-point")]
 // TODO: `eventHandlerShim` could be `naked` fn ([stabilization][] 🎉)
 // [stabilization](https://github.com/rust-lang/rust/pull/134213).
@@ -217,7 +217,7 @@ pub extern "C" fn eventHandlerShim(api: *const ffi::Playdate,
 static PANICKED: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
 
 #[cfg(any(pdtrace = "all", pdtrace = "stack"))]
-#[export_name = "pdtrace_stack_bottom"]
+#[unsafe(export_name = "pdtrace_stack_bottom")]
 static mut BOTTOM: *const () = core::ptr::null();
 
 
@@ -421,10 +421,10 @@ pub mod misc {
 #[cfg(not(test))]
 #[cfg(target_os = "macos")]
 #[link(name = "System")]
-extern "C" {}
+unsafe extern "C" {}
 #[cfg(all(target_os = "windows", target_feature = "crt-static"))]
 #[link(name = "libcmt")]
-extern "C" {}
+unsafe extern "C" {}
 #[cfg(all(target_os = "windows", not(target_feature = "crt-static")))]
 #[link(name = "msvcrt")]
-extern "C" {}
+unsafe extern "C" {}
