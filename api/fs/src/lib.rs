@@ -2,6 +2,7 @@
 #![cfg_attr(not(test), no_main)]
 #![feature(const_trait_impl, const_deref)]
 
+
 #[macro_use]
 extern crate sys;
 extern crate alloc;
@@ -243,7 +244,7 @@ impl Fs {
 	#[inline(always)]
 	pub fn metadata<P: AsRef<Path>>(&self, path: P) -> Result<FileStat, Owned> {
 		let mut stat = FileStat::default();
-		self.metadata_to(path, &mut stat).map_err(Owned::from)?;
+		self.metadata_to(path, &mut stat)?;
 		Ok(stat)
 	}
 

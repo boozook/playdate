@@ -16,7 +16,6 @@ type Api = &'static sys::ffi::PlaydateDisplay;
 ///
 /// ```no_run
 /// # use playdate_display::Display;
-
 /// let display = Display::default();
 /// let width = display.width();
 /// let height = display.height();
@@ -167,9 +166,9 @@ pub enum DisplayScale {
 	Eight = 8,
 }
 
-impl Into<c_uint> for DisplayScale {
+impl From<DisplayScale> for c_uint {
 	#[inline(always)]
-	fn into(self) -> c_uint { self.as_uint() }
+	fn from(val: DisplayScale) -> Self { val.as_uint() }
 }
 
 impl From<c_uint> for DisplayScale {

@@ -30,6 +30,6 @@ mod __ {
 
 	const _: () = const {
 		use core::intrinsics::type_id;
-		const _: [(); (type_id::<UdPtr>() - type_id::<*mut c_void>() != 0) as usize] = [(); 0];
+		assert!(type_id::<UdPtr>() == type_id::<*mut c_void>())
 	};
 }

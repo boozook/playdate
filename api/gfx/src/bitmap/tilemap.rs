@@ -59,25 +59,25 @@ pub mod borrow {
 		}
 	}
 
-	impl<'o> const AsRef<'o, TileMap> for Borrowed<'o> where ManuallyDrop<TileMap>: ~const Deref {
+	impl<'o> const AsRef<'o, TileMap> for Borrowed<'o> where ManuallyDrop<TileMap>: [const] Deref {
 		fn as_ref<'t>(&'t self) -> &'t TileMap
 			where 'o: 't {
 			&self.0
 		}
 	}
-	impl<'o> const AsMut<'o, TileMap> for Borrowed<'o> where ManuallyDrop<TileMap>: ~const DerefMut {
+	impl<'o> const AsMut<'o, TileMap> for Borrowed<'o> where ManuallyDrop<TileMap>: [const] DerefMut {
 		fn as_mut<'t>(&'t mut self) -> &'t mut TileMap
 			where 'o: 't {
 			&mut self.0
 		}
 	}
 
-	impl<'t, 'l> const Deref for Borrowed<'t> where Self: ~const AsRef<'t, TileMap> {
+	impl<'t, 'l> const Deref for Borrowed<'t> where Self: [const] AsRef<'t, TileMap> {
 		type Target = TileMap;
 		fn deref(&self) -> &Self::Target { self.as_ref() }
 	}
 	impl<'t, 'l> const DerefMut for Borrowed<'t>
-		where Self: ~const AsMut<'t, TileMap> + ~const Deref<Target = TileMap>
+		where Self: [const] AsMut<'t, TileMap> + [const] Deref<Target = TileMap>
 	{
 		fn deref_mut(&mut self) -> &mut Self::Target { self.as_mut() }
 	}

@@ -23,12 +23,12 @@ pub enum ButtonQueueResult {
 	Nope = 1,
 }
 
-impl Into<c_int> for ButtonQueueResult {
-	fn into(self) -> c_int { self as c_int }
+impl From<ButtonQueueResult> for c_int {
+	fn from(v: ButtonQueueResult) -> Self { v as c_int }
 }
 
-impl Into<c_uint> for ButtonQueueResult {
-	fn into(self) -> c_uint { self as c_uint }
+impl From<ButtonQueueResult> for c_uint {
+	fn from(v: ButtonQueueResult) -> Self { v as c_uint }
 }
 
 

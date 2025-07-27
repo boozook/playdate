@@ -37,7 +37,7 @@ impl<T> arg::Adapter for Adapter<(Ud<T>,), ()> {
 	type Params = (Ud<T>,);
 	type Args = ();
 	#[inline(always)]
-	fn convert(_: Self::Params) -> Self::Args { () }
+	fn convert(_: Self::Params) -> Self::Args {}
 }
 
 
@@ -107,7 +107,7 @@ impl Update {
 	/// Acceptable options of signature of the `callback` can be
 	/// - `(&userdata) -> Output`
 	/// - `(&mut userdata) -> Output`\
-	/// where `Output` is anything that impls `Into<UpdateDisplayCtrl>` such as any `uint` or `int`.
+	///   where `Output` is anything that impls `Into<UpdateDisplayCtrl>` such as any `uint` or `int`.
 	#[doc(alias = "sys::ffi::PlaydateSys::setUpdateCallback")]
 	#[allow(private_bounds)]
 	pub fn set_with<Args: Tuple, R, F, Ud>(&self, callback: F, userdata: Ud)

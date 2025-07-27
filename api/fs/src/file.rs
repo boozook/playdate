@@ -41,8 +41,8 @@ impl File {
 	///
 	/// Equivalent to [`sys::ffi::PlaydateFile::open`]
 	#[doc(alias = "sys::ffi::PlaydateFile::open")]
-	#[must_use]
 	#[inline(always)]
+	#[must_use = "Error message is taken from C part, converted into an owned."]
 	pub fn open<P: AsRef<Path>>(path: P, data_dir: bool) -> Result<File, Owned> {
 		Self::open_with(api!(file), path, data_dir)
 	}
@@ -55,7 +55,7 @@ impl File {
 	///
 	/// Equivalent to [`sys::ffi::PlaydateFile::open`]
 	#[doc(alias = "sys::ffi::PlaydateFile::open")]
-	#[must_use]
+	#[must_use = "Error message is taken from C part, converted into an owned."]
 	pub fn open_with<P: AsRef<Path>>(api: Api, path: P, data_dir: bool) -> Result<File, Owned> {
 		crate::op::open(api, path, FileOptions::new().read(true).read_data(data_dir)).map_err(Owned::from)
 	}
@@ -66,8 +66,8 @@ impl File {
 	///
 	/// Equivalent to [`sys::ffi::PlaydateFile::read`]
 	#[doc(alias = "sys::ffi::PlaydateFile::read")]
-	#[must_use]
 	#[inline(always)]
+	#[must_use = "Error message is taken from C part, converted into an owned."]
 	pub fn read(&mut self, to: &mut [u8], len: c_uint) -> Result<c_uint, Owned> {
 		crate::op::read(api!(file), self, to, len).map_err(Owned::from)
 	}
@@ -78,8 +78,8 @@ impl File {
 	///
 	/// Equivalent to [`sys::ffi::PlaydateFile::write`]
 	#[doc(alias = "sys::ffi::PlaydateFile::write")]
-	#[must_use]
 	#[inline(always)]
+	#[must_use = "Error message is taken from C part, converted into an owned."]
 	pub fn write(&mut self, from: &[u8]) -> Result<c_uint, Owned> {
 		crate::op::write(api!(file), self, from).map_err(Owned::from)
 	}
@@ -91,14 +91,15 @@ impl File {
 	/// Equivalent to [`sys::ffi::PlaydateFile::flush`]
 	#[doc(alias = "sys::ffi::PlaydateFile::flush")]
 	#[inline(always)]
+	#[must_use = "Error message is taken from C part, converted into an owned."]
 	pub fn flush(&mut self) -> Result<c_uint, Owned> { crate::op::flush(api!(file), self).map_err(Owned::from) }
 
 	/// Returns the current read/write offset in the given file handle.
 	///
 	/// Equivalent to [`sys::ffi::PlaydateFile::tell`]
 	#[doc(alias = "sys::ffi::PlaydateFile::tell")]
-	#[must_use]
 	#[inline(always)]
+	#[must_use = "Error message is taken from C part, converted into an owned."]
 	pub fn tell(&mut self) -> Result<c_uint, Owned> { crate::op::tell(api!(file), self).map_err(Owned::from) }
 
 	/// Sets the read/write offset in the file to `pos`.
@@ -106,6 +107,7 @@ impl File {
 	/// Equivalent to [`sys::ffi::PlaydateFile::seek`]
 	#[doc(alias = "sys::ffi::PlaydateFile::seek")]
 	#[inline(always)]
+	#[must_use = "Error message is taken from C part, converted into an owned."]
 	pub fn seek(&mut self, pos: SeekFrom) -> Result<(), Owned> {
 		let (whence, pos) = pos.into_parts();
 		crate::op::seek(api!(file), self, pos, whence).map_err(Owned::from)
@@ -116,6 +118,7 @@ impl File {
 	/// Equivalent to [`sys::ffi::PlaydateFile::close`]
 	#[doc(alias = "sys::ffi::PlaydateFile::close")]
 	#[inline(always)]
+	#[must_use = "Error message is taken from C part, converted into an owned."]
 	pub fn close(self) -> Result<(), Owned> { crate::op::close(api!(file), self).map_err(Owned::from) }
 }
 

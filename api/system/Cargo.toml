@@ -83,6 +83,5 @@ cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=co
 [badges.maintenance]
 status = "actively-developed"
 
-
-[lints.rust.unexpected_cfgs]
-level = "deny"
+[lints]
+workspace = true

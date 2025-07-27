@@ -26,7 +26,7 @@ impl Serial {
 	/// - `(&CStr) -> Output`
 	/// - `(CString) -> Output`
 	/// - `(*const c_char) -> Output` \
-	/// where `Output` is anything that impls `Into<UpdateDisplayCtrl>`.
+	///   where `Output` is anything that impls `Into<UpdateDisplayCtrl>`.
 	///
 	/// Accepts functions:
 	/// - any rust function which higher then `FnOnce` (excluding),

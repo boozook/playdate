@@ -141,6 +141,21 @@ pub enum Button {
 	Menu,
 }
 
+impl Button {
+	pub const fn first_from(btns: ffi::Buttons) -> Option<Self> {
+		match btns {
+			ffi::Buttons::A => Some(Self::A),
+			ffi::Buttons::B => Some(Self::B),
+			ffi::Buttons::Left => Some(Self::Left),
+			ffi::Buttons::Right => Some(Self::Right),
+			ffi::Buttons::Up => Some(Self::Up),
+			ffi::Buttons::Down => Some(Self::Down),
+			ffi::Buttons::Menu => Some(Self::Menu),
+			_ => None,
+		}
+	}
+}
+
 impl const ButtonsExt for Button {
 	const A: Self = Button::A;
 	const B: Self = Button::B;
@@ -203,8 +218,8 @@ impl Button {
 	];
 }
 
-impl Into<ffi::Buttons> for Button {
-	fn into(self) -> ffi::Buttons { self.to_buttons() }
+impl From<Button> for ffi::Buttons {
+	fn from(btn: Button) -> Self { btn.to_buttons() }
 }
 
 
@@ -242,7 +257,7 @@ mod fmt {
 		}
 	}
 
-	impl<'t> fmt::Display for Display {
+	impl fmt::Display for Display {
 		fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 			write!(f, "(")?;
 			let mut iter = self.0.into_iter_flatten();

@@ -30,8 +30,8 @@ impl ServerTime {
 	/// - `(Ok, Err) -> Output`,
 	/// - `(Option<Ok>, Option<Err>) -> Output`,
 	/// - `(Result<Ok, Err>) -> Output`, \
-	/// where `Output` is anything that impls `Into<UpdateDisplayCtrl>`, \
-	/// and `Ok` and `Err` can be any combination of `&CStr`, `CString` or `*const c_char`.
+	///   where `Output` is anything that impls `Into<UpdateDisplayCtrl>`, \
+	///   and `Ok` and `Err` can be any combination of `&CStr`, `CString` or `*const c_char`.
 	///
 	/// __Important:__ \
 	/// This "subscription" doesn't support multiple requests running simultaneously.
@@ -60,9 +60,9 @@ impl ServerTime {
 
 	fn clean() -> bool {
 		use crate::callback::storage::Store;
-		let res = <<Scope as scope::Scope>::Storage<Self> as Store<Box<dyn Any>>>::remove() ||
-		          <<Scope as scope::Scope>::Storage<Self> as Store<fn()>>::remove();
-		res
+
+		<<Scope as scope::Scope>::Storage<Self> as Store<Box<dyn Any>>>::remove() ||
+		<<Scope as scope::Scope>::Storage<Self> as Store<fn()>>::remove()
 	}
 }
 

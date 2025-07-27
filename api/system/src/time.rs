@@ -1,6 +1,5 @@
 use core::ffi::c_float;
 use core::ffi::c_uint;
-use core::fmt::Write;
 use core::ptr::null_mut;
 
 pub use sys::ffi::DateTime;
@@ -13,8 +12,16 @@ pub mod primitive {
 	use core::ffi::c_uint;
 	use core::fmt::Display;
 	use core::fmt::Write;
+	use core::iter::Sum;
 	use core::ops::Add;
 	use core::ops::AddAssign;
+	use core::ops::Div;
+	use core::ops::Mul;
+	use core::ops::MulAssign;
+	use core::ops::Neg;
+	use core::ops::Sub;
+	use core::ops::SubAssign;
+	use core::marker::Destruct;
 
 
 	#[repr(transparent)]
@@ -22,8 +29,8 @@ pub mod primitive {
 	pub struct Seconds<T>(pub T);
 
 
-	impl Into<Seconds<c_int>> for Seconds<c_uint> {
-		fn into(self) -> Seconds<c_int> { Seconds::<c_int>(self.0 as _) }
+	impl From<Seconds<c_uint>> for Seconds<c_int> {
+		fn from(val: Seconds<c_uint>) -> Self { Seconds::<c_int>(val.0 as _) }
 	}
 
 	impl<T> Seconds<T> {
@@ -37,9 +44,8 @@ pub mod primitive {
 	}
 
 
-	impl<T: Add<Output = T>> Add for Seconds<T> {
+	impl<T: [const] Add<Output = T> + [const] Destruct> const Add for Seconds<T> {
 		type Output = Seconds<T>;
-
 		fn add(self, rhs: Self) -> Self::Output { Self(self.0 + rhs.0) }
 	}
 
@@ -47,24 +53,78 @@ pub mod primitive {
 		fn add_assign(&mut self, rhs: Self) { self.0 += rhs.0 }
 	}
 
+	impl<T: [const] Sub<Output = T> + [const] Destruct> const Sub for Seconds<T> {
+		type Output = Seconds<T>;
+		fn sub(self, rhs: Self) -> Self::Output { Self(self.0 - rhs.0) }
+	}
+
+	impl<T: SubAssign> SubAssign for Seconds<T> {
+		fn sub_assign(&mut self, rhs: Self) { self.0 -= rhs.0 }
+	}
+
+	impl<T: [const] Mul<Output = T> + [const] Destruct> const Mul for Seconds<T> {
+		type Output = Self;
+		fn mul(self, rhs: Self) -> Self::Output { Self(self.0 * rhs.0) }
+	}
+
+	impl<T: [const] Div<Output = T> + [const] Destruct> const Div for Seconds<T> {
+		type Output = Self;
+		fn div(self, rhs: Self) -> Self::Output { Self(self.0 / rhs.0) }
+	}
+
+	impl<T: Neg<Output = T>> Neg for Seconds<T> {
+		type Output = Seconds<T>;
+		fn neg(self) -> Self::Output { Self(-self.0) }
+	}
+
 
 	#[repr(transparent)]
 	#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 	pub struct Milliseconds<T>(pub T);
 
-	impl Into<Milliseconds<c_int>> for Milliseconds<c_uint> {
-		fn into(self) -> Milliseconds<c_int> { Milliseconds::<c_int>(self.0 as _) }
+	impl From<Milliseconds<c_uint>> for Milliseconds<c_int> {
+		fn from(val: Milliseconds<c_uint>) -> Self { Milliseconds::<c_int>(val.0 as _) }
 	}
 
 	impl<T> Milliseconds<T> {
 		pub const fn new(v: T) -> Self { Self(v) }
 	}
 
-
 	impl<T: Display> Display for Milliseconds<T> {
 		fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 			self.0.fmt(f).and_then(|_| f.write_str("ms"))
 		}
+	}
+
+	impl<T: Sum> Sum for Milliseconds<T> {
+		fn sum<I: Iterator<Item = Self>>(iter: I) -> Self { Self(iter.map(|ms| ms.0).sum()) }
+	}
+
+	impl<T: Add<Output = T>> Add for Milliseconds<T> {
+		type Output = Milliseconds<T>;
+		fn add(self, rhs: Self) -> Self::Output { Self(self.0 + rhs.0) }
+	}
+
+	impl<T: AddAssign> AddAssign for Milliseconds<T> {
+		fn add_assign(&mut self, rhs: Self) { self.0 += rhs.0 }
+	}
+
+	impl<T: Mul<Output = T>> Mul for Milliseconds<T> {
+		type Output = Milliseconds<T>;
+		fn mul(self, rhs: Self) -> Self::Output { Self(self.0 * rhs.0) }
+	}
+
+	impl<T: MulAssign> MulAssign for Milliseconds<T> {
+		fn mul_assign(&mut self, rhs: Self) { self.0 *= rhs.0 }
+	}
+
+	impl<T: Mul<Output = T>> Mul<T> for Milliseconds<T> {
+		type Output = Milliseconds<T>;
+		fn mul(self, rhs: T) -> Self::Output { Self(self.0 * rhs) }
+	}
+
+	impl<T: MulAssign> MulAssign<T> for Milliseconds<T> {
+		fn mul_assign(&mut self, rhs: T) { self.0 *= rhs }
 	}
 }
 
@@ -106,8 +166,8 @@ mod duration {
 		}
 	}
 
-	impl Into<Duration> for Epoch {
-		fn into(self) -> Duration { Self::into_duration(self) }
+	impl From<Epoch> for Duration {
+		fn from(val: Epoch) -> Self { Epoch::into_duration(val) }
 	}
 
 
