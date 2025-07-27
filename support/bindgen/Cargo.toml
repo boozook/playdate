@@ -17,7 +17,7 @@ semver.workspace = true
 
 # parser:
 html5ever = { version = "0.35.0", optional = true }
-markup5ever_rcdom = { version = "0.35.0+unofficial", optional = true }
+markup5ever_rcdom = { version = "0.35.0", optional = true }
 # html2md = { package = "html2md-rs", version = "0.10", optional = true }
 
 # doc-gen, rustification:
