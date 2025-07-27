@@ -158,25 +158,26 @@ pub fn volumes_for<'i, I: 'i>(
 
 /// Call `system_profiler -json SPUSBDataType`
 #[cfg_attr(feature = "tracing", tracing::instrument(skip(filter)))]
-fn spusb<F>(filter: F)
-            -> Result<impl Iterator<Item = SpusbInfo<impl Future<Output = Result<PathBuf, Error>>>>, Error>
+fn spusb<'f, F: 'f>(
+	filter: F)
+	-> Result<impl Iterator<Item = SpusbInfo<impl Future<Output = Result<PathBuf, Error>>>> + 'f, Error>
 	where F: FnMut(&DeviceInfo) -> bool {
 	use std::process::Command;
 
 	let output = Command::new("system_profiler").args(["-json", "SPUSBDataType"])
 	                                            .output()?;
 	output.status.exit_ok()?;
-	parse_spusb(filter, &output.stdout)
+	parse_spusb(filter, output.stdout)
 }
 
 
-fn parse_spusb<F>(
+fn parse_spusb<'f, F: 'f>(
 	filter: F,
-	data: &[u8])
-	-> Result<impl Iterator<Item = SpusbInfo<impl Future<Output = Result<PathBuf, Error>>>>, Error>
+	data: impl AsRef<[u8]>)
+	-> Result<impl Iterator<Item = SpusbInfo<impl Future<Output = Result<PathBuf, Error>>>> + 'f, Error>
 	where F: FnMut(&DeviceInfo) -> bool
 {
-	let data: SystemProfilerResponse = serde_json::from_slice(data)?;
+	let data: SystemProfilerResponse = serde_json::from_slice(data.as_ref())?;
 
 	/// Recursive function that flattens the items.
 	fn flatten_items(item: AnyDeviceInfo) -> Vec<DeviceInfo> {

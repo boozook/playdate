@@ -25,6 +25,7 @@ usb-ids = { version = "1.2025.1" }
 serialport = { version = "4.7", features = ["usbportinfo-interface"] }
 tokio-serial = { version = "5.4", optional = true }
 
+# TODO: rem this monstrous tracing at all everywhere
 tracing = { version = "0.1", optional = true }
 
 # mb. read mount-points more correctly:
@@ -39,6 +40,7 @@ features = ["fs", "process", "time", "io-std"]
 workspace = true
 optional = true
 
+# TODO: rem, use smol or/and tokio
 [dependencies.async-std]
 features = ["std", "log", "gloo-timers", "futures-lite", "pin-project-lite", "unstable", "default"]
 workspace = true
