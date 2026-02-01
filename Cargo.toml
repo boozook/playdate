@@ -46,7 +46,8 @@ regex = "1"
 log = "0.4"
 env_logger = "0.11"
 clap = "4.5"
-serde = "1.0"
+serde = { version = "1.0", default-features = false }
+serde_derive = { features = ["deserialize_in_place"] }
 serde_json = "1.0"
 toml = "0.9"
 futures-lite = "2.6"
@@ -71,9 +72,15 @@ tabs_in_doc_comments = "allow"
 [workspace.lints.rust.unexpected_cfgs]
 level = "deny"
 check-cfg = [
+	'cfg(target_os, values("playdate", "playdateos", "pdos"))',
+	'cfg(target_vendor, values("panic"))',
+
 	'cfg(pdtrace, values("all", "alloc", "stack", "cb-add", "cb-rem", "cb-call", "cb-get", "cb-into"))',
 	# use with RUSTFLAGS='--cfg trace="cb-add" --cfg trace="stack"'
 ]
+
+[workspace.lints.rust.uncommon_codepoints]
+level = "allow"
 
 
 [profile.dev.package.playdate-color]

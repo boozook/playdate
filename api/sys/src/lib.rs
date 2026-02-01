@@ -5,14 +5,12 @@
 #![allow(internal_features)]
 #![feature(lang_items, core_intrinsics)]
 // allocator:
-#![cfg_attr(feature = "allocator", feature(alloc_error_handler, alloc_layout_extra))]
+#![cfg_attr(feature = "allocator", feature(alloc_error_handler))]
 #![cfg_attr(feature = "allocator-api", feature(allocator_api, slice_ptr_get))]
 // const features:
 #![cfg_attr(feature = "const-types", feature(adt_const_params))]
 // error, ctrl-flow:
 #![feature(try_trait_v2)]
-// heap-less on-stack formatting for print, panic and OoM:
-#![feature(maybe_uninit_slice, maybe_uninit_write_slice)]
 // cfg values, format_buffer, target, mock:
 #![feature(cfg_select)]
 // docs:
@@ -22,7 +20,7 @@
 // tracing:
 #![feature(const_type_name)]
 // utils:
-#![feature(const_trait_impl, const_deref)]
+#![feature(const_trait_impl, const_convert)]
 
 
 #[cfg(test)]
@@ -178,8 +176,7 @@ mod allocation {
 /// ```
 #[unsafe(no_mangle)]
 #[cfg(feature = "entry-point")]
-// TODO: `eventHandlerShim` could be `naked` fn ([stabilization][] 🎉)
-// [stabilization](https://github.com/rust-lang/rust/pull/134213).
+// TODO: `eventHandlerShim` could be `naked` fn.
 pub extern "C" fn eventHandlerShim(api: *const ffi::Playdate,
                                    event: ffi::SystemEvent,
                                    arg: u32)

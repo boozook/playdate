@@ -32,10 +32,10 @@ required-features = ["clap", "env_logger", "const-str"]
 anyhow = "1.0"
 log.workspace = true
 env_logger = { workspace = true, optional = true }
-symbolic = { version = "12.8", features = ["demangle"] }
+symbolic = { version = "12.17", features = ["demangle"] }
 
 regex.workspace = true
-const-str = { version = "0.6", default-features = false, optional = true }
+const-str = { version = "0.7", default-features = false, optional = true }
 paste = "1.0"
 
 tokio = { workspace = true, features = ["full", "rt-multi-thread"] }
@@ -49,7 +49,7 @@ workspace = true
 optional = true
 
 [dependencies.rusqlite]
-version = "^0.34.0"
+version = "^0.37"
 features = ["bundled"]
 
 [dependencies.utils]

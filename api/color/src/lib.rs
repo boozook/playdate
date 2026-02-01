@@ -1,6 +1,6 @@
 #![no_std]
 #![cfg_attr(not(test), no_main)]
-#![feature(const_trait_impl, const_deref, ptr_as_uninit)]
+#![feature(const_trait_impl, const_convert, ptr_as_uninit)]
 #![cfg_attr(test, feature(assert_matches))]
 
 extern crate sys;
