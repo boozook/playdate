@@ -48,7 +48,7 @@ jobs:
           echo "Will checkout ${{ github.event.inputs.source || github.ref }}"
 
       - name: Checkout Master
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.inputs.source || github.ref || github.event.repository.default_branch }}
 
@@ -130,7 +130,7 @@ jobs:
           echo "Working branch: ${{ needs.new-branch.outputs.working }}"
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ needs.new-branch.outputs.working }}
 
@@ -237,7 +237,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ needs.new-branch.outputs.working }}
           fetch-depth: 10
@@ -280,7 +280,7 @@ jobs:
       pull-requests: write
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.new-branch.outputs.working }}
 
@@ -326,7 +326,7 @@ jobs:
           echo "Base branch: ${{ needs.new-branch.outputs.base }}"
           echo "Working branch: ${{ needs.new-branch.outputs.working }}"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.new-branch.outputs.working }}
 
@@ -371,7 +371,7 @@ jobs:
           echo "Any: ${{ needs.pr.outputs.url || needs.pr.outputs.number }}"
 
       # needed when using PR-number instead of url
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.new-branch.outputs.working }}
 
