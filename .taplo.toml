@@ -1,10 +1,13 @@
 # doc: https://taplo.tamasfe.dev/configuration/formatter-options.html
 
-[formatting]
+
 # include = ["*.toml", "**/*.toml"]
+include = ["*.toml", ".*.toml", "**/*.toml"]
 exclude = ["**/target/*.toml", ".vet/*.toml"]
 
-align_entries         = false # Align entries vertically. Entries that have table headers, comments, or blank lines between them are not aligned.
+[formatting]
+
+align_entries         = false # Align entries vertically. Entries that have table headers, comments, or blank lines between them are not aligned
 align_comments        = true  # Align consecutive comments after entries and items vertically. This applies to comments that are after entries or array items.
 array_trailing_comma  = true  # Put trailing commas for multiline arrays.
 array_auto_expand     = true  # Automatically expand arrays to multiple lines when they exceed column_width characters.

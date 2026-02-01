@@ -3,16 +3,14 @@ use core::ops::*;
 use sys::ffi;
 
 
-#[const_trait]
-pub trait Buttons: ButtonsExt + BitOr + BitAnd + BitOrAssign + BitAndAssign {
+pub const trait Buttons: ButtonsExt + BitOr + BitAnd + BitOrAssign + BitAndAssign {
 	const All: Self;
 
 	fn display(&self) -> impl core::fmt::Display + core::fmt::Debug;
 }
 
 
-#[const_trait]
-pub trait ButtonsExt: Sized {
+pub const trait ButtonsExt: Sized {
 	fn raw(&self) -> u8;
 
 
@@ -24,7 +22,7 @@ pub trait ButtonsExt: Sized {
 
 	/// Same as [`contains_all`][Self::contains_all], but for single button.
 	#[inline]
-	fn contains(&self, other: &Button) -> bool { self.raw() & other.to_buttons().raw() != 0 }
+	fn contains(&self, other: Button) -> bool { self.raw() & other.to_buttons().raw() != 0 }
 
 	/// Semantically same as `Eq`.
 	///
@@ -46,27 +44,27 @@ pub trait ButtonsExt: Sized {
 
 	/// Contains [`Left`][Self::Left] button.
 	#[inline(always)]
-	fn left(&self) -> bool { self.contains(&Button::Left) }
+	fn left(&self) -> bool { self.contains(Button::Left) }
 
 	/// Contains [`Right`][Self::Right] button.
 	#[inline(always)]
-	fn right(&self) -> bool { self.contains(&Button::Right) }
+	fn right(&self) -> bool { self.contains(Button::Right) }
 
 	/// Contains [`Up`][Self::Up] button.
 	#[inline(always)]
-	fn up(&self) -> bool { self.contains(&Button::Up) }
+	fn up(&self) -> bool { self.contains(Button::Up) }
 
 	/// Contains [`Down`][Self::Down] button.
 	#[inline(always)]
-	fn down(&self) -> bool { self.contains(&Button::Down) }
+	fn down(&self) -> bool { self.contains(Button::Down) }
 
 	/// Contains [`A`][Self::A] button.
 	#[inline(always)]
-	fn a(&self) -> bool { self.contains(&Button::A) }
+	fn a(&self) -> bool { self.contains(Button::A) }
 
 	/// Contains [`B`][Self::B] button.
 	#[inline(always)]
-	fn b(&self) -> bool { self.contains(&Button::B) }
+	fn b(&self) -> bool { self.contains(Button::B) }
 
 
 	const A: Self;
@@ -91,7 +89,7 @@ pub trait ButtonsIntoIter: ButtonsExt {
 	fn into_iter_btns(self) -> impl Iterator<Item = ffi::Buttons>;
 
 	fn into_iter_flatten(self) -> impl Iterator<Item = Button> {
-		Button::ALL.into_iter().filter(move |btn| self.contains(btn))
+		Button::ALL.into_iter().filter(move |&btn| self.contains(btn))
 	}
 }
 impl ButtonsIntoIter for ffi::Buttons {
@@ -322,17 +320,17 @@ mod tests {
 		let ab = Btns::A | Btns::B;
 		let no = Btns(0);
 
-		assert!(all.contains(&Button::A));
-		assert!(all.contains(&Button::B));
-		assert!(all.contains(&Button::Left));
+		assert!(all.contains(Button::A));
+		assert!(all.contains(Button::B));
+		assert!(all.contains(Button::Left));
 
-		assert!(ab.contains(&Button::A));
-		assert!(ab.contains(&Button::B));
-		assert!(!ab.contains(&Button::Left));
+		assert!(ab.contains(Button::A));
+		assert!(ab.contains(Button::B));
+		assert!(!ab.contains(Button::Left));
 
-		assert!(!no.contains(&Button::A));
-		assert!(!no.contains(&Button::B));
-		assert!(!no.contains(&Button::Left));
+		assert!(!no.contains(Button::A));
+		assert!(!no.contains(Button::B));
+		assert!(!no.contains(Button::Left));
 		assert!(no.is_empty());
 	}
 

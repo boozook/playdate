@@ -1,5 +1,6 @@
 #![no_std]
 #![no_main]
+#![crate_type = "dylib"]
 #![allow(unused_must_use)]
 
 #[macro_use]
@@ -106,7 +107,7 @@ impl State {
 
 
 /// Entry point / event handler
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn event_handler(api: &'static Playdate, e: SystemEvent, _: u32) -> EventLoopCtrl {
 	let SystemEvent::Init = dbg!(e) else {
 		return EventLoopCtrl::Continue;

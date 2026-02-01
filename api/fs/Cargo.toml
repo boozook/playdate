@@ -23,6 +23,7 @@ default-features = false
 features = ["alloc"]
 optional = true
 
+# build with --cfg portable_io_unstable_all
 [dependencies.portable-io] # io-traits implementation
 version = "0.0.4"
 default-features = false

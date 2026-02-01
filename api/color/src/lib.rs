@@ -20,7 +20,7 @@ pub mod pattern;
 
 /// Safe impl of [`LcdColor`](sys::ffi::Color) with preserved lifetime of [`Pattern`].
 ///
-/// In case of this containts a pattern ("pointer" to the pattern),
+/// In case of this contains a pattern ("pointer" to the pattern),
 /// for each function taking an `LCDColor` the pattern is freeable immediately after returning.
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(transparent)]
@@ -110,8 +110,7 @@ impl<'t> From<&'t Pattern> for Color<'t> {
 }
 
 
-#[const_trait]
-pub trait ColorExt {
+pub const trait ColorExt {
 	fn is_solid(&self) -> bool;
 	fn is_pattern(&self) -> bool;
 }
@@ -122,8 +121,7 @@ impl const ColorExt for LcdColor<'_> {
 }
 
 
-#[const_trait]
-pub trait IntoColor<'t> {
+pub const trait IntoColor<'t> {
 	fn into_color(self) -> LcdColor<'t>;
 }
 

@@ -116,7 +116,7 @@ impl VideoPlayer {
 	///
 	/// Calls [`sys::ffi::PlaydateVideo::renderFrame`].
 	#[doc(alias = "sys::ffi::PlaydateVideo::renderFrame")]
-	pub fn render_frame(&mut self, api: Api, n: c_int) -> Result<(), error::Borrowed> {
+	pub fn render_frame(&'_ mut self, api: Api, n: c_int) -> Result<(), error::Borrowed<'_>> {
 		if unsafe { (api.renderFrame)(self.0.as_ptr(), n) } != 0 {
 			Ok(())
 		} else {

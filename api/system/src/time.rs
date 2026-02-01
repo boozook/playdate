@@ -28,6 +28,30 @@ pub mod primitive {
 	#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 	pub struct Seconds<T>(pub T);
 
+	impl Seconds<c_int> {
+		pub const fn to_ms(self) -> Milliseconds<c_int> { Milliseconds(self.0 * 1000) }
+	}
+	impl Seconds<c_uint> {
+		pub const fn to_ms(self) -> Milliseconds<c_uint> { Milliseconds(self.0 * 1000) }
+	}
+	impl Seconds<f32> {
+		pub const fn to_ms(self) -> Milliseconds<f32> { Milliseconds(self.0 * 1000.) }
+
+		pub const fn to_ms_int(self) -> Milliseconds<c_int> { Milliseconds(self.0 as c_int * 1000) }
+
+		pub const fn to_ms_int_rounding(self) -> Milliseconds<c_int> {
+			Milliseconds(core::f32::math::round(self.0 * 1000.) as c_int)
+		}
+	}
+	impl Seconds<f16> {
+		pub const fn to_ms(self) -> Milliseconds<f16> { Milliseconds(self.0 * 1000.) }
+
+		pub const fn to_ms_int(self) -> Milliseconds<c_int> { Milliseconds(self.0 as c_int * 1000) }
+
+		pub const fn to_ms_int_rounding(self) -> Milliseconds<c_int> {
+			Milliseconds(core::intrinsics::roundf16(self.0 * 1000.) as c_int)
+		}
+	}
 
 	impl From<Seconds<c_uint>> for Seconds<c_int> {
 		fn from(val: Seconds<c_uint>) -> Self { Seconds::<c_int>(val.0 as _) }
@@ -107,6 +131,14 @@ pub mod primitive {
 
 	impl<T: AddAssign> AddAssign for Milliseconds<T> {
 		fn add_assign(&mut self, rhs: Self) { self.0 += rhs.0 }
+	}
+
+	impl<T: Sub<Output = T>> Sub for Milliseconds<T> {
+		type Output = Milliseconds<T>;
+		fn sub(self, rhs: Self) -> Self::Output { Self(self.0 - rhs.0) }
+	}
+	impl<T: SubAssign> SubAssign for Milliseconds<T> {
+		fn sub_assign(&mut self, rhs: Self) { self.0 -= rhs.0 }
 	}
 
 	impl<T: Mul<Output = T>> Mul for Milliseconds<T> {

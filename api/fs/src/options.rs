@@ -7,8 +7,7 @@ use crate::Path;
 
 
 /// Extension for [`sys::ffi::FileOptions`] make it looks like [`std::fs::OpenOptions`].
-#[const_trait]
-pub trait FileOptionsExt: Into<FileOptions> {
+pub const trait FileOptionsExt: Into<FileOptions> {
 	/// Creates new empty file options.
 	fn new() -> Self;
 

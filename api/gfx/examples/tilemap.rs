@@ -24,7 +24,7 @@ const CENTER_Y: i32 = LCD_ROWS as i32 / 2;
 const TILEMAP_FILENAME: &Path = c"tiles";
 
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn event_handler(api: &'static Playdate, e: SystemEvent, _: u32) -> EventLoopCtrl {
 	let SystemEvent::Init = dbg!(e) else {
 		return EventLoopCtrl::Continue;

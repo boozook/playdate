@@ -13,12 +13,12 @@ use gfx::BitmapFlipExt;
 use gfx::bitmap;
 use gfx::bitmap::Bitmap;
 use gfx::bitmap::table::BitmapTable;
-use sprite::Sprite;
+use sprite::DisplayList;
 use sprite::SpriteType;
 use sys::ffi::PDRect;
 use sys::traits::AsRaw;
 
-use sprite::AnySprite;
+use sprite::AsSprite;
 use sprite::prelude::*;
 use sprite::callback::update::SpriteUpdate;
 use sprite::callback::update;
@@ -29,7 +29,7 @@ use sprite::callback::draw;
 const CRANK_FRAME_COUNT: u8 = 12;
 const TEXT_FRAME_COUNT: u8 = 14;
 
-type MySprite = Sprite<State, sprite::api::Default>;
+type MySprite = DisplayList<State, sprite::api::Default>;
 type UpdHandle = update::Handle<true, MySprite, UpdateDraw>;
 type DrwHandle = draw::l2::Handle<true, MySprite, UpdHandle, UpdateDraw>;
 
@@ -42,7 +42,7 @@ impl CrankIndicator {
 	pub fn new(scale: DisplayScale) -> Result<Self, gfx::error::ApiError> {
 		let state = State::new(scale)?;
 
-		let sprite = Sprite::<_, sprite::api::Default>::new().into_update_handler::<UpdateDraw>();
+		let sprite = DisplayList::<_, sprite::api::Default>::new().into_update_handler::<UpdateDraw>();
 		sprite.set_ignores_draw_offset(true);
 		sprite.set_bounds(state.bounds());
 
@@ -75,7 +75,7 @@ impl SpriteApi for CrankIndicator {
 
 	fn api_ref(&self) -> &Self::Api { self.sprite.api_ref() }
 }
-impl AnySprite for CrankIndicator {}
+impl AsSprite for CrankIndicator {}
 
 impl SpriteType for CrankIndicator {
 	type Api = <Self as SpriteApi>::Api;
@@ -83,15 +83,15 @@ impl SpriteType for CrankIndicator {
 }
 
 
-pub struct UpdateDraw<T: AnySprite = SpriteRef>(PhantomData<T>);
+pub struct UpdateDraw<T: AsSprite = SpriteRef>(PhantomData<T>);
 
-impl<T: AnySprite> SpriteType for UpdateDraw<T> {
+impl<T: AsSprite> SpriteType for UpdateDraw<T> {
 	type Api = <T as SpriteApi>::Api;
 	type Userdata = State;
 	const FREE_ON_DROP: bool = false;
 }
 
-impl<T: AnySprite> SpriteUpdate for UpdateDraw<T> {
+impl<T: AsSprite> SpriteUpdate for UpdateDraw<T> {
 	#[inline(always)]
 	fn on_update(s: &update::Handle<false, SharedSprite<Self::Userdata, Self::Api>, Self>) {
 		if let Some(state) = s.userdata() {
@@ -105,7 +105,7 @@ impl<T: AnySprite> SpriteUpdate for UpdateDraw<T> {
 	}
 }
 
-impl<T: AnySprite> SpriteDraw for UpdateDraw<T> {
+impl<T: AsSprite> SpriteDraw for UpdateDraw<T> {
 	#[inline(always)]
 	fn on_draw(s: &draw::Handle<false, SharedSprite<Self::Userdata, Self::Api>, Self>, bounds: PDRect, _: PDRect) {
 		if let Some(state) = s.userdata() {

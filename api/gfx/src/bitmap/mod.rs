@@ -32,8 +32,7 @@ mod any {
 	use super::*;
 
 
-	#[const_trait]
-	pub trait AsBitmap: AsRaw<Output = SysBitmap> {}
+	pub const trait AsBitmap: AsRaw<Output = SysBitmap> {}
 	impl<T: [const] AsRaw<Output = SysBitmap>> const AsBitmap for T {}
 }
 

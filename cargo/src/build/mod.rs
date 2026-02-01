@@ -19,7 +19,7 @@ use cargo::core::Target;
 use cargo::core::Verbosity;
 use cargo::core::compiler::CompileKind;
 use cargo::core::compiler::CrateType;
-use cargo::util::command_prelude::CompileMode;
+use cargo::core::compiler::CompileMode;
 use playdate::compile::dylib_suffix_for_host_opt;
 use playdate::compile::static_lib_suffix;
 use playdate::fs::soft_link_checked;

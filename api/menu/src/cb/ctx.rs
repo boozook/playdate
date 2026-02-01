@@ -23,7 +23,7 @@ impl<K, F> MenuItem<K, F>
 	      F: FnMut(&MenuItemRef<K>)
 {
 	pub(super) unsafe extern "C" fn proxy_self(userdata: *mut c_void) {
-		if let Some(this) = (userdata.cast::<Self>()).as_mut() {
+		if let Some(this) = unsafe { (userdata.cast::<Self>()).as_mut() } {
 			let item = MenuItemRef(this.as_ptr(), PhantomData);
 			let cb = &mut this.2;
 			cb(&item);

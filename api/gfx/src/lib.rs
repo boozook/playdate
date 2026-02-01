@@ -33,10 +33,7 @@ use sys::ffi::SolidColor;
 
 unsafe fn as_slice_mut(buf: *mut u8) -> Result<&'static mut [u8], NullPtrError> {
 	if !buf.is_null() {
-		Ok(core::slice::from_raw_parts_mut(
-		                                   buf,
-		                                   (LCD_ROWSIZE * LCD_ROWS) as usize,
-		))
+		Ok(unsafe { core::slice::from_raw_parts_mut(buf, (LCD_ROWSIZE * LCD_ROWS) as usize) })
 	} else {
 		Err(NullPtrError)
 	}
@@ -287,14 +284,12 @@ impl Graphics {
 }
 
 
-#[const_trait]
-trait AsRef<'ext, T: ?Sized> {
+const trait AsRef<'ext, T: ?Sized> {
 	fn as_ref<'t>(&'t self) -> &'t T
 		where 'ext: 't;
 }
 
-#[const_trait]
-trait AsMut<'ext, T: ?Sized>: AsRef<'ext, T> {
+const trait AsMut<'ext, T: ?Sized>: AsRef<'ext, T> {
 	fn as_mut<'t>(&'t mut self) -> &'t mut T
 		where 'ext: 't;
 }

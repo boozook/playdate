@@ -25,7 +25,7 @@ unsafe impl GlobalAlloc for System {
 
 		#[cfg(not(miri))]
 		{
-			realloc(core::ptr::null_mut(), layout.size()) as *mut u8
+			(unsafe { realloc(core::ptr::null_mut(), layout.size()) }) as *mut u8
 		}
 		#[cfg(miri)]
 		{
@@ -42,7 +42,7 @@ unsafe impl GlobalAlloc for System {
 	unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
 		trace_alloc!(global::dealloc ptr=ptr, size=layout.size());
 
-		dealloc(ptr, layout);
+		unsafe { dealloc(ptr, layout) };
 	}
 
 
@@ -50,7 +50,7 @@ unsafe impl GlobalAlloc for System {
 	unsafe fn realloc(&self, ptr: *mut u8, _layout: Layout, new_size: usize) -> *mut u8 {
 		trace_alloc!(global::realloc ptr=ptr, size=_layout.size(), size=new_size);
 
-		let res = realloc(ptr as *mut c_void, new_size) as *mut u8;
+		let res = unsafe { realloc(ptr as *mut c_void, new_size) } as *mut u8;
 
 		// default mem-copy- behavior if new != old:
 		if !res.is_null() && ptr != res {
@@ -242,7 +242,7 @@ mod local {
 pub unsafe fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void {
 	if let Some(api) = crate::api() {
 		trace_alloc!(realloc ptr=ptr, size=size);
-		(api.system.realloc)(ptr, size)
+		unsafe { (api.system.realloc)(ptr, size) }
 	} else {
 		#[cfg(debug_assertions)]
 		{
@@ -259,7 +259,7 @@ pub unsafe fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void {
 #[track_caller]
 #[cfg(not(miri))]
 #[inline(always)]
-unsafe fn dealloc(ptr: *mut u8, _: Layout) { realloc(ptr.cast(), 0); }
+unsafe fn dealloc(ptr: *mut u8, _: Layout) { unsafe { realloc(ptr.cast(), 0) }; }
 
 #[cfg(miri)]
 #[track_caller]

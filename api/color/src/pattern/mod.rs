@@ -61,3 +61,6 @@ pub const fn to_opaque(pat: Pattern) -> Pattern {
 
 /// Make new pattern with given `body` and [`OPAQUE`] mask.
 pub const fn opaque(body: Body) -> Pattern { unsafe { core::mem::transmute((body, OPAQUE)) } }
+
+/// Make new pattern with given `body` and [`TRANSPARENT`] mask.
+pub const fn transparent(body: Body) -> Pattern { unsafe { core::mem::transmute((body, TRANSPARENT)) } }

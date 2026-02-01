@@ -3,8 +3,7 @@ use core::ops::DerefMut;
 use core::ptr::NonNull;
 
 
-#[const_trait]
-pub trait AsRaw {
+pub const trait AsRaw {
 	type Output;
 	/// Returns a raw pointer to the underlying data.
 	///
@@ -19,7 +18,7 @@ pub trait AsRaw {
 impl<T: [const] Deref<Target = U>, U: [const] AsRaw> const AsRaw for T {
 	type Output = <U as AsRaw>::Output;
 	#[inline(always)]
-	unsafe fn as_raw(&self) -> NonNull<Self::Output> { Deref::deref(self).as_raw() }
+	unsafe fn as_raw(&self) -> NonNull<Self::Output> { unsafe { Deref::deref(self).as_raw() } }
 }
 
 
@@ -94,7 +93,6 @@ impl<T, F: FnOnce()> AsMut<T> for Cod<T, F> {
 }
 
 
-#[const_trait]
-pub trait IntoCod: Sized {
+pub const trait IntoCod: Sized {
 	fn into_cod(self, f: impl FnOnce()) -> Cod<Self, impl FnOnce()> { Cod::new(self, f) }
 }

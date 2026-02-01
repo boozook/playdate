@@ -31,13 +31,13 @@ pub trait Layout {
 	/// so we're have to specify the name,
 	/// so `dest` will be `$root/$NAME/`,
 	/// where `$NAME` is the name of the target.
-	fn dest(&self) -> Cow<Path> { self.root().join(self.name().as_ref()).into() }
+	fn dest(&'_ self) -> Cow<'_, Path> { self.root().join(self.name().as_ref()).into() }
 
 	/// Collected assets
-	fn assets(&self) -> Cow<Path> { self.build().clone() }
+	fn assets(&'_ self) -> Cow<'_, Path> { self.build().clone() }
 	/// Hash of collected assets: `$dest/.assets.hash`
-	fn assets_hash(&self) -> Cow<Path> { self.dest().join(".assets.hash").into() }
-	fn assets_plan(&self) -> Cow<Path> { self.dest().join("plan.json").into() }
+	fn assets_hash(&'_ self) -> Cow<'_, Path> { self.dest().join(".assets.hash").into() }
+	fn assets_plan(&'_ self) -> Cow<'_, Path> { self.dest().join("plan.json").into() }
 
 	/// The directory for build package: `$dest/build`
 	///
@@ -48,18 +48,18 @@ pub trait Layout {
 	/// - pdex.dylib  : by cargo (link)
 	/// - pdxinfo     : manifest
 	/// - * files     : linked assets
-	fn build(&self) -> Cow<Path> { self.dest().join("build").into() }
+	fn build(&'_ self) -> Cow<'_, Path> { self.dest().join("build").into() }
 
 	/// Playdate package manifest: `$build/pdxinfo`
-	fn manifest(&self) -> Cow<Path> { self.build().join(PDX_PKG_MANIFEST_FILENAME).into() }
+	fn manifest(&'_ self) -> Cow<'_, Path> { self.build().join(PDX_PKG_MANIFEST_FILENAME).into() }
 
 	/// Playdate (hw) executable: `$build/pdex.elf`
-	fn binary(&self) -> Cow<Path> { self.build().join(PDX_BIN_NAME_ELF).into() }
+	fn binary(&'_ self) -> Cow<'_, Path> { self.build().join(PDX_BIN_NAME_ELF).into() }
 
 	/// Playdate (sim) library: `$build/pdex.(dylib|dll)`
 	///
 	/// Type of library depends on the current (HOST) target.
-	fn library(&self) -> Cow<Path> {
+	fn library(&'_ self) -> Cow<'_, Path> {
 		self.build()
 		    .join(PDX_BIN_NAME_STEM)
 		    .with_extension(dylib_suffix_for_host())
@@ -68,7 +68,7 @@ pub trait Layout {
 
 
 	/// The final package: `$root/$NAME.pdx`
-	fn artifact(&self) -> Cow<Path> {
+	fn artifact(&'_ self) -> Cow<'_, Path> {
 		self.root()
 		    .join(self.name().as_ref())
 		    .with_extension(PDX_PKG_EXT)
@@ -112,8 +112,8 @@ impl DefaultLayout {
 impl Layout for DefaultLayout {
 	fn name(&self) -> &Name { &self.name }
 	fn root(&self) -> &Path { self.root.as_path() }
-	fn dest(&self) -> Cow<Path> { self.dest.as_path().into() }
-	fn build(&self) -> Cow<Path> { self.build.as_path().into() }
+	fn dest(&'_ self) -> Cow<'_, Path> { self.dest.as_path().into() }
+	fn build(&'_ self) -> Cow<'_, Path> { self.build.as_path().into() }
 }
 
 

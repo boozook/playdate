@@ -31,10 +31,10 @@ clap_lex = "0.7"
 dirs.workspace = true
 fs_extra.workspace = true
 
-cargo = "0.89"
-cargo-util = "0.2.17"
-cargo-platform = "0.3.0"
-cargo-util-schemas = "0.8.2"
+cargo = "0.92"
+cargo-util = "0.2"
+cargo-platform = "0.3"
+cargo-util-schemas = "0.10"
 
 semver.workspace = true
 serde = { workspace = true, features = ["derive"] }
@@ -43,7 +43,7 @@ toml.workspace = true
 toml_edit = { version = "0.23", features = ["serde"] }
 regex.workspace = true
 byteorder = "1.5"
-zip = { version = "4.3", features = ["time"] }
+zip = { version = "6.0", features = ["time"] }
 walkdir = "2.5"
 
 anyhow = "1.0"

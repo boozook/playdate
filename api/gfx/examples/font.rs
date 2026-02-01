@@ -32,7 +32,7 @@ const FONTS: &[&Path] = &[FONT_SYSTEM_ASHEVILLE_LIGHT,
 const TEXT: &[&str] = &["Hello", "こんにちは", "ⒶⒷ🟨⊙🔒🎣✛⬆➡⬇⬅"];
 
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn event_handler(api: &'static Playdate, e: SystemEvent, _: u32) -> EventLoopCtrl {
 	let SystemEvent::Init = dbg!(e) else {
 		return EventLoopCtrl::Continue;

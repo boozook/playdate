@@ -120,7 +120,7 @@ impl State {
 
 		// draw state (offset, scale, fps)
 		self.gfx
-		    .draw_text(format!("{}x, {:?}", self.scale, self.offset), 18, 0)?;
+		    .draw_text_utf8(format!("{}x, {:?}", self.scale, self.offset), 18, 0)?;
 		self.system.draw_fps(0, 0);
 
 		UpdateCtrl::Continue

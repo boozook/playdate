@@ -2,8 +2,7 @@ use sys::ffi::Color;
 use sys::ffi::SolidColor;
 
 
-#[const_trait]
-pub trait ColorFmt<'t> {
+pub const trait ColorFmt<'t> {
 	type Display: 't + core::fmt::Debug + core::fmt::Display;
 	fn display(&'t self) -> Self::Display;
 }

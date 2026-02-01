@@ -109,12 +109,12 @@ impl Generator {
 
 		#[cfg(feature = "extra-codegen")]
 		r#gen::engage(
-		            &bindings,
-		            self.renamed,
-		            &self.features,
-		            &self.filename.target,
-		            &self.sdk,
-		            None,
+		              &bindings,
+		              self.renamed,
+		              &self.features,
+		              &self.filename.target,
+		              &self.sdk,
+		              None,
 		).map(Bindings::Engaged)
 	}
 }

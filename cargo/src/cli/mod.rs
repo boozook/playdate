@@ -13,9 +13,9 @@ use std::path::PathBuf;
 use clap::error::{ErrorKind, ContextKind, ContextValue};
 use clap::{Arg, ArgMatches, FromArgMatches};
 use cargo::core::Workspace;
-use cargo::core::compiler::{CompileTarget, CompileKind};
+use cargo::core::compiler::{CompileKind, CompileTarget, UserIntent};
 use cargo::ops::CompileOptions;
-use cargo::util::command_prelude::{ArgMatchesExt, CompileMode, ProfileChecking};
+use cargo::util::command_prelude::{ArgMatchesExt, ProfileChecking};
 use cargo::util::GlobalContext as CargoConfig;
 use cargo::util::CargoResult;
 use clap_lex::SeekFrom;
@@ -305,12 +305,12 @@ fn compile_options(cmd: &Cmd, matches: &ArgMatches, ws: &Workspace<'_>) -> Cargo
 	let mut compile_options = match cmd {
 		// allow multiple crates:
 		Cmd::Build | Cmd::Package | Cmd::Assets => {
-			matches.compile_options(cfg, CompileMode::Build, Some(ws), ProfileChecking::Custom)?
+			matches.compile_options(cfg, UserIntent::Build, Some(ws), ProfileChecking::Custom)?
 		},
 
 		// allow only one crate:
 		Cmd::Run => {
-			matches.compile_options_for_single_package(cfg, CompileMode::Build, Some(ws), ProfileChecking::Custom)?
+			matches.compile_options_for_single_package(cfg, UserIntent::Build, Some(ws), ProfileChecking::Custom)?
 		},
 	};
 

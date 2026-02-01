@@ -16,7 +16,7 @@ impl<K, F> MenuItem<K, Pin<Box<F>>>
 	      F: FnMut()
 {
 	unsafe extern "C" fn proxy(callback: *mut c_void) {
-		if let Some(f) = (callback as *mut F).as_mut() {
+		if let Some(f) = unsafe { (callback as *mut F).as_mut() } {
 			f()
 		} else {
 			panic!("missed userdata")

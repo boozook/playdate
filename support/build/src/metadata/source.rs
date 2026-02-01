@@ -12,14 +12,14 @@ pub trait PackageSource {
 
 
 	/// Crate name.
-	fn name(&self) -> Cow<str>;
+	fn name(&'_ self) -> Cow<'_, str>;
 	/// Crate authors.
 	fn authors(&self) -> &Self::Authors;
 	// fn authors(&self) -> &[&str];
 	/// Crate version (semver).
-	fn version(&self) -> Cow<str>;
+	fn version(&'_ self) -> Cow<'_, str>;
 	/// Crate description.
-	fn description(&self) -> Option<Cow<str>>;
+	fn description(&'_ self) -> Option<Cow<'_, str>>;
 	/// Crate metadata - `playdate` table.
 	fn metadata(&self) -> Option<&Self::Metadata>;
 
@@ -48,7 +48,7 @@ pub trait PackageSource {
 	fn examples(&self) -> &[&str];
 
 	/// Crate manifest path (Cargo.toml).
-	fn manifest_path(&self) -> Cow<Path>;
+	fn manifest_path(&'_ self) -> Cow<'_, Path>;
 
 
 	fn manifest_for_crate(&self) -> impl ManifestSourceOptExt {

@@ -264,10 +264,11 @@ pub mod ctrl {
 
 	/// Update callback return value - signal to update the display for the PdOs.
 	///
-	/// This should be returned from update-callback registerd with [`setUpdateCallback`].
+	/// This should be returned from update-callback registered with [`setUpdateCallback`].
 	///
 	/// Starting from [PdOs v1.12][changelog] the update function should return a non-zero number to tell the system to update the display,
 	/// or zero if update isn’t needed.
+	/// _Works on hardware_, but may not in simulator.
 	///
 	/// [changelog]: https://sdk.play.date/changelog/#_1_12_0
 	/// [`setUpdateCallback`]: crate::ffi::PlaydateSys::setUpdateCallback
