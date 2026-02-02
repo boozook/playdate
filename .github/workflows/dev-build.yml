@@ -71,7 +71,7 @@ jobs:
         continue-on-error: true
         run: cargo build -p=playdate-symbolize --bins
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: symbolize-utils${{ steps.names.outputs.suffix }}
           path: |
@@ -87,7 +87,7 @@ jobs:
         continue-on-error: true
         run: cargo build -p=playdate-tool --bin=pdtool --features=tracing
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pdtool${{ steps.names.outputs.full }}
           path: target/debug/pdtool${{ steps.names.outputs.ext }}
@@ -101,7 +101,7 @@ jobs:
           cargo build --bin=pdbindgen --no-default-features
           --features=cli,documentation,extra-codegen,logging,pretty-please,which-rustfmt,runtime
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pdbindgen${{ steps.names.outputs.full }}
           path: target/debug/pdbindgen${{ steps.names.outputs.ext }}
@@ -113,7 +113,7 @@ jobs:
         continue-on-error: true
         run: cargo build --bin=cargo-playdate --all-features
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cargo-playdate${{ steps.names.outputs.full }}
           path: target/debug/cargo-playdate${{ steps.names.outputs.ext }}
