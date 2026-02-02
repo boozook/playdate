@@ -16,7 +16,7 @@ jobs:
       actions: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Remove caches by a branch
         run: |
           gh extension install actions/gh-actions-cache

@@ -38,7 +38,7 @@ jobs:
         shell: bash
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Deps
         uses: ./.github/actions/tools-deps
