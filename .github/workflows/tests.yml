@@ -107,7 +107,7 @@ jobs:
           ref: ${{ inputs.ref || github.ref }}
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             target/
@@ -177,7 +177,7 @@ jobs:
           ref: ${{ inputs.ref || github.ref }}
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             target/
@@ -250,7 +250,7 @@ jobs:
           ref: ${{ inputs.ref || github.ref }}
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             target/
@@ -307,7 +307,7 @@ jobs:
           ref: ${{ inputs.ref || github.ref }}
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             target/
@@ -367,7 +367,7 @@ jobs:
           ref: ${{ inputs.ref || github.ref }}
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             target/
@@ -436,7 +436,7 @@ jobs:
           ref: ${{ inputs.ref || github.ref }}
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo
@@ -588,7 +588,7 @@ jobs:
         run: rustup component add clippy
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             target/
