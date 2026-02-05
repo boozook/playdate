@@ -10,7 +10,7 @@ runs:
     - name: Cache (LLVM)
       id: cache-llvm
       if: runner.os == 'Windows'
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ${{ runner.temp }}/llvm
         key: llvm-14.0-${{ runner.os }}-${{ runner.arch }}
@@ -27,7 +27,7 @@ runs:
         cached: ${{ steps.cache-llvm.outputs.cache-hit }}
 
     - name: Cache (bindgen)
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       id: cache
       with:
         path: ~/.cargo/bin/pdbindgen${{ runner.os == 'Windows' && '.exe' || '' }}
@@ -43,7 +43,7 @@ runs:
       shell: bash
       run: pdbindgen -V
 
-    - uses: actions/cache/save@v4
+    - uses: actions/cache/save@v5
       if: steps.cache.outputs.cache-hit != 'true'
       with:
         path: ~/.cargo/bin/pdbindgen${{ runner.os == 'Windows' && '.exe' || '' }}
