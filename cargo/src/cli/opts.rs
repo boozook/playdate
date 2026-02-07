@@ -3,7 +3,7 @@ use std::ffi::OsString;
 
 use cargo::core::compiler::CompileKind;
 use cargo::util::command_prelude::{CommandExt, flag, opt, multi_opt};
-use clap::builder::{Str, ArgPredicate};
+use clap::builder::Str;
 use clap::{Arg, ArgAction, value_parser, Args};
 use clap::Command;
 use device::device::query::DEVICE_SERIAL_ENV;
@@ -62,19 +62,6 @@ pub fn special_args_for(cmd: &Cmd) -> Vec<Arg> {
 			args
 		},
 		Cmd::Assets => vec![flag_pdc_skip_unknown(), flag_pdc_skip_prebuild()],
-
-		Cmd::New => {
-			vec![
-			     flag_create_full_config(),
-			     flag_create_full_metadata(),
-			     flag_create_deps_sys_only(),
-			     flag_create_deps_list(),
-			     ide_template(),
-			]
-		},
-		Cmd::Init => special_args_for(&Cmd::New),
-		Cmd::Migrate => vec![],
-		Cmd::Publish => vec![],
 	}
 }
 
@@ -94,12 +81,8 @@ fn shorthands_for(cmd: &Cmd) -> Vec<Arg> {
 			]
 		},
 
-		Cmd::New => vec![],
-		Cmd::Init => vec![],
-		Cmd::Migrate => vec![],
 		Cmd::Package => vec![],
 		Cmd::Assets => vec![],
-		Cmd::Publish => vec![],
 	}
 }
 
@@ -185,17 +168,6 @@ fn package() -> Command {
 	.about("Compile a local package and all of its dependencies, build assets for them, manifests for local crates and pack it all together.")
 }
 
-fn migrate() -> Command {
-	Command::new(Cmd::Migrate.as_ref()).ignore_errors(true)
-	                                   .about("non implemented yet")
-}
-fn publish() -> Command {
-	Command::new(Cmd::Publish.as_ref()).arg(flag_zip_package().default_value("true"))
-	                                   .arg(flag_no_info_file())
-	                                   .ignore_errors(true)
-	                                   .about("non implemented yet")
-}
-
 
 fn assets() -> Command {
 	Command::new(Cmd::Assets.as_ref()).ignore_errors(true)
@@ -211,25 +183,6 @@ fn assets() -> Command {
 	                                  // add exclusive shorthands:
 	                                  .args(special_args_for(&Cmd::Assets))
 	                                  .arg(extra_arg())
-}
-
-
-fn new_crate() -> Command {
-	Command::new(Cmd::New.as_ref()).ignore_errors(true)
-	                               .about("Create a new cargo package at <path>")
-	                               .arg_new_opts()
-											 .arg(Arg::new("path").num_args(1)
-	                                                    .required(true)
-	                                                    .value_hint(clap::ValueHint::DirPath)
-	                                                    .value_parser(clap::builder::ValueParser::path_buf()))
-											 // add exclusive shorthands:
-											 .args(special_args_for(&Cmd::New))
-}
-
-fn init_crate() -> Command {
-	new_crate().name(Cmd::Init.as_ref())
-	           .about("Create a new cargo package in an existing directory")
-	           .mut_arg("path", |arg| arg.required(false).default_value("."))
 }
 
 
@@ -361,59 +314,59 @@ fn flag_create_full_config() -> Arg {
 	              .action(ArgAction::SetTrue)
 }
 
-fn flag_create_full_metadata() -> Arg {
-	let name = "full-metadata";
-	let help = "Create a template with complex metadata example.";
-	Arg::new(name).long(name).help(help).action(ArgAction::SetTrue)
-}
+// fn flag_create_full_metadata() -> Arg {
+// 	let name = "full-metadata";
+// 	let help = "Create a template with complex metadata example.";
+// 	Arg::new(name).long(name).help(help).action(ArgAction::SetTrue)
+// }
 
-fn flag_create_deps_sys_only() -> Arg {
-	let name = "sys-only";
-	let help = r#"Add only "playdate-sys" dependency, use low-level template, don't add high-level dependencies."#;
-	Arg::new(name).long(name).help(help).action(ArgAction::SetTrue)
-}
+// fn flag_create_deps_sys_only() -> Arg {
+// 	let name = "sys-only";
+// 	let help = r#"Add only "playdate-sys" dependency, use low-level template, don't add high-level dependencies."#;
+// 	Arg::new(name).long(name).help(help).action(ArgAction::SetTrue)
+// }
 
-fn flag_create_deps_list() -> Arg {
-	let name = "deps";
-	let help = r#"Space or comma separated list of dependencies to add. Format: 'crate-name[:git|crates]', source is usable for known crates only. "#;
+// fn flag_create_deps_list() -> Arg {
+// 	let name = "deps";
+// 	let help = r#"Space or comma separated list of dependencies to add. Format: 'crate-name[:git|crates]', source is usable for known crates only. "#;
 
-	let arg = Arg::new(name).long(name)
-	                        .help(help)
-	                        .required(false)
-	                        .num_args(1)
-	                        .value_name("DEPS")
-	                        .action(ArgAction::Append)
-	                        .default_values(["playdate"])
-	                        .default_missing_values(["playdate:git"])
-	                        .value_delimiter(',')
-	                        .default_value_if("sys-only", ArgPredicate::Equals("true".into()), "sys");
+// 	let arg = Arg::new(name).long(name)
+// 	                        .help(help)
+// 	                        .required(false)
+// 	                        .num_args(1)
+// 	                        .value_name("DEPS")
+// 	                        .action(ArgAction::Append)
+// 	                        .default_values(["playdate"])
+// 	                        .default_missing_values(["playdate:git"])
+// 	                        .value_delimiter(',')
+// 	                        .default_value_if("sys-only", ArgPredicate::Equals("true".into()), "sys");
 
-	let possible_values = arg.clone()
-	                         .value_parser(value_parser!(super::deps::Dependency))
-	                         .get_possible_values();
-	let mut long = "Possible values:".to_string();
-	for val in possible_values {
-		let head = format!(
-		                   "\n  {}",
-		                   val.get_name_and_aliases().collect::<Vec<_>>().join(", ")
-		);
-		let tail = val.get_help().map(|s| format!(": {s}")).unwrap_or_default();
-		long.push_str(&format!("{head}{tail}"));
-	}
-	arg.long_help(long)
-}
+// 	let possible_values = arg.clone()
+// 	                         .value_parser(value_parser!(super::deps::Dependency))
+// 	                         .get_possible_values();
+// 	let mut long = "Possible values:".to_string();
+// 	for val in possible_values {
+// 		let head = format!(
+// 		                   "\n  {}",
+// 		                   val.get_name_and_aliases().collect::<Vec<_>>().join(", ")
+// 		);
+// 		let tail = val.get_help().map(|s| format!(": {s}")).unwrap_or_default();
+// 		long.push_str(&format!("{head}{tail}"));
+// 	}
+// 	arg.long_help(long)
+// }
 
-fn ide_template() -> Arg {
-	let name = "ide";
-	let help = r#"Add configuration files for given IDE."#;
-	Arg::new(name).long(name)
-	              .help(help)
-	              .num_args(1)
-	              .required(false)
-	              .action(ArgAction::Set)
-	              .value_hint(clap::ValueHint::Other)
-	              .value_parser(value_parser!(super::ide::Ide))
-}
+// fn ide_template() -> Arg {
+// 	let name = "ide";
+// 	let help = r#"Add configuration files for given IDE."#;
+// 	Arg::new(name).long(name)
+// 	              .help(help)
+// 	              .num_args(1)
+// 	              .required(false)
+// 	              .action(ArgAction::Set)
+// 	              .value_hint(clap::ValueHint::Other)
+// 	              .value_parser(value_parser!(super::ide::Ide))
+// }
 
 fn set_aliases(cmd: Command, aliases: Option<&HashMap<impl Into<Str> + Clone, impl AsRef<str>>>) -> Command {
 	if let Some(aliases) = aliases {
@@ -448,11 +401,7 @@ pub fn main(aliases: Option<&HashMap<impl Into<Str> + Clone, impl AsRef<str>>>) 
 	                 .subcommand(set_aliases(build(), aliases))
 	                 .subcommand(run())
 	                 .subcommand(assets())
-	                 .subcommand(new_crate())
-	                 .subcommand(init_crate())
 	                 .subcommand(package())
-	                 .subcommand(migrate().hide(true))
-	                 .subcommand(publish().hide(true))
 }
 
 

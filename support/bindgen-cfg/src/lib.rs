@@ -53,7 +53,7 @@ pub struct Cfg {
 	#[cfg_attr(feature = "clap", arg(long, value_name = "TY[,TY...]", default_value_t = Derive::default(), verbatim_doc_comment))]
 	pub derive: Derive,
 
-	/// Comma separated list of features to use. Possible values: documentation, rustify.
+	/// Comma separated list of features to use. Possible values: documentation, nice.
 	#[cfg_attr(feature = "clap", arg(long, value_name = "FEATURE[,FEATURE...]", default_value_t = Features::default(), verbatim_doc_comment))]
 	pub features: Features,
 
@@ -305,14 +305,16 @@ impl Default for Derive {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Features {
+	/// Generate documentation
 	pub documentation: bool,
-	pub rustify: bool,
+	/// Extra rustification
+	pub nice: bool,
 }
 
 impl Features {
 	pub const fn empty() -> Self {
 		Self { documentation: false,
-		       rustify: false }
+		       nice: false }
 	}
 
 	pub fn cli_args(&self) -> Vec<String> {
@@ -339,8 +341,8 @@ impl FromStr for Features {
 		for word in s.to_ascii_lowercase().split([',', ' ']).filter(|s| !s.is_empty()) {
 			match word {
 				"documentation" => this.documentation = true,
-				"rustify" => this.rustify = true,
-				_ => println!("cargo::warning=Unknown feature '{word}' ({}).", word == "rustify"),
+				"nice" => this.nice = true,
+				_ => println!("cargo::warning=Unknown feature '{word}' ({}).", word == "nice"),
 			}
 		}
 
@@ -353,7 +355,7 @@ impl Features {
 	fn arg_feature_list(&self) -> String {
 		let mut out = Vec::new();
 		if self.documentation { out.push("documentation") }
-		if self.rustify { out.push("rustify") }
+		if self.nice { out.push("nice") }
 		out.join(",")
 	}
 }
@@ -366,7 +368,7 @@ impl std::fmt::Display for Features {
 impl Default for Features {
 	fn default() -> Self {
 		Self { documentation: true,
-		       rustify: false }
+		       nice: false }
 	}
 }
 

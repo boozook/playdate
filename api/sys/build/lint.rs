@@ -1,4 +1,3 @@
-use format_args_nl as fmt_nl;
 use format_args as fmt;
 use bindgen_cfg::{BIN_NAME, Bin};
 
@@ -30,9 +29,9 @@ pub fn check_bindgen_inner_and_external(bin: &Bin) {
 pub fn panic_recover_hints_no_builtin(sdk: &str) -> ! {
 	panic!(
 	       "Builtin bindings for SDK {sdk} that covers requested feature-set not found. {}\t{}\t{}\t{}",
-	       fmt_nl!("Possible options to solve it:"),
-	       fmt_nl!("- update '{PKG_NAME}' crate with `cargo update`"),
-	       fmt_nl!("- get '{BIN_NAME}' with `cargo install playdate-bindgen`"),
+	       fmt!("Possible options to solve it:"),
+	       fmt!("- update '{PKG_NAME}' crate with `cargo update`"),
+	       fmt!("- get '{BIN_NAME}' with `cargo install playdate-bindgen`"),
 	       fmt!("- enable 'bindgen' feature for the '{PKG_NAME}' crate.")
 	);
 }

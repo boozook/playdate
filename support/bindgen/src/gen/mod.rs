@@ -10,7 +10,7 @@ use proc_macro2::TokenStream;
 
 use crate::Result;
 use crate::error::Error;
-use crate::rustify::rename::{self, Kind, SharedRenamed};
+use crate::nice::rename::{self, Kind, SharedIdents};
 
 pub mod docs;
 pub mod fixes;
@@ -18,13 +18,13 @@ pub mod fixes;
 
 #[allow(unused_variables)]
 pub fn engage(source: &bindgen::Bindings,
-              renamed: SharedRenamed,
+              renamed: SharedIdents,
               features: &crate::cfg::Features,
               target: &crate::cfg::Target,
               sdk: &Sdk,
               root: Option<&str>)
               -> Result<Bindings> {
-	if features.rustify {
+	if features.nice {
 		rename::reduce(Arc::clone(&renamed));
 	}
 
@@ -55,7 +55,7 @@ pub fn engage(source: &bindgen::Bindings,
 	#[cfg(feature = "documentation")]
 	let docset = if features.documentation {
 		let docset = docs::parser::parse(sdk)?;
-		docs::gen::engage(&mut bindings, &root_struct_name, &docset)?;
+		docs::r#gen::engage(&mut bindings, &root_struct_name, &docset)?;
 		Some(docset)
 	} else {
 		None
@@ -63,7 +63,7 @@ pub fn engage(source: &bindgen::Bindings,
 
 
 	#[cfg(feature = "extra-codegen")]
-	if features.rustify {
+	if features.nice {
 		// let fixes = if target.is_playdate() {
 		let mut fixes = HashMap::new();
 		fixes.insert("system.error".to_owned(), fixes::Fix::ReturnNever);
@@ -118,23 +118,21 @@ impl Bindings {
 	/// Write these bindings as source text to the given `Write`able.
 	pub fn write<'a>(&self, mut writer: Box<dyn Write + 'a>) -> std::io::Result<()> {
 		// formatting:
-		let source = self.module.to_string();
-		let output = match crate::rustfmt(None, source.clone(), None) {
+		let output;
+		#[cfg(feature = "pretty")]
+		{
+			let tokens = &self.module;
+			output = prettyplease::unparse(&syn::parse_quote!(#tokens));
+		}
+		#[cfg(not(feature = "prettyplease"))]
+		{
+			output = self.module.to_string();
+		}
+		let output = match crate::rustfmt(None, output.as_str().into(), None) {
 			Ok(output) => output,
 			Err(err) => {
-				println!("cargo::warning=Rustfmt error: {err}");
-
-				let output: String;
-				#[cfg(feature = "pretty-please")]
-				{
-					let tokens = &self.module;
-					output = prettyplease::unparse(&syn::parse_quote!(#tokens));
-				}
-				#[cfg(not(feature = "prettyplease"))]
-				{
-					output = source;
-				}
-				output
+				println!("cargo::warning=rustfmt error: {err}");
+				output.into()
 			},
 		};
 

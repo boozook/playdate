@@ -45,7 +45,7 @@ pub fn cargo(cfg: Option<&Config>) -> CargoResult<std::process::Command> {
 	if let Some(cfg) = cfg.map(|cfg| cfg.workspace.gctx()) {
 		// transparent env:
 		cfg.env_config()?.iter().for_each(|(k, v)| {
-			                        let value = v.resolve(cfg);
+			                        let value = v; // resolve(cfg)?
 			                        proc.env(k, value);
 		                        });
 		// explicitly set colors:

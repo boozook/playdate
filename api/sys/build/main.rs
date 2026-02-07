@@ -1,5 +1,4 @@
 #![feature(str_from_raw_parts)]
-#![feature(format_args_nl)]
 use std::borrow::Cow;
 use std::path::{PathBuf, Path};
 use bindgen_cfg::*;
@@ -48,17 +47,16 @@ fn main() {
 	let target = Target::from_env_target().inspect_err(|err| cargo::warn(err)).ok();
 
 	// target -> cfg:
-	println!("cargo::rustc-check-cfg=cfg(playdate)");
 	if matches!(target, Some(Target::Playdate)) {
 		println!("cargo::rustc-cfg=playdate")
 	}
 
 	let cfg = cfg::create();
 
-
-	// Docs.rs-like environment:
-	if is_env_without_sdk() {
-		println!("docs.rs detected");
+	// Docs.rs-like environment,
+	// With mock the bindings are replaced so it doesn’t matter what to use.
+	if is_env_without_sdk() || cfg!(any(mockrt, mockrt = "alloc", mockrt = "std")) {
+		println!("docs.rs or mock detected");
 		return use_existing_bundled(&cfg);
 	}
 
@@ -77,7 +75,7 @@ fn main() {
 	// builtin, exactly same as requested:
 	let bundled = builtin::path(&filename);
 
-	if bundled.exists() {
+	if bundled.exists() && !is_bundled_rebuild_requested() {
 		lint::check_bindgen_unnecessary_inner();
 
 		println!("Found exact match");
@@ -130,7 +128,7 @@ fn with_external_bindgen(mut cfg: Cfg, filename: &Filename) {
 
 
 #[cfg(feature = "bindgen")]
-fn with_builtin_bindgen(mut cfg: Cfg) {
+fn with_builtin_bindgen(cfg: Cfg) {
 	// prepare generator:
 	let generator = bindgen::Generator::new(cfg).expect("Couldn't create bindings generator.");
 	let filename = generator.filename.to_owned();
@@ -215,7 +213,7 @@ fn is_env_without_sdk() -> bool {
 }
 
 fn is_bundled_rebuild_requested() -> bool {
-	// TODO: replace with cfg
+	// TODO: Probably replace with cfg
 	cargo::watch_env(BINDINGS_BUILD_BUNDLED);
 	env::is_set(BINDINGS_BUILD_BUNDLED)
 }

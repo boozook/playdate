@@ -1,3 +1,5 @@
+cargo-features = ["profile-rustflags"]
+
 [workspace]
 resolver = "2"
 members = ["cargo", "api/*", "support/*", "components/*", "examples/*"]
@@ -6,7 +8,7 @@ exclude = ["cargo/tests/crates/**/*"]
 
 
 [workspace.package]
-edition = "2021"
+edition = "2024"
 license = "MIT OR Apache-2.0"
 authors = ["Alex Koz <a@koz.email>"]
 homepage = "https://github.com/boozook/playdate"
@@ -15,7 +17,6 @@ repository = "https://github.com/boozook/playdate.git"
 
 [workspace.dependencies]
 color = { version = "0.2", path = "api/color", package = "playdate-color", default-features = false }
-ctrl = { version = "0.3", path = "api/ctrl", package = "playdate-controls", default-features = false }
 display = { version = "0.3", path = "api/display", package = "playdate-display", default-features = false }
 fs = { version = "0.2", path = "api/fs", package = "playdate-fs", default-features = false }
 gfx = { version = "0.6", path = "api/gfx", package = "playdate-graphics", default-features = false }
@@ -26,13 +27,14 @@ sound = { version = "0.4", path = "api/sound", package = "playdate-sound", defau
 sprite = { version = "0.3", path = "api/sprite", package = "playdate-sprite", default-features = false }
 system = { version = "0.3", path = "api/system", package = "playdate-system", default-features = false }
 sys = { version = "0.5", path = "api/sys", package = "playdate-sys", default-features = false }
+callback = { version = "0.1", path = "api/callback", package = "playdate-callback", default-features = false }
 
 tool = { version = "0.1", path = "support/tool", package = "playdate-tool" }
 build = { version = "0.4", path = "support/build", package = "playdate-build", default-features = false }
 utils = { version = "0.3", path = "support/utils", package = "playdate-build-utils", default-features = false }
 device = { version = "0.2", path = "support/device", package = "playdate-device" }
 simulator = { version = "0.1", path = "support/sim-ctrl", package = "playdate-simulator-utils", default-features = false }
-bindgen = { version = "0.4", path = "support/bindgen", package = "playdate-bindgen", default-features = false }
+bindgen = { version = "0.5", path = "support/bindgen", package = "playdate-bindgen", default-features = false }
 bindgen-cfg = { version = "0.4", path = "support/bindgen-cfg", package = "playdate-bindgen-cfg", default-features = false }
 
 # Deps that used multiple times,
@@ -44,13 +46,15 @@ regex = "1"
 log = "0.4"
 env_logger = "0.11"
 clap = "4.5"
-serde = "1.0"
+serde = { version = "1.0", default-features = false }
+serde_derive = { features = ["deserialize_in_place"] }
 serde_json = "1.0"
-toml = "0.8"
+toml = "0.9"
 futures-lite = "2.6"
 thiserror = "2.0"
-tokio = { version = "1.43", default-features = false }
+tokio = { version = "1.45", default-features = false }
 async-std = { version = "1.13", default-features = false }
+duplicate = "2.0"
 
 
 [workspace.metadata.playdate.options.assets]
@@ -60,3 +64,54 @@ overwrite = false
 
 [workspace.metadata.vet]
 store = { path = ".vet" }
+
+
+[workspace.lints.clippy]
+tabs_in_doc_comments = "allow"
+
+[workspace.lints.rust.unexpected_cfgs]
+level = "deny"
+check-cfg = [
+	'cfg(target_os, values("playdate", "playdateos", "pdos"))',
+	'cfg(target_vendor, values("panic"))',
+
+	'cfg(pdtrace, values("all", "alloc", "stack", "cb-add", "cb-rem", "cb-call", "cb-get", "cb-into"))',
+	# use with RUSTFLAGS='--cfg trace="cb-add" --cfg trace="stack"'
+]
+
+[workspace.lints.rust.uncommon_codepoints]
+level = "allow"
+
+
+[profile.dev.package.playdate-color]
+opt-level = 3
+[profile.dev.package.playdate-graphics]
+opt-level = 3
+[profile.dev.package.playdate-sound]
+opt-level = 3
+[profile.dev.package.playdate-system]
+opt-level = 3
+[profile.dev.package.playdate-callback]
+opt-level = 3
+
+
+[profile.dev]
+lto = true
+rustflags = [
+	# '--cfg=pdtrace="alloc"',
+	'--cfg=pdtrace="stack"',
+	'--cfg=pdtrace="cb-add"',
+	'--cfg=pdtrace="cb-rem"',
+	# '--cfg=pdtrace="cb-get"',
+	# '--cfg=pdtrace="cb-call"',
+	'--cfg=pdtrace="cb-into"',
+]
+
+[profile.release]
+lto = true
+rustflags = [
+	'--cfg=pdtrace="stack"',
+	'--cfg=pdtrace="cb-add"',
+	'--cfg=pdtrace="cb-rem"',
+	# '--cfg=pdtrace="cb-into"',
+]

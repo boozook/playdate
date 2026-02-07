@@ -105,21 +105,8 @@ jobs:
         sdk:
           - ${{ github.event.inputs.sdk || 'latest' }}
         features:
-          - v: >-
-              bindings-documentation
-              bindings-derive-debug
+          - v: ""
             name: default
-          - v: >-
-              bindings-documentation
-              bindings-derive-default
-              bindings-derive-eq
-              bindings-derive-copy
-              bindings-derive-debug
-              bindings-derive-hash
-              bindings-derive-ord
-              bindings-derive-partialeq
-              bindings-derive-partialord
-            name: full
 
     steps:
       - name: Inputs
@@ -178,34 +165,34 @@ jobs:
       - name: Host
         if: steps.sdk.outcome == 'success'
         run: >-
-          cargo build -p=playdate-sys --features="${{ matrix.features.v }}"
+          cargo build -p=playdate-sys --features="bindgen,${{ matrix.features.v }}"
           ${{ runner.os == 'macOS' && '--target=aarch64-apple-darwin --target=x86_64-apple-darwin' || '' }}
           ${{ runner.os == 'Windows' && '--target=x86_64-pc-windows-msvc --target=aarch64-pc-windows-msvc' || '' }}
 
       - name: Device
         if: matrix.os == 'ubuntu-latest' && steps.sdk.outcome == 'success'
-        run: cargo build -p=playdate-sys --features="${{ matrix.features.v }}" --target=thumbv7em-none-eabihf
+        run: cargo build -p=playdate-sys --features="bindgen,${{ matrix.features.v }}" --target=thumbv7em-none-eabihf
 
       - name: Format
         run: rustfmt api/sys/gen/*.rs
 
-      - name: Test (host)
-        if: steps.sdk.outcome == 'success'
-        # env: # uncomment when all bindings for min-supported-SDK will be there
-        #   IGNORE_EXISTING_PLAYDATE_SDK: 1
-        #   PLAYDATE_USE_PREBUILT_VERSION: ${{ steps.sdk.outputs.version }}
-        run: |
-          cargo test -p=playdate-sys --features="lang-items ${{ matrix.features.v }}"
-          cargo test -p=playdate-sys --features="lang-items ${{ matrix.features.v }}" --release
+      # - name: Test (host)
+      #   if: steps.sdk.outcome == 'success'
+      #   # env: # uncomment when all bindings for min-supported-SDK will be there
+      #   #   IGNORE_EXISTING_PLAYDATE_SDK: 1
+      #   #   PLAYDATE_USE_PREBUILT_VERSION: ${{ steps.sdk.outputs.version }}
+      #   run: |
+      #     cargo test -p=playdate-sys --features="lang-items ${{ matrix.features.v }}"
+      #     cargo test -p=playdate-sys --features="lang-items ${{ matrix.features.v }}" --release
 
-      - name: Test (device)
-        if: matrix.os == 'ubuntu-latest' && steps.sdk.outcome == 'success'
-        # env: # uncomment when all bindings for min-supported-SDK will be there
-        #   IGNORE_EXISTING_PLAYDATE_SDK: 1
-        #   PLAYDATE_USE_PREBUILT_VERSION: ${{ steps.sdk.outputs.version }}
-        run: |
-          cargo build -p=playdate-sys --features="lang-items ${{ matrix.features.v }}" --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc
-          cargo build -p=playdate-sys --features="lang-items ${{ matrix.features.v }}" --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc --release
+      # - name: Test (device)
+      #   if: matrix.os == 'ubuntu-latest' && steps.sdk.outcome == 'success'
+      #   # env: # uncomment when all bindings for min-supported-SDK will be there
+      #   #   IGNORE_EXISTING_PLAYDATE_SDK: 1
+      #   #   PLAYDATE_USE_PREBUILT_VERSION: ${{ steps.sdk.outputs.version }}
+      #   run: |
+      #     cargo build -p=playdate-sys --features="lang-items ${{ matrix.features.v }}" --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc
+      #     cargo build -p=playdate-sys --features="lang-items ${{ matrix.features.v }}" --target=thumbv7em-none-eabihf -Zbuild-std=core,alloc --release
 
       - name: Commit
         continue-on-error: true
@@ -214,9 +201,11 @@ jobs:
         uses: EndBug/add-and-commit@v9
         with:
           add: ./api/sys/gen/*.rs
-          author_name: Update Bot
-          author_email: boozook@users.noreply.github.com
-          committer_name: Update Bot
+          author_name: dependabot[bot]
+          author_email: 49699333+dependabot[bot]@users.noreply.github.com
+          committer_name: GitHub
+          committer_email: noreply@github.com
+          default_author: github_actions
           message: >-
             Automated build pre-built bindings for ${{ steps.sdk.outputs.version }}
             on ${{ runner.os }}-${{ runner.arch }}
@@ -297,9 +286,11 @@ jobs:
         uses: EndBug/add-and-commit@v9.1.4
         with:
           add: ./api/sys/Cargo.toml
-          author_name: Bump Bot
-          author_email: boozook@users.noreply.github.com
-          committer_name: Bump Bot
+          author_name: dependabot[bot]
+          author_email: 49699333+dependabot[bot]@users.noreply.github.com
+          committer_name: GitHub
+          committer_email: noreply@github.com
+          default_author: github_actions
           message: Automated bump sys crate version
           pull: "--rebase --autostash"
           push: true
@@ -351,6 +342,7 @@ jobs:
       url: ${{ steps.pr.outputs.PULL_REQUEST_URL }}
 
   accept:
+    if: false
     name: Accept
     needs: [new-branch, pr]
     runs-on: ubuntu-latest

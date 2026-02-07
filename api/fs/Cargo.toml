@@ -12,22 +12,24 @@ homepage.workspace = true
 repository.workspace = true
 
 
-[features]
-default = ["sys/default"]
-
-# playdate-sys features, should be shared because it's build configuration:
-
-bindgen-runtime = ["sys/bindgen-runtime"]
-bindgen-static = ["sys/bindgen-static"]
-bindings-derive-debug = ["sys/bindings-derive-debug"]
-
-
 [dependencies.sys]
 workspace = true
 default-features = false
+features = ["alloc"]
 
-[dev-dependencies]
-system = { workspace = true, default-features = false, features = ["try-trait-v2"] }
+[dependencies.no_std_io2] # io-traits implementation
+version = "0.9"
+default-features = false
+features = ["alloc"]
+optional = true
+
+# build with --cfg portable_io_unstable_all
+[dependencies.portable-io] # io-traits implementation
+version = "0.0.4"
+default-features = false
+features = ["alloc"]
+optional = true
+
 
 [[example]]
 name = "simple"
@@ -35,22 +37,27 @@ crate-type = ["dylib", "staticlib"]
 path = "examples/simple.rs"
 required-features = ["sys/lang-items", "sys/entry-point"]
 
+[[example]]
+name = "simple-bin"
+crate-type = ["bin"]
+path = "examples/simple.rs"
+required-features = ["sys/lang-items", "sys/entry-point"]
+
+
 [package.metadata.playdate]
 bundle-id = "rs.playdate.fs"
 
 
 [package.metadata.docs.rs]
-all-features = false
-features = [
-	"sys/bindings-derive-default",
-	"sys/bindings-derive-eq",
-	"sys/bindings-derive-copy",
-	"bindings-derive-debug",
-	"sys/bindings-derive-hash",
-	"sys/bindings-derive-ord",
-	"sys/bindings-derive-partialeq",
-	"sys/bindings-derive-partialord",
-]
+all-features = true
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]
+
+
+[badges.maintenance]
+status = "actively-developed"
+
+
+[lints]
+workspace = true

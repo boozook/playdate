@@ -9,7 +9,6 @@ use super::DocsMap;
 
 
 pub fn engage(bindings: &mut syn::File, root: &str, docs: &DocsMap) -> Result<()> {
-	// TODO: preserve bindings.attrs
 	let items = Cell::from_mut(&mut bindings.items[..]);
 	let items_cells = items.as_slice_of_cells();
 	if let Some(root) = find_struct(items_cells, root) {
@@ -20,6 +19,7 @@ pub fn engage(bindings: &mut syn::File, root: &str, docs: &DocsMap) -> Result<()
 }
 
 
+#[allow(clippy::mut_from_ref)]
 fn find_struct<'t>(items: &'t [Cell<Item>], name: &str) -> Option<&'t mut ItemStruct> {
 	items.iter().find_map(|item| {
 		            match unsafe { item.as_ptr().as_mut() }.expect("cell is null, impossible") {

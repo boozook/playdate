@@ -19,7 +19,7 @@ use cargo::core::Target;
 use cargo::core::Verbosity;
 use cargo::core::compiler::CompileKind;
 use cargo::core::compiler::CrateType;
-use cargo::util::command_prelude::CompileMode;
+use cargo::core::compiler::CompileMode;
 use playdate::compile::dylib_suffix_for_host_opt;
 use playdate::compile::static_lib_suffix;
 use playdate::fs::soft_link_checked;
@@ -169,7 +169,7 @@ pub fn build(cfg: &Config, tree: &MetaDeps) -> CargoResult<Vec<BuildProduct>> {
 				                       let name = f.file_name().expect("artifact filename").to_string_lossy();
 				                       let ct = fts.iter()
 				                                   .find(|ft| name == ft.uplift_filename(target))
-				                                   .and_then(|ft| ft.crate_type.clone());
+				                                   .and_then(|ft| ft.crate_type.as_ref().map(ToOwned::to_owned));
 				                       (f, ct)
 			                       })
 		   })
@@ -290,7 +290,8 @@ pub fn build(cfg: &Config, tree: &MetaDeps) -> CargoResult<Vec<BuildProduct>> {
 		let export_dir = cfg.compile_options
 		                    .build_config
 		                    .export_dir
-		                    .clone()
+		                    .as_ref()
+		                    .map(ToOwned::to_owned)
 		                    .unwrap_or_else(|| cfg.workspace.target_dir().into_path_unlocked());
 		artifacts.extract_if(.., |(art, roots)| {
 			         let various_ck: Vec<_> = {
@@ -560,23 +561,30 @@ fn read_cargo_output<'cfg, 't>(config: &'cfg Config,
 	};
 
 
-	// Add completion to iterator with asking & logging process status.
-	// It's looks a little bit ugly with map to `Option` then `flat_map`, but
-	// after optimization there is no these perturbations.
-	// Also we don't need to fail entire process if one target fails and so status will not ok.
-	let artifacts = map_artifacts(tree, artifacts).map(Some)
-	                                              .chain([reader].into_iter()
-	                                                             .flat_map(|mut r| {
-		                                                             r.status()
-		                                                              .log_err_cargo(config)
-		                                                              .ok()
-		                                                              .and_then(|status| {
-			                                                              status.exit_ok().log_err_cargo(config).ok()
-		                                                              })
-	                                                             })
-	                                                             .map(|_| None))
-	                                              .flatten()
-	                                              .collect::<Vec<_>>();
+	// // Add completion to iterator with asking & logging process status.
+	// // It's looks a little bit ugly with map to `Option` then `flat_map`, but
+	// // after optimization there is no these perturbations.
+	// // Also we don't need to fail entire process if one target fails and so status will not ok.
+	// let artifacts = map_artifacts(tree, artifacts).map(Some)
+	//                                               .chain([reader].into_iter()
+	//                                                              .flat_map(|mut r| {
+	// 	                                                             r.status()
+	// 	                                                              .log_err_cargo(config)
+	// 	                                                              .ok()
+	// 	                                                              .and_then(|status| {
+	// 		                                                              status.exit_ok().log_err_cargo(config).ok()
+	// 	                                                              })
+	//                                                              })
+	//                                                              .map(|_| None))
+	//                                               .flatten()
+	//                                               .collect::<Vec<_>>();
+	let artifacts = map_artifacts(tree, artifacts).collect::<Vec<_>>();
+	reader.status()
+	      .log_err_cargo(config)
+	      .and_then(|status| status.exit_ok().log_err_cargo(config).map_err(Into::into))
+	      .ok();
+
+
 	let success = build_finished_success.filter(|v| *v)
 	                                    .ok_or_else(|| anyhow!("build not successful"));
 	if !config.compile_options.build_config.keep_going {

@@ -3,8 +3,8 @@ name = "playdate-color"
 version = "0.2.8"
 readme = "README.md"
 description = "Color extension for Playdate API"
-keywords = ["playdate", "sdk", "api", "gamedev"]
-categories = ["game-development", "api-bindings", "graphics", "no-std"]
+keywords = ["playdate", "sdk", "api", "gamedev", "gfxp"]
+categories = ["game-development", "graphics", "no-std", "no-std::no-alloc"]
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
@@ -13,13 +13,7 @@ repository.workspace = true
 
 
 [features]
-default = ["sys/default"]
-
-# playdate-sys features, should be shared because it's build configuration:
-
-bindgen-runtime = ["sys/bindgen-runtime"]
-bindgen-static = ["sys/bindgen-static"]
-bindings-derive-debug = ["sys/bindings-derive-debug"]
+gfxp = [] # include GFXP patterns
 
 
 [dependencies.sys]
@@ -28,17 +22,11 @@ default-features = false
 
 
 [package.metadata.docs.rs]
-all-features = false
-features = [
-	"sys/bindings-derive-default",
-	"sys/bindings-derive-eq",
-	"sys/bindings-derive-copy",
-	"bindings-derive-debug",
-	"sys/bindings-derive-hash",
-	"sys/bindings-derive-ord",
-	"sys/bindings-derive-partialeq",
-	"sys/bindings-derive-partialord",
-]
+all-features = true
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]
+
+
+[badges.maintenance]
+status = "actively-developed"

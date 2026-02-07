@@ -1,88 +1,67 @@
 [package]
 name = "playdate-sys"
-version = "0.5.6"
+version = "0.5.14"
 build = "build/main.rs"
 readme = "README.md"
 description = "Low-level Playdate API bindings"
 keywords = ["playdate", "bindings", "ffi", "gamedev"]
-categories = ["external-ffi-bindings", "development-tools::ffi", "game-development", "no-std"]
+categories = ["external-ffi-bindings", "game-development", "no-std", "no-std::no-alloc"]
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
 homepage.workspace = true
 repository.workspace = true
-publish = true
 
 
 [features]
-default = ["bindings-derive-debug", "bindings-documentation"]
+default = ["bindings-documentation"]
+lang-items = ["allocator", "panic-handler", "eh-personality"] # lang-items feature-set
 
-lang-items = ["allocator", "panic-handler", "eh-personality"] # lang-items
-allocator = []                                                # global allocator
-panic-handler = ["arrayvec"]                                  # global panic handler
-eh-personality = []                                           # eh_personality for sim-targets, dummy empty no-op
-
-entry-point = []  # simple minimal proxy entry point
-try-trait-v2 = [] # impl `FromResidual` for `EventLoopCtrl`
-error-ctx = []    # errors with context (incomplete feature)
-
-
-bindgen-runtime = ["bindgen", "bindgen?/runtime"]  # runtime linking (dlopen)
-bindgen-static = ["bindgen", "bindgen?/static"]    # static linking to clang
-bindgen-logging = ["bindgen?/logging"]
-bindgen-pretty-please = ["bindgen?/pretty-please"] # TODO: remove formatting at all
-bindgen-which-rustfmt = ["bindgen?/which-rustfmt"]
+alloc = []          # use alloc crate
+allocator = []      # global allocator
+allocator-api = []  # allocator-api implementation
+panic-handler = []  # global panic handler
+entry-point = []    # simple minimal proxy entry point, just registers api endpoint
+eh-personality = [] # eh_personality for sim-targets, dummy empty no-op # TODO: remove `eh-personality` feature?
 
 bindings-documentation = ["bindgen?/documentation"] # generate docs for bindings
-
-bindings-derive-default = []      # ask bindgen to derive `Default`
-bindings-derive-eq = []           # ask bindgen to derive `Eq`
-bindings-derive-copy = []         # ask bindgen to derive `Copy`
-bindings-derive-debug = []        # ask bindgen to derive `Debug`
-bindings-derive-hash = []         # ask bindgen to derive `Hash`
-bindings-derive-ord = []          # ask bindgen to derive `Ord`
-bindings-derive-partialeq = []    # ask bindgen to derive `PartialEq`
-bindings-derive-partialord = []   # ask bindgen to derive `PartialOrd`
-bindings-derive-constparamty = [] # derive `ConstParamTy`
-# These "derive-" bindgen's options are presented as features
-# to allow top-down infecting of the deps-tree, from user's top to this crate.
-
-
-[dependencies]
-arrayvec = { version = "0.7", default-features = false, optional = true }
+const-types = []                                    # derive `ConstParamTy` for simple types
 
 
 [build-dependencies.bindgen]
 optional = true
 workspace = true
 default-features = false
+features = ["pretty", "runtime"] # runtime linking (dlopen) by default
+[target.'cfg(bindgen = "static")'.build-dependencies.bindgen]
+optional = true
+workspace = true
+default-features = false
+features = ["pretty", "static"] # static linking with clang-lib by cfg, e.g. RUSTFLAGS='--cfg bindgen="static"'
+
 
 [build-dependencies.bindgen-cfg]
 workspace = true
 default-features = false
 
 
-[package.metadata.docs.rs]
-all-features = false
-features = [
-	"lang-items",
-	"entry-point",
-	"try-trait-v2",
-	"error-ctx",
-	"bindings-derive-default",
-	"bindings-derive-eq",
-	"bindings-derive-copy",
-	"bindings-derive-debug",
-	"bindings-derive-hash",
-	"bindings-derive-ord",
-	"bindings-derive-partialeq",
-	"bindings-derive-partialord",
-]
-# https://docs.rs/about/builds#cross-compiling
-# rustc-args = ["--cfg", "docsrs"]
-rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
-default-target = "thumbv7em-none-eabihf"
-cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]
+[target.'cfg(miri)'.dependencies.mock]
+package = "playdate-sys-mock"
+path = "../rt-mock"
+version = "0"
+features = ["executor"]
+public = false
+
+[target.'cfg(mockrt = "std")'.dev-dependencies.mock]
+package = "playdate-sys-mock"
+path = "../rt-mock"
+version = "0"
+features = ["std"]
+
+[target.'cfg(any(mockrt, mockrt = "alloc"))'.dev-dependencies.mock]
+package = "playdate-sys-mock"
+path = "../rt-mock"
+version = "0"
 
 
 [[example]]
@@ -92,10 +71,49 @@ path = "examples/hello-world.rs"
 required-features = ["lang-items"]
 
 [[example]]
+name = "hello-world-bin"
+crate-type = ["bin"]
+path = "examples/hello-world.rs"
+required-features = ["lang-items"]
+
+[[example]]
 name = "handler"
 crate-type = ["dylib", "staticlib"]
 path = "examples/handler.rs"
 required-features = ["lang-items", "entry-point"]
 
+[[example]]
+name = "handler-bin"
+crate-type = ["bin"]
+path = "examples/handler.rs"
+required-features = ["lang-items", "entry-point"]
+
+
 [package.metadata.playdate]
 bundle-id = "rs.playdate.sys"
+
+
+[package.metadata.docs.rs]
+all-features = true
+# https://docs.rs/about/builds#cross-compiling
+# rustc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
+default-target = "thumbv7em-none-eabihf"
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]
+
+
+[lints.rust.unexpected_cfgs]
+level = "deny"
+check-cfg = [
+	'cfg(playdate)',                                                # FIXME: refactor `cfg playdate`
+	'cfg(mockrt, values(none(), "alloc", "std"))',                  # enable runtime-mock for tests
+	'cfg(format_buffer, values("0", "128", "256", "512", "1024"))', # configure size of on-stack buffer used for formatting
+	'cfg(pdtrace, values("all", "stack", "alloc"))',                # tracing
+]
+
+[lints.rust]
+exported_private_dependencies = "allow"
+
+
+[badges.maintenance]
+status = "actively-developed"

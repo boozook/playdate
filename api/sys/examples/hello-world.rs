@@ -1,20 +1,23 @@
 //! Unsafe low-level Hello-World example.
-
 #![no_std]
+#![no_main]
+
 extern crate alloc;
 use core::ffi::*;
 use core::ptr::null_mut;
 use alloc::boxed::Box;
+use alloc::borrow::ToOwned;
 
-#[macro_use]
 extern crate playdate_sys as pd;
 use pd::ffi::*;
+use pd::macros::*;
+use pd::ctrl::{EventLoopCtrl, UpdateDisplayCtrl};
 
 
 const INITIAL_X: u32 = LCD_COLUMNS / 2;
-const INITIAL_Y: u32 = (pd::ffi::LCD_ROWS - TEXT_HEIGHT) / 2;
+const INITIAL_Y: u32 = (LCD_ROWS - TEXT_HEIGHT) / 2;
 const TEXT_HEIGHT: u32 = 16;
-const TEXT: &str = "Hello, Rust World";
+const TEXT: &CStr = c"Hello, Rust World";
 
 
 /// 2D point
@@ -32,107 +35,161 @@ impl<T> Point<T> {
 struct State {
 	location: Point<i32>,
 	velocity: Point<i32>,
+
+	// cached text width
+	text_width: Option<i32>,
 }
 
 impl State {
-	const fn new() -> Self {
+	fn new() -> Self {
 		Self { location: Point::new(INITIAL_X as _, INITIAL_Y as _),
-		       velocity: Point::new(1, 2) }
+		       velocity: Point::new(1, 2),
+		       text_width: None }
 	}
 
 
-	/// Updates the state
-	fn update(&mut self) -> Option<()> {
+	fn update(&mut self, mut next_scene: impl FnMut()) -> UpdateDisplayCtrl {
+		let api = pd::api().expect("api");
+		let graphics = api.graphics;
+
+		// is btn A pressed:
+		let pressed = {
+			let mut btns = Buttons(0);
+			unsafe { (api.system.getButtonState)(&mut btns, null_mut(), null_mut()) }
+			(btns & Buttons::A) != Buttons(0)
+		};
+
+		if pressed {
+			next_scene();
+			unsafe { (graphics.clear)(SolidColor::White as Color) }
+			return UpdateDisplayCtrl::Needed;
+		}
+
+
+		// get or calc width of text:
+		let calc_text_width = || unsafe {
+			let f = graphics.getTextWidth;
+			f(
+			  null_mut(),
+			  TEXT.as_ptr().cast(),
+			  TEXT.count_bytes(),
+			  StringEncoding::ASCII,
+			  0,
+			)
+		};
+		let text_width = self.text_width.get_or_insert_with(calc_text_width).to_owned();
+
+
+		// clean previous frame:
 		unsafe {
-			let graphics = (*pd::API).graphics;
-			(*graphics).clear?(LCDSolidColor::kColorWhite as LCDColor);
-
-			let c_text = CString::new(TEXT).ok()?;
-			let text_width = (*graphics).getTextWidth?(
-			                                           null_mut(),
-			                                           c_text.as_ptr() as *const _,
-			                                           TEXT.len(),
-			                                           PDStringEncoding::kUTF8Encoding,
-			                                           0,
+			let prev_draw_mode = (graphics.setDrawMode)(BitmapDrawMode::FillWhite);
+			(graphics.fillRect)(
+			                    self.location.x,
+			                    self.location.y,
+			                    text_width,
+			                    (TEXT_HEIGHT + 2) as _, // +2 for comma
+			                    SolidColor::White as Color,
 			);
-			(*graphics).drawText?(
-			                      c_text.as_ptr() as *const _,
-			                      TEXT.len(),
-			                      PDStringEncoding::kUTF8Encoding,
-			                      self.location.x,
-			                      self.location.y,
-			);
-
-			self.location.x += self.velocity.x;
-			self.location.y += self.velocity.y;
-
-			if self.location.x < 0 || self.location.x > LCD_COLUMNS as i32 - text_width {
-				self.velocity.x = -self.velocity.x;
-			}
-
-			if self.location.y < 0 || self.location.y > LCD_ROWS as i32 - TEXT_HEIGHT as i32 {
-				self.velocity.y = -self.velocity.y;
-			}
-
-			(*(*pd::API).system).drawFPS?(0, 0);
-			Some(())
+			let _ = (graphics.setDrawMode)(prev_draw_mode);
 		}
+
+		// calc new position:
+		self.location.x += self.velocity.x;
+		self.location.y += self.velocity.y;
+
+		if self.location.x < 0 || self.location.x > LCD_COLUMNS as i32 - text_width {
+			self.velocity.x = -self.velocity.x;
+		}
+
+		if self.location.y < 0 || self.location.y > LCD_ROWS as i32 - TEXT_HEIGHT as i32 {
+			self.velocity.y = -self.velocity.y;
+		}
+
+		// draw finally:
+		unsafe {
+			(graphics.drawText)(
+			                    TEXT.as_ptr().cast(),
+			                    TEXT.count_bytes(),
+			                    StringEncoding::ASCII,
+			                    self.location.x,
+			                    self.location.y,
+			);
+
+			(api.system.drawFPS)(0, 0);
+		}
+
+		UpdateDisplayCtrl::Nope
 	}
 
 
-	/// Event handler
-	fn event(&mut self, event: PDSystemEvent) -> Option<()> {
-		match event {
-			// initial setup
-			PDSystemEvent::kEventInit => unsafe {
-				(*(*pd::API).display).setRefreshRate?(20.0);
-			},
-			_ => {},
-		}
-		Some(())
+	/// Proxy update callback, calls `State::update`
+	unsafe extern "C" fn on_update(ptr: *mut c_void) -> c_int {
+		// previous state to drop:
+		let mut prev = None;
+
+		// set callback & state to the new:
+		let reset_update = {
+			// borrowed state to move into closure:
+			let prev = &mut prev;
+			move || unsafe {
+				// here could be a new callback & new state instead of null, but this is just example:
+				api!(system.setUpdateCallback)(None, null_mut());
+				println!("switched to the next scene (none), kinda...");
+				*prev = Some(ptr)
+			}
+		};
+
+		// get self, call update:
+		let updated = {
+			let state = unsafe {
+				let ptr: *mut Self = ptr.cast();
+				ptr.as_mut().expect("missed state")
+			};
+			state.update(reset_update).into()
+		};
+
+		// drop old state:
+		prev.inspect(|_| println!("dropping prev state..."))
+		    .map(|p| Box::from_raw(p as *mut Self))
+		    .map(|b| drop(b))
+		    .inspect(|_| println!("prev state dropped."));
+
+		updated
 	}
 }
 
 
 #[no_mangle]
-/// Proxy event handler, calls `State::event`
-pub extern "C" fn eventHandlerShim(api: *const PlaydateAPI, event: PDSystemEvent, _arg: u32) -> c_int {
-	static mut STATE: Option<Box<State>> = None;
+/// System Event Handler
+pub extern "C" fn eventHandlerShim(api: &'static Playdate, event: SystemEvent, key: c_uint) -> c_int {
+	let (event, _) = dbg!(event, key);
 
 	match event {
-		PDSystemEvent::kEventInit => unsafe {
-			// register the API entry point
-			pd::API = api;
+		SystemEvent::Init => {
+			// register the API entry point:
+			pd::set_api(api);
 
-			// create game state
-			if STATE.is_none() {
-				STATE = Some(Box::new(State::new()));
+			// set fps:
+			unsafe { (api.display.setRefreshRate)(30.0) }
+
+			let state = Box::into_raw(Box::new(State::new()));
+
+			// register update callback with our state as user-data:
+			unsafe {
+				(api.system.setUpdateCallback)(Some(State::on_update), state.cast());
 			}
-			let state = STATE.as_mut().unwrap().as_mut() as *mut State;
-
-			// get `setUpdateCallback` fn
-			let f = (*(*api).system).setUpdateCallback.expect("setUpdateCallback");
-			// register update callback with user-data = our state
-			f(Some(on_update), state.cast());
 		},
 		_ => {},
 	}
 
-	if let Some(state) = unsafe { STATE.as_mut() } {
-		state.event(event).and(Some(0)).unwrap_or(1)
-	} else {
-		1
-	}
+	EventLoopCtrl::Continue.into()
 }
 
 
-/// Proxy update callback, calls `State::update`
-unsafe extern "C" fn on_update(state: *mut c_void) -> i32 {
-	let ptr: *mut State = state.cast();
-	let state = ptr.as_mut().expect("missed state");
-	state.update().and(Some(1)).unwrap_or_default()
-}
+#[cfg(miri)]
+#[no_mangle]
+fn miri_start(_argc: isize, _argv: *const *const u8) -> isize { pd::mock::executor::minimal() }
 
 
-// Needed for debug build
-ll_symbols!();
+// Needed for device target when building with arm-gcc and linking with its stdlib.
+// ll_symbols!();

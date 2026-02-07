@@ -3,12 +3,12 @@ use std::collections::HashMap;
 use bindgen_cfg::Target;
 use syn::spanned::Spanned;
 use syn::token;
-use syn::token::Not;
-use syn::token::RArrow;
 use syn::Item;
 use syn::Lifetime;
+use syn::ReturnType;
 use syn::Type;
 use syn::ItemStruct;
+use syn::TypeNever;
 use syn::TypeReference;
 
 use crate::Result;
@@ -20,11 +20,12 @@ pub enum Fix {
 	ReturnNever,
 	Unwrap,
 	Deref,
+	// /// Remove field with simple ptr-type, replace with `*const void`.
+	// RemovePtr,
 }
 
 
 pub fn engage(bindings: &mut syn::File, root: &str, _target: &Target, docs: &FixMap) -> Result<()> {
-	// TODO: preserve bindings.attrs
 	let items = Cell::from_mut(&mut bindings.items[..]);
 	let items_cells = items.as_slice_of_cells();
 	if let Some(root) = find_struct(items_cells, root) {
@@ -35,6 +36,7 @@ pub fn engage(bindings: &mut syn::File, root: &str, _target: &Target, docs: &Fix
 }
 
 
+#[allow(clippy::mut_from_ref)]
 fn find_struct<'t>(items: &'t [Cell<Item>], name: &str) -> Option<&'t mut ItemStruct> {
 	items.iter().find_map(|item| {
 		            match unsafe { item.as_ptr().as_mut() }.expect("cell is null, impossible") {
@@ -52,6 +54,17 @@ fn walk_struct(items: &[Cell<Item>],
 	let prefix = this.map(|s| format!("{s}.")).unwrap_or("".to_owned());
 	for field in structure.fields.iter_mut() {
 		let field_name = field.ident.as_ref().expect("field name");
+
+		// remove/hide/make unuseful:
+		{
+			let key = format!("{prefix}{field_name}");
+			if key == "system.vaFormatString" {
+				field.ty = syn::parse_quote! { *const ::core::convert::Infallible };
+				let attr: syn::Attribute = syn::parse_quote! { #[doc(hidden)] };
+				field.attrs.push(attr);
+				continue;
+			}
+		}
 
 		match &mut field.ty {
 			syn::Type::Ptr(entry) => {
@@ -140,11 +153,11 @@ fn extract_type_from_option(ty: &syn::Type) -> Option<&syn::Type> {
 fn apply(_key: &str, field: &mut syn::Field, fix: &Fix, _underlying: Option<Type>) {
 	match fix {
 		Fix::ReturnNever => {
-			if let Type::BareFn(ref mut ty) = &mut field.ty {
+			if let Type::BareFn(ty) = &mut field.ty {
 				ty.output =
-					syn::ReturnType::Type(
-					                      RArrow(ty.output.span()),
-					                      Box::new(syn::TypeNever { bang_token: Not(ty.output.span()), }.into()),
+					ReturnType::Type(
+					                 token::RArrow(ty.output.span()),
+					                 Box::new(TypeNever { bang_token: syn::Token![!](ty.output.span()), }.into()),
 					);
 			}
 		},
@@ -167,7 +180,8 @@ fn apply_all(key: &str, field: &mut syn::Field, fixes: &FixMap, ty: Option<Type>
 	match ty {
 		Type::BareFn(_) => {
 			// apply default unwrap:
-			if key != "graphics.getDebugBitmap" {
+			const UNWRAP_EXCLUDE: &[&str] = &["graphics.getDebugBitmap", "system.vaFormatString"];
+			if !UNWRAP_EXCLUDE.contains(&key) {
 				field.ty = ty.to_owned();
 			}
 		},

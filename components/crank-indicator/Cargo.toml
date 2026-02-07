@@ -10,35 +10,6 @@ homepage.workspace = true
 repository.workspace = true
 
 
-[features]
-default = ["sys/default", "gfx/default", "display/default", "sprite/default", "system/default"]
-
-# playdate-sys features, should be shared because it's build configuration:
-
-bindgen-runtime = [
-	"sys/bindgen-runtime",
-	"gfx/bindgen-runtime",
-	"display/bindgen-runtime",
-	"sprite/bindgen-runtime",
-	"system/bindgen-runtime",
-]
-bindgen-static = [
-	"sys/bindgen-static",
-	"gfx/bindgen-static",
-	"display/bindgen-static",
-	"sprite/bindgen-static",
-	"system/bindgen-static",
-]
-
-bindings-derive-debug = [
-	"sys/bindings-derive-debug",
-	"gfx/bindings-derive-debug",
-	"display/bindings-derive-debug",
-	"sprite/bindings-derive-debug",
-	"system/bindings-derive-debug",
-]
-
-
 [dependencies]
 sys = { workspace = true, default-features = false }
 system = { workspace = true, default-features = false }
@@ -48,7 +19,6 @@ sprite = { workspace = true, default-features = false }
 
 
 [dev-dependencies]
-ctrl = { workspace = true, default-features = false }
 menu = { workspace = true, default-features = false }
 
 
@@ -56,7 +26,7 @@ menu = { workspace = true, default-features = false }
 name = "example"
 crate-type = ["dylib", "staticlib"]
 path = "examples/example.rs"
-required-features = ["sys/lang-items", "sys/entry-point", "sys/try-trait-v2", "system/try-trait-v2"]
+required-features = ["sys/lang-items", "sys/entry-point", "system/try-trait-v2"]
 
 
 [package.metadata.playdate]
@@ -67,17 +37,7 @@ bundle-id = "rs.playdate.ui.crank.indicator"
 
 
 [package.metadata.docs.rs]
-all-features = false
-features = [
-	"sys/bindings-derive-default",
-	"sys/bindings-derive-eq",
-	"sys/bindings-derive-copy",
-	"bindings-derive-debug",
-	"sys/bindings-derive-hash",
-	"sys/bindings-derive-ord",
-	"sys/bindings-derive-partialeq",
-	"sys/bindings-derive-partialord",
-]
+all-features = true
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]
 default-target = "thumbv7em-none-eabihf"
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=core,alloc"]

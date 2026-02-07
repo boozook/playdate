@@ -79,40 +79,24 @@ pdtool unmount
 
 ## Install
 
-You can grab the latest [release][] or you can build your own.
-
-
-### Build
-
-To build tools you need Rust __nightly__ toolchain. Recomended version is [there][rust-toolchain].
-
-#### From crates.io:
-
 ```bash
 cargo install playdate-symbolize
-```
-
-#### From the repo:
-
-```bash
+# or
 cargo install playdate-symbolize --git=https://github.com/boozook/playdate.git
 ```
 
-
 ### Prerequisites
 
-To symbolize pointers (or offsets) outside of your program you need [Playdate SDK][sdk].
-Ensure that env var `PLAYDATE_SDK_PATH` points to the SDK root. _This is optional, but good move to help the tool to find SDK, and also useful if you have more then one version of SDK._
+[Common prerequisites described in the wiki](https://github.com/boozook/playdate/wiki#prerequisites).
 
-Also you need your program - `elf` saved before packing into pdx.
+To symbolize pointers (or offsets) outside of your program you need [Playdate SDK][sdk].
+
+Also you need your program - `elf` file saved __before packing into pdx__, definitely.
 
 
 
 [pdtool]: https://crates.io/crates/playdate-tool
-[release]: https://github.com/boozook/playdate/releases
 [sdk]: https://play.date/dev/#cardSDK
-[rust-toolchain]: https://github.com/boozook/playdate/blob/main/rust-toolchain.toml
-
 
 
 - - -

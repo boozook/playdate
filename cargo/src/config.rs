@@ -13,8 +13,6 @@ use cargo::util::{CargoResult, Rustc};
 
 use crate::build::rustflags::Rustflags;
 use crate::cli::cmd::Cmd;
-use crate::cli::deps::Dependency;
-use crate::cli::ide::Ide;
 use crate::cli::opts::Mount;
 
 
@@ -44,15 +42,6 @@ pub struct Config<'cfg> {
 	pub no_info_meta: bool,
 
 	pub prevent_unwinding: bool,
-
-	// init & new
-	pub create_path: Option<PathBuf>,
-	pub create_full_config: bool,
-	pub create_local_schema: bool,
-	pub create_full_metadata: bool,
-	pub create_deps_sys_only: bool,
-	pub create_deps: Vec<Dependency<'static>>,
-	pub ide: Ide,
 
 	pub workspace: Workspace<'cfg>,
 	pub host_target: CompileTarget,
@@ -87,13 +76,6 @@ impl<'cfg> Config<'cfg> {
 	           zip: bool,
 	           no_info_meta: bool,
 	           prevent_unwinding: bool,
-	           create_path: Option<PathBuf>,
-	           create_full_config: bool,
-	           create_local_schema: bool,
-	           create_full_metadata: bool,
-	           create_deps_sys_only: bool,
-	           create_deps: Vec<Dependency<'static>>,
-	           ide: Ide,
 	           workspace: Workspace<'cfg>,
 	           host_target: CompileTarget,
 	           compile_options: CompileOptions,
@@ -115,13 +97,6 @@ impl<'cfg> Config<'cfg> {
 		       zip,
 		       no_info_meta,
 		       prevent_unwinding,
-		       create_path,
-		       create_full_config,
-		       create_local_schema,
-		       create_full_metadata,
-		       create_deps_sys_only,
-		       create_deps,
-		       ide,
 		       workspace,
 		       host_target,
 		       rustc,
