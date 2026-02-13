@@ -1,5 +1,5 @@
 [toolchain]
-channel = "nightly-2025-04-25"
+channel = "nightly-2026-02-13"
 profile = "minimal"
 targets = ["thumbv7em-none-eabihf"]
 components = [
