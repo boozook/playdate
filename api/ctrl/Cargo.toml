@@ -1,7 +1,7 @@
 [package]
 name = "playdate-controls"
 version = "0.4.0"
-readme = "README.md"
+readme = "Crate.md"
 description = "High-level controls API built on-top of Playdate API, merged into playdate-system."
 keywords = ["playdate", "sdk", "api", "gamedev"]
 categories = ["game-development", "api-bindings", "no-std"]

@@ -1,7 +1,7 @@
 [package]
 name = "playdate-sys-mock"
 version = "0.0.0"
-readme = "README.md"
+readme = "Crate.md"
 description = "Runtime mock for testing playdate-sys and dependent crates. Contains own bindings until it fully covers & implements the full functionality of the Playdate's runtime."
 keywords = ["playdate", "gamedev", "mock", "test"]
 categories = ["development-tools::testing", "external-ffi-bindings", "game-development", "no-std"]

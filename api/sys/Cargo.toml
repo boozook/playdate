@@ -2,7 +2,7 @@
 name = "playdate-sys"
 version = "0.5.14"
 build = "build/main.rs"
-readme = "README.md"
+readme = "Crate.md"
 description = "Low-level Playdate API bindings"
 keywords = ["playdate", "bindings", "ffi", "gamedev"]
 categories = ["external-ffi-bindings", "game-development", "no-std", "no-std::no-alloc"]

@@ -1,7 +1,7 @@
 [package]
 name = "playdate-callback"
 version = "0.1.0"
-readme = "README.md"
+readme = "Crate.md"
 description = "Callback-related utils for Playdate API."
 keywords = ["playdate", "gamedev", "callback", "closure", "cffi"]
 categories = ["game-development", "no-std"]

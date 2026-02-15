@@ -1,7 +1,7 @@
 [package]
 name = "playdate"
 version = "0.2.6"
-readme = "README.md"
+readme = "Crate.md"
 description = "High-level Playdate API"
 keywords = ["playdate", "sdk", "api", "gamedev"]
 categories = ["game-development", "api-bindings", "no-std"]
