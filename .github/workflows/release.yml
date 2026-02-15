@@ -151,7 +151,7 @@ jobs:
 
       - name: Upload for next jobs
         if: runner.os == 'macOS'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: |
             target/release/pdbindgen
