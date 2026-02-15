@@ -66,14 +66,6 @@ fn execute(config: &Config) -> CargoResult<()> {
 		},
 
 		cli::cmd::Cmd::Build => {
-			if config.compile_options.build_config.build_plan {
-				// TODO: wrap result to our own build-plan?
-				// let plan = config.build_plan()?;
-				// TODO: return the plan
-				// config.compile_options.build_config.emit_json()
-				return Err(anyhow::anyhow!("build-plan in not implemented yet"));
-			}
-
 			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
 			build::build(config, &deps_tree)?;
 		},

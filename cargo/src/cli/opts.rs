@@ -92,7 +92,6 @@ fn build() -> Command {
 	                     .about("Compile a local package and all of its dependencies")
 	                     .arg_release("Build artifacts in release mode, with optimizations")
 	                     .arg_profile("Build artifacts with the specified profile")
-	                     .arg_build_plan()
 	                     .arg_unit_graph()
 	                     .arg_package_spec(
 	                                       "Package to build (see `cargo help pkgid`)",
@@ -133,7 +132,6 @@ fn run() -> Command {
 	                               .about("Run a binary or example of the local package on a device or simulator")
 	                               .arg_release("Build artifacts in release mode, with optimizations")
 	                               .arg_profile("Build artifacts with the specified profile")
-	                               .arg_build_plan()
 	                               .arg_unit_graph()
 	                               .arg_package_spec(
 	                                                 "Package to build (see `cargo help pkgid`)",
@@ -173,7 +171,6 @@ fn assets() -> Command {
 	Command::new(Cmd::Assets.as_ref()).ignore_errors(true)
 	                                  .about("Collect assets for a local package and all of its dependencies")
 	                                  .arg_dry_run("Enable dry-run mode")
-	                                  .arg_build_plan()
 	                                  .arg_unit_graph()
 	                                  .arg_package_spec(
 	                                                    "Package to build (see `cargo help .pkgid`)",
