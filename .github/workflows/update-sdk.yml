@@ -135,7 +135,7 @@ jobs:
           ref: ${{ needs.new-branch.outputs.working }}
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             target/
