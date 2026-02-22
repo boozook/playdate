@@ -27,3 +27,6 @@ all-features = true
 
 [badges.maintenance]
 status = "actively-developed"
+
+[lints]
+workspace = true

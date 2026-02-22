@@ -1,7 +1,7 @@
 [package]
 name = "playdate-ui-crank-indicator"
 version = "0.1.7"
-readme = "README.md"
+readme = "Crate.md"
 description = "Crank Indicator UI component."
 edition.workspace = true
 license.workspace = true

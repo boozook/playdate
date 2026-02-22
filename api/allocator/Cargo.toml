@@ -21,3 +21,7 @@ allocator-api = [] # Implementation of `allocator-api`
 static-link = []
 
 global-error-handler = [] # Optional global OoM handler, panics.
+
+
+[lints]
+workspace = true

@@ -1,7 +1,7 @@
 [package]
 name = "playdate-bindgen-cfg"
 version = "0.4.0"
-readme = "README.md"
+readme = "Crate.md"
 description = "Minimal configuration end cli-executor for playdate-bindgen."
 keywords = ["playdate"]
 categories = ["development-tools::ffi", "development-tools::build-utils"]
@@ -17,6 +17,9 @@ features = ["std", "env", "derive", "help"]
 workspace = true
 optional = true
 
+
+[lints]
+workspace = true
 
 [package.metadata.docs.rs]
 all-features = true

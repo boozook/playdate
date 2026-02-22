@@ -26,3 +26,7 @@ cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples", "-Zbuild-std=co
 
 [badges.maintenance]
 status = "actively-developed"
+
+
+[lints]
+workspace = true

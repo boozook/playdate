@@ -71,8 +71,8 @@ cli = ["clap", "documentation", "extra-codegen", "pretty"]
 features = ["cli", "documentation", "extra-codegen"]
 
 
-[lints.rust.unexpected_cfgs]
-level = "deny"
+[lints]
+workspace = true
 
 
 [badges.maintenance]

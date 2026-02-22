@@ -20,3 +20,6 @@ bundle-id = "rs.playdate.ctrl"
 
 [badges.maintenance]
 status = "deprecated"
+
+[lints]
+workspace = true

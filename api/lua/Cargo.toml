@@ -36,6 +36,9 @@ bundle-id = "rs.playdate.lua"
 "main.pdz" = "examples/Example.pdx/main.pdz"
 
 
+[lints]
+workspace = true
+
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]

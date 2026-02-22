@@ -32,6 +32,9 @@ required-features = ["sys/lang-items", "sys/entry-point"]
 bundle-id = "rs.playdate.menu"
 
 
+[lints]
+workspace = true
+
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs", "--show-type-layout"]

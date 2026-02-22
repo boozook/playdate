@@ -14,7 +14,6 @@ authors = ["Alex Koz <a@koz.email>"]
 homepage = "https://github.com/boozook/playdate"
 repository = "https://github.com/boozook/playdate.git"
 
-
 [workspace.dependencies]
 color = { version = "0.2", path = "api/color", package = "playdate-color", default-features = false }
 display = { version = "0.3", path = "api/display", package = "playdate-display", default-features = false }
@@ -75,12 +74,16 @@ check-cfg = [
 	'cfg(target_os, values("playdate", "playdateos", "pdos"))',
 	'cfg(target_vendor, values("panic"))',
 
-	'cfg(pdtrace, values("all", "alloc", "stack", "cb-add", "cb-rem", "cb-call", "cb-get", "cb-into"))',
-	# use with RUSTFLAGS='--cfg trace="cb-add" --cfg trace="stack"'
+	'cfg(pdtrace, values("all", "alloc", "cb-add", "cb-rem", "cb-call", "cb-get", "cb-into"))',
+	# use with RUSTFLAGS='--cfg pdtrace="cb-add" --cfg pdtrace="all"'
 ]
 
 [workspace.lints.rust.uncommon_codepoints]
 level = "allow"
+[workspace.lints.rust.rust_2024_compatibility] # unsafe_op_in_unsafe_fn only
+level = "allow"
+[workspace.lints.rust.future-incompatible]
+level = "warn"
 
 
 [profile.dev.package.playdate-color]
@@ -99,7 +102,6 @@ opt-level = 3
 lto = true
 rustflags = [
 	# '--cfg=pdtrace="alloc"',
-	'--cfg=pdtrace="stack"',
 	'--cfg=pdtrace="cb-add"',
 	'--cfg=pdtrace="cb-rem"',
 	# '--cfg=pdtrace="cb-get"',
@@ -110,7 +112,10 @@ rustflags = [
 [profile.release]
 lto = true
 rustflags = [
-	'--cfg=pdtrace="stack"',
+	'--cfg=pdtrace="cb-add"',
+	'--cfg=pdtrace="cb-rem"',
+	# '--cfg=pdtrace="cb-into"',
+]
 	'--cfg=pdtrace="cb-add"',
 	'--cfg=pdtrace="cb-rem"',
 	# '--cfg=pdtrace="cb-into"',
