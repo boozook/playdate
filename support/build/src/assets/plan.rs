@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::str::FromStr;
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 
-use wax::{Glob, Pattern};
+use wax::{Glob, Program as _};
 
 use crate::config::Env;
 use crate::metadata::format::{AssetsOptions, AssetsRules, RuleValue};

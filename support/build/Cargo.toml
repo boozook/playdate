@@ -18,7 +18,7 @@ dirs.workspace = true
 fs_extra.workspace = true
 regex.workspace = true
 semver.workspace = true
-wax = "0.6"
+wax = "0.7"
 symlink = "0.1"
 
 toml = { workspace = true, optional = true }

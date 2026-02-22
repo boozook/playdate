@@ -6,7 +6,9 @@ use std::str;
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 
 use regex::Regex;
-use wax::{Glob, LinkBehavior, WalkError, WalkEntry};
+use wax::{Glob};
+use wax::walk::{FileIterator as _, LinkBehavior, WalkError, Entry as _};
+type WalkEntry<'t> = wax::walk::GlobEntry;
 
 use crate::config::Env;
 use super::log_err;
@@ -40,7 +42,7 @@ pub fn resolve_includes<S: AsRef<str>, Excl: AsRef<str>>(expr: S,
 			           Error::from(err)
 		           }
 	           })?;
-	let exclude = exclude.iter().map(AsRef::as_ref).chain(["**/.*/**"]);
+	let exclude = wax::any(exclude.iter().map(AsRef::as_ref).chain(["**/.*/**"]));
 	let walker = glob.walk_with_behavior(crate_root, links)
 	                 .not(exclude)?
 	                 .map(|res| res.map(Match::from));
@@ -215,7 +217,7 @@ impl EnvResolver {
 
 #[derive(Debug)]
 pub enum Match {
-	Match(wax::WalkEntry<'static>),
+	Match(WalkEntry<'static>),
 	Pair {
 		/// The path to the file to include.
 		source: PathBuf,
@@ -290,7 +292,7 @@ impl Match {
 }
 
 impl From<WalkEntry<'_>> for Match {
-	fn from(entry: WalkEntry) -> Self { Match::Match(entry.into_owned()) }
+	fn from(entry: WalkEntry) -> Self { Match::Match(entry) }
 }
 
 impl Match {
