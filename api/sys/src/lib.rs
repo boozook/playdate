@@ -184,14 +184,6 @@ pub extern "C" fn eventHandlerShim(api: *const ffi::Playdate,
                                    arg: u32)
                                    -> core::ffi::c_int {
 	if let ffi::SystemEvent::Init = event {
-		// save location of the stack bottom for tracing,
-		// old-school way to get local (fn's) stack size at runtime.
-		#[cfg(any(pdtrace = "all", pdtrace = "stack"))]
-		{
-			let v = ();
-			unsafe { BOTTOM = core::ptr::addr_of!(v).cast() };
-		}
-
 		unsafe { API = api }
 	}
 
@@ -214,10 +206,6 @@ pub extern "C" fn eventHandlerShim(api: *const ffi::Playdate,
 // This is atomic because the env is the simulator that is asymchronous and built on SDL.
 #[cfg(all(feature = "entry-point", not(playdate)))]
 static PANICKED: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
-
-#[cfg(any(pdtrace = "all", pdtrace = "stack"))]
-#[unsafe(export_name = "pdtrace_stack_bottom")]
-static mut BOTTOM: *const () = core::ptr::null();
 
 
 pub mod ctrl {

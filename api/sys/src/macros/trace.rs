@@ -1,31 +1,3 @@
-#[macro_export]
-macro_rules! trace_stack_size {
-	() => {{
-		$crate::macros::trace::trace_stack_size!(@do: "")
-	}};
-
-	($fn:ident) => {{
-		use $crate::macros::trace::*;
-		trace_stack_size!(@do: "{}", type_name_of(&$fn))
-	}};
-
-	(@do: $($arg:tt)+) => {
-		#[cfg(not(miri))]
-		{
-			static mut LOCAL_STACK_SIZE_TRACED: bool = false;
-			if !unsafe { LOCAL_STACK_SIZE_TRACED } {
-				$crate::macros::trace::trace!("stack": "{} bytes for {}",
-														  $crate::macros::trace::stack_size(),
-														  format_args!($($arg)+)
-														  );
-				unsafe { LOCAL_STACK_SIZE_TRACED = true };
-			}
-		}
-	};
-}
-pub use trace_stack_size;
-
-
 macro_rules! trace_alloc {
 	// This should be heap/allocation-free, so here could be used on-stack fmt:
 	(@fmt $num:expr) => {{
@@ -39,7 +11,7 @@ macro_rules! trace_alloc {
 	}};
 
 	(@print $pat:literal $(($(len:$len:expr, s:$s:ident)? $(o:$o:ident)? $(p:$p:expr)?)),+) => {{
-		#![cfg(any(pdtrace = "all", pdtrace = "stack"))]
+		// #![cfg(any(pdtrace = "all", pdtrace = "stack"))]
 		if let Some(f) = $crate::macros::api_opt!(system.logToConsole) {
 			unsafe {
 				f(
@@ -128,9 +100,6 @@ pub(crate) use trace_alloc;
 #[macro_export]
 macro_rules! trace {
 	// shorthands:
-	(stack $(: $($arg:tt)*)?) => {{
-		$crate::macros::trace::trace_stack_size!($($($arg)*)?)
-	}};
 	(alloc $(: $($arg:tt)*)?) => {{ compile_error!("use `trace_alloc` instead"); }};
 
 	// fmt unification:
@@ -174,20 +143,4 @@ pub const fn type_name_of<T>(_: &T) -> &'static str { core::any::type_name::<T>(
 #[track_caller]
 pub const fn caller_location() -> &'static core::panic::Location<'static> {
 	::core::intrinsics::caller_location()
-}
-
-#[doc(hidden)]
-#[inline(never)]
-#[cfg(not(miri))]
-pub fn stack_size() -> isize {
-	if cfg!(any(pdtrace = "all", pdtrace = "stack")) {
-		unsafe extern "Rust" {
-			#[link_name = "pdtrace_stack_bottom"]
-			static mut BOTTOM: *const ();
-		}
-		let v = ();
-		(core::ptr::addr_of!(v).addr() as isize) - (unsafe { BOTTOM.addr() } as isize)
-	} else {
-		-1
-	}
 }
