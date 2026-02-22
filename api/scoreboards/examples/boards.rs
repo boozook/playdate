@@ -15,7 +15,7 @@ use scoreboards::Scoreboards;
 
 
 /// Entry point
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn event_handler(_: NonNull<PlaydateAPI>, event: SystemEvent, _: u32) -> EventLoopCtrl {
 	// Ignore any other events, just for this minimalistic example
 	if !matches!(event, SystemEvent::Init) {

@@ -2,6 +2,8 @@ cargo-features = ["profile-rustflags"]
 
 [workspace]
 resolver = "2"
+members = ["cargo", "api/*", "support/*", "components/*", "examples/*"]
+default-members = ["cargo", "support/tool", "support/bindgen"]
 exclude = ["cargo/tests/crates/**/*"]
 
 
@@ -27,7 +29,6 @@ sys = { version = "0.5", path = "api/sys", package = "playdate-sys", default-fea
 callback = { version = "0.1", path = "api/callback", package = "playdate-callback", default-features = false }
 
 target = { version = "*", path = "support/target", package = "playdate-target", default-features = false }
-tool = { version = "0.1", path = "support/tool", package = "playdate-tool" }
 build = { version = "0.4", path = "support/build", package = "playdate-build", default-features = false }
 utils = { version = "0.3", path = "support/utils", package = "playdate-build-utils", default-features = false }
 device = { version = "0.2", path = "support/device", package = "playdate-device" }

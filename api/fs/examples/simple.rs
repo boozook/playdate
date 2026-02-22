@@ -94,7 +94,7 @@ fn read_package_info() -> Result<(), ReadError> {
 
 
 /// Entry point / event handler
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn event_handler(api: &'static Playdate, event: SystemEvent, _: u32) -> EventLoopCtrl {
 	// Ignore any other events, just for this minimalistic example
 	if matches!(event, SystemEvent::Init) {
@@ -112,7 +112,7 @@ fn event_handler(api: &'static Playdate, event: SystemEvent, _: u32) -> EventLoo
 
 
 #[cfg(miri)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn miri_start(_argc: isize, _argv: *const *const u8) -> isize { sys::mock::executor::minimal() }
 
 

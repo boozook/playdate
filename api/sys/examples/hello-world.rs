@@ -159,7 +159,7 @@ impl State {
 }
 
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 /// System Event Handler
 pub extern "C" fn eventHandlerShim(api: &'static Playdate, event: SystemEvent, key: c_uint) -> c_int {
 	let (event, _) = dbg!(event, key);
@@ -187,7 +187,7 @@ pub extern "C" fn eventHandlerShim(api: &'static Playdate, event: SystemEvent, k
 
 
 #[cfg(miri)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn miri_start(_argc: isize, _argv: *const *const u8) -> isize { pd::mock::executor::minimal() }
 
 

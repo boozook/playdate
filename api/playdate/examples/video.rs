@@ -30,7 +30,7 @@ struct State {
 
 
 /// Entry point
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn event_handler(api: NonNull<PlaydateAPI>, event: SystemEvent, _sim_key_code: u32) -> EventLoopCtrl {
 	// Ignore any other events, just for this minimalistic example
 	if !matches!(event, SystemEvent::Init) {

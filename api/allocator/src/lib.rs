@@ -175,7 +175,7 @@ mod tests {
 	}
 
 
-	#[no_mangle]
+	#[unsafe(no_mangle)]
 	#[cfg(fake_alloc)]
 	#[cfg(feature = "static-link")]
 	extern "C" fn pdrealloc(_: *mut c_void, _: usize) -> *mut c_void { null_mut() }

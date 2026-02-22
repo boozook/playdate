@@ -12,7 +12,7 @@ use pd::ffi::{Playdate, SystemEvent};
 
 
 /// Entry point / event handler
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn event_handler(api: &'static Playdate, event: SystemEvent, _key: u32) -> EventLoopCtrl {
 	if dbg!(event) == SystemEvent::Init {
 		// 💡 Note that api endpoint is already set by the caller - `eventHandlerShim` in the crate.
@@ -28,7 +28,7 @@ fn event_handler(api: &'static Playdate, event: SystemEvent, _key: u32) -> Event
 
 
 #[cfg(miri)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn miri_start(_argc: isize, _argv: *const *const u8) -> isize { pd::mock::executor::minimal() }
 
 

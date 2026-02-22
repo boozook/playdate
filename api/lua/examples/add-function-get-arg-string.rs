@@ -17,7 +17,7 @@ use sys::macros::api;
 
 
 /// Entry point, event handler
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn event_handler(api: &'static Playdate, event: SystemEvent, _: u32) -> EventLoopCtrl {
 	// We need to set our update callback in the InitLua handler instead of Init.
 	// https://devforum.play.date/t/lua-c-minimal-example/4354/5

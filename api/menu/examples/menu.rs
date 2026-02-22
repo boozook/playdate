@@ -17,7 +17,7 @@ use sys::ctrl::{EventLoopCtrl, UpdateDisplayCtrl};
 use system::System;
 
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn event_handler(api: &'static Playdate, e: SystemEvent, _: u32) -> EventLoopCtrl {
 	let SystemEvent::Init = dbg!(e) else {
 		return EventLoopCtrl::Continue;

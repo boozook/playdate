@@ -70,7 +70,7 @@ fn update(accelerometer: Accelerometer) -> impl FnMut() -> UpdateDisplayCtrl {
 
 
 /// Entry point / event handler
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn event_handler(api: &'static Playdate, e: SystemEvent, _: u32) -> EventLoopCtrl {
 	dbg!(e);
 

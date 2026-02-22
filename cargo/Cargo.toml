@@ -90,11 +90,15 @@ features = [
 
 [dev-dependencies]
 target = "2.1"
-rand = "0.9"
+rand = "0.10"
 
 [target.'cfg(unix)'.dev-dependencies]
-nix = { version = "0.30", features = ["signal"] }
+nix = { version = "0.31", features = ["signal"] }
 
 
 [features]
 eject = ["device/eject"] # windows only, enable one more unmount method
+
+
+[lints]
+workspace = true
