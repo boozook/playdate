@@ -176,31 +176,45 @@ mod allocation {
 /// 	EventLoopCtrl::Stop
 /// }
 /// ```
-#[unsafe(no_mangle)]
 #[cfg(feature = "entry-point")]
-// TODO: `eventHandlerShim` could be `naked` fn.
+#[unsafe(no_mangle)]
+#[cfg_attr(playdate, unsafe(naked))] // just simple trampoline
 pub extern "C" fn eventHandlerShim(api: *const ffi::Playdate,
                                    event: ffi::SystemEvent,
                                    arg: u32)
                                    -> core::ffi::c_int {
-	if let ffi::SystemEvent::Init = event {
-		unsafe { API = api }
-	}
-
 	unsafe extern "Rust" {
 		safe fn event_handler(api: *const ffi::Playdate, event: ffi::SystemEvent, arg: u32) -> ctrl::EventLoopCtrl;
 	}
 
+
 	#[cfg(not(playdate))]
-	if PANICKED.load(core::sync::atomic::Ordering::Relaxed) {
-		return ctrl::EventLoopCtrl::Stop.into();
+	{
+		if ffi::SystemEvent::Init == event {
+			unsafe { API = api }
+		}
+
+		if api.is_null() || PANICKED.load(core::sync::atomic::Ordering::Relaxed) {
+			ctrl::EventLoopCtrl::Stop
+		} else {
+			event_handler(api, event, arg)
+		}.into()
 	}
 
-	if api.is_null() {
-		ctrl::EventLoopCtrl::Stop.into()
-	} else {
-		event_handler(api, event, arg).into()
-	}
+	// https://blog.rust-lang.org/2025/07/03/stabilizing-naked-functions
+	#[cfg(playdate)]
+	core::arch::naked_asm!(
+		// ARMv7E-M Thumb2 AAPCS: r0=api, r1=event, r2=_
+		"cmp     r1, #0",         // event eq 0 (SystemEvent::Init=0)
+		"bne     1f",
+		"ldr     r3, ={api}",     // load &raw API
+		"str     r0, [r3]",       // store api arg into API
+		"1:",
+		"ldr     r3, ={handler}", // load &raw event_handler
+		"bx      r3",             // tail-call (returns c_int directly)
+		api     = sym API,
+		handler = sym event_handler
+	);
 }
 
 // This is atomic because the env is the simulator that is asymchronous and built on SDL.
