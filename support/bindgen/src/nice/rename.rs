@@ -1,6 +1,6 @@
-use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::collections::HashMap;
 use std::fmt::Display;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -8,10 +8,12 @@ use std::sync::RwLock;
 use bindgen::callbacks::DiscoveredItem;
 use bindgen::callbacks::DiscoveredItemId;
 use bindgen::callbacks::ItemInfo;
+use bindgen::callbacks::ItemKind;
 use convert_case::{Case, Casing};
 
 
 pub type SharedIdents = Arc<RwLock<BTreeMap<Kind, String>>>;
+pub type SharedCfg = Arc<RwLock<RenameMapCfg>>;
 
 
 pub fn reduce(changes: SharedIdents) {
@@ -37,65 +39,32 @@ pub fn reduce(changes: SharedIdents) {
 }
 
 
-pub fn print_as_md_table(changes: SharedIdents) {
-	{
-		let mut enums = BTreeSet::new();
-		let changes = changes.read().expect("renamed set is locked");
-		let iter = changes.keys().filter_map(|k| {
-			                         if let Kind::EnumVariant(name, _) = k {
-				                         Some(name)
-			                         } else {
-				                         None
-			                         }
-		                         });
-		enums.extend(iter);
-
-		let find_item = |name: &str| {
-			let key = Kind::Item(name.to_owned());
-			changes.get(&key)
-		};
-
-		// print
-		println!("| kind | original | generated |");
-		println!("| ----: | :-------- | :-------- |");
-		for (was, now) in changes.iter() {
-			match was {
-				Kind::Item(name) => {
-					let kind = if enums.contains(name) { "enum" } else { "item" };
-					println!("| {kind} | `{name}` | `{now}` |");
-				},
-				Kind::Struct(name) => {
-					println!("| struct | `{name}` | `{now}` |");
-				},
-				Kind::Union(name) => {
-					println!("| union | `{name}` | `{now}` |");
-				},
-				Kind::EnumVariant(name, var) => {
-					let ren = find_item(name).map(String::as_str).unwrap_or("_");
-					println!("| enum ctor | `{name}::{var}` | `{ren}::{now}` |");
-				},
-			}
-		}
-
-		println!("\n_total: {}_", changes.len());
-	}
-}
-
-
 /// Renames symbols in the bindings.
 #[derive(Debug, Default)]
 pub struct RenameMap {
 	pub renamed: SharedIdents,
+	pub cfg: SharedCfg,
 }
 
 impl RenameMap {
-	pub fn new() -> Self { Default::default() }
+	pub fn new(cfg: SharedCfg) -> Self {
+		Self { cfg,
+		       ..Default::default() }
+	}
 
-	fn renamed(&self, was: Kind, now: String) {
+	fn renamed(&self, orig: Kind, new: String) {
+		let eq = match &orig {
+			Kind::Item(ty) | Kind::Struct(ty) | Kind::Union(ty) => new.eq(ty),
+			Kind::EnumVariant(ty, v) => new.eq(v) || new.eq(ty),
+		};
+		if eq {
+			return;
+		}
+
 		self.renamed
 		    .write()
 		    .expect("renamed set is locked")
-		    .insert(was, now);
+		    .insert(orig, new);
 	}
 }
 
@@ -111,6 +80,14 @@ pub enum Kind {
 	Union(String),
 	/// `(enum name, variant name)`
 	EnumVariant(String, String),
+}
+
+impl Kind {
+	pub fn item_name(&self) -> &str {
+		match self {
+			Self::Item(name) | Self::Struct(name) | Self::Union(name) | Self::EnumVariant(name, _) => name.as_str(),
+		}
+	}
 }
 
 impl Display for Kind {
@@ -144,68 +121,46 @@ impl bindgen::callbacks::ParseCallbacks for RenameMap {
 			                        final_name, } => {
 				self.renamed(Kind::Union(original_name), final_name);
 			},
+			// DiscoveredItem::Alias { alias_name, .. } => println!("gen alias: {alias_name}"),
+			// DiscoveredItem::Enum { final_name } => println!("gen enum: {final_name}"),
+			// DiscoveredItem::Function { final_name } => println!("gen function: {final_name}"),
+			// DiscoveredItem::Method { final_name, parent } => println!("gen method: {final_name} of {parent:?}"),
 			_ => {},
 		}
 	}
 
 	fn item_name(&self, info: ItemInfo) -> Option<String> {
 		let name = info.name;
+		let exclude = |s: &str| matches!(info.kind, ItemKind::Var) || s.starts_with('_') || s == "va_list";
 
-		if name.starts_with("__") ||
-		   name.starts_with("_bindgen_") ||
-		   name.starts_with("ptr_") ||
-		   name.ends_with("_t")
-		{
-			return None;
-		}
+		let cfg = self.cfg.read().expect("rename-map is locked");
+		if let Some(new) = cfg.items.get(name) {
+			Some(new.to_owned())
+		} else if !exclude(name) {
+			let strip_prefix = cfg.strip_prefix.as_deref().filter(|p| !p.is_empty());
 
-		let mut exact = BTreeMap::new();
-		exact.insert("PDNetErr", "NetworkError");
-		exact.insert("PlaydateAPI", "Playdate");
-		exact.insert("playdate_videostream", "PlaydateVideoStream");
-		exact.insert("l_valtype", "LuaValueType");
-		exact.insert("PDRect", "Rect");
-		exact.insert("LCDRect", "Aabb");
-
-		let mut ignore = BTreeSet::new();
-		ignore.extend([
-			"void",
-			"root",
-			"unsigned_int",
-			"unsigned_long",
-			"va_list",
-			"float",
-			//
-			"SEEK_SET",
-			"SEEK_CUR",
-			"SEEK_END",
-			"LCD_COLUMNS",
-			"LCD_ROWS",
-			"LCD_ROWSIZE",
-			"AUDIO_FRAMES_PER_CYCLE",
-			"NOTE_C4",
-		]);
-
-		if ignore.contains(name) {
-			return None;
-		}
-
-		if let Some(s) = exact.get(name) {
-			self.renamed(Kind::Item(name.to_owned()), s.to_string());
-			return Some(s.to_string());
-		}
-
-		let res = name.strip_prefix("PD")
-		              .or_else(|| name.strip_prefix("LCD"))
-		              .unwrap_or(name)
-		              .to_case(Case::UpperCamel);
-
-		if res != name {
-			self.renamed(Kind::Item(name.to_owned()), res.clone());
-			Some(res)
+			match (strip_prefix, cfg.fix_case) {
+				(Some(prefix), true) => {
+					let new = prefix.iter()
+					                .find_map(|prefix| name.strip_prefix(prefix))
+					                .unwrap_or(name)
+					                .to_case(Case::UpperCamel);
+					(new != name).then_some(new)
+				},
+				(Some(prefix), false) => {
+					prefix.iter()
+					      .find_map(|prefix| name.strip_prefix(prefix))
+					      .map(ToOwned::to_owned)
+				},
+				(None, true) => {
+					let new = name.to_case(Case::UpperCamel);
+					(new != name).then_some(new)
+				},
+				(None, false) => None,
+			}
 		} else {
 			None
-		}
+		}.inspect(|new| self.renamed(Kind::Item(name.to_owned()), new.to_owned()))
 	}
 
 	fn enum_variant_name(&self,
@@ -213,97 +168,35 @@ impl bindgen::callbacks::ParseCallbacks for RenameMap {
 	                     vname: &str,
 	                     _: bindgen::callbacks::EnumVariantValue)
 	                     -> Option<String> {
-		let mut exact_var = BTreeMap::new();
-		exact_var.insert("kASCIIEncoding", "ASCII");
-		exact_var.insert("kUTF8Encoding", "UTF8");
-		exact_var.insert("k16BitLEEncoding", "UTF16");
-
-		exact_var.insert("kSound8bitMono", "Mono8bit");
-		exact_var.insert("kSound8bitStereo", "Stereo8bit");
-		exact_var.insert("kSound16bitMono", "Mono16bit");
-		exact_var.insert("kSound16bitStereo", "Stereo16bit");
-		exact_var.insert("kSoundADPCMMono", "MonoADPCM");
-		exact_var.insert("kSoundADPCMStereo", "StereoADPCM");
-		exact_var.insert("kColorXOR", "XOR");
-		exact_var.insert("kDrawModeXOR", "XOR");
-		exact_var.insert("kDrawModeNXOR", "NXOR");
-
-		let mut prefix = BTreeMap::new();
-		prefix.insert("PDTextWrappingMode", "Wrap");
-		prefix.insert("PDTextAlignment", "AlignText");
-		prefix.insert("MicSource", "MicInput");
-		prefix.insert("PDLanguage", "PdLanguage");
-		prefix.insert("LCDFontLanguage", "LcdFontLanguage");
-		prefix.insert("LFOType", "LfoType");
-		prefix.insert("PDButtons", "Button");
-		prefix.insert("json_value_type", "Json");
-
-		let mut ignore = BTreeSet::new();
-		ignore.extend(["idtype_t"]);
-
-		let ename = ename.expect("enum name for {vname} must not be empty");
-
-
-		if ename.starts_with("__") || vname.starts_with("__") {
-			#[cfg(feature = "log")]
-			println!("skip renaming: {ename}::{vname}");
-			return None;
-		}
-		if ignore.contains(&ename) || ignore.contains(vname) {
-			return None;
-		}
-
-
+		let ename = ename?;
 		// workaround bindgen's bug: enum name is prefixed with "enum " sometimes
-		let ename = ename.strip_prefix("enum ").unwrap_or(ename);
+		let ty = ename.strip_prefix("enum ").unwrap_or(ename);
 
+		let cfg = self.cfg.read().expect("rename-map is locked");
+		let id = format!("{ty}::{vname}");
+		let exclude = |s: &str| s.starts_with('_');
 
-		if let Some(s) = exact_var.get(vname) {
-			self.renamed(
-			             Kind::EnumVariant(ename.to_owned(), vname.to_owned()),
-			             s.to_string(),
-			);
-			return Some(s.to_string());
-		}
-
-
-		let res = if vname.starts_with('k') {
-			Cow::Owned((&vname[1..]).to_case(Case::UpperCamel))
+		if let Some(new) = cfg.enums.get(&id) {
+			Some(new.to_owned())
+		} else if !exclude(&id) && !exclude(vname) {
+			cfg.fix_case
+			   .then(|| vname.to_case(Case::UpperCamel))
+			   .filter(|new| new != vname)
 		} else {
-			vname.into()
-		};
-
-
-		let res = if let Some(prefix) = prefix.get(&ename) {
-			res.strip_prefix(prefix).unwrap_or(&res)
-		} else {
-			&res
-		};
-
-		let mut res = res.to_case(Case::UpperCamel);
-
-		// auto-trim-prefix:
-		{
-			let eparts = Case::Pascal.split(&ename);
-			let vparts = Case::Pascal.split(&res);
-			let mut rparts = vparts.as_slice();
-
-			for word in eparts.iter() {
-				if let Some(parts) = rparts.strip_prefix(&[*word]) {
-					rparts = parts;
-				}
-			}
-
-			if rparts != vparts {
-				res = rparts.join("");
-			}
+			None
 		}
-
-
-		if res != vname {
-			self.renamed(Kind::EnumVariant(ename.to_owned(), vname.to_owned()), res.clone());
-		}
-
-		if res != vname { Some(res) } else { None }
 	}
+}
+
+
+#[derive(Debug, Default, serde::Deserialize)]
+pub struct RenameMapCfg {
+	#[serde(alias = "to-upper-camel-case", rename = "to-upper-camel-case")]
+	fix_case: bool,
+	#[serde(alias = "strip-prefix", rename = "strip-prefix")]
+	strip_prefix: Option<Vec<String>>,
+	#[serde(alias = "item", rename = "item")]
+	items: HashMap<String, String>,
+	#[serde(alias = "enum", rename = "enum")]
+	enums: HashMap<String, String>,
 }

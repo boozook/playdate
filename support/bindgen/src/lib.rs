@@ -5,13 +5,15 @@ pub extern crate bindgen;
 use std::borrow::Cow;
 use std::env;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, RwLock};
 use bindgen::{EnumVariation, RustTarget, Builder, MacroTypeVariation};
+use r#gen::patch::PatchCfg;
 use nice::derive::DeriveConstParamTy;
 use utils::consts::*;
 use utils::toolchain::gcc::{ArmToolchain, Gcc};
 use utils::toolchain::sdk::Sdk;
 pub use bindgen_cfg as cfg;
-use nice::rename::SharedIdents;
+use nice::rename::{SharedCfg, SharedIdents};
 
 
 pub mod error;
@@ -84,6 +86,9 @@ pub struct Generator {
 
 	/// Renamed symbols, if `nice` is enabled.
 	renamed: SharedIdents,
+	// input cfg
+	// pub rename_map: Option<RenameMapCfg>,
+	pub patches: Option<PatchCfg>,
 
 	// configuration
 	pub derives: cfg::Derive,
@@ -92,7 +97,76 @@ pub struct Generator {
 
 
 impl Generator {
-	pub fn new(cfg: cfg::Cfg) -> Result<Self> { create_generator(cfg) }
+	pub fn new(cfg: cfg::Cfg) -> Result<Self> {
+		println!("cargo::rerun-if-env-changed=TARGET");
+		println!("cargo::rerun-if-env-changed=PROFILE");
+
+		let cargo_target_triple = env::var("TARGET").expect("TARGET cargo env var");
+		let cargo_profile = env::var("PROFILE").expect("PROFILE cargo env var");
+		let is_debug = cargo_profile == "debug" || env_cargo_feature("DEBUG");
+
+		let sdk = cfg.sdk
+		             .map(|p| Sdk::try_new_exact(p).or_else(|_| Sdk::try_new()))
+		             .unwrap_or_else(Sdk::try_new)?;
+		let version_path = sdk.version_file();
+		let version_raw = sdk.read_version()?;
+		let version = check_sdk_version(&version_raw)?;
+		println!("cargo::rerun-if-changed={}", version_path.display());
+		let sdk_c_api = sdk.c_api();
+
+		let main_header = sdk_c_api.join("pd_api.h");
+		println!("cargo::rerun-if-changed={}", main_header.display());
+		println!("cargo::rerun-if-env-changed={SDK_ENV_VAR}");
+		// println!("cargo::metadata=include={}", sdk_c_api.display());
+
+
+		// builder:
+		let gcc = cfg.gcc
+		             .map(|p| {
+			             Gcc::try_from_path(p).and_then(ArmToolchain::try_new_with)
+			                                  .or_else(|_| ArmToolchain::try_new())
+		             })
+		             .unwrap_or_else(ArmToolchain::try_new)?;
+
+
+		let rename_map = if let Some(ref p) = cfg.rename {
+			let src = std::fs::read_to_string(&p)?;
+			let cfg = serde_yml::from_str(&src).expect("Invalid content in rename-map");
+			Some(Arc::new(RwLock::new(cfg)))
+		} else {
+			None
+		};
+		let patches_cfg = if let Some(ref p) = cfg.patch {
+			let src = std::fs::read_to_string(&p)?;
+			Some(serde_yml::from_str(&src).expect("Invalid content in patch cfg"))
+		} else {
+			None
+		};
+
+		let (mut builder, renamed) = create_builder(
+		                                            &cargo_target_triple,
+		                                            &sdk_c_api,
+		                                            &main_header,
+		                                            &cfg.derive,
+		                                            &cfg.features,
+		                                            rename_map,
+		);
+		builder = apply_profile(builder, is_debug);
+		builder = apply_target(builder, &cargo_target_triple, &gcc);
+
+
+		let filename = cfg::Filename::new(version.to_owned(), cfg.derive)?;
+
+		Ok(Self { sdk,
+		          gcc,
+		          version,
+		          filename,
+		          builder,
+		          renamed,
+		          patches: patches_cfg,
+		          derives: cfg.derive,
+		          features: cfg.features })
+	}
 
 	pub fn generate(mut self) -> Result<Bindings> {
 		// disable formatting if we gonna extra work:
@@ -111,66 +185,13 @@ impl Generator {
 		r#gen::engage(
 		              &bindings,
 		              self.renamed,
+		              self.patches.unwrap_or_default(),
 		              &self.features,
 		              &self.filename.target,
 		              &self.sdk,
 		              None,
 		).map(Bindings::Engaged)
 	}
-}
-
-
-fn create_generator(cfg: cfg::Cfg) -> Result<Generator, error::Error> {
-	println!("cargo::rerun-if-env-changed=TARGET");
-	let cargo_target_triple = env::var("TARGET").expect("TARGET cargo env var");
-
-	println!("cargo::rerun-if-env-changed=PROFILE");
-	let cargo_profile = env::var("PROFILE").expect("PROFILE cargo env var");
-	let is_debug = cargo_profile == "debug" || env_cargo_feature("DEBUG");
-
-	let sdk = cfg.sdk
-	             .map(|p| Sdk::try_new_exact(p).or_else(|_| Sdk::try_new()))
-	             .unwrap_or_else(Sdk::try_new)?;
-	let version_path = sdk.version_file();
-	let version_raw = sdk.read_version()?;
-	let version = check_sdk_version(&version_raw)?;
-	println!("cargo::rerun-if-changed={}", version_path.display());
-	let sdk_c_api = sdk.c_api();
-
-	let main_header = sdk_c_api.join("pd_api.h");
-	println!("cargo::rerun-if-changed={}", main_header.display());
-	println!("cargo::rerun-if-env-changed={SDK_ENV_VAR}");
-	println!("cargo::metadata=include={}", sdk_c_api.display());
-
-
-	// builder:
-	let gcc = cfg.gcc
-	             .map(|p| {
-		             Gcc::try_from_path(p).and_then(ArmToolchain::try_new_with)
-		                                  .or_else(|_| ArmToolchain::try_new())
-	             })
-	             .unwrap_or_else(ArmToolchain::try_new)?;
-	let (mut builder, renamed) = create_builder(
-	                                            &cargo_target_triple,
-	                                            &sdk_c_api,
-	                                            &main_header,
-	                                            &cfg.derive,
-	                                            &cfg.features,
-	);
-	builder = apply_profile(builder, is_debug);
-	builder = apply_target(builder, &cargo_target_triple, &gcc);
-
-
-	let filename = cfg::Filename::new(version.to_owned(), cfg.derive)?;
-
-	Ok(Generator { sdk,
-	               gcc,
-	               version,
-	               filename,
-	               builder,
-	               renamed,
-	               derives: cfg.derive,
-	               features: cfg.features })
 }
 
 
@@ -206,7 +227,8 @@ fn create_builder(_target: &str,
                   capi: &Path,
                   header: &Path,
                   derive: &cfg::Derive,
-                  features: &cfg::Features)
+                  features: &cfg::Features,
+                  rename_map: Option<SharedCfg>)
                   -> (Builder, SharedIdents) {
 	let mut builder = bindgen::builder()
 	.header(format!("{}", header.display()))
@@ -224,7 +246,7 @@ fn create_builder(_target: &str,
 	.detect_include_paths(true)
 	.clang_args(&["--include-directory", &capi.display().to_string()])
 	.clang_arg("-DTARGET_EXTENSION=1")
-	.dynamic_link_require_all(true)
+	// .dynamic_link_require_all(true)
 	.generate_comments(true)
 	// macro:
 	.default_macro_constant_type(MacroTypeVariation::Unsigned)
@@ -293,19 +315,20 @@ fn create_builder(_target: &str,
 	                          "SoundEffect",
 	                          "SoundChannel",
 	];
-	for name in NO_DER {
-		builder = builder.no_copy(*name)
-		                 .no_debug(*name)
-		                 .no_default(*name)
-		                 .no_partialeq(*name)
-		                 .no_hash(*name);
+	for &name in NO_DER {
+		builder = builder.no_copy(name)
+		                 .no_debug(name)
+		                 .no_default(name)
+		                 .no_partialeq(name)
+		                 .no_hash(name);
 	}
 
 
 	builder = builder.parse_callbacks(Box::new(bindgen::CargoCallbacks::new()));
 
-	let idents = if features.nice {
-		let hook = nice::rename::RenameMap::new();
+	let idents = if features.patch {
+		let rename_map = rename_map.unwrap_or_default();
+		let hook = nice::rename::RenameMap::new(rename_map);
 		let renamed = hook.renamed.clone();
 		builder = builder.parse_callbacks(Box::new(hook));
 		renamed
@@ -332,24 +355,29 @@ fn apply_profile(mut builder: Builder, debug: bool) -> Builder {
 }
 
 
-// This is for build with ARM toolchain.
+// Uses std from ARM toolchain.
 // TODO: impl build with just LLVM.
-fn apply_target(mut builder: Builder, target: &str, gcc: &ArmToolchain) -> Builder {
-	builder = if DEVICE_TARGET == target {
-		let arm_eabi_include = gcc.include();
-		// println!("cargo::rustc-link-search={}", arm_eabi.join("lib").display()); // for executable
-		println!("cargo::metadata=include={}", arm_eabi_include.display());
+fn apply_target(builder: Builder, target: &str, gcc: &ArmToolchain) -> Builder {
+	use target::TargetKind as Tk;
 
-		builder.clang_arg("-DTARGET_PLAYDATE=1")
-		       .blocklist_file("stdlib.h")
+	let tk = Tk::from_cargo_env().unwrap_or_else(|err| {
+		                             eprintln!("PdTargetKind from env: {err}");
+		                             Tk::from_target(target)
+	                             });
+	match tk {
+		Tk::Device => {
+			let arm_eabi_include = gcc.include();
+			builder.clang_arg("-DTARGET_PLAYDATE=1")
+		       .blocklist_file("stdlib.h" /* exclude STD */)
 		       .clang_args(&["-target", DEVICE_TARGET])
 		       .clang_arg("-fshort-enums")
-		       .clang_args(&["--include-directory", &arm_eabi_include.display().to_string()])
-		       .clang_arg(format!("-I{}", arm_eabi_include.display()))
-	} else {
-		builder.clang_arg("-DTARGET_SIMULATOR=1")
-	};
-	builder
+		       // .clang_args(&["--include-directory", &arm_eabi_include.display().to_string()])
+		       // .clang_arg(format!("-I{}", arm_eabi_include.display()))
+		       .clang_arg("-isystem")
+		       .clang_arg(arm_eabi_include.display().to_string() /* include STD */)
+		},
+		Tk::Simulator => builder.clang_arg("-DTARGET_SIMULATOR=1"),
+	}
 }
 
 

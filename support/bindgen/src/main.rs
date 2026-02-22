@@ -10,7 +10,7 @@ fn main() {
 	let mut args = Args::parse();
 
 	if cfg!(debug_assertions) {
-		eprintln!("{args:#?}")
+		eprintln!("{args:#?}");
 	}
 
 	match args.cmd {

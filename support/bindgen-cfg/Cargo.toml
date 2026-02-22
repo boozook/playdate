@@ -12,6 +12,9 @@ homepage.workspace = true
 repository.workspace = true
 
 
+[dependencies]
+target.workspace = true
+
 [dependencies.clap]
 features = ["std", "env", "derive", "help"]
 workspace = true

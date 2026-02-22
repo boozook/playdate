@@ -53,9 +53,20 @@ pub struct Cfg {
 	#[cfg_attr(feature = "clap", arg(long, value_name = "TY[,TY...]", default_value_t = Derive::default(), verbatim_doc_comment))]
 	pub derive: Derive,
 
-	/// Comma separated list of features to use. Possible values: documentation, nice.
+	/// Comma separated list of features to use. Possible values: documentation, patch.
 	#[cfg_attr(feature = "clap", arg(long, value_name = "FEATURE[,FEATURE...]", default_value_t = Features::default(), verbatim_doc_comment))]
 	pub features: Features,
+
+	/// Yaml file with mapping for types' and enum-variants' names mapping: `old: new`.
+	#[cfg_attr(
+	           feature = "clap",
+	           arg(long("rename-map"), alias = "rename", value_name = "FILE")
+	)]
+	pub rename: Option<PathBuf>,
+
+	/// Yaml file with patches definitions
+	#[cfg_attr(feature = "clap", arg(long("patch"), value_name = "FILE"))]
+	pub patch: Option<PathBuf>,
 
 	/// Output file path.
 	#[cfg_attr(feature = "clap", arg(long, value_name = "FILE"))]
@@ -168,8 +179,10 @@ impl Default for Cfg {
 		       gcc: Default::default(),
 		       derive: Default::default(),
 		       features: Default::default(),
+		       bin: Bin { path: tool },
 		       output: None,
-		       bin: Bin { path: tool } }
+		       rename: None,
+		       patch: None }
 	}
 }
 
@@ -188,6 +201,13 @@ impl Cfg {
 
 		args.extend(self.derive.cli_args());
 		args.extend(self.features.cli_args());
+
+		if let Some(ref p) = self.rename {
+			args.push(format!("--rename={}", p.display()));
+		}
+		if let Some(ref p) = self.patch {
+			args.push(format!("--patch={}", p.display()));
+		}
 
 		if let Some(ref path) = self.output {
 			args.push(format!("--output={}", path.display()));
@@ -308,13 +328,13 @@ pub struct Features {
 	/// Generate documentation
 	pub documentation: bool,
 	/// Extra rustification
-	pub nice: bool,
+	pub patch: bool,
 }
 
 impl Features {
 	pub const fn empty() -> Self {
 		Self { documentation: false,
-		       nice: false }
+		       patch: false }
 	}
 
 	pub fn cli_args(&self) -> Vec<String> {
@@ -341,7 +361,7 @@ impl FromStr for Features {
 		for word in s.to_ascii_lowercase().split([',', ' ']).filter(|s| !s.is_empty()) {
 			match word {
 				"documentation" => this.documentation = true,
-				"nice" => this.nice = true,
+				"patch" | "nice" => this.patch = true,
 				_ => println!("cargo::warning=Unknown feature '{word}' ({}).", word == "nice"),
 			}
 		}
@@ -355,7 +375,7 @@ impl Features {
 	fn arg_feature_list(&self) -> String {
 		let mut out = Vec::new();
 		if self.documentation { out.push("documentation") }
-		if self.nice { out.push("nice") }
+		if self.patch { out.push("nice,patch") }
 		out.join(",")
 	}
 }
@@ -368,7 +388,7 @@ impl std::fmt::Display for Features {
 impl Default for Features {
 	fn default() -> Self {
 		Self { documentation: true,
-		       nice: false }
+		       patch: false }
 	}
 }
 
@@ -404,14 +424,14 @@ impl Filename {
 	pub fn trim_suffix(&self) -> String {
 		let target = &self.target;
 		let sdk = &self.sdk;
-		format!("pd{sdk}-{target}-")
+		format!("{}{sdk}-{target}-", Self::PREFIX)
 	}
 
 	/// Extract SDK version from rendered filename.
 	/// If `target` is set, able to extract full version with suffix (e.g. "-beta.1").
 	/// Otherwise without suffix.
 	///
-	/// Usefull for multiple usage with single `target` instead of [`get_sdk_version_from_filename`].
+	/// Useful for multiple usage with single `target` instead of [`get_sdk_version_from_filename`].
 	pub fn get_sdk_version_from_filename_with_target<'t>(s: &'t std::ffi::OsStr,
 	                                                     target: Option<&'_ str>)
 	                                                     -> Option<Cow<'t, std::ffi::OsStr>> {
@@ -455,7 +475,7 @@ impl std::fmt::Display for Filename {
 		let derives = &self.mask;
 		let target = &self.target;
 		let sdk = &self.sdk;
-		write!(f, "pd{sdk}-{target}-{derives}{}", Self::DOT_EXT)
+		write!(f, "{}{sdk}-{target}-{derives}{}", Self::PREFIX, Self::DOT_EXT)
 	}
 }
 
@@ -486,32 +506,20 @@ pub enum Target {
 impl Target {
 	/// Retrieve by cargo env vars.
 	pub fn from_env_target() -> Result<Self, VarError> {
-		use std::env::{var, var_os};
+		match target::TargetKind::from_cargo_env()? {
+			target::TargetKind::Device => Ok(Self::Playdate),
+			target::TargetKind::Simulator => {
+				use std::env::var;
+				use core::ffi::c_int;
 
-		let target = var("TARGET")?;
-		let is_pdos = var_os("CARGO_CFG_TARGET_OS").filter(|v| {
-			                                           let v = v.to_ascii_lowercase();
-			                                           v == "playdate" || v == "playdateos" || v == "pdos"
-		                                           })
-		                                           .is_some();
-		// let is_panic = var_os("CARGO_CFG_TARGET_VENDOR").filter(|v| {
-		// 	                                                let v = v.to_ascii_lowercase();
-		// 	                                                v == "panic" || v == "playdate"
-		//                                                 })
-		//                                                 .is_some();
-		// XXX: "sim" may conflict with "simd" for example.
-		let is_sim = target.contains("sim");
-		if target == "thumbv7em-none-eabihf" || (is_pdos && !is_sim) || (target.contains("playdate") && !is_sim) {
-			Ok(Self::Playdate)
-		} else {
-			use core::ffi::c_int;
-			let ptr = var("CARGO_CFG_TARGET_POINTER_WIDTH")?;
-			let arch = var("CARGO_CFG_TARGET_ARCH")?;
-			let os = var("CARGO_CFG_TARGET_OS")?;
-			Ok(Self::Other { os,
-			                 arch,
-			                 ptr,
-			                 c_int: c_int::BITS as usize })
+				let ptr = var("CARGO_CFG_TARGET_POINTER_WIDTH")?;
+				let arch = var("CARGO_CFG_TARGET_ARCH")?;
+				let os = var("CARGO_CFG_TARGET_OS")?;
+				Ok(Self::Other { os,
+				                 arch,
+				                 ptr,
+				                 c_int: c_int::BITS as usize })
+			},
 		}
 	}
 

@@ -35,7 +35,7 @@ env_logger = { workspace = true, optional = true }
 symbolic = { version = "12.17", features = ["demangle"] }
 
 regex.workspace = true
-const-str = { version = "0.7", default-features = false, optional = true }
+const-str = { version = "1.1", default-features = false, optional = true }
 paste = "1.0"
 
 tokio = { workspace = true, features = ["full", "rt-multi-thread"] }
