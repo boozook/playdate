@@ -67,6 +67,8 @@ pub fn set_api(api: *const crate::ffi::Playdate) { unsafe { API = api } }
 #[cfg(not(all(test, mockrt = "std")))]
 pub mod ffi {
 	#![cfg_attr(test, allow(deref_nullptr))]
+	#![allow(unpredictable_function_pointer_comparisons)]
+	#![allow(unsafe_attr_outside_unsafe, unsafe_op_in_unsafe_fn)]
 	#![allow(non_upper_case_globals, non_camel_case_types, non_snake_case)]
 	#![allow(unnecessary_transmutes)]
 	#![allow(clippy::all, clippy::pedantic, clippy::nursery)]
@@ -382,32 +384,32 @@ pub mod misc {
 	macro_rules! ll_symbols {
 		() => {
 			#[doc(hidden)]
-			#[no_mangle]
+			#[unsafe(no_mangle)]
 			// GCC unwinding
 			pub extern "C" fn __exidx_start() { unimplemented!() }
 
-			#[no_mangle]
+			#[unsafe(no_mangle)]
 			#[doc(hidden)]
 			// GCC unwinding
 			pub extern "C" fn __exidx_end() { unimplemented!() }
 
 			#[doc(hidden)]
-			#[no_mangle]
+			#[unsafe(no_mangle)]
 			#[cfg(not(target_os = "windows"))]
 			// there should be loop
 			pub extern "C" fn _exit() {}
 
 			#[doc(hidden)]
-			#[no_mangle]
+			#[unsafe(no_mangle)]
 			// there should be loop
 			pub extern "C" fn _kill() {}
 
 			#[doc(hidden)]
-			#[no_mangle]
+			#[unsafe(no_mangle)]
 			pub extern "C" fn _getpid() -> core::ffi::c_int { 0 }
 
 			#[doc(hidden)]
-			#[no_mangle]
+			#[unsafe(no_mangle)]
 			// it not needed on MacOS
 			#[cfg(not(target_os = "macos"))]
 			// TODO: Somehow link with proper impl: https://stackoverflow.com/q/76439798/829264

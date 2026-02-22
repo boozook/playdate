@@ -50,7 +50,6 @@ package = "playdate-sys-mock"
 path = "../rt-mock"
 version = "0"
 features = ["executor"]
-public = false
 
 [target.'cfg(mockrt = "std")'.dev-dependencies.mock]
 package = "playdate-sys-mock"
@@ -108,7 +107,7 @@ check-cfg = [
 	'cfg(playdate)',                                                # FIXME: refactor `cfg playdate`
 	'cfg(mockrt, values(none(), "alloc", "std"))',                  # enable runtime-mock for tests
 	'cfg(format_buffer, values("0", "128", "256", "512", "1024"))', # configure size of on-stack buffer used for formatting
-	'cfg(pdtrace, values("all", "stack", "alloc"))',                # tracing
+	'cfg(pdtrace, values("all", "alloc"))',                         # tracing
 ]
 
 [lints.rust]

@@ -55,7 +55,7 @@ pub fn highest_version(all: bool) -> String {
 
 
 /// Simple per-comp cmp.
-// XXX: this is a sort of stupid absolutelly not optimal implementation.
+// XXX: this is a sort of stupid absolutely not optimal implementation.
 fn cmp_versions(a: impl AsRef<[u8]>, b: impl AsRef<[u8]>) -> Ordering {
 	let a = a.as_ref().split(|v| *v == b'.');
 	let b = b.as_ref().split(|v| *v == b'.');
