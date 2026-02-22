@@ -2,8 +2,6 @@ cargo-features = ["profile-rustflags"]
 
 [workspace]
 resolver = "2"
-members = ["cargo", "api/*", "support/*", "components/*", "examples/*"]
-default-members = ["cargo", "support/tool", "support/bindgen"]
 exclude = ["cargo/tests/crates/**/*"]
 
 
@@ -28,6 +26,7 @@ system = { version = "0.3", path = "api/system", package = "playdate-system", de
 sys = { version = "0.5", path = "api/sys", package = "playdate-sys", default-features = false }
 callback = { version = "0.1", path = "api/callback", package = "playdate-callback", default-features = false }
 
+target = { version = "*", path = "support/target", package = "playdate-target", default-features = false }
 tool = { version = "0.1", path = "support/tool", package = "playdate-tool" }
 build = { version = "0.4", path = "support/build", package = "playdate-build", default-features = false }
 utils = { version = "0.3", path = "support/utils", package = "playdate-build-utils", default-features = false }
@@ -46,7 +45,6 @@ log = "0.4"
 env_logger = "0.11"
 clap = "4.5"
 serde = { version = "1.0", default-features = false }
-serde_derive = { features = ["deserialize_in_place"] }
 serde_json = "1.0"
 toml = "0.9"
 futures-lite = "2.6"

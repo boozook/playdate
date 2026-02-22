@@ -1,0 +1,152 @@
+# Schema:
+# $(rustc --print sysroot)/etc/target-spec-json-schema.json
+# or $(rustc +nightly --print sysroot)/etc/target-spec-json-schema.json
+# typically ~/.rustup/toolchains/$HOST_TOOLCHAIN/etc/target-spec-json-schema.json (or $RUSTUP_TOOLCHAIN)
+#
+# Doc:
+# https://doc.rust-lang.org/nightly/nightly-rustc/rustc_target/spec/struct.TargetOptions.html
+# https://docs.rust-embedded.org/embedonomicon/custom-target.html
+#
+# fields marked "inherited" are inherited by thumbv7em-none-eabihf
+# https://github.com/rust-lang/rust/blob/master/compiler/rustc_target/src/spec/targets/thumbv7em_none_eabihf.rs
+
+
+metadata.description = "Panic Playdate, ARM Cortex-M7 32b HF, FreeRTOS-based system with dynamic loader, starting from OS v2.1."
+metadata.host_tools = false
+metadata.std = false
+# inherited, this spec is merely a clarification with minor overidings.
+metadata.tier = 2
+
+# Exclude comp-builtins like memcmp, memcpy, memmove, memset.
+# Disable optimizing certain code patterns to invocations of library functions that are assumed to exist.
+# Disabled by-default, but can be enabled with attr `#![no_builtins]`.
+no-builtins = false
+no-default-libraries = true
+requires-uwtable = false
+default-uwtable = false
+
+env = "elf"
+vendor = "panic"
+os = "playdate"
+target-family = []
+
+
+arch = "arm"
+cpu = "cortex-m7"
+abi = "eabihf"
+data-layout = "e-m:e-p:32:32-Fi8-i64:64-v128:64:128-a:0:32-n32-S64" # inherited
+
+llvm-target = "thumbv7em-none-eabihf" # inherited
+llvm-floatabi = "hard"                # inherited
+# llvm-abiname
+# rustc-abi
+
+code-model = "small"
+
+
+# inherited: +vfp4d16sp (VFP4 instructions with only 16 d-registers and no double precision)
+#                       https://developer.arm.com/documentation/ddi0489/f/floating-point-unit/fpu-functional-description
+#                       should be vfp5 (FPv5), but vfp4d16sp instead.
+# others -- added for explicitness
+# rev1: double precision registers are disabled by vendor
+# https://github.com/rust-lang/rust/blob/a2db9280539229a3b8a084a09886670a57bc7e9c/compiler/rustc_target/src/spec/targets/thumbv7em_none_eabihf.rs#L29-L36
+# https://github.com/rust-lang/rust/blob/master/src/doc/rustc/src/platform-support/thumbv7em-none-eabi.md
+features = "+m7,+vfp4,+vfp4d16sp,-d32,-fp64,+armv7-m,-neon,+dsp,-soft-float" # +DMA, +fp16fml?, +fpregs16?, +fpao?, +strict-align?
+
+c-enum-min-bits = 8       # inherited
+max-atomic-width = 32     # inherited
+target-pointer-width = 32 # inherited
+# has-thumb-interworking — mb. DSP, DMA
+
+crt-objects-fallback = "false" # inherited, may be enabled when needed
+frame-pointer = "may-omit"     # owerriden, may be 'always' if needed for PGO
+
+
+panic-strategy = "abort" # inherited, can also be `immediate-abort`
+
+# Only executables are permitted (actually static libs too, but executables we able to optimize and tune better)
+executables = true
+static-position-independent-executables = true
+binary-format = "elf"
+
+singlethread = true      # audio task is on the separate thread, so could be false
+tls-model = "emulated"   # Cortex-M has no hw TLS (no MMU, no TLS-segments)
+has-thread-local = false
+
+function-sections = true    # needed for analyze, opts & LTO
+merge-functions = "aliases" # TODO: ensure that it's better option
+
+entry-abi = "C"
+entry-name = "eventHandlerShim" # platform specific
+relocation-model = "pie"        # platform specific, can be PIE or PIC
+
+# Enables relocation relaxation optimizations (e.g., converting expensive relocations to cheaper ones where possible),
+# potentially reducing code size or improving performance on ARM.
+relax-elf-relocations = true
+
+# ELF RELRO (Relocation Read-Only) protection level.
+relro-level = "off" # not needed, entier resulting PH is RWX
+
+
+emit-debug-gdb-scripts = false                            # inherited
+debuginfo-kind = "dwarf"
+default-dwarf-version = 5                                 # TODO: ensure, tune version
+supported-split-debuginfo = ["off", "packed", "unpacked"]
+split-debuginfo = "packed"
+allow-asm = true
+
+eh-frame-header = false         # TODO: mb. ON for PGO?
+stack-probes.kind = "inline"    # mb. `none`
+supports-stack-protector = true
+default-codegen-units = 1
+
+
+llvm-args = [
+	"-inline-max-stacksize=9216", # FIXME: 4096 (page) could be better
+]
+supported-sanitizers = [] # TODO: is there something supporting arm32?...
+# llvm-mcount-intrinsic # for profiling & PGO
+
+
+linker = "rust-lld"                                      # inherited
+linker-flavor = "gnu-lld"                                # inherited
+lld-flavor = "gnu"
+has-rpath = false
+dynamic-linking = false
+link-env = ["__STACK_SIZE=10240", "__HEAP_SIZE=8388208"]
+link-script = """/* injected from file */"""
+
+[pre-link-args]
+# TODO:
+# - gnu-cc
+# - gnu-lld-cc
+# - unix-cc
+# - llbc
+
+'ld.lld' = [
+	"-zexecstack", # additional for single RWX PH defined in the linker-script, for JIT
+
+	# Constants:
+	# FIXME: what exactly here to use?
+	# - max for `gameTask` (10240)
+	# - or min as max for `audio` (4096)
+	# - or mid as for `esp32`-task (6144)
+	"-zstack-size=10240",
+	"-zmax-page-size=4096",  # typical embedded 4k "pages", usage: `MAXPAGESIZE`
+	"-zcommon-page-size=32", # usage: `COMMONPAGESIZE` or system page size
+]
+gcc = [
+	# XXX: remove unnecessary
+	"-ffunction-sections",
+	"-fdata-sections",
+	"-fno-common",
+	"-ffunction-sections",
+	"-fdata-sections",
+	"-fno-exceptions",
+	"-fno-rtti",
+]
+
+# XXX: remove unnecessary
+[post-link-args] # -Wl,--gc-sections
+'ld.lld' = ["--emit-relocs", "--gc-sections", "--entry=eventHandlerShim"]
+gcc = ["-e,eventHandlerShim", "-r", "-fpic", "-rdynamic", "-mword-relocations"]
