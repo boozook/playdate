@@ -8,7 +8,6 @@
 #![allow(internal_features)]
 #![allow(uncommon_codepoints)]
 #![cfg_attr(test, feature(thread_local))]
-#![cfg_attr(any(debug_assertions, feature = "sys"), feature(cfg_select))]
 
 #[cfg(test)]
 #[macro_use]

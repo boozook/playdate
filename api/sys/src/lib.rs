@@ -11,8 +11,6 @@
 #![cfg_attr(feature = "const-types", feature(adt_const_params))]
 // error, ctrl-flow:
 #![feature(try_trait_v2)]
-// cfg values, format_buffer, target, mock:
-#![feature(cfg_select)]
 // docs:
 #![doc(issue_tracker_base_url = "https://github.com/boozook/playdate/issues/")]
 // testing:

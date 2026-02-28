@@ -40,7 +40,7 @@ semver.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 toml.workspace = true
-toml_edit = { version = "0.25", features = ["serde"] }
+toml_edit = { workspace = true, optional = true, features = ["default", "serde"] }
 regex.workspace = true
 byteorder = "1.5"
 zip = { version = "8.0", features = ["time"] }

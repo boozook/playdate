@@ -20,7 +20,7 @@ pub(crate) mod global;
 /// Allocator uses system `realloc` c-fn,
 /// so user have to call [`init`] if `static-link` feature is disabled.
 ///
-/// Otherwise if `static-link` is on, it's statically linked and it's nesessary to call [`init`].
+/// Otherwise if `static-link` is on, it's statically linked and it's necessary to call [`init`].
 pub struct System;
 
 
