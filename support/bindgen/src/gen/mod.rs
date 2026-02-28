@@ -72,51 +72,10 @@ pub fn engage(source: &bindgen::Bindings,
 
 	// add compat- module with original names:
 	#[cfg(feature = "extra-codegen")]
-	{
-		let mut items = TokenStream::new();
-		let common_span = items.span();
-		let idents = renamed.read().expect("ident-map set is locked");
-		let var = idents.iter()
-		                .filter_map(|(orig, new)| {
-			                let old = orig.item_name();
-			                (!matches!(orig, Kind::EnumVariant(..)) && new != old).then_some((old, new.as_str()))
-		                })
-		                .filter(|&(orig, new)| {
-			                // get rid off unexisting things:
-			                bindings.items.iter().any(|existing| {
-				                                     use syn::*;
-				                                     if let Item::Const(ItemConst { ident, .. }) |
-				                                     Item::Enum(ItemEnum { ident, .. }) |
-				                                     Item::Mod(ItemMod { ident, .. }) |
-				                                     Item::Static(ItemStatic { ident, .. }) |
-				                                     Item::Struct(ItemStruct { ident, .. }) |
-				                                     Item::Type(ItemType { ident, .. }) |
-				                                     Item::Union(ItemUnion { ident, .. }) |
-				                                     Item::Fn(ItemFn { sig: Signature { ident, .. },
-				                                                              .. }) = existing
-				                                     {
-					                                     ident.eq(new)
-				                                     } else {
-					                                     false
-				                                     }
-			                                     })
-		                })
-		                .map(|(old, new)| (syn::Ident::new(old, common_span), syn::Ident::new(new, common_span)))
-		                .map(|(old, new)| quote::quote!(pub use super::#new as #old;));
-		items.extend(var);
+	insert_compat_aliases(&mut bindings, renamed);
 
-		let module: syn::Item = syn::parse_quote! {
-			pub mod compat { /*! Original names of renamed types. */ #items }
-		};
-		bindings.items.push(module);
-	}
-	#[cfg(not(feature = "extra-codegen"))]
-	{
-		let module: syn::Item = syn::parse_quote! {
-			pub mod compat { /*! Original names of renamed types. */ pub use super::*; }
-		};
-		bindings.items.push(module);
-	}
+	#[cfg(all(not(feature = "extra-codegen"), feature = "syn"))]
+	bindings.items.push(syn::parse_quote! { pub mod compat { /*! Original names of renamed types. */ pub use super::*; } });
 
 	let mut module = TokenStream::new();
 	bindings.to_tokens(&mut module);
@@ -194,4 +153,45 @@ impl std::fmt::Display for Bindings {
 		    .expect("writing to a vec cannot fail");
 		f.write_str(std::str::from_utf8(&bytes).expect("we should only write bindings that are valid utf-8"))
 	}
+}
+
+
+#[cfg(feature = "extra-codegen")]
+fn insert_compat_aliases(bindings: &mut syn::File, renamed: SharedIdents) {
+	let mut items = TokenStream::new();
+	let common_span = items.span();
+	let idents = renamed.read().expect("ident-map set is locked");
+	let var = idents.iter()
+	                .filter_map(|(orig, new)| {
+		                let old = orig.item_name();
+		                (!matches!(orig, Kind::EnumVariant(..)) && new != old).then_some((old, new.as_str()))
+	                })
+	                .filter(|&(_, new)| {
+		                // get rid off unexisting things:
+		                bindings.items.iter().any(|existing| {
+			                                     use syn::*;
+			                                     if let Item::Const(ItemConst { ident, .. }) |
+			                                     Item::Enum(ItemEnum { ident, .. }) |
+			                                     Item::Mod(ItemMod { ident, .. }) |
+			                                     Item::Static(ItemStatic { ident, .. }) |
+			                                     Item::Struct(ItemStruct { ident, .. }) |
+			                                     Item::Type(ItemType { ident, .. }) |
+			                                     Item::Union(ItemUnion { ident, .. }) |
+			                                     Item::Fn(ItemFn { sig: Signature { ident, .. },
+			                                                              .. }) = existing
+			                                     {
+				                                     ident.eq(new)
+			                                     } else {
+				                                     false
+			                                     }
+		                                     })
+	                })
+	                .map(|(old, new)| (syn::Ident::new(old, common_span), syn::Ident::new(new, common_span)))
+	                .map(|(old, new)| quote::quote!(pub use super::#new as #old;));
+	items.extend(var);
+
+	let module: syn::Item = syn::parse_quote! {
+		pub mod compat { /*! Original names of renamed types. */ #items }
+	};
+	bindings.items.push(module);
 }
