@@ -1,8 +1,11 @@
 [toolchain]
-channel = "nightly" # TODO: specify version like "nightly-2025-07-02"
+channel = "nightly-2026-02-24"
 profile = "minimal"
 targets = ["thumbv7em-none-eabihf"]
 components = [
-	"rust-src", # for build-std
+	"rust-src",      # for build-std
+	"llvm-tools",    # used by cargo-playdate
 	"rustfmt",
+	"clippy",
+	"rust-analyzer",
 ]
