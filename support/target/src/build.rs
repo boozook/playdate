@@ -63,38 +63,18 @@ mod spec {
 	}
 
 
-	pub fn build_json() -> Result<serde_json::Value> {
-		let toml = build_toml()?;
-		serde_json::to_value(toml).map_err(Into::into)
-	}
+	mod build;
 
-	pub fn build_toml() -> Result<toml::Value> {
-		let mut toml: toml::Value = toml::from_str(SPEC)?;
-		*toml.get_mut("link-script").unwrap() = toml::Value::String(LD.to_owned());
-		Ok(toml)
-	}
 
-	#[cfg(feature = "pretty")]
+	pub fn build_toml() -> Result<toml::Value> { build::build_toml(SPEC, Some(LD)) }
+
 	/// Build using toml-edit
-	pub fn build_toml_pretty() -> Result<toml_edit::DocumentMut> {
-		use toml_edit::DocumentMut;
-
-		let mut toml = SPEC.parse::<DocumentMut>().expect("invalid doc");
-		toml["link-script"] = toml_edit::value(LD);
-		*toml.get_mut("link-script").unwrap() = toml_edit::value(LD);
-
-		Ok(toml)
-	}
+	#[cfg(feature = "pretty")]
+	pub fn build_toml_pretty() -> Result<toml_edit::DocumentMut> { build::build_toml_edit(SPEC, Some(LD)) }
 
 
 	pub fn write_json(to: impl Write, pretty: bool) -> Result<()> {
-		let spec = build_json()?;
-
-		if pretty {
-			serde_json::to_writer_pretty(to, &spec)
-		} else {
-			serde_json::to_writer(to, &spec)
-		}.map_err(Into::into)
+		build::write_json_from_toml(SPEC, Some(LD), to, pretty)
 	}
 
 	pub fn write_toml(mut to: impl Write, pretty: bool) -> Result<()> {
@@ -133,15 +113,14 @@ mod spec {
 				to.write_all(bang.as_bytes()).ok();
 			}
 		}
+
 		// export:
 		let spec = fix_esc_for_multiline_str(build_toml_pretty()?.to_string());
 		to.write_all(spec.as_bytes()).map_err(Into::into)
 	}
 
 	/// fix issue https://github.com/blinxen/tomli/issues/7
-	fn fix_esc_for_multiline_str(src: impl AsRef<str>) -> String {
-		src.as_ref().replace("\n\\t\\t", "\n		").replace("\n\\t", "\n	")
-	}
+	fn fix_esc_for_multiline_str(src: impl AsRef<str>) -> String { src.as_ref().replace("\\t", "\t") }
 
 
 	trait TellCargo<Ok, Err: Display> {

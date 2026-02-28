@@ -126,6 +126,7 @@ link-script = """/* injected from file */"""
 
 [post-link-args]
 'ld.lld' = ["--emit-relocs", "--entry=eventHandlerShim"]
+gcc = ["--emit-relocs", "-Wl,--emit-relocs", "-nostartfiles", "--entry,eventHandlerShim"]
 # TODO: also for
 # - gcc(!): ["-e,eventHandlerShim", "-r", "-fpie", "-pie", "-rdynamic", "-mword-relocations"]
 # - gnu-cc

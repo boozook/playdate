@@ -16,7 +16,12 @@ anyhow = "1.0"
 [build-dependencies]
 toml = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
-toml_edit = { version = "0.23", features = ["serde"], optional = true }
+toml_edit = { workspace = true, optional = true, features = ["default", "serde"] }
+
+[dependencies]
+toml = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+toml_edit = { workspace = true, optional = true, features = ["default", "serde"] }
 
 
 [features]

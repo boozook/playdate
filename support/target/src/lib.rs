@@ -7,6 +7,8 @@ pub use kind::TargetKind;
 
 
 pub mod spec {
+	pub mod build;
+
 	/// Crate and spec version.
 	pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
