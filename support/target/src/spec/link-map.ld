@@ -1,40 +1,29 @@
-/* Elf layout that acceptable for PDC
-	docs: https://sourceware.org/binutils/docs/ld/Scripts.html
+/* Playdate OS 2.0+ elf layout compatible with PDC (v2.2+).
+	Linker: rust-lld, lld, ld.
+	Hardware rev: for RevA, compliant with RevB.
 */
 
-/* TODO: LD_FEATURE(string) */
-
-
-ASSERT(CONSTANT(MAXPAGESIZE), "MAXPAGESIZE not set")
-ASSERT(CONSTANT(COMMONPAGESIZE), "COMMONPAGESIZE not set")
-
 ASSERT(DEFINED(eventHandlerShim), "Playdate event-handler (entry-point) not found")
-
 ENTRY(eventHandlerShim)
 
-MEMORY
-{
-	/*
-		https://sourceware.org/binutils/docs/ld/MEMORY.html
-		RevA load loc: 61800
-		Heap: 8388208
-	*/
-	/* ram (rwx) : ORIGIN = 0, LENGTH = 61800 */
-	ram (rwx) : ORIGIN = 0, LENGTH = 8388208
-}
-PROVIDE(_fstack = ORIGIN(ram) + LENGTH(ram) - 4);
+/*
+	https://sourceware.org/binutils/docs/ld/MEMORY.html
+	RevA load loc: 61800
+	Heap: 8388208 (8MiB, probably "usable safe" could be 12-14M)
+	RAM: 16MiB
 
-PHDRS {
-	/* https://sourceware.org/binutils/docs/ld/PHDRS.html */
-	text PT_LOAD FLAGS(7); /* 7=RWX */
-}
+MEMORY { ram (rwx) : ORIGIN = 0, LENGTH = 8388208 }
+PROVIDE(_fstack = ORIGIN(ram) + LENGTH(ram) - 4);
+	RWX for JIT:
+	https://sourceware.org/binutils/docs/ld/PHDRS.html
+PHDRS { text PT_LOAD FLAGS(7); }
+*/
+
 
 SECTIONS
 {
-	.text ALIGN (CONSTANT (MAXPAGESIZE)) :
-	{
-		*(.text)
-		*(.text.*)
+	.text ALIGN(4): {
+		*(.text .text.*)
 
 		KEEP(*(.init))
 		KEEP(*(.fini))
@@ -53,73 +42,76 @@ SECTIONS
 		*(SORT(.dtors.*))
 		*(.dtors)
 
-		*(.rodata*)
+		*(.rodata .rodata.*)
+		*(.srodata .srodata.*)
 
-		KEEP(*(.eh_frame*))
-	} :text /* PUT IT IN THE text SEGMENT */
-
-
-	/* Optional extension like 'plugin-list as section' */
-	.pdext ALIGN(4): {
-	   __start_pdext = .;
-		KEEP(*(.pdext))
-	   KEEP(*(.pdext.*))
-	   __end_pdext = .;
-	   . = ALIGN(4);
-   } :text
-
-
-	/* XXX: better, but expensive:
-		.data DATA_SEGMENT_ALIGN(CONSTANT(MAXPAGESIZE), CONSTANT(COMMONPAGESIZE)) : */
-	.data DATA_SEGMENT_ALIGN(CONSTANT(COMMONPAGESIZE), 4) :
-	{
-		__etext = .;
-
-		__data_start__ = .;
-		*(vtable)
-		*(.data*)
+		*(.eh_frame*)
 
 		. = ALIGN(4);
-		/* preinit data */
+		__etext = .;
+	}
+
+
+	.data ALIGN(4): {
+		__data_start__ = .;
+		*(vtable)
+
+		*(.data .data.*)
+		*(.sdata .sdata.*)
+
+		. = ALIGN(4);
+
+		/* preinit */
 		PROVIDE_HIDDEN (__preinit_array_start = .);
 		KEEP(*(.preinit_array))
 		PROVIDE_HIDDEN (__preinit_array_end = .);
 
 		. = ALIGN(4);
-		/* init data */
+		/* init */
 		PROVIDE_HIDDEN (__init_array_start = .);
 		KEEP(*(SORT(.init_array.*)))
 		KEEP(*(.init_array))
 		PROVIDE_HIDDEN (__init_array_end = .);
 
 		. = ALIGN(4);
-		/* fini data */
+		/* fini */
 		PROVIDE_HIDDEN (__fini_array_start = .);
 		KEEP(*(SORT(.fini_array.*)))
 		KEEP(*(.fini_array))
 		PROVIDE_HIDDEN (__fini_array_end = .);
 
 		. = ALIGN(4);
-		/* All data end */
 		__data_end__ = .;
-	} :text /* PUT IT IN THE text SEGMENT */
+	}
 
-	.bss (NOLOAD) : ALIGN(4)
-	{
-		. = ALIGN(4);
+	.bss (NOLOAD) : ALIGN(4) {
 		__bss_start__ = .;
-		*(.bss*)
+		*(.bss .bss.*)
+		*(.sbss .sbss.*)
 		*(COMMON)
 		*(COM)
 		. = ALIGN(4);
 		__bss_end__ = .;
-	} :text /* PUT IT IN THE text SEGMENT */
+	}
 
-	.reloc : {
+	/* optional extension-like list: */
+	.pdext ALIGN(4): {
+		__start_pdext = .;
+		KEEP(*(.pdext))
+		KEEP(*(.pdext.*))
+		__end_pdext = .;
 		. = ALIGN(4);
-		/* . = RELOC_TABLE_START; */
-		*(.rel*.*) /* might need to include other sections based on compiler output */
-	} :text /* PUT IT IN THE text SEGMENT */
+	}
+
+
+/* TODO: this should be injectable from user's script, optionally
+	`.debug_addr`+reloc needed for DWARFv5 and probably for v4.
+
+	.debug (NOLOAD) : {
+		*(.debug*)
+	}
+*/
+
 
 	/DISCARD/ :
 	{

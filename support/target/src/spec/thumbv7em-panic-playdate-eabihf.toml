@@ -19,7 +19,7 @@ metadata.tier = 2
 
 # Exclude comp-builtins like memcmp, memcpy, memmove, memset.
 # Disable optimizing certain code patterns to invocations of library functions that are assumed to exist.
-# Disabled by-default, but can be enabled with attr `#![no_builtins]`.
+# Disabled by-default, see also attr `#![no_builtins]`.
 no-builtins = false
 no-default-libraries = true
 requires-uwtable = false
@@ -46,65 +46,63 @@ code-model = "small"
 
 # inherited: +vfp4d16sp (VFP4 instructions with only 16 d-registers and no double precision)
 #                       https://developer.arm.com/documentation/ddi0489/f/floating-point-unit/fpu-functional-description
-#                       should be vfp5 (FPv5), but vfp4d16sp instead.
+#                       should be vfp5 (FPv5, `+fpv5sp,+fpv5d16sp`), but vfp4d16sp instead.
 # others -- added for explicitness
 # rev1: double precision registers are disabled by vendor
 # https://github.com/rust-lang/rust/blob/a2db9280539229a3b8a084a09886670a57bc7e9c/compiler/rustc_target/src/spec/targets/thumbv7em_none_eabihf.rs#L29-L36
 # https://github.com/rust-lang/rust/blob/master/src/doc/rustc/src/platform-support/thumbv7em-none-eabi.md
-features = "+m7,+vfp4,+vfp4d16sp,-d32,-fp64,+armv7-m,-neon,+dsp,-soft-float" # +DMA, +fp16fml?, +fpregs16?, +fpao?, +strict-align?
+features = "+m7,+armv7e-m,+dsp,+vfp4d16sp,-neon,-d32,-fp64,-soft-float" # +DMA, +fp16fml?, +fpregs16?, +fpao?, +strict-align?
 
+allow-asm = true
 c-enum-min-bits = 8       # inherited
 max-atomic-width = 32     # inherited
 target-pointer-width = 32 # inherited
 # has-thumb-interworking — mb. DSP, DMA
 
-crt-objects-fallback = "false" # inherited, may be enabled when needed
-frame-pointer = "may-omit"     # owerriden, may be 'always' if needed for PGO
+entry-abi = "C"                 # platform specific
+entry-name = "eventHandlerShim" # platform specific
 
-
-panic-strategy = "abort" # inherited, can also be `immediate-abort`
-
+binary-format = "elf"
 # Only executables are permitted (actually static libs too, but executables we able to optimize and tune better)
 executables = true
-static-position-independent-executables = true
-binary-format = "elf"
 
-singlethread = true      # audio task is on the separate thread, so could be false
+crt-objects-fallback = "false" # inherited, may be enabled when needed
+frame-pointer = "may-omit"     # owerriden, may be 'always' if needed for debug or PGO
+panic-strategy = "abort"       # inherited, can also be `immediate-abort`
+
+singlethread = true      # audio task is on the separate thread, so could be `false`
 tls-model = "emulated"   # Cortex-M has no hw TLS (no MMU, no TLS-segments)
 has-thread-local = false
 
 function-sections = true    # needed for analyze, opts & LTO
 merge-functions = "aliases" # TODO: ensure that it's better option
 
-entry-abi = "C"
-entry-name = "eventHandlerShim" # platform specific
-relocation-model = "pie"        # platform specific, can be PIE or PIC
 
-# Enables relocation relaxation optimizations (e.g., converting expensive relocations to cheaper ones where possible),
-# potentially reducing code size or improving performance on ARM.
-relax-elf-relocations = true
-
-# ELF RELRO (Relocation Read-Only) protection level.
-relro-level = "off" # not needed, entier resulting PH is RWX
+# relocation-model = "pie" # platform specific, can be PIE, PIC or default if set `static-position-independent-executables`
+static-position-independent-executables = true # "static PIE"
+relax-elf-relocations = true                   # relaxation optimizations
+relro-level = "partial"                        # set "off" if entier resulting PH is RWX, for JIT
 
 
-emit-debug-gdb-scripts = false                            # inherited
+# NOTE: DWARF v4 and v5 requires to keep `.debug*`-sections in the product.
+# DWARFv4 is more compatible with modern tooling and emitted relocs.
+# DWARFv5 is better, but currently not at all compatible with relocs.
 debuginfo-kind = "dwarf"
-default-dwarf-version = 5                                 # TODO: ensure, tune version
-supported-split-debuginfo = ["off", "packed", "unpacked"]
+default-dwarf-version = 5
 split-debuginfo = "packed"
-allow-asm = true
+supported-split-debuginfo = ["off", "packed", "unpacked"]
+emit-debug-gdb-scripts = false                            # inherited
 
-eh-frame-header = false         # TODO: mb. ON for PGO?
-stack-probes.kind = "inline"    # mb. `none`
-supports-stack-protector = true
+eh-frame-header = false          # NOTE: force ON for PGO
+stack-probes.kind = "none"       # unnecessary
+supports-stack-protector = false # unnecessary
 default-codegen-units = 1
 
 
 llvm-args = [
-	"-inline-max-stacksize=9216", # FIXME: 4096 (page) could be better
+	"-inline-max-stacksize=9216", # FIXME: 4096 could be better
 ]
-supported-sanitizers = [] # TODO: is there something supporting arm32?...
+# supported-sanitizers = [] # TODO: is there something supporting ARM32/Thumb2?...
 # llvm-mcount-intrinsic # for profiling & PGO
 
 
@@ -113,40 +111,24 @@ linker-flavor = "gnu-lld"                                # inherited
 lld-flavor = "gnu"
 has-rpath = false
 dynamic-linking = false
-link-env = ["__STACK_SIZE=10240", "__HEAP_SIZE=8388208"]
+link-env = ["__STACK_SIZE=10240", "__HEAP_SIZE=8388208"] # not used currently
 link-script = """/* injected from file */"""
 
 [pre-link-args]
-# TODO:
+'ld.lld' = [
+	# "-zexecstack",      # for JIT and on-stack corutines
+	"-zstack-size=10240", # lld/ld doesn't uses it for bare-metal elfs, but why not in future
+	"--gc-sections",
+	"--as-needed",
+	"--no-undefined",
+	"--no-eh-frame-hdr",  # no unwind, so `.eh_frame_hdr`-table is unnecessary
+]
+
+[post-link-args]
+'ld.lld' = ["--emit-relocs", "--entry=eventHandlerShim"]
+# TODO: also for
+# - gcc(!): ["-e,eventHandlerShim", "-r", "-fpie", "-pie", "-rdynamic", "-mword-relocations"]
 # - gnu-cc
 # - gnu-lld-cc
 # - unix-cc
 # - llbc
-
-'ld.lld' = [
-	"-zexecstack", # additional for single RWX PH defined in the linker-script, for JIT
-
-	# Constants:
-	# FIXME: what exactly here to use?
-	# - max for `gameTask` (10240)
-	# - or min as max for `audio` (4096)
-	# - or mid as for `esp32`-task (6144)
-	"-zstack-size=10240",
-	"-zmax-page-size=4096",  # typical embedded 4k "pages", usage: `MAXPAGESIZE`
-	"-zcommon-page-size=32", # usage: `COMMONPAGESIZE` or system page size
-]
-gcc = [
-	# XXX: remove unnecessary
-	"-ffunction-sections",
-	"-fdata-sections",
-	"-fno-common",
-	"-ffunction-sections",
-	"-fdata-sections",
-	"-fno-exceptions",
-	"-fno-rtti",
-]
-
-# XXX: remove unnecessary
-[post-link-args] # -Wl,--gc-sections
-'ld.lld' = ["--emit-relocs", "--gc-sections", "--entry=eventHandlerShim"]
-gcc = ["-e,eventHandlerShim", "-r", "-fpic", "-rdynamic", "-mword-relocations"]
