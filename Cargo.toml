@@ -116,7 +116,3 @@ rustflags = [
 	'--cfg=pdtrace="cb-rem"',
 	# '--cfg=pdtrace="cb-into"',
 ]
-	'--cfg=pdtrace="cb-add"',
-	'--cfg=pdtrace="cb-rem"',
-	# '--cfg=pdtrace="cb-into"',
-]
