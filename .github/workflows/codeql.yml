@@ -233,7 +233,7 @@ jobs:
           flag-name: Unit
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           files: api-no-default.lcov.info,api-features.lcov.info,tools-utils.lcov.info,cargo.lcov.info
           flags: unit
