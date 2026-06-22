@@ -1,3 +1,13 @@
+## The future of this project directly depends on your donations.
+[![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/boozook?o=esb)
+
+Maintenance of this project is made possible by all the [contributors][] and [sponsors][].
+
+[contributors]: https://github.com/boozook/playdate/graphs/contributors
+[sponsors]: https://github.com/sponsors/boozook
+
+- - -
+
 # 🦀 Playdate API and build tools in Rust
 
 This project allows you to create games for the [Playdate handheld gaming system][playdate-website] in Rust lang.
