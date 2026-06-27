@@ -211,7 +211,7 @@ jobs:
         continue-on-error: true
         id: commit
         if: steps.sdk.outcome == 'success'
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v10
         with:
           add: ./api/sys/gen/*.rs
           author_name: Update Bot
@@ -294,7 +294,7 @@ jobs:
 
       - name: Commit
         id: commit
-        uses: EndBug/add-and-commit@v9.1.4
+        uses: EndBug/add-and-commit@v10
         with:
           add: ./api/sys/Cargo.toml
           author_name: Bump Bot
