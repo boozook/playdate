@@ -85,12 +85,12 @@ jobs:
           - ${{ inputs.sdk || 'latest' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref || github.ref }}
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             target/
@@ -158,12 +158,12 @@ jobs:
           # - beta
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref || github.ref }}
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             target/
@@ -215,12 +215,12 @@ jobs:
           # - beta
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref || github.ref }}
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             target/
@@ -284,12 +284,12 @@ jobs:
           # - beta
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref || github.ref }}
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo
@@ -357,7 +357,7 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref || github.ref }}
 
@@ -435,7 +435,7 @@ jobs:
           - { name: win, key: windows-latest }
           - { name: linux, key: ubuntu-latest }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref || github.ref }}
 
@@ -443,7 +443,7 @@ jobs:
         run: rustup component add clippy
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             target/
@@ -502,7 +502,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Config
         uses: ./.github/actions/init-cfg
@@ -538,7 +538,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Config
         uses: ./.github/actions/init-cfg

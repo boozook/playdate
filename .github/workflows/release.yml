@@ -57,7 +57,7 @@ jobs:
           - windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Deps
         uses: ./.github/actions/tools-deps
@@ -147,7 +147,7 @@ jobs:
 
       - name: Upload for next jobs
         if: runner.os == 'macOS'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           path: |
             target/release/pdbindgen
@@ -165,7 +165,7 @@ jobs:
     runs-on: macos-12
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: prepare dir
         run: |
@@ -174,7 +174,7 @@ jobs:
 
       - name: Download artifacts
         continue-on-error: true
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           path: target/download/
 

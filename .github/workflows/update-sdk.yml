@@ -48,7 +48,7 @@ jobs:
           echo "Will checkout ${{ github.event.inputs.source || github.ref }}"
 
       - name: Checkout Master
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.inputs.source || github.ref || github.event.repository.default_branch }}
 
@@ -117,12 +117,12 @@ jobs:
           echo "Working branch: ${{ needs.new-branch.outputs.working }}"
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ needs.new-branch.outputs.working }}
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             target/
@@ -198,7 +198,7 @@ jobs:
         continue-on-error: true
         id: commit
         if: steps.sdk.outcome == 'success'
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v10
         with:
           add: ./api/sys/gen/*.rs
           author_name: dependabot[bot]
@@ -226,7 +226,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ needs.new-branch.outputs.working }}
           fetch-depth: 10
@@ -269,7 +269,7 @@ jobs:
       pull-requests: write
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.new-branch.outputs.working }}
 
@@ -283,7 +283,7 @@ jobs:
 
       - name: Commit
         id: commit
-        uses: EndBug/add-and-commit@v9.1.4
+        uses: EndBug/add-and-commit@v10
         with:
           add: ./api/sys/Cargo.toml
           author_name: dependabot[bot]
@@ -317,7 +317,7 @@ jobs:
           echo "Base branch: ${{ needs.new-branch.outputs.base }}"
           echo "Working branch: ${{ needs.new-branch.outputs.working }}"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.new-branch.outputs.working }}
 
@@ -363,7 +363,7 @@ jobs:
           echo "Any: ${{ needs.pr.outputs.url || needs.pr.outputs.number }}"
 
       # needed when using PR-number instead of url
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.new-branch.outputs.working }}
 
