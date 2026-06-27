@@ -35,7 +35,7 @@ impl<'dev> MountedDevicePathBorrowed<'dev> {
 	pub fn into_path(self) -> String { self.path }
 	pub fn into_parts(self) -> (&'dev MountedDevice, String) { (self.drive, self.path) }
 
-	pub fn to_owned_replacing(self) -> impl FnOnce(MountedDevice) -> MountedDevicePath {
+	pub fn to_owned_replacing(self) -> impl FnOnce(MountedDevice) -> MountedDevicePath + use<> {
 		let (_, path) = self.into_parts();
 		move |drive| MountedDevicePath { drive, path }
 	}

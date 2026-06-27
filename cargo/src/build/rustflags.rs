@@ -128,7 +128,7 @@ impl Rustflags {
 			}
 		}
 		log::debug!("removed duplicates flags: {drained:#?}");
-		flags.extract_if(|_, flags| flags.is_empty()).count();
+		flags.extract_if(.., |_, flags| flags.is_empty()).count();
 		Ok(Self { flags })
 	}
 

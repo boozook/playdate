@@ -1,10 +1,7 @@
 #![feature(never_type)]
-#![feature(extract_if)]
 #![feature(iter_intersperse)]
 #![feature(exit_status_error)]
-#![feature(btree_extract_if)]
 #![feature(const_trait_impl)]
-#![feature(let_chains)]
 #![feature(debug_closure_helpers)]
 
 extern crate build as playdate;
@@ -29,7 +26,6 @@ mod assets;
 mod package;
 mod layout;
 mod utils;
-mod init;
 
 
 fn main() -> CargoResult<()> {
@@ -70,14 +66,6 @@ fn execute(config: &Config) -> CargoResult<()> {
 		},
 
 		cli::cmd::Cmd::Build => {
-			if config.compile_options.build_config.build_plan {
-				// TODO: wrap result to our own build-plan?
-				// let plan = config.build_plan()?;
-				// TODO: return the plan
-				// config.compile_options.build_config.emit_json()
-				return Err(anyhow::anyhow!("build-plan in not implemented yet"));
-			}
-
 			let deps_tree = crate::utils::cargo::meta_deps::meta_deps(config)?;
 			build::build(config, &deps_tree)?;
 		},
@@ -208,7 +196,11 @@ fn execute(config: &Config) -> CargoResult<()> {
 				use simulator::run::run as run_sim;
 
 				if ck.is_playdate() {
-					let query = config.mounting.clone().unwrap_or_default().device;
+					let query = config.mounting
+					                  .as_ref()
+					                  .map(ToOwned::to_owned)
+					                  .unwrap_or_default()
+					                  .device;
 					let pdx = package.path.to_owned();
 					let no_install = false;
 					let no_read = config.no_read;
@@ -222,15 +214,6 @@ fn execute(config: &Config) -> CargoResult<()> {
 			}
 
 			std::process::exit(0)
-		},
-
-		cli::cmd::Cmd::New | cli::cmd::Cmd::Init => {
-			init::new_or_init(config)?;
-		},
-		cli::cmd::Cmd::Migrate => todo!(),
-		cli::cmd::Cmd::Publish => {
-			config.workspace.emit_warnings()?;
-			todo!()
 		},
 	}
 

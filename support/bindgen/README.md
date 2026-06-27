@@ -5,16 +5,9 @@ Util to generate bindings to Playdate with additional code-gen features like in-
 
 ## Requirements
 
-1. Rust __nightly__ toolchain
-2. [Playdate SDK][sdk]
-   - Ensure that env var `PLAYDATE_SDK_PATH` points to the SDK root
-3. Follow the [official documentation][sdk-prerequisites]
-   - Ensure that `arm-none-eabi-gcc` or `gcc-arm-none-eabi` in your `PATH`
-4. Requirements inherited by [bindgen][bindgen-crate], follow [official documentation][bindgen-requirements].
+1. [Common prerequisites described in the wiki](https://github.com/boozook/playdate/wiki#prerequisites).
+1. Requirements inherited by [bindgen][bindgen-crate], follow [official documentation][bindgen-requirements].
 
-
-[sdk]: https://play.date/dev/#cardSDK
-[sdk-prerequisites]: https://sdk.play.date/Inside%20Playdate%20with%20C.html#_prerequisites
 [bindgen-requirements]: https://rust-lang.github.io/rust-bindgen/requirements.html#clang
 
 

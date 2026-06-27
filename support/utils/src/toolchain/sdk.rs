@@ -18,7 +18,9 @@ pub struct Sdk {
 impl Sdk {
 	pub fn path(&self) -> &Path { &self.path }
 	pub fn c_api(&self) -> PathBuf { self.path.join("C_API") }
-	pub fn build_support(&self) -> BuildSupport { BuildSupport { path: self.c_api().join("buildsupport").into() } }
+	pub fn build_support(&'_ self) -> BuildSupport<'_> {
+		BuildSupport { path: self.c_api().join("buildsupport").into() }
+	}
 	pub fn version_file(&self) -> PathBuf { self.path.join("VERSION.txt") }
 
 	pub fn bin(&self) -> PathBuf { self.path.join("bin") }

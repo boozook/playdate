@@ -788,7 +788,7 @@ mod tests {
 	use super::*;
 	use crate::manifest::format::ManifestFmt;
 
-	use std::assert_matches::assert_matches;
+	use std::assert_matches;
 
 
 	type ManifestWithAny = Ext<Manifest<String>>;

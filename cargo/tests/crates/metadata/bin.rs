@@ -22,7 +22,7 @@ pub static EVENT_HANDLER_SHIM: extern "C" fn(*const pd::ffi::PlaydateAPI, pd::ff
 	eventHandlerShim;
 
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn eventHandlerShim(api: *const PlaydateAPI, event: PDSystemEvent, _arg: u32) -> c_int {
 	match event {
 		PDSystemEvent::kEventInit => unsafe {

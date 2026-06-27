@@ -197,7 +197,7 @@ impl Update for State {
 
 
 /// Entry point
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn event_handler(_api: NonNull<PlaydateAPI>, event: SystemEvent, _sim_key_code: u32) -> EventLoopCtrl {
 	// Unsafe static storage for our state.
 	// Usually it's safe because there's only one thread.

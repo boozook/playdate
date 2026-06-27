@@ -1,7 +1,7 @@
 [package]
 name = "playdate-build-utils"
 version = "0.3.11"
-readme = "README.md"
+readme = "Crate.md"
 description = "Utils that help to build program with Rust and Playdate API"
 keywords = ["playdate", "utility"]
 categories = ["development-tools::build-utils"]
@@ -30,3 +30,6 @@ cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
 
 [badges.maintenance]
 status = "actively-developed"
+
+[lints]
+workspace = true

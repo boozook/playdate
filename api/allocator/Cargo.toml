@@ -1,7 +1,7 @@
 [package]
 name = "playdate-allocator"
 version = "0.1.0"
-readme = "README.md"
+readme = "Crate.md"
 description = "Global allocator and allocator-api implementation for Playdate"
 keywords = ["playdate", "allocator", "allocator-api", "gamedev"]
 categories = ["memory-management", "external-ffi-bindings", "api-bindings", "game-development", "no-std"]
@@ -10,7 +10,6 @@ license.workspace = true
 authors.workspace = true
 homepage.workspace = true
 repository.workspace = true
-publish = true
 
 
 [features]
@@ -22,3 +21,7 @@ allocator-api = [] # Implementation of `allocator-api`
 static-link = []
 
 global-error-handler = [] # Optional global OoM handler, panics.
+
+
+[lints]
+workspace = true

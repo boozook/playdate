@@ -1,0 +1,135 @@
+# Schema:
+# $(rustc --print sysroot)/etc/target-spec-json-schema.json
+# or $(rustc +nightly --print sysroot)/etc/target-spec-json-schema.json
+# typically ~/.rustup/toolchains/$HOST_TOOLCHAIN/etc/target-spec-json-schema.json (or $RUSTUP_TOOLCHAIN)
+#
+# Doc:
+# https://doc.rust-lang.org/nightly/nightly-rustc/rustc_target/spec/struct.TargetOptions.html
+# https://docs.rust-embedded.org/embedonomicon/custom-target.html
+#
+# fields marked "inherited" are inherited by thumbv7em-none-eabihf
+# https://github.com/rust-lang/rust/blob/master/compiler/rustc_target/src/spec/targets/thumbv7em_none_eabihf.rs
+
+
+metadata.description = "Panic Playdate, ARM Cortex-M7 32b HF, FreeRTOS-based system with dynamic loader, starting from OS v2.1."
+metadata.host_tools = false
+metadata.std = false
+# inherited, this spec is merely a clarification with minor overidings.
+metadata.tier = 2
+
+# Exclude comp-builtins like memcmp, memcpy, memmove, memset.
+# Disable optimizing certain code patterns to invocations of library functions that are assumed to exist.
+# Disabled by-default, see also attr `#![no_builtins]`.
+no-builtins = false
+no-default-libraries = true
+requires-uwtable = false
+default-uwtable = false
+
+env = "elf"
+vendor = "panic"
+os = "playdate"
+target-family = []
+
+
+arch = "arm"
+cpu = "cortex-m7"
+abi = "eabihf"
+data-layout = "e-m:e-p:32:32-Fi8-i64:64-v128:64:128-a:0:32-n32-S64" # inherited
+
+llvm-target = "thumbv7em-none-eabihf" # inherited
+llvm-floatabi = "hard"                # inherited
+# llvm-abiname
+# rustc-abi
+
+code-model = "small"
+
+
+# inherited: +vfp4d16sp (VFP4 instructions with only 16 d-registers and no double precision)
+#                       https://developer.arm.com/documentation/ddi0489/f/floating-point-unit/fpu-functional-description
+#                       should be vfp5 (FPv5, `+fpv5sp,+fpv5d16sp`), but vfp4d16sp instead.
+# others -- added for explicitness
+# rev1: double precision registers are disabled by vendor
+# https://github.com/rust-lang/rust/blob/a2db9280539229a3b8a084a09886670a57bc7e9c/compiler/rustc_target/src/spec/targets/thumbv7em_none_eabihf.rs#L29-L36
+# https://github.com/rust-lang/rust/blob/master/src/doc/rustc/src/platform-support/thumbv7em-none-eabi.md
+features = "+m7,+armv7e-m,+dsp,+vfp4d16sp,-neon,-d32,-fp64,-soft-float" # +DMA, +fp16fml?, +fpregs16?, +fpao?, +strict-align?
+
+allow-asm = true
+c-enum-min-bits = 8       # inherited
+max-atomic-width = 32     # inherited
+target-pointer-width = 32 # inherited
+# has-thumb-interworking — mb. DSP, DMA
+
+entry-abi = "C"                 # platform specific
+entry-name = "eventHandlerShim" # platform specific
+
+binary-format = "elf"
+# Only executables are permitted (actually static libs too, but executables we able to optimize and tune better)
+executables = true
+
+crt-objects-fallback = "false" # inherited, may be enabled when needed
+frame-pointer = "may-omit"     # owerriden, may be 'always' if needed for debug or PGO
+panic-strategy = "abort"       # inherited, can also be `immediate-abort`
+
+singlethread = true      # audio task is on the separate thread, so could be `false`
+tls-model = "emulated"   # Cortex-M has no hw TLS (no MMU, no TLS-segments)
+has-thread-local = false
+
+function-sections = true    # needed for analyze, opts & LTO
+merge-functions = "aliases" # TODO: ensure that it's better option
+
+
+# relocation-model = "pie" # platform specific, can be PIE, PIC or default if set `static-position-independent-executables`
+static-position-independent-executables = true # "static PIE"
+relax-elf-relocations = true                   # relaxation optimizations
+relro-level = "partial"                        # set "off" if entier resulting PH is RWX, for JIT
+
+
+# NOTE: DWARF v4 and v5 requires to keep `.debug*`-sections in the product.
+# DWARFv4 is more compatible with modern tooling and emitted relocs.
+# DWARFv5 is better, but currently not at all compatible with relocs.
+debuginfo-kind = "dwarf"
+default-dwarf-version = 5
+split-debuginfo = "packed"
+supported-split-debuginfo = ["off", "packed", "unpacked"]
+emit-debug-gdb-scripts = false                            # inherited
+
+eh-frame-header = false          # NOTE: force ON for PGO
+stack-probes.kind = "none"       # unnecessary
+supports-stack-protector = false # unnecessary
+default-codegen-units = 1
+
+
+llvm-args = [
+	"-inline-max-stacksize=9216", # FIXME: 4096 could be better
+]
+# supported-sanitizers = [] # TODO: is there something supporting ARM32/Thumb2?...
+# llvm-mcount-intrinsic # for profiling & PGO
+
+
+linker = "rust-lld"                                      # inherited
+linker-flavor = "gnu-lld"                                # inherited
+lld-flavor = "gnu"
+has-rpath = false
+dynamic-linking = false
+link-env = ["__STACK_SIZE=10240", "__HEAP_SIZE=8388208"] # not used currently
+link-script = """/* injected from file */"""
+
+[pre-link-args]
+'ld.lld' = [
+	# "-zexecstack",      # for JIT and on-stack corutines
+	"-zstack-size=10240", # lld/ld doesn't uses it for bare-metal elfs, but why not in future
+	"--gc-sections",
+	"--as-needed",
+	"--no-undefined",
+	"--no-eh-frame-hdr",  # no unwind, so `.eh_frame_hdr`-table is unnecessary
+]
+
+[post-link-args]
+'ld.lld' = ["--emit-relocs", "--entry=eventHandlerShim"]
+gcc = ["--emit-relocs", "-Wl,--emit-relocs", "-nostartfiles", "--entry,eventHandlerShim"]
+# TODO: also for
+# - gcc(!): ["-e,eventHandlerShim", "-r", "-fpie", "-pie", "-rdynamic", "-mword-relocations"]
+# - gnu-cc
+# - gnu-lld-cc
+# - unix-cc
+# - llbc

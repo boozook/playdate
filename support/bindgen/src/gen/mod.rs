@@ -1,35 +1,38 @@
 #![cfg(feature = "extra-codegen")]
 use std::borrow::Cow;
-use std::collections::HashMap;
 use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
+use patch::PatchCfg;
+use syn::spanned::Spanned;
 use utils::toolchain::sdk::Sdk;
 use quote::ToTokens;
 use proc_macro2::TokenStream;
 
 use crate::Result;
 use crate::error::Error;
-use crate::rustify::rename::{self, Kind, SharedRenamed};
+use crate::nice::rename::{self, Kind, SharedIdents};
 
 pub mod docs;
-pub mod fixes;
+pub mod patch;
+pub mod common;
 
 
 #[allow(unused_variables)]
 pub fn engage(source: &bindgen::Bindings,
-              renamed: SharedRenamed,
+              renamed: SharedIdents,
+              patches: PatchCfg,
               features: &crate::cfg::Features,
               target: &crate::cfg::Target,
               sdk: &Sdk,
               root: Option<&str>)
               -> Result<Bindings> {
-	if features.rustify {
+	if features.patch {
 		rename::reduce(Arc::clone(&renamed));
 	}
 
 	let root_struct_name = {
-		let orig = root.as_ref().map(AsRef::as_ref).unwrap_or("PlaydateAPI");
+		let orig = root.as_deref().unwrap_or("PlaydateAPI");
 
 		// find the renamed root:
 		let key = Kind::Struct(orig.to_owned());
@@ -45,9 +48,6 @@ pub fn engage(source: &bindgen::Bindings,
 	};
 
 
-	// rename::print_as_md_table(Arc::clone(&renamed));
-
-
 	#[allow(unused_mut)]
 	let mut bindings = syn::parse_file(&source.to_string())?;
 
@@ -55,7 +55,7 @@ pub fn engage(source: &bindgen::Bindings,
 	#[cfg(feature = "documentation")]
 	let docset = if features.documentation {
 		let docset = docs::parser::parse(sdk)?;
-		docs::gen::engage(&mut bindings, &root_struct_name, &docset)?;
+		docs::r#gen::engage(&mut bindings, &root_struct_name, &docset)?;
 		Some(docset)
 	} else {
 		None
@@ -63,16 +63,19 @@ pub fn engage(source: &bindgen::Bindings,
 
 
 	#[cfg(feature = "extra-codegen")]
-	if features.rustify {
-		// let fixes = if target.is_playdate() {
-		let mut fixes = HashMap::new();
-		fixes.insert("system.error".to_owned(), fixes::Fix::ReturnNever);
-		// fixes
-		// } else {
-		// 	Default::default()
-		// };
-		fixes::engage(&mut bindings, &root_struct_name, target, &fixes)?;
+	if features.patch {
+		let renamed = Arc::clone(&renamed);
+		patch::engage(&mut bindings, &root_struct_name, target, patches, renamed)?;
+	} else {
+		panic!("features.patch is OFF: {features:#?}");
 	}
+
+	// add compat- module with original names:
+	#[cfg(feature = "extra-codegen")]
+	insert_compat_aliases(&mut bindings, renamed);
+
+	#[cfg(all(not(feature = "extra-codegen"), feature = "syn"))]
+	bindings.items.push(syn::parse_quote! { pub mod compat { /*! Original names of renamed types. */ pub use super::*; } });
 
 	let mut module = TokenStream::new();
 	bindings.to_tokens(&mut module);
@@ -118,23 +121,21 @@ impl Bindings {
 	/// Write these bindings as source text to the given `Write`able.
 	pub fn write<'a>(&self, mut writer: Box<dyn Write + 'a>) -> std::io::Result<()> {
 		// formatting:
-		let source = self.module.to_string();
-		let output = match crate::rustfmt(None, source.clone(), None) {
+		let output;
+		#[cfg(feature = "pretty")]
+		{
+			let tokens = &self.module;
+			output = prettyplease::unparse(&syn::parse_quote!(#tokens));
+		}
+		#[cfg(not(feature = "prettyplease"))]
+		{
+			output = self.module.to_string();
+		}
+		let output = match crate::rustfmt(None, output.as_str().into(), None) {
 			Ok(output) => output,
 			Err(err) => {
-				println!("cargo::warning=Rustfmt error: {err}");
-
-				let output: String;
-				#[cfg(feature = "pretty-please")]
-				{
-					let tokens = &self.module;
-					output = prettyplease::unparse(&syn::parse_quote!(#tokens));
-				}
-				#[cfg(not(feature = "prettyplease"))]
-				{
-					output = source;
-				}
-				output
+				println!("cargo::warning=rustfmt error: {err}");
+				output.into()
 			},
 		};
 
@@ -152,4 +153,45 @@ impl std::fmt::Display for Bindings {
 		    .expect("writing to a vec cannot fail");
 		f.write_str(std::str::from_utf8(&bytes).expect("we should only write bindings that are valid utf-8"))
 	}
+}
+
+
+#[cfg(feature = "extra-codegen")]
+fn insert_compat_aliases(bindings: &mut syn::File, renamed: SharedIdents) {
+	let mut items = TokenStream::new();
+	let common_span = items.span();
+	let idents = renamed.read().expect("ident-map set is locked");
+	let var = idents.iter()
+	                .filter_map(|(orig, new)| {
+		                let old = orig.item_name();
+		                (!matches!(orig, Kind::EnumVariant(..)) && new != old).then_some((old, new.as_str()))
+	                })
+	                .filter(|&(_, new)| {
+		                // get rid off unexisting things:
+		                bindings.items.iter().any(|existing| {
+			                                     use syn::*;
+			                                     if let Item::Const(ItemConst { ident, .. }) |
+			                                     Item::Enum(ItemEnum { ident, .. }) |
+			                                     Item::Mod(ItemMod { ident, .. }) |
+			                                     Item::Static(ItemStatic { ident, .. }) |
+			                                     Item::Struct(ItemStruct { ident, .. }) |
+			                                     Item::Type(ItemType { ident, .. }) |
+			                                     Item::Union(ItemUnion { ident, .. }) |
+			                                     Item::Fn(ItemFn { sig: Signature { ident, .. },
+			                                                              .. }) = existing
+			                                     {
+				                                     ident.eq(new)
+			                                     } else {
+				                                     false
+			                                     }
+		                                     })
+	                })
+	                .map(|(old, new)| (syn::Ident::new(old, common_span), syn::Ident::new(new, common_span)))
+	                .map(|(old, new)| quote::quote!(pub use super::#new as #old;));
+	items.extend(var);
+
+	let module: syn::Item = syn::parse_quote! {
+		pub mod compat { /*! Original names of renamed types. */ #items }
+	};
+	bindings.items.push(module);
 }
