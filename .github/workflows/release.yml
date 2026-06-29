@@ -143,7 +143,7 @@ jobs:
           lipo -create -output target/upload/pd-symbolize-crashlog${{ steps.names.outputs.os }} target/*/release/pd-symbolize-crashlog
 
       - name: Upload Release Artifacts
-        uses: AButler/upload-release-assets@v3.0
+        uses: AButler/upload-release-assets@v4.0
         with:
           release-id: ${{ needs.draft.outputs.id }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -233,7 +233,7 @@ jobs:
         run: mv target/release/cargo-playdate target/upload/cargo-playdate-${{ runner.os }}-${{ runner.arch }}
 
       - name: Upload Release Artifacts
-        uses: AButler/upload-release-assets@v3.0
+        uses: AButler/upload-release-assets@v4.0
         with:
           release-id: ${{ needs.draft.outputs.id }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
