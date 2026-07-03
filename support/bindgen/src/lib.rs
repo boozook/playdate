@@ -1,22 +1,25 @@
+#![feature(exit_status_error)]
 #![cfg_attr(feature = "documentation", feature(get_mut_unchecked))]
 pub extern crate bindgen;
 
+use std::borrow::Cow;
 use std::env;
 use std::path::{Path, PathBuf};
-use bindgen::callbacks::DeriveInfo;
+use std::sync::{Arc, RwLock};
 use bindgen::{EnumVariation, RustTarget, Builder, MacroTypeVariation};
+use r#gen::patch::PatchCfg;
+use nice::derive::DeriveConstParamTy;
 use utils::consts::*;
 use utils::toolchain::gcc::{ArmToolchain, Gcc};
 use utils::toolchain::sdk::Sdk;
 pub use bindgen_cfg as cfg;
-use rustify::rename::SharedRenamed;
+use nice::rename::{SharedCfg, SharedIdents};
 
 
 pub mod error;
-pub mod gen;
-pub mod rustify {
-	pub mod rename;
-}
+pub mod r#gen;
+pub mod nice;
+pub mod crepr;
 
 
 type Result<T, E = error::Error> = std::result::Result<T, E>;
@@ -29,7 +32,7 @@ pub const SDK_VER_SUPPORTED: &str = ">=2.1.0, <3.0.0";
 pub enum Bindings {
 	Bindgen(Box<bindgen::Bindings>),
 	#[cfg(feature = "extra-codegen")]
-	Engaged(gen::Bindings),
+	Engaged(r#gen::Bindings),
 }
 
 
@@ -81,8 +84,11 @@ pub struct Generator {
 	/// Configured [`bindgen::Builder`].
 	pub builder: Builder,
 
-	/// Renamed symbols, if `rustify` is enabled.
-	renamed: SharedRenamed,
+	/// Renamed symbols, if `nice` is enabled.
+	renamed: SharedIdents,
+	// input cfg
+	// pub rename_map: Option<RenameMapCfg>,
+	pub patches: Option<PatchCfg>,
 
 	// configuration
 	pub derives: cfg::Derive,
@@ -91,7 +97,76 @@ pub struct Generator {
 
 
 impl Generator {
-	pub fn new(cfg: cfg::Cfg) -> Result<Self> { create_generator(cfg) }
+	pub fn new(cfg: cfg::Cfg) -> Result<Self> {
+		println!("cargo::rerun-if-env-changed=TARGET");
+		println!("cargo::rerun-if-env-changed=PROFILE");
+
+		let cargo_target_triple = env::var("TARGET").expect("TARGET cargo env var");
+		let cargo_profile = env::var("PROFILE").expect("PROFILE cargo env var");
+		let is_debug = cargo_profile == "debug" || env_cargo_feature("DEBUG");
+
+		let sdk = cfg.sdk
+		             .map(|p| Sdk::try_new_exact(p).or_else(|_| Sdk::try_new()))
+		             .unwrap_or_else(Sdk::try_new)?;
+		let version_path = sdk.version_file();
+		let version_raw = sdk.read_version()?;
+		let version = check_sdk_version(&version_raw)?;
+		println!("cargo::rerun-if-changed={}", version_path.display());
+		let sdk_c_api = sdk.c_api();
+
+		let main_header = sdk_c_api.join("pd_api.h");
+		println!("cargo::rerun-if-changed={}", main_header.display());
+		println!("cargo::rerun-if-env-changed={SDK_ENV_VAR}");
+		// println!("cargo::metadata=include={}", sdk_c_api.display());
+
+
+		// builder:
+		let gcc = cfg.gcc
+		             .map(|p| {
+			             Gcc::try_from_path(p).and_then(ArmToolchain::try_new_with)
+			                                  .or_else(|_| ArmToolchain::try_new())
+		             })
+		             .unwrap_or_else(ArmToolchain::try_new)?;
+
+
+		let rename_map = if let Some(ref p) = cfg.rename {
+			let src = std::fs::read_to_string(&p)?;
+			let cfg = serde_yml::from_str(&src).expect("Invalid content in rename-map");
+			Some(Arc::new(RwLock::new(cfg)))
+		} else {
+			None
+		};
+		let patches_cfg = if let Some(ref p) = cfg.patch {
+			let src = std::fs::read_to_string(&p)?;
+			Some(serde_yml::from_str(&src).expect("Invalid content in patch cfg"))
+		} else {
+			None
+		};
+
+		let (mut builder, renamed) = create_builder(
+		                                            &cargo_target_triple,
+		                                            &sdk_c_api,
+		                                            &main_header,
+		                                            &cfg.derive,
+		                                            &cfg.features,
+		                                            rename_map,
+		);
+		builder = apply_profile(builder, is_debug);
+		builder = apply_target(builder, &cargo_target_triple, &gcc);
+
+
+		let filename = cfg::Filename::new(version.to_owned(), cfg.derive)?;
+
+		Ok(Self { sdk,
+		          gcc,
+		          version,
+		          filename,
+		          builder,
+		          renamed,
+		          patches: patches_cfg,
+		          derives: cfg.derive,
+		          features: cfg.features })
+	}
 
 	pub fn generate(mut self) -> Result<Bindings> {
 		// disable formatting if we gonna extra work:
@@ -107,69 +182,16 @@ impl Generator {
 
 
 		#[cfg(feature = "extra-codegen")]
-		gen::engage(
-		            &bindings,
-		            self.renamed,
-		            &self.features,
-		            &self.filename.target,
-		            &self.sdk,
-		            None,
+		r#gen::engage(
+		              &bindings,
+		              self.renamed,
+		              self.patches.unwrap_or_default(),
+		              &self.features,
+		              &self.filename.target,
+		              &self.sdk,
+		              None,
 		).map(Bindings::Engaged)
 	}
-}
-
-
-fn create_generator(cfg: cfg::Cfg) -> Result<Generator, error::Error> {
-	println!("cargo::rerun-if-env-changed=TARGET");
-	let cargo_target_triple = env::var("TARGET").expect("TARGET cargo env var");
-
-	println!("cargo::rerun-if-env-changed=PROFILE");
-	let cargo_profile = env::var("PROFILE").expect("PROFILE cargo env var");
-	let is_debug = cargo_profile == "debug" || env_cargo_feature("DEBUG");
-
-	let sdk = cfg.sdk
-	             .map(|p| Sdk::try_new_exact(p).or_else(|_| Sdk::try_new()))
-	             .unwrap_or_else(Sdk::try_new)?;
-	let version_path = sdk.version_file();
-	let version_raw = sdk.read_version()?;
-	let version = check_sdk_version(&version_raw)?;
-	println!("cargo::rerun-if-changed={}", version_path.display());
-	let sdk_c_api = sdk.c_api();
-
-	let main_header = sdk_c_api.join("pd_api.h");
-	println!("cargo::rerun-if-changed={}", main_header.display());
-	println!("cargo::rerun-if-env-changed={SDK_ENV_VAR}");
-	println!("cargo::metadata=include={}", sdk_c_api.display());
-
-
-	// builder:
-	let gcc = cfg.gcc
-	             .map(|p| {
-		             Gcc::try_from_path(p).and_then(ArmToolchain::try_new_with)
-		                                  .or_else(|_| ArmToolchain::try_new())
-	             })
-	             .unwrap_or_else(ArmToolchain::try_new)?;
-	let (mut builder, renamed) = create_builder(
-	                                            &cargo_target_triple,
-	                                            &sdk_c_api,
-	                                            &main_header,
-	                                            &cfg.derive,
-	                                            &cfg.features,
-	);
-	builder = apply_profile(builder, is_debug);
-	builder = apply_target(builder, &cargo_target_triple, &gcc);
-
-
-	let filename = cfg::Filename::new(version.to_owned(), cfg.derive)?;
-
-	Ok(Generator { sdk,
-	               gcc,
-	               version,
-	               filename,
-	               builder,
-	               renamed,
-	               derives: cfg.derive,
-	               features: cfg.features })
 }
 
 
@@ -205,43 +227,12 @@ fn create_builder(_target: &str,
                   capi: &Path,
                   header: &Path,
                   derive: &cfg::Derive,
-                  features: &cfg::Features)
-                  -> (Builder, SharedRenamed) {
+                  features: &cfg::Features,
+                  rename_map: Option<SharedCfg>)
+                  -> (Builder, SharedIdents) {
 	let mut builder = bindgen::builder()
 	.header(format!("{}", header.display()))
 	.rust_target(RustTarget::nightly())
-
-	// allow types:
-	.allowlist_recursively(true)
-	.allowlist_type("PlaydateAPI")
-	.allowlist_type("PDSystemEvent")
-	.allowlist_type("LCDSolidColor")
-	.allowlist_type("LCDColor")
-	.allowlist_type("LCDPattern")
-	.allowlist_type("PDEventHandler")
-
-	.allowlist_var("LCD_COLUMNS")
-	.allowlist_var("LCD_ROWS")
-	.allowlist_var("LCD_ROWSIZE")
-	.allowlist_var("LCD_SCREEN_RECT")
-	.allowlist_var("SEEK_SET")
-	.allowlist_var("SEEK_CUR")
-	.allowlist_var("SEEK_END")
-	.allowlist_var("AUDIO_FRAMES_PER_CYCLE")
-	.allowlist_var("NOTE_C4")
-
-	// experimental:
-	.default_macro_constant_type(MacroTypeVariation::Unsigned)
-	.allowlist_var("LCDMakePattern")
-	.allowlist_type("LCDMakePattern")
-	.allowlist_var("LCDOpaquePattern")
-	.allowlist_type("LCDOpaquePattern")
-	.allowlist_type("LCDFontLanguage")
-
-	.bitfield_enum("FileOptions")
-	.bitfield_enum("PDButtons")
-
-	// types:
 	.use_core()
 	.ctypes_prefix("core::ffi")
 	.size_t_is_usize(true)
@@ -249,43 +240,95 @@ fn create_builder(_target: &str,
 	.translate_enum_integer_types(true)
 	.array_pointers_in_arguments(true)
 	.explicit_padding(false)
-
 	.default_enum_style(EnumVariation::Rust { non_exhaustive: false })
-
 	.layout_tests(true)
 	.enable_function_attribute_detection()
 	.detect_include_paths(true)
-
 	.clang_args(&["--include-directory", &capi.display().to_string()])
 	.clang_arg("-DTARGET_EXTENSION=1")
-
-	.dynamic_link_require_all(true)
-
+	// .dynamic_link_require_all(true)
+	.generate_comments(true)
+	// macro:
+	.default_macro_constant_type(MacroTypeVariation::Unsigned)
+	// allow types:
+	.allowlist_recursively(true)
+	.allowlist_type("PlaydateAPI")
+	.allowlist_type("LCD.*")
+	.allowlist_type("PD.*")
+	.allowlist_var("LCD_.*")
+	.allowlist_var("SEEK_.*")
+	.allowlist_var("NOTE_.*")
+	.allowlist_var("AUDIO_FRAMES_PER_CYCLE")
+	// impl bitfield:
+	.bitfield_enum("FileOptions")
+	.bitfield_enum("PDButtons")
+	// attrs:
+	.must_use_type(".*")
 	// derives:
+	.derive_debug(derive.copy)
 	.derive_default(derive.default)
-	.derive_eq(derive.eq)
-	.derive_copy(derive.copy)
 	.derive_debug(derive.debug)
+	.derive_eq(derive.eq)
 	.derive_hash(derive.hash)
 	.derive_ord(derive.ord)
 	.derive_partialeq(derive.partialeq)
-	.derive_partialord(derive.partialord)
+	.derive_partialord(derive.partialord);
 
-	.must_use_type("playdate_*")
-	.must_use_type(".*")
-	.generate_comments(true);
+	// backlist some derives for safety purposes:
+	const NO_DER: &[&str] = &[
+	                          "PlaydateAPI",
+	                          "playdate.*",
+	                          "LCDBitmap",
+	                          "LCDBitmapTable",
+	                          "LCDFont",
+	                          "LCDFontData",
+	                          "LCDFontPage",
+	                          "LCDFontGlyph",
+	                          "LCDTileMap",
+	                          "LCDVideoPlayer",
+	                          "LCDStreamPlayer",
+	                          "HTTPConnection",
+	                          "TCPConnection",
+	                          "PDScore.*",
+	                          "PDBoard.*",
+	                          "json_.*",
+	                          "LuaUDObject",
+	                          "PDMenuItem",
+	                          "LCDSprite",
+	                          "SpriteCollisionInfo",
+	                          "SpriteQueryInfo",
+	                          "FilePlayer",
+	                          "SoundSource",
+	                          "AudioSample",
+	                          "SamplePlayer",
+	                          "PDSynth.*",
+	                          "ControlSignal",
+	                          "SequenceTrack",
+	                          "RingModulator",
+	                          "TwoPoleFilter",
+	                          "OnePoleFilter",
+	                          "BitCrusher",
+	                          "DelayLine",
+	                          "DelayLineTap",
+	                          "Overdrive",
+	                          "SoundSequence",
+	                          "SoundEffect",
+	                          "SoundChannel",
+	];
+	for &name in NO_DER {
+		builder = builder.no_copy(name)
+		                 .no_debug(name)
+		                 .no_default(name)
+		                 .no_partialeq(name)
+		                 .no_hash(name);
+	}
 
 
 	builder = builder.parse_callbacks(Box::new(bindgen::CargoCallbacks::new()));
-	if !derive.copy {
-		builder = builder.parse_callbacks(Box::new(DeriveCopyToPrimitives));
-	}
-	if derive.constparamty {
-		builder = builder.parse_callbacks(Box::new(DeriveConstParamTy));
-	}
 
-	let renamed = if features.rustify {
-		let hook = rustify::rename::RenameMap::new();
+	let idents = if features.patch {
+		let rename_map = rename_map.unwrap_or_default();
+		let hook = nice::rename::RenameMap::new(rename_map);
 		let renamed = hook.renamed.clone();
 		builder = builder.parse_callbacks(Box::new(hook));
 		renamed
@@ -293,151 +336,66 @@ fn create_builder(_target: &str,
 		Default::default()
 	};
 
-
-	// explicitly set "do not derive":
-	if !derive.default {
-		builder = builder.no_default(".*");
-	}
-	if !derive.copy {
-		builder = builder.no_copy(".*");
-	}
-	if !derive.debug {
-		builder = builder.no_debug(".*");
-	}
-	if !derive.hash {
-		builder = builder.no_hash(".*");
-	}
-	if !derive.partialeq {
-		builder = builder.no_partialeq(".*");
+	if derive.constparamty {
+		builder = builder.parse_callbacks(Box::new(DeriveConstParamTy::new(idents.clone())));
 	}
 
-	(builder, renamed)
+	(builder, idents)
 }
 
 
 fn apply_profile(mut builder: Builder, debug: bool) -> Builder {
 	// extra code-gen for `debug` feature:
 	if debug {
-		builder = builder.clang_arg("-D_DEBUG=1").derive_debug(true);
+		builder = builder.clang_arg("-D_DEBUG=1");
 	} else {
 		// should we set "-D_DEBUG=0"?
-		// builder = builder.derive_debug(false).no_debug(".*");
 	}
 	builder
 }
 
 
-// This is for build with ARM toolchain.
+// Uses std from ARM toolchain.
 // TODO: impl build with just LLVM.
-fn apply_target(mut builder: Builder, target: &str, gcc: &ArmToolchain) -> Builder {
-	builder = if DEVICE_TARGET == target {
-		let arm_eabi_include = gcc.include();
-		// println!("cargo::rustc-link-search={}", arm_eabi.join("lib").display()); // for executable
-		println!("cargo::metadata=include={}", arm_eabi_include.display());
+fn apply_target(builder: Builder, target: &str, gcc: &ArmToolchain) -> Builder {
+	use target::TargetKind as Tk;
 
-		// TODO: prevent build this for other targets:
-		// builder = builder.raw_line(format!("#![cfg(target = \"{DEVICE_TARGET}\")]\n\n"));
-
-		builder.clang_arg("-DTARGET_PLAYDATE=1")
-		       .blocklist_file("stdlib.h")
+	let tk = Tk::from_cargo_env().unwrap_or_else(|err| {
+		                             eprintln!("PdTargetKind from env: {err}");
+		                             Tk::from_target(target)
+	                             });
+	match tk {
+		Tk::Device => {
+			let arm_eabi_include = gcc.include();
+			builder.clang_arg("-DTARGET_PLAYDATE=1")
+		       .blocklist_file("stdlib.h" /* exclude STD */)
 		       .clang_args(&["-target", DEVICE_TARGET])
 		       .clang_arg("-fshort-enums")
-		       .clang_args(&["--include-directory", &arm_eabi_include.display().to_string()])
-		       .clang_arg(format!("-I{}", arm_eabi_include.display()))
-	} else {
-		builder.clang_arg("-DTARGET_SIMULATOR=1")
-	};
-	builder
-}
-
-
-/// Derives `Copy` to simple structs and enums.
-#[derive(Debug)]
-struct DeriveCopyToPrimitives;
-impl bindgen::callbacks::ParseCallbacks for DeriveCopyToPrimitives {
-	fn add_derives(&self, info: &DeriveInfo<'_>) -> Vec<String> {
-		const TYPES: &[&str] = &[
-		                         "PDButtons",
-		                         "FileOptions",
-		                         "LCDBitmapDrawMode",
-		                         "LCDBitmapFlip",
-		                         "LCDSolidColor",
-		                         "LCDLineCapStyle",
-		                         "PDStringEncoding",
-		                         "LCDPolygonFillRule",
-		                         "PDLanguage",
-		                         "PDPeripherals",
-		                         "l_valtype",
-		                         "LuaType",
-		                         "json_value_type",
-		                         "SpriteCollisionResponseType",
-		                         "SoundFormat",
-		                         "LFOType",
-		                         "SoundWaveform",
-		                         "TwoPoleFilterType",
-		                         "PDSystemEvent",
-		];
-
-		if TYPES.contains(&info.name) {
-			vec!["Copy".to_string()]
-		} else {
-			vec![]
-		}
+		       // .clang_args(&["--include-directory", &arm_eabi_include.display().to_string()])
+		       // .clang_arg(format!("-I{}", arm_eabi_include.display()))
+		       .clang_arg("-isystem")
+		       .clang_arg(arm_eabi_include.display().to_string() /* include STD */)
+		},
+		Tk::Simulator => builder.clang_arg("-DTARGET_SIMULATOR=1"),
 	}
 }
 
 
-#[derive(Debug)]
-/// Derives `Copy` to simple structs and enums.
-struct DeriveConstParamTy;
-
-impl bindgen::callbacks::ParseCallbacks for DeriveConstParamTy {
-	fn add_derives(&self, info: &DeriveInfo<'_>) -> Vec<String> {
-		const TYPES: &[&str] = &[
-		                         "PDButtons",
-		                         "FileOptions",
-		                         "LCDBitmapDrawMode",
-		                         "LCDBitmapFlip",
-		                         "LCDSolidColor",
-		                         "LCDLineCapStyle",
-		                         "PDStringEncoding",
-		                         "LCDPolygonFillRule",
-		                         "PDLanguage",
-		                         "PDPeripherals",
-		                         "l_valtype",
-		                         "LuaType",
-		                         "json_value_type",
-		                         "SpriteCollisionResponseType",
-		                         "SoundFormat",
-		                         "LFOType",
-		                         "SoundWaveform",
-		                         "TwoPoleFilterType",
-		                         "PDSystemEvent",
-		];
-
-		if TYPES.contains(&info.name) {
-			vec!["::core::marker::ConstParamTy".to_string()]
-		} else {
-			vec![]
-		}
-	}
-}
-
-
-pub fn rustfmt(mut rustfmt_path: Option<PathBuf>,
-               source: String,
-               config_path: Option<&Path>)
-               -> std::io::Result<String> {
+pub fn rustfmt<'src>(mut rustfmt: Option<PathBuf>,
+                     source: Cow<'src, str>,
+                     config_path: Option<&Path>)
+                     -> std::io::Result<Cow<'src, str>> {
 	use std::io::Write;
 	use std::process::{Command, Stdio};
 
-	rustfmt_path = rustfmt_path.or_else(|| std::env::var("RUSTFMT").map(PathBuf::from).ok());
-	#[cfg(feature = "which-rustfmt")]
-	{
-		rustfmt_path = rustfmt_path.or_else(|| which::which("rustfmt").ok());
-	}
-	let rustfmt = rustfmt_path.as_deref().unwrap_or(Path::new("rustfmt"));
+	rustfmt = rustfmt.or_else(|| std::env::var_os("RUSTFMT").map(PathBuf::from));
+	let rustfmt = rustfmt.as_deref().unwrap_or(Path::new("rustfmt"));
 
+	// check
+	Command::new(rustfmt).arg("-V")
+	                     .status()?
+	                     .exit_ok()
+	                     .map_err(std::io::Error::other)?;
 
 	let mut cmd = Command::new(rustfmt);
 
@@ -455,6 +413,7 @@ pub fn rustfmt(mut rustfmt_path: Option<PathBuf>,
 	// Write to stdin in a new thread, so that we can read from stdout on this
 	// thread. This keeps the child from blocking on writing to its stdout which
 	// might block us from writing to its stdin.
+	let source = source.into_owned();
 	let stdin_handle = std::thread::spawn(move || {
 		let _ = child_stdin.write_all(source.as_bytes());
 		source
@@ -468,18 +427,18 @@ pub fn rustfmt(mut rustfmt_path: Option<PathBuf>,
 	                         .expect("The thread writing to rustfmt's stdin doesn't do anything that could panic");
 
 	match String::from_utf8(output) {
-		Ok(bindings) => {
+		Ok(output) => {
 			match status.code() {
-				Some(0) => Ok(bindings),
+				Some(0) => Ok(output.into()),
 				Some(2) => Err(std::io::Error::other("Rustfmt parsing errors.".to_string())),
 				Some(3) => {
 					println!("cargo:warning=Rustfmt could not format some lines.");
-					Ok(bindings)
+					Ok(output.into())
 				},
 				_ => Err(std::io::Error::other("Internal rustfmt error".to_string())),
 			}
 		},
-		_ => Ok(source),
+		_ => Ok(source.into()),
 	}
 }
 

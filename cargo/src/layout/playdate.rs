@@ -2,10 +2,9 @@ use std::borrow::Cow;
 use std::ffi::OsString;
 use std::path::Path;
 use std::path::PathBuf;
-use std::hash::{Hash, Hasher};
 
 use cargo::core::PackageId;
-use cargo::util::StableHasher;
+use cargo::util::hash_u64;
 use cargo_util::paths;
 use cargo::CargoResult;
 use cargo::core::profiles::Profiles;
@@ -198,10 +197,8 @@ impl PlaydateAssets<PathBuf> {
 	}
 
 	fn name_for_package(config: &Config, package_id: &PackageId) -> TargetName {
-		let mut hasher = StableHasher::new();
 		let stable = package_id.stable_hash(config.workspace.root());
-		stable.hash(&mut hasher);
-		let hash = hasher.finish();
+		let hash = hash_u64(stable);
 		TargetName::with_package(format!("{}-{hash:016x}", package_id.name()))
 	}
 }

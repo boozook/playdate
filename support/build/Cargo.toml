@@ -1,7 +1,7 @@
 [package]
 name = "playdate-build"
 version = "0.4.4"
-readme = "README.md"
+readme = "Crate.md"
 description = "Utils that help to build package for Playdate"
 keywords = ["playdate", "package", "encoding", "manifest", "assets"]
 categories = ["development-tools::build-utils"]
@@ -18,7 +18,7 @@ dirs.workspace = true
 fs_extra.workspace = true
 regex.workspace = true
 semver.workspace = true
-wax = "0.6"
+wax = "0.7"
 symlink = "0.1"
 
 toml = { workspace = true, optional = true }
@@ -49,3 +49,6 @@ cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
 
 [badges.maintenance]
 status = "actively-developed"
+
+[lints]
+workspace = true

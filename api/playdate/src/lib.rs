@@ -49,7 +49,7 @@ pub mod ext {
 		fn system(&self) -> system::System<system::api::Cache>;
 
 		/// Playdate Peripherals API.
-		fn peripherals(&self) -> controls::peripherals::Peripherals<controls::api::Cache>;
+		fn peripherals(&self) -> controls::peripherals::Ctrl<controls::api::Cache>;
 
 		/// Playdate File-system API.
 		fn file(&self) -> fs::Fs<fs::api::Cache>;
@@ -79,9 +79,9 @@ pub mod ext {
 			system::System::new_with(system::api::Cache::from(unsafe { self.as_ref() }.system))
 		}
 
-		fn peripherals(&self) -> controls::peripherals::Peripherals<controls::api::Cache> {
+		fn peripherals(&self) -> controls::peripherals::Ctrl<controls::api::Cache> {
 			let api = system::api::Cache::from(unsafe { self.as_ref() }.system);
-			controls::peripherals::Peripherals::new_with(api.into())
+			controls::peripherals::Ctrl::new_with(api.into())
 		}
 
 		fn file(&self) -> fs::Fs<fs::api::Cache> {
@@ -114,9 +114,9 @@ pub mod ext {
 			system::System::new_with(system::api::Cache::from(unsafe { self.as_ref() }.expect("api").system))
 		}
 
-		fn peripherals(&self) -> controls::peripherals::Peripherals<controls::api::Cache> {
+		fn peripherals(&self) -> controls::peripherals::Ctrl<controls::api::Cache> {
 			let api = system::api::Cache::from(unsafe { self.as_ref() }.expect("api").system);
-			controls::peripherals::Peripherals::new_with(api.into())
+			controls::peripherals::Ctrl::new_with(api.into())
 		}
 
 		fn file(&self) -> fs::Fs<fs::api::Cache> {

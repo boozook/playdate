@@ -6,45 +6,23 @@ pub enum Cmd {
 	Build,
 	Run,
 
-	New,
-	Init,
-	Migrate,
-
 	/// Build Playdate package (pdx)
 	Package,
 
 	/// Prepare, collect assets for target
 	Assets,
-
-	/// Publish Playdate package
-	Publish,
 }
 
 impl Cmd {
 	#[allow(dead_code)]
-	pub const ALL: &'static [Cmd] = &[
-	                                  Self::Build,
-	                                  Self::Run,
-	                                  Self::New,
-	                                  Self::Init,
-	                                  Self::Migrate,
-	                                  Self::Package,
-	                                  Self::Assets,
-	                                  Self::Publish,
-	];
+	pub const ALL: &'static [Cmd] = &[Self::Build, Self::Run, Self::Package, Self::Assets];
 
 	pub fn as_str(&self) -> &'static str {
 		match self {
 			Self::Build => "build",
 			Self::Run => "run",
-
-			Self::New => "new",
-			Self::Init => "init",
-
-			Self::Migrate => "migrate",
 			Self::Package => "package",
 			Self::Assets => "assets",
-			Self::Publish => "publish",
 		}
 	}
 }
@@ -66,13 +44,8 @@ impl TryFrom<&str> for Cmd {
 			"build" => Self::Build,
 			"run" => Self::Run,
 
-			"new" => Self::New,
-			"init" => Self::Init,
-
-			"migrate" => Self::Migrate,
 			"package" => Self::Package,
 			"assets" => Self::Assets,
-			"publish" => Self::Publish,
 
 			other => bail!("Unknown command '{other}'."),
 		};

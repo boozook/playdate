@@ -15,7 +15,7 @@ mod shared;
 pd::ll_symbols!();
 
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn eventHandlerShim(api: *const PlaydateAPI, event: PDSystemEvent, _arg: u32) -> c_int {
 	match event {
 		PDSystemEvent::kEventInit => unsafe {

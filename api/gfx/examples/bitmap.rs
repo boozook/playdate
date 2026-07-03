@@ -1,112 +1,121 @@
 #![no_std]
-extern crate alloc;
+#![no_main]
+#![crate_type = "dylib"]
+#![allow(unused_must_use)]
 
 #[macro_use]
 extern crate sys;
 extern crate playdate_graphics as gfx;
 
-use core::ffi::*;
-use core::ptr::NonNull;
-
-use sys::EventLoopCtrl;
-use sys::ffi::*;
-use system::prelude::*;
+use display::Display;
+use system::System;
+use sys::ffi::{Playdate, SystemEvent};
+use sys::ffi::{LCD_COLUMNS, LCD_ROWSIZE, LCD_ROWS};
+use sys::ctrl::{EventLoopCtrl, UpdateDisplayCtrl};
 
 use gfx::Graphics;
 use gfx::bitmap::Bitmap;
-use gfx::text::StringEncoding;
 use gfx::color::*;
-use gfx::text::StringEncodingExt;
 
 
 const CENTER_X: u32 = LCD_COLUMNS / 2;
 const CENTER_Y: u32 = LCD_ROWS / 2;
-const TEXT_HEIGHT: u32 = 16;
+const TILE_WH: i32 = 33; // 8*4 +1px
 
 
-/// App state
 struct State {
-	rotation: c_float,
+	rotation: f32,
 	image: Bitmap,
+
+	gfx: Graphics,
 }
 
 impl State {
-	fn new() -> Self {
-		let image = Bitmap::new(100, 100, Color::BLACK).unwrap();
-		Self { rotation: 0., image }
-	}
+	fn new(api: &'static Playdate) -> Self {
+		let gfx = Graphics::new(api.graphics);
+		let pattern = color::pattern::opaque(color::pattern::gfxp::DOT12);
+		let mut image = Bitmap::new(&gfx, TILE_WH, TILE_WH, &pattern).unwrap();
 
-	/// Event handler
-	fn event(&'static mut self, event: SystemEvent) -> EventLoopCtrl {
-		match event {
-			// initial setup
-			SystemEvent::Init => {
-				display::Display::Default().set_refresh_rate(0.);
+		println!("w,h: {:?}", image.size(&gfx));
 
-				// Register our update handler that defined below
-				self.set_update_handler();
-			},
-			_ => {},
+		// just for example, trigger error
+		{
+			match image.load_into(&gfx, c"wrong-path") {
+				Err(e) => println!("Err: {e:?}"),
+				Ok(_) => unreachable!(),
+			}
 		}
 
-		EventLoopCtrl::Continue
+		Self { rotation: 0.,
+		       image,
+		       gfx }
 	}
-}
 
-impl Update for State {
+
 	/// Updates the state
-	fn update(&mut self) -> UpdateCtrl {
-		const LABEL_DEF: &str = "Just rotating bitmap:\0";
-		const ENC: StringEncoding = StringEncoding::ASCII;
-
-		let cstr = CStr::from_bytes_with_nul(LABEL_DEF.as_bytes()).unwrap();
-
-		// Create cached api end-point
-		let gfx = Graphics::Cached();
+	fn update(&mut self) -> UpdateDisplayCtrl {
+		let gfx = self.gfx;
 
 		gfx.clear(Color::WHITE);
 
-		// get width (screen-size) of text
-		let font = Default::default();
-		let text_width = gfx.get_text_width_cstr(cstr, ENC, font, 0);
-
-		// render text
-		gfx.draw_text_cstr(
-		                   cstr,
-		                   ENC,
-		                   CENTER_X as c_int - text_width / 2,
-		                   TEXT_HEIGHT.try_into().unwrap(),
-		);
 
 		// draw bitmap
-		self.image
-		    .draw_rotated(CENTER_X as _, CENTER_Y as _, self.rotation, 0.5, 0.5, 1.0, 1.0);
+		self.image.draw_rotated(
+		                        &gfx,
+		                        CENTER_X as _,
+		                        CENTER_Y as _,
+		                        self.rotation,
+		                        0.5,
+		                        0.5,
+		                        1.0,
+		                        1.0,
+		);
 
+		// update state
 		self.rotation += 1.0;
 		if self.rotation > 360.0 {
 			self.rotation = 0.0;
 		}
 
-		UpdateCtrl::Continue
+
+		// also draw someshit to debug-framebuffer
+		if let Ok(mut dbt) = gfx.debug_frame_buffer() {
+			gfx.push_context(&dbt);
+			self.image.draw_rotated(
+			                        &gfx,
+			                        (CENTER_X / 2) as _,
+			                        (CENTER_Y / 2) as _,
+			                        self.rotation,
+			                        0.5,
+			                        0.5,
+			                        1.0,
+			                        1.0,
+			);
+			gfx.pop_context();
+
+			let mut data = dbt.bitmap_data(&gfx);
+			data.data_mut()
+			    .chunks_exact_mut(LCD_ROWSIZE as _)
+			    .step_by(2)
+			    .map(|row| &mut row[(LCD_ROWSIZE - 10) as usize..])
+			    .for_each(|right_side| right_side.fill(0xFF));
+		}
+
+		UpdateDisplayCtrl::Needed
 	}
 }
 
 
 /// Entry point / event handler
-#[no_mangle]
-fn event_handler(_: NonNull<PlaydateAPI>, event: SystemEvent, _: u32) -> EventLoopCtrl {
-	// Unsafe static storage for our state.
-	// Usually it's safe because there's only one thread.
-	pub static mut STATE: Option<State> = None;
-	if unsafe { STATE.is_none() } {
-		let state = State::new();
-		unsafe { STATE = Some(state) }
-	}
+#[unsafe(no_mangle)]
+fn event_handler(api: &'static Playdate, e: SystemEvent, _: u32) -> EventLoopCtrl {
+	let SystemEvent::Init = dbg!(e) else {
+		return EventLoopCtrl::Continue;
+	};
 
-	// Call state.event
-	unsafe { STATE.as_mut() }.expect("impossible").event(event)
+	Display::new(api.display).set_fps(0.);
+	System::new(api.system).update()
+	                       .set_with(State::update, State::new(api));
+
+	EventLoopCtrl::Continue
 }
-
-
-// Needed for debug build
-ll_symbols!();

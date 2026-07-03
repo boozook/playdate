@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::io::{Error as IoError, ErrorKind as IoErrorKind};
 
-use wax::{LinkBehavior, WalkError};
+use wax::walk::{LinkBehavior, WalkError};
 use fs_extra::error::Error as FsExtraError;
 
 use crate::fs::soft_link_checked;

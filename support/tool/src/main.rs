@@ -78,7 +78,9 @@ async fn main() -> miette::Result<()> {
 	#[cfg(not(feature = "tracing"))]
 	{
 		#[cfg(debug_assertions)]
-		std::env::set_var("RUST_LOG", "trace,nusb=info");
+		unsafe {
+			std::env::set_var("RUST_LOG", "trace,nusb=info")
+		};
 		env_logger::Builder::from_env(env_logger::Env::default()).format_indent(Some(3))
 		                                                         .format_module_path(false)
 		                                                         .format_target(true)

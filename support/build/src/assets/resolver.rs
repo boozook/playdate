@@ -6,7 +6,9 @@ use std::str;
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 
 use regex::Regex;
-use wax::{Glob, LinkBehavior, WalkError, WalkEntry};
+use wax::{Glob};
+use wax::walk::{FileIterator as _, LinkBehavior, WalkError, Entry as _};
+type WalkEntry<'t> = wax::walk::GlobEntry;
 
 use crate::config::Env;
 use super::log_err;
@@ -40,7 +42,7 @@ pub fn resolve_includes<S: AsRef<str>, Excl: AsRef<str>>(expr: S,
 			           Error::from(err)
 		           }
 	           })?;
-	let exclude = exclude.iter().map(AsRef::as_ref).chain(["**/.*/**"]);
+	let exclude = wax::any(exclude.iter().map(AsRef::as_ref).chain(["**/.*/**"]));
 	let walker = glob.walk_with_behavior(crate_root, links)
 	                 .not(exclude)?
 	                 .map(|res| res.map(Match::from));
@@ -121,7 +123,9 @@ impl EnvResolver {
 		this
 	}
 
-	pub fn cache(&self) -> Option<std::cell::Ref<BTreeMap<String, String>>> { self.1.as_ref().map(|v| v.borrow()) }
+	pub fn cache(&'_ self) -> Option<std::cell::Ref<'_, BTreeMap<String, String>>> {
+		self.1.as_ref().map(|v| v.borrow())
+	}
 	pub fn into_cache(self) -> Option<BTreeMap<String, String>> { self.1.map(|cell| cell.into_inner()) }
 }
 impl Default for EnvResolver {
@@ -213,7 +217,7 @@ impl EnvResolver {
 
 #[derive(Debug)]
 pub enum Match {
-	Match(wax::WalkEntry<'static>),
+	Match(WalkEntry<'static>),
 	Pair {
 		/// The path to the file to include.
 		source: PathBuf,
@@ -246,13 +250,13 @@ impl serde::Serialize for Match {
 impl Eq for Match {}
 
 impl Match {
-	pub fn source(&self) -> Cow<Path> {
+	pub fn source(&'_ self) -> Cow<'_, Path> {
 		match self {
 			Match::Match(source) => Cow::Borrowed(source.path()),
 			Match::Pair { source, .. } => Cow::Borrowed(source.as_path()),
 		}
 	}
-	pub fn target(&self) -> Cow<Path> {
+	pub fn target(&'_ self) -> Cow<'_, Path> {
 		match self {
 			Match::Match(source) => Cow::Borrowed(Path::new(source.matched().complete())),
 			Match::Pair { target, .. } => Cow::Borrowed(target.as_path()),
@@ -288,7 +292,7 @@ impl Match {
 }
 
 impl From<WalkEntry<'_>> for Match {
-	fn from(entry: WalkEntry) -> Self { Match::Match(entry.into_owned()) }
+	fn from(entry: WalkEntry) -> Self { Match::Match(entry) }
 }
 
 impl Match {
@@ -364,14 +368,14 @@ impl From<Expr<'_>> for PathBuf {
 impl Expr<'_> {
 	pub fn original(&self) -> &str {
 		match self {
-			Expr::Original(ref s) => s,
-			Expr::Modified { ref original, .. } => original,
+			Expr::Original(s) => s,
+			Expr::Modified { original, .. } => original,
 		}
 	}
 	pub fn actual(&self) -> &str {
 		match self {
-			Expr::Original(ref s) => s,
-			Expr::Modified { ref actual, .. } => actual,
+			Expr::Original(s) => s,
+			Expr::Modified { actual, .. } => actual,
 		}
 	}
 }

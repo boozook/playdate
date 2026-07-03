@@ -1,7 +1,7 @@
 [package]
 name = "cargo-playdate"
 version = "0.5.8"
-readme = "README.md"
+readme = "Crate.md"
 description = "Build tool for neat yellow console."
 keywords = ["playdate", "build", "cargo", "plugin", "cargo-subcommand"]
 categories = [
@@ -27,23 +27,23 @@ path = "src/main.rs"
 once_cell = "1.21"
 try-lazy-init = "0.0.2"
 
-clap_lex = "0.7"
+clap_lex = "1.0"
 dirs.workspace = true
 fs_extra.workspace = true
 
-cargo = "0.82"
-cargo-util = "0.2.17"
-cargo-platform = "0.1.9"
-cargo-util-schemas = "0.5"
+cargo = "0.94"
+cargo-util = "0.2"
+cargo-platform = "0.3"
+cargo-util-schemas = "0.11"
 
 semver.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 toml.workspace = true
-toml_edit = { version = "0.22", features = ["serde"] }
+toml_edit = { workspace = true, optional = true, features = ["default", "serde"] }
 regex.workspace = true
 byteorder = "1.5"
-zip = { version = "2.4", features = ["time"] }
+zip = { version = "8.0", features = ["time"] }
 walkdir = "2.5"
 
 anyhow = "1.0"
@@ -90,11 +90,15 @@ features = [
 
 [dev-dependencies]
 target = "2.1"
-rand = "0.9"
+rand = "0.10"
 
 [target.'cfg(unix)'.dev-dependencies]
-nix = { version = "0.29", features = ["signal"] }
+nix = { version = "0.31", features = ["signal"] }
 
 
 [features]
 eject = ["device/eject"] # windows only, enable one more unmount method
+
+
+[lints]
+workspace = true

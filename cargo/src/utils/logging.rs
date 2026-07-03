@@ -1,9 +1,8 @@
 use std::borrow::Cow;
-use std::cell::RefMut;
 use std::fmt::Display;
-use std::ops::DerefMut;
 
-use cargo::core::Shell;
+use cargo::GlobalContext;
+use cargo::core::Verbosity;
 use cargo::util::machine_message::Message;
 use anstyle::AnsiColor as Color;
 
@@ -14,15 +13,14 @@ use crate::proc::reader::format::CargoMessage;
 use crate::proc::reader::format::CompilerMessage;
 
 
-pub struct CargoLogger<T: DerefMut<Target = Shell>>(T, bool);
+pub struct CargoLogger<'gc>(&'gc GlobalContext, bool);
 
-// impl CargoLogger<'_> {
-impl<S: DerefMut<Target = Shell>> CargoLogger<S> {
+impl CargoLogger<'_> {
 	/// Shortcut to right-align and color green a status message.
 	pub fn status<T, U>(&mut self, status: T, message: U)
 		where T: Display,
 		      U: Display {
-		self.0.status(status, message).log_err().ok();
+		self.0.shell().status(status, message).log_err().ok();
 	}
 
 	/// Shortcut to right-align a status message.
@@ -30,6 +28,7 @@ impl<S: DerefMut<Target = Shell>> CargoLogger<S> {
 		where T: Display,
 		      U: Display {
 		self.0
+		    .shell()
 		    .status_with_color(status, message, &color.on_default())
 		    .log_err()
 		    .ok();
@@ -43,9 +42,10 @@ impl<S: DerefMut<Target = Shell>> CargoLogger<S> {
 			                                                                     level: "error".to_owned(),
 			                                                                     code: None,
 			                                                                     spans: vec![] } };
-			self.0.print_json(&msg)
+			self.0.shell().print_json(&msg)
 		} else {
 			self.0
+			    .shell()
 			    .status_with_color("Error", message, &Color::Red.on_default())
 		}.log_err()
 		.ok();
@@ -53,14 +53,14 @@ impl<S: DerefMut<Target = Shell>> CargoLogger<S> {
 
 	/// Runs the callback only if we are in verbose mode.
 	pub fn verbose<F>(&mut self, mut callback: F)
-		where F: FnMut(CargoLogger<&mut Shell>) {
-		self.0
-		    .verbose(|shell| {
-			    callback(CargoLogger(shell, self.1));
-			    Ok(())
-		    })
-		    .log_err()
-		    .ok();
+		where F: FnMut(CargoLogger) {
+		match { self.0.shell().verbosity() } {
+			Verbosity::Verbose => {
+				let logger = CargoLogger(self.0, self.1);
+				callback(logger)
+			},
+			_ => {},
+		}
 	}
 
 	/// Prints a red 'error' message.
@@ -70,9 +70,9 @@ impl<S: DerefMut<Target = Shell>> CargoLogger<S> {
 			                                                                     level: "error".to_owned(),
 			                                                                     code: None,
 			                                                                     spans: vec![] } };
-			self.0.print_json(&msg)
+			self.0.shell().print_json(&msg)
 		} else {
-			self.0.error(message)
+			self.0.shell().error(message)
 		}.log_err()
 		.ok();
 	}
@@ -84,15 +84,15 @@ impl<S: DerefMut<Target = Shell>> CargoLogger<S> {
 			                                                                     level: "warning".to_owned(),
 			                                                                     code: None,
 			                                                                     spans: vec![] } };
-			self.0.print_json(&msg)
+			self.0.shell().print_json(&msg)
 		} else {
-			self.0.warn(message)
+			self.0.shell().warn(message)
 		}.log_err()
 		.ok();
 	}
 
 	/// Prints a cyan 'note' message.
-	pub fn note<T: Display>(&mut self, message: T) { self.0.note(message).log_err().ok(); }
+	pub fn note<T: Display>(&mut self, message: T) { self.0.shell().note(message).log_err().ok(); }
 
 	// pub fn print_json<T: Message>(&mut self, message: T)  {
 	// 	if self.1 { self.0.print_json(&message) } else { Ok(()) }.log_err().ok();
@@ -102,6 +102,7 @@ impl<S: DerefMut<Target = Shell>> CargoLogger<S> {
 	pub fn print_cargo_message<T: Message>(&mut self, message: T) {
 		if self.1 {
 			self.0
+			    .shell()
 			    .out()
 			    .write_all(message.to_json_string().as_bytes())
 			    .log_err()
@@ -123,17 +124,17 @@ impl<S: DerefMut<Target = Shell>> CargoLogger<S> {
 }
 
 
-impl Config<'_> {
+impl<'gc> Config<'gc> {
 	#[must_use]
-	pub fn log(&self) -> CargoLogger<RefMut<'_, Shell>> {
+	pub fn log(&self) -> CargoLogger<'gc> {
 		CargoLogger(
-		            self.workspace.gctx().shell(),
+		            self.workspace.gctx(),
 		            self.compile_options.build_config.emit_json(),
 		)
 	}
 
 	pub fn log_extra_verbose<F>(&self, mut callback: F)
-		where F: FnMut(CargoLogger<RefMut<'_, Shell>>) {
+		where F: FnMut(CargoLogger<'gc>) {
 		if self.workspace.gctx().extra_verbose() {
 			callback(self.log())
 		}

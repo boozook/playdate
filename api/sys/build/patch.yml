@@ -1,0 +1,61 @@
+root:
+  never-return:
+    - system.error
+  remove:
+    # - system.vaFormatString
+    - __builtin_va_list
+    - va_list
+  unwrap:
+    exclude:
+      - system.vaFormatString
+      - graphics.getDebugBitmap
+  deref:
+    exclude:
+
+# TODO: enable entier list
+safe: # make callbacks safe
+  include:
+    # - system.realloc
+    # - PDCallbackFunction
+    # - PDMenuItemCallbackFunction
+    # - PDButtonCallbackFunction
+    # - sndCallbackProc
+    # - SequenceFinishedCallback
+    # - AudioSourceFunction
+    # - RecordCallback
+    # - signalStepFunc
+    # - signalNoteOnFunc
+    # - signalNoteOffFunc
+    # - signalDeallocFunc
+    # - synthRenderFunc
+    # - synthNoteOnFunc
+    # - synthReleaseFunc
+    # - synthSetParameterFunc
+    # - synthDeallocFunc
+    # - synthCopyUserdata
+    # - effectProc
+    # - AddScoreCallback
+    # - PersonalBestCallback
+    # - BoardsListCallback
+    # - ScoresCallback
+    - AccessRequestCallback
+    # - HTTPConnectionCallback
+    # - HTTPHeaderCallback
+    # - TCPConnectionCallback
+    # - TCPOpenCallback
+    # - LCDSpriteDrawFunction
+    # - LCDSpriteUpdateFunction
+    # - LCDSpriteCollisionFilterProc
+    # - lua_CFunction
+    # - json_readFunc
+    # - json_writeFunc
+# safe-param:
+#   - struct: playdate_sound_lfo
+#     field: setFunction
+#     param: lfoFunc
+#   - struct: playdate_sound
+#     field: getHeadphoneState
+#     param: changeCallback
+#   - struct: playdate_network
+#     field: setEnabled
+#     param: callback

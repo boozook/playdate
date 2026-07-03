@@ -1,5 +1,4 @@
 #![feature(str_from_raw_parts)]
-#![feature(format_args_nl)]
 use std::borrow::Cow;
 use std::path::{PathBuf, Path};
 use bindgen_cfg::*;
@@ -9,6 +8,9 @@ use bindgen_cfg::*;
 const BINDINGS_PATH_ENV: &str = "PD_BINDINGS_PATH"; // used in source - include-path.
 const BINDINGS_VER_ENV: &str = "PD_SDK_VERSION"; // used in source - doc for ffi mod.
 const BINDINGS_NAME_ENV: &str = "PD_BINDINGS_FILENAME"; // can be used in source.
+
+const BINDINGS_PATCH_ENV: &str = "PD_BINDINGS_PATCH";
+const BINDINGS_RENAME_ENV: &str = "PD_BINDINGS_RENAME";
 
 /// Magic variable to allow save generated bindings to $crate-root/gen/.
 const BINDINGS_BUILD_BUNDLED: &str = "PD_BUILD_PREBUILT";
@@ -38,6 +40,11 @@ fn output(filename: &Filename, path: Option<&Path>) -> ! {
 
 	debug_assert!(path.exists(), "bindings not found");
 
+	if !path.exists() {
+		cargo::err(format_args!("output bindings not found at {path:?}"));
+	}
+
+	// open_in_editor(&path);
 	std::process::exit(0);
 }
 
@@ -48,17 +55,39 @@ fn main() {
 	let target = Target::from_env_target().inspect_err(|err| cargo::warn(err)).ok();
 
 	// target -> cfg:
-	println!("cargo::rustc-check-cfg=cfg(playdate)");
 	if matches!(target, Some(Target::Playdate)) {
 		println!("cargo::rustc-cfg=playdate")
 	}
 
-	let cfg = cfg::create();
+	let mut cfg = cfg::default();
+	// TODO: configure layout_tests
+
+	// set patch override:
+	{
+		let patch_env_use = env::var_os(BINDINGS_PATCH_ENV).map(|p| cfg.patch = Some(p.into()));
+		let rename_env_use = env::var_os(BINDINGS_RENAME_ENV).map(|p| cfg.rename = Some(p.into()));
+
+		if let Some(path) = cfg.patch.as_deref() &&
+		   !path.exists()
+		{
+			let src = patch_env_use.map(|_| format!("from env {BINDINGS_PATCH_ENV}"))
+			                       .unwrap_or_default();
+			cargo::err(format_args!("missed patch at {path:?} {src}"));
+		}
+		if let Some(path) = cfg.rename.as_deref() &&
+		   !path.exists()
+		{
+			let src = rename_env_use.map(|_| format!("from env {BINDINGS_RENAME_ENV}"))
+			                        .unwrap_or_default();
+			cargo::err(format_args!("missed rename at {path:?} {src}"));
+		}
+	}
 
 
-	// Docs.rs-like environment:
-	if is_env_without_sdk() {
-		println!("docs.rs detected");
+	// Docs.rs-like environment,
+	// With mock the bindings are replaced so it doesn’t matter what to use.
+	if is_env_without_sdk() || cfg!(any(mockrt, mockrt = "alloc", mockrt = "std")) {
+		println!("docs.rs or mock detected");
 		return use_existing_bundled(&cfg);
 	}
 
@@ -77,7 +106,8 @@ fn main() {
 	// builtin, exactly same as requested:
 	let bundled = builtin::path(&filename);
 
-	if bundled.exists() {
+
+	if bundled.exists() && !is_bundled_rebuild_requested() {
 		lint::check_bindgen_unnecessary_inner();
 
 		println!("Found exact match");
@@ -91,7 +121,7 @@ fn main() {
 			return with_builtin_bindgen(cfg);
 		} else if let Some((pdbindgen, ver)) = Runner::find_tool(&cfg.bin) {
 			println!("Using external bindgen {ver} ({pdbindgen:?})");
-			with_external_bindgen(cfg, &filename);
+			with_external_bindgen(&mut cfg, &filename);
 		} else {
 			// well, not feature bindgen & pdbindgen not installed.
 			// search for some prebuilt that covers requested
@@ -110,7 +140,7 @@ fn main() {
 }
 
 
-fn with_external_bindgen(mut cfg: Cfg, filename: &Filename) {
+fn with_external_bindgen(cfg: &mut Cfg, filename: &Filename) {
 	// determine output path (bundled or OUT_DIR)
 	let out_path = out_path_or_cache(filename);
 
@@ -118,19 +148,20 @@ fn with_external_bindgen(mut cfg: Cfg, filename: &Filename) {
 	cfg.output = Some(out_path);
 
 	// execute bindgen
-	let result = Runner::gen_cmd(&cfg).and_then(|mut cmd| cmd.status().map_err(|err| eprintln!("{err}")).ok());
-
-	if let Some(exit) = result {
-		println!("Playdate bindgen exited with status {exit}");
-		output(filename, cfg.output.as_deref());
-	} else {
-		panic!("Playdate bindgen exited with error and feature 'bindgen' disabled, so can't generate bindings.");
+	match Runner::gen_cmd(&cfg).expect("pd-bindgen cmd").status() {
+		Ok(exit) => {
+			println!("Playdate bindgen exited with status {exit}");
+			output(filename, cfg.output.as_deref());
+		},
+		Err(err) => {
+			cargo::err(format_args!("Playdate bindgen exited with error and feature 'bindgen' is off, so can't generate bindings. {err}"));
+		},
 	}
 }
 
 
 #[cfg(feature = "bindgen")]
-fn with_builtin_bindgen(mut cfg: Cfg) {
+fn with_builtin_bindgen(cfg: Cfg) {
 	// prepare generator:
 	let generator = bindgen::Generator::new(cfg).expect("Couldn't create bindings generator.");
 	let filename = generator.filename.to_owned();
@@ -215,7 +246,7 @@ fn is_env_without_sdk() -> bool {
 }
 
 fn is_bundled_rebuild_requested() -> bool {
-	// TODO: replace with cfg
+	// TODO: Probably replace with cfg
 	cargo::watch_env(BINDINGS_BUILD_BUNDLED);
 	env::is_set(BINDINGS_BUILD_BUNDLED)
 }
@@ -269,7 +300,41 @@ mod cargo {
 	use std::path::Path;
 
 	pub fn warn(s: impl Display) { println!("cargo::warning={s}") }
+	pub fn err(s: impl Display) { println!("cargo::error={s}") }
 
 	pub fn watch_path(p: impl AsRef<Path>) { println!("cargo::rerun-if-changed={}", p.as_ref().display()) }
 	pub fn watch_env(var: impl Display) { println!("cargo::rerun-if-env-changed={var}") }
+}
+
+
+/// Open `path` in `$EDITOR`.
+/// Used only for bindings generation debug purposes
+#[allow(unused)]
+fn open_in_editor(path: &Path) -> bool {
+	std::env::var("EDITOR").map(|var| {
+		                       let mut cmd = var.split_once(" ")
+		                                        .map(|(cmd, arg)| {
+			                                        let mut cmd = std::process::Command::new(cmd);
+			                                        if !arg.contains("wait") {
+				                                        cmd.arg(arg);
+			                                        }
+			                                        cmd
+		                                        })
+		                                        .unwrap_or_else(|| std::process::Command::new(var));
+		                       cmd.arg(path.as_os_str());
+		                       cmd
+	                       })
+	                       .inspect_err(|err| {
+		                       cargo::err(format_args!("getting env $EDITOR: {err:?}"));
+	                       })
+	                       .ok()
+	                       .and_then(|mut cmd| {
+		                       cmd.output()
+		                          .inspect_err(|err| {
+			                          cargo::err(format_args!("open with $EDITOR: {err:?}"));
+		                          })
+		                          .ok()
+		                          .filter(|s| s.status.success())
+	                       })
+	                       .is_some()
 }
