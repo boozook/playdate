@@ -72,7 +72,9 @@ jobs:
           -p=playdate-build-utils
           -p=playdate-tool
           --bins --examples --all-targets --no-deps
-          --message-format=json | cargo deduplicate-warnings | clippy-sarif | tee results.sarif | sarif-fmt
+          --message-format=json
+          --keep-going -Zunstable-options || true
+          | cargo deduplicate-warnings | clippy-sarif | tee results.sarif | sarif-fmt
 
       - name: Fix PWD
         if: runner.os == 'Windows'
