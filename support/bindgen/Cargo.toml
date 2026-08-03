@@ -17,7 +17,7 @@ semver.workspace = true
 
 # parser:
 serde = { workspace = true, features = ["derive"] }
-serde_yml = "0.0.12"
+serde_yml = "0.0.13"
 
 html5ever = { version = "0.35.0", optional = true }
 markup5ever_rcdom = { version = "0.35.0", optional = true }
@@ -65,7 +65,7 @@ extra-codegen = ["syn", "proc-macro2", "quote"]
 
 # bindgen options
 runtime = ["bindgen/runtime"]                              # runtime linking (dlopen)
-static = ["bindgen/static"]                                # static linking to clang
+static = ["bindgen/static"]                                # static linking clang
 logging = ["bindgen/logging", "utils/log"]
 pretty = ["bindgen/prettyplease", "prettyplease"]
 cli = ["clap", "documentation", "extra-codegen", "pretty"]
