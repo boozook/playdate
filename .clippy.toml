@@ -1,0 +1,36 @@
+third-party.clippy-feature = "nightly"
+
+
+avoid-breaking-exported-api = false
+
+# TODO:
+# stack-size-threshold
+# too-large-for-stack
+# too-many-arguments-threshold
+# enum-variant-size-threshold
+# vec-box-size-threshold
+single-char-binding-names-threshold = 8
+pass-by-value-size-limit = 256
+
+# https://doc.rust-lang.org/stable/clippy/lint_configuration.html#doc-valid-idents
+doc-valid-idents = [".."]
+
+lint-commented-code = true
+check-private-items = true
+check-grouped-late-init = true
+accept-comment-above-attributes = true
+allow-expect-in-consts = true
+allow-expect-in-tests = true
+allow-unwrap-in-consts = true
+allow-unwrap-in-tests = true
+allow-panic-in-tests = true
+
+allowed-dotfiles = [".cargo-playdate.toml"]
+
+allowed-scripts = ["Latin", "Math Symbols", "Letterlike Symbols"]
+
+
+# https://doc.rust-lang.org/stable/clippy/lint_configuration.html#arithmetic-side-effects-allowed
+arithmetic-side-effects-allowed = []
+arithmetic-side-effects-allowed-binary = []
+arithmetic-side-effects-allowed-unary = []
