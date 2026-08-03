@@ -222,7 +222,7 @@ jobs:
           --lcov --output-path cargo.lcov.info
 
       - name: Upload to Coveralls
-        uses: coverallsapp/github-action@v2.3.6
+        uses: coverallsapp/github-action@v2.3.8
         with:
           files: >-
             api-no-default.lcov.info
