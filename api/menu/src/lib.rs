@@ -196,7 +196,7 @@ impl<Params> MenuItem {
 #[derive(Clone, Copy)]
 pub struct Menu(Api);
 
-impl const Deref for Menu {
+const impl Deref for Menu {
 	type Target = Api;
 	fn deref(&self) -> &Self::Target { &self.0 }
 }

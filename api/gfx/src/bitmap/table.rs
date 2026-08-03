@@ -19,7 +19,7 @@ use super::Bitmap;
 #[repr(transparent)]
 pub struct BitmapTable(pub(super) NonNull<SysBitmapTable>);
 
-impl const AsRaw for BitmapTable {
+const impl AsRaw for BitmapTable {
 	type Output = SysBitmapTable;
 	#[inline]
 	unsafe fn as_raw(&self) -> NonNull<Self::Output> { self.0 }

@@ -7,7 +7,7 @@ pub const trait ColorFmt<'t> {
 	fn display(&'t self) -> Self::Display;
 }
 
-impl<'t> const ColorFmt<'t> for SolidColor {
+const impl<'t> ColorFmt<'t> for SolidColor {
 	type Display = ColorDisplay<'t, Self>;
 	fn display(&self) -> ColorDisplay<'_, Self> { ColorDisplay(self) }
 }

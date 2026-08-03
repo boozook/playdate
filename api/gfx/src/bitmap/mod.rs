@@ -33,7 +33,7 @@ mod any {
 
 
 	pub const trait AsBitmap: AsRaw<Output = SysBitmap> {}
-	impl<T: [const] AsRaw<Output = SysBitmap>> const AsBitmap for T {}
+	const impl<T: [const] AsRaw<Output = SysBitmap>> AsBitmap for T {}
 }
 
 
@@ -62,7 +62,7 @@ mod ty {
 		pub(super) const fn as_ptr(&self) -> *mut SysBitmap { self.0.as_ptr() }
 	}
 
-	impl const AsRaw for Bitmap {
+	const impl AsRaw for Bitmap {
 		type Output = SysBitmap;
 		#[inline(always)]
 		unsafe fn as_raw(&self) -> NonNull<Self::Output> { self.0 }
@@ -77,24 +77,24 @@ mod ty {
 		pub const fn from_ptr(ptr: NonNull<SysBitmap>) -> Self { Self(ManuallyDrop::new(Bitmap(ptr)), PhantomData) }
 	}
 
-	impl<'o> const AsRef<'o, Bitmap> for Borrowed<'o> where ManuallyDrop<Bitmap>: [const] Deref {
+	const impl<'o> AsRef<'o, Bitmap> for Borrowed<'o> where ManuallyDrop<Bitmap>: [const] Deref {
 		fn as_ref<'t>(&'t self) -> &'t Bitmap
 			where 'o: 't {
 			&self.0
 		}
 	}
-	impl<'o> const AsMut<'o, Bitmap> for Borrowed<'o> where ManuallyDrop<Bitmap>: [const] DerefMut {
+	const impl<'o> AsMut<'o, Bitmap> for Borrowed<'o> where ManuallyDrop<Bitmap>: [const] DerefMut {
 		fn as_mut<'t>(&'t mut self) -> &'t mut Bitmap
 			where 'o: 't {
 			&mut self.0
 		}
 	}
 
-	impl<'t, 'l> const Deref for Borrowed<'t> where Self: [const] AsRef<'t, Bitmap> {
+	const impl<'t, 'l> Deref for Borrowed<'t> where Self: [const] AsRef<'t, Bitmap> {
 		type Target = Bitmap;
 		fn deref(&self) -> &Self::Target { self.as_ref() }
 	}
-	impl<'t, 'l> const DerefMut for Borrowed<'t>
+	const impl<'t, 'l> DerefMut for Borrowed<'t>
 		where Self: [const] AsMut<'t, Bitmap> + [const] Deref<Target = Bitmap>
 	{
 		fn deref_mut(&mut self) -> &mut Self::Target { self.as_mut() }
@@ -116,7 +116,7 @@ mod ty {
 		pub const unsafe fn from_ptr(ptr: NonNull<SysBitmap>) -> Self { Self(Bitmap(ptr), PhantomData) }
 	}
 
-	impl<'o> const AsRef<'o, Bitmap> for Pointing<'o> {
+	const impl<'o> AsRef<'o, Bitmap> for Pointing<'o> {
 		#[inline(always)]
 		fn as_ref<'t>(&'t self) -> &'t Bitmap
 			where 'o: 't {
@@ -124,7 +124,7 @@ mod ty {
 		}
 	}
 
-	impl<'t, 'l> const Deref for Pointing<'t> where Self: [const] AsRef<'t, Bitmap> {
+	const impl<'t, 'l> Deref for Pointing<'t> where Self: [const] AsRef<'t, Bitmap> {
 		type Target = Bitmap;
 		fn deref(&self) -> &Self::Target { self.as_ref() }
 	}

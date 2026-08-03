@@ -48,7 +48,7 @@ impl OpenOptions for FileOptions {
 }
 
 
-impl const FileOptionsExt for FileOptions {
+const impl FileOptionsExt for FileOptions {
 	fn new() -> Self { FileOptions(0) }
 
 	/// Read access to Game’s package (bundle) directory.

@@ -68,7 +68,7 @@ pub mod primitive {
 	}
 
 
-	impl<T: [const] Add<Output = T> + [const] Destruct> const Add for Seconds<T> {
+	const impl<T: [const] Add<Output = T> + [const] Destruct> Add for Seconds<T> {
 		type Output = Seconds<T>;
 		fn add(self, rhs: Self) -> Self::Output { Self(self.0 + rhs.0) }
 	}
@@ -77,7 +77,7 @@ pub mod primitive {
 		fn add_assign(&mut self, rhs: Self) { self.0 += rhs.0 }
 	}
 
-	impl<T: [const] Sub<Output = T> + [const] Destruct> const Sub for Seconds<T> {
+	const impl<T: [const] Sub<Output = T> + [const] Destruct> Sub for Seconds<T> {
 		type Output = Seconds<T>;
 		fn sub(self, rhs: Self) -> Self::Output { Self(self.0 - rhs.0) }
 	}
@@ -86,12 +86,12 @@ pub mod primitive {
 		fn sub_assign(&mut self, rhs: Self) { self.0 -= rhs.0 }
 	}
 
-	impl<T: [const] Mul<Output = T> + [const] Destruct> const Mul for Seconds<T> {
+	const impl<T: [const] Mul<Output = T> + [const] Destruct> Mul for Seconds<T> {
 		type Output = Self;
 		fn mul(self, rhs: Self) -> Self::Output { Self(self.0 * rhs.0) }
 	}
 
-	impl<T: [const] Div<Output = T> + [const] Destruct> const Div for Seconds<T> {
+	const impl<T: [const] Div<Output = T> + [const] Destruct> Div for Seconds<T> {
 		type Output = Self;
 		fn div(self, rhs: Self) -> Self::Output { Self(self.0 / rhs.0) }
 	}

@@ -31,6 +31,7 @@ mod builtin;
 
 fn output(filename: &Filename, path: Option<&Path>) -> ! {
 	let sdk = filename.sdk.as_str();
+	println!("cargo::metadata=SDK={sdk}");
 	println!("cargo::rustc-env={BINDINGS_VER_ENV}={sdk}");
 	println!("cargo::rustc-env={BINDINGS_NAME_ENV}={filename}");
 

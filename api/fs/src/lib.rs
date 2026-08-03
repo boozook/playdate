@@ -405,12 +405,12 @@ pub mod scoped {
 		};
 
 		/// Down-conversion from one which returns owned results to this the [scoped](scoped::Fs).
-		impl const Deref for crate::Fs {
+		const impl Deref for crate::Fs {
 			type Target = scoped::Fs;
 			fn deref(&self) -> &Self::Target { unsafe { core::mem::transmute(self) } }
 		}
 
-		impl const DerefMut for crate::Fs {
+		const impl DerefMut for crate::Fs {
 			fn deref_mut(&mut self) -> &mut scoped::Fs { unsafe { core::mem::transmute(self) } }
 		}
 	}

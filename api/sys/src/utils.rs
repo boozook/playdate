@@ -15,7 +15,7 @@ pub const trait AsRaw {
 	unsafe fn as_raw(&self) -> NonNull<Self::Output>;
 }
 
-impl<T: [const] Deref<Target = U>, U: [const] AsRaw> const AsRaw for T {
+const impl<T: [const] Deref<Target = U>, U: [const] AsRaw> AsRaw for T {
 	type Output = <U as AsRaw>::Output;
 	#[inline(always)]
 	unsafe fn as_raw(&self) -> NonNull<Self::Output> { unsafe { Deref::deref(self).as_raw() } }
@@ -77,11 +77,11 @@ impl<T, F: FnOnce()> Drop for Cod<T, F> {
 // 	unsafe fn as_raw(&self) -> NonNull<Self::Output> { T::as_raw(&self.0) }
 // }
 
-impl<T, F: FnOnce()> const Deref for Cod<T, F> {
+const impl<T, F: FnOnce()> Deref for Cod<T, F> {
 	type Target = T;
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
-impl<T, F: FnOnce()> const DerefMut for Cod<T, F> {
+const impl<T, F: FnOnce()> DerefMut for Cod<T, F> {
 	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 

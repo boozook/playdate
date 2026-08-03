@@ -41,11 +41,11 @@ impl From<UnsafeLcdColor> for LcdColor<'_> {
 impl Into<UnsafeLcdColor> for LcdColor<'_> {
 	fn into(self) -> UnsafeLcdColor { self.0 }
 }
-impl const Deref for LcdColor<'_> {
+const impl Deref for LcdColor<'_> {
 	type Target = UnsafeLcdColor;
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
-impl const DerefMut for LcdColor<'_> {
+const impl DerefMut for LcdColor<'_> {
 	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
@@ -114,7 +114,7 @@ pub const trait ColorExt {
 	fn is_pattern(&self) -> bool;
 }
 
-impl const ColorExt for LcdColor<'_> {
+const impl ColorExt for LcdColor<'_> {
 	fn is_solid(&self) -> bool { self.0 >= SolidColor::Black as _ && self.0 <= SolidColor::XOR as _ }
 	fn is_pattern(&self) -> bool { !self.is_solid() }
 }
@@ -124,7 +124,7 @@ pub const trait IntoColor<'t> {
 	fn into_color(self) -> LcdColor<'t>;
 }
 
-impl const IntoColor<'_> for SolidColor {
+const impl IntoColor<'_> for SolidColor {
 	fn into_color(self) -> LcdColor<'static> { LcdColor::new(self as UnsafeLcdColor) }
 }
 

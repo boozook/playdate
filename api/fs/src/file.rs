@@ -17,7 +17,7 @@ use crate::error::err_code_on_drop;
 #[must_use = "File will be closed on drop"]
 pub struct File(pub(crate) *mut SdFile);
 
-impl const AsRaw for File {
+const impl AsRaw for File {
 	type Output = SdFile;
 	unsafe fn as_raw(&self) -> NonNull<SdFile> { NonNull::new(self.0).expect("non-null ptr") }
 }

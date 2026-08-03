@@ -102,11 +102,11 @@ cfg_select! {
 		/// Runtime Mock
 		pub extern crate mock;
 		pub use mock::ffi;
-	}
+	},
 	all(miri, all(test, any(mockrt, mockrt = "alloc", mockrt = "std"))) => {
 		compile_error!("Because of feature-poisoning, it is an error to use mock with enabled std (cfg: mockrt = \"std\") with miri (cfg: miri)");
-	}
-	_ => {}
+	},
+	_ => {},
 }
 
 
@@ -306,56 +306,53 @@ pub mod ctrl {
 		fn from(v: bool) -> Self { unsafe { core::mem::transmute(v as i32) } }
 	}
 
+	// mod impl_try {
+	// 	use core::fmt::Display;
+	// 	use core::ops::FromResidual;
+	// 	use core::convert::Infallible;
+	// 	use crate::macros::{api, api_opt};
+	// 	use super::*;
 
-	mod impl_try {
-		use core::fmt::Display;
-		use core::ops::FromResidual;
-		use core::convert::Infallible;
-		use crate::macros::{api, api_opt};
-		use super::*;
+	// 	impl core::ops::Try for EventLoopCtrl {
+	// 		type Output = Self;
+	// 		fn from_output(output: Self::Output) -> Self { Self::from(output) }
 
+	// 		type Residual = c_int;
+	// 		fn branch(self) -> core::ops::ControlFlow<Self::Residual, Self::Output> {
+	// 			if matches!(self, Self::Stop) {
+	// 				core::ops::ControlFlow::Break(self.into())
+	// 			} else {
+	// 				core::ops::ControlFlow::Continue(self)
+	// 			}
+	// 		}
+	// 	}
 
-		impl core::ops::Try for EventLoopCtrl {
-			type Output = Self;
-			fn from_output(output: Self::Output) -> Self { Self::from(output) }
+	// 	impl FromResidual<c_int> for EventLoopCtrl {
+	// 		#[track_caller]
+	// 		fn from_residual(residual: c_int) -> Self {
+	// 			let res = EventLoopCtrl::from(residual);
+	// 			if res == Self::Stop {
+	// 				sim_try_full_stop();
+	// 				panic!("{res:?}");
+	// 			}
+	// 			res
+	// 		}
+	// 	}
 
-			type Residual = c_int;
-			fn branch(self) -> core::ops::ControlFlow<Self::Residual, Self::Output> {
-				if matches!(self, Self::Stop) {
-					core::ops::ControlFlow::Break(self.into())
-				} else {
-					core::ops::ControlFlow::Continue(self)
-				}
-			}
-		}
+	// 	impl<E: Display> FromResidual<Result<Infallible, E>> for EventLoopCtrl {
+	// 		#[track_caller]
+	// 		fn from_residual(residual: Result<Infallible, E>) -> Self {
+	// 			sim_try_full_stop();
+	// 			panic!("{}", unsafe { residual.unwrap_err_unchecked() });
+	// 		}
+	// 	}
 
-		impl FromResidual<c_int> for EventLoopCtrl {
-			#[track_caller]
-			fn from_residual(residual: c_int) -> Self {
-				let res = EventLoopCtrl::from(residual);
-				if res == Self::Stop {
-					sim_try_full_stop();
-					panic!("{res:?}");
-				}
-				res
-			}
-		}
-
-		impl<E: Display> FromResidual<Result<Infallible, E>> for EventLoopCtrl {
-			#[track_caller]
-			fn from_residual(residual: Result<Infallible, E>) -> Self {
-				sim_try_full_stop();
-				panic!("{}", unsafe { residual.unwrap_err_unchecked() });
-			}
-		}
-
-
-		fn sim_try_full_stop() {
-			if api_opt!(graphics.getDebugBitmap).flatten().is_some() {
-				unsafe { api!(system.setUpdateCallback)(None, core::ptr::null_mut()) }
-			}
-		}
-	}
+	// 	fn sim_try_full_stop() {
+	// 		if api_opt!(graphics.getDebugBitmap).flatten().is_some() {
+	// 			unsafe { api!(system.setUpdateCallback)(None, core::ptr::null_mut()) }
+	// 		}
+	// 	}
+	// }
 }
 
 

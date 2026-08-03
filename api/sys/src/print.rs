@@ -149,12 +149,12 @@ pub mod fmt {
 	// 	_ => { 1024 }
 	// }};
 	const FMT_BUF_LEN: usize = cfg_select! {
-		format_buffer = "0" => { 0 }
-		format_buffer = "128" => { 128 }
-		format_buffer = "256" => { 256 }
-		format_buffer = "512" => { 512 }
-		format_buffer = "1024" => { 1024 }
-		_ => { 1024 }
+		format_buffer = "0" => 0,
+		format_buffer = "128" => 128,
+		format_buffer = "256" => 256,
+		format_buffer = "512" => 512,
+		format_buffer = "1024" => 1024,
+		_ => 1024,
 	};
 
 	/// On-stack format buffer with constant length.

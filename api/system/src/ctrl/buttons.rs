@@ -18,7 +18,11 @@ pub const trait ButtonsExt: Sized {
 	///
 	/// Returns `true` if `self` contains __any__ of `other`.
 	#[inline(always)]
-	fn intersects(&self, other: &Self) -> bool { self.raw() == other.raw() || (self.raw() & other.raw()) != 0 }
+	fn intersects(&self, other: &Self) -> bool { self.intersection(other).0 != 0 }
+
+	#[inline(always)]
+	fn intersection(&self, other: &Self) -> ffi::Buttons { ffi::Buttons((self.raw() & other.raw()) as _) }
+
 
 	/// Same as [`contains_all`][Self::contains_all], but for single button.
 	#[inline]
@@ -101,7 +105,7 @@ impl ButtonsIntoIter for ffi::Buttons {
 }
 
 
-impl const ButtonsExt for ffi::Buttons {
+const impl ButtonsExt for ffi::Buttons {
 	const A: Self = ffi::Buttons::A;
 	const B: Self = ffi::Buttons::B;
 	const Left: Self = ffi::Buttons::Left;
@@ -113,7 +117,7 @@ impl const ButtonsExt for ffi::Buttons {
 	fn raw(&self) -> u8 { self.0 as _ }
 }
 
-impl const Buttons for ffi::Buttons {
+const impl Buttons for ffi::Buttons {
 	const All: Self = ffi::Buttons(
 	                               ffi::Buttons::A.0 |
 	                               ffi::Buttons::B.0 |
@@ -154,7 +158,7 @@ impl Button {
 	}
 }
 
-impl const ButtonsExt for Button {
+const impl ButtonsExt for Button {
 	const A: Self = Button::A;
 	const B: Self = Button::B;
 	const Left: Self = Button::Left;

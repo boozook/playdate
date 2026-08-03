@@ -46,7 +46,7 @@ type Api = &'static sys::ffi::PlaydateGraphics;
 #[derive(Clone, Copy)]
 pub struct Graphics(Api);
 
-impl const Deref for Graphics {
+const impl Deref for Graphics {
 	type Target = Api;
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
