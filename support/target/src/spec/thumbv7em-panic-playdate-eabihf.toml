@@ -106,12 +106,15 @@ llvm-args = [
 # llvm-mcount-intrinsic # for profiling & PGO
 
 
-linker = "rust-lld"                                      # inherited
-linker-flavor = "gnu-lld"                                # inherited
+linker = "rust-lld" # inherited
+linker-flavor = "gnu-lld" # inherited
 lld-flavor = "gnu"
 has-rpath = false
 dynamic-linking = false
-link-env = ["__STACK_SIZE=10240", "__HEAP_SIZE=8388208"] # not used currently
+link-env = [
+	"STACK_SIZE=10240",  # originally has been set as `61800`
+	"HEAP_SIZE=8388208", # not used currently
+]
 link-script = """/* injected from file */"""
 
 [pre-link-args]

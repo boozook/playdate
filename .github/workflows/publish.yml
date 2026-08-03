@@ -31,6 +31,7 @@ env:
 
 jobs:
   crates-io:
+    # TODO: use https://github.com/rust-lang/crates-io-auth-action instead
     name: crates.io
     runs-on: ubuntu-latest
     defaults:
@@ -84,7 +85,7 @@ jobs:
           MESSAGE=$(echo $CRATES | jq -r 'if length == 1 then "Crate updated: \(.[0].name) v\(.[0].version)" else ("Crates updated:"), (to_entries[] | "\(.key + 1). \(.value.name): v\(.value.version)") end')
           echo "$MESSAGE"
 
-          # Replace \n->\n is really nessessary! This encodes string to json string.
+          # Replace \n->\n is really necessary! This encodes string to json string.
           MESSAGE="\"${MESSAGE//$'\n'/'\n'}\""
           echo "encoded: $MESSAGE"
 

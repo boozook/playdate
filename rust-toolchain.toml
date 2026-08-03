@@ -1,11 +1,11 @@
 [toolchain]
 channel = "nightly"
 profile = "minimal"
-targets = ["thumbv7em-none-eabihf"]
+targets = [ "thumbv7em-none-eabihf" ]
 components = [
-	"rust-src",      # for build-std
-	"llvm-tools",    # used by cargo-playdate
+	"rust-src",     # for build-std
+	"llvm-tools",   # used by cargo-playdate
 	"rustfmt",
 	"clippy",
-	"rust-analyzer",
+	"rust-analyzer"
 ]
