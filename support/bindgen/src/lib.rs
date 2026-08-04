@@ -129,15 +129,15 @@ impl Generator {
 		             .unwrap_or_else(ArmToolchain::try_new)?;
 
 
-		let rename_map = if let Some(ref p) = cfg.rename {
-			let src = std::fs::read_to_string(&p)?;
+		let rename_map = if let Some(p) = cfg.rename.as_deref() {
+			let src = std::fs::read_to_string(p)?;
 			let cfg = serde_yml::from_str(&src).expect("Invalid content in rename-map");
 			Some(Arc::new(RwLock::new(cfg)))
 		} else {
 			None
 		};
-		let patches_cfg = if let Some(ref p) = cfg.patch {
-			let src = std::fs::read_to_string(&p)?;
+		let patches_cfg = if let Some(p) = cfg.patch.as_deref() {
+			let src = std::fs::read_to_string(p)?;
 			Some(serde_yml::from_str(&src).expect("Invalid content in patch cfg"))
 		} else {
 			None

@@ -32,7 +32,7 @@ pub fn engage(source: &bindgen::Bindings,
 	}
 
 	let root_struct_name = {
-		let orig = root.as_deref().unwrap_or("PlaydateAPI");
+		let orig = root.unwrap_or("PlaydateAPI");
 
 		// find the renamed root:
 		let key = Kind::Struct(orig.to_owned());

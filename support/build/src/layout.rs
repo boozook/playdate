@@ -22,10 +22,10 @@ pub trait Layout {
 
 	/// The root directory: `/path/to/target/profile/playdate`.
 	/// If per-target: `/path/to/target/$TRIPLE/profile/playdate`.
-	/// If build-script: `/path/to/target(/$TRIPLE)/profile/build/**/out` ($OUT_DIR or `export-dir`).
+	/// If build-script: `/path/to/target(/$TRIPLE)/profile/build/**/out` (`$OUT_DIR` or `export-dir`).
 	fn root(&self) -> &Path;
 
-	/// The intermediate artifact destination: `$root/$NAME/`
+	/// The intermediate artifact destination: `$root/$NAME/`.
 	///
 	/// Crate can have multiple _targets_ (e.g. bins, lib, examples),
 	/// so we're have to specify the name,
@@ -33,13 +33,13 @@ pub trait Layout {
 	/// where `$NAME` is the name of the target.
 	fn dest(&'_ self) -> Cow<'_, Path> { self.root().join(self.name().as_ref()).into() }
 
-	/// Collected assets
+	/// Collected assets.
 	fn assets(&'_ self) -> Cow<'_, Path> { self.build() }
-	/// Hash of collected assets: `$dest/.assets.hash`
+	/// Hash of collected assets: `$dest/.assets.hash`.
 	fn assets_hash(&'_ self) -> Cow<'_, Path> { self.dest().join(".assets.hash").into() }
 	fn assets_plan(&'_ self) -> Cow<'_, Path> { self.dest().join("plan.json").into() }
 
-	/// The directory for build package: `$dest/build`
+	/// The directory for build package: `$dest/build`.
 	///
 	/// Directory with all files prepared to build with pdc.
 	///
@@ -50,13 +50,13 @@ pub trait Layout {
 	/// - * files     : linked assets
 	fn build(&'_ self) -> Cow<'_, Path> { self.dest().join("build").into() }
 
-	/// Playdate package manifest: `$build/pdxinfo`
+	/// Playdate package manifest: `$build/pdxinfo`.
 	fn manifest(&'_ self) -> Cow<'_, Path> { self.build().join(PDX_PKG_MANIFEST_FILENAME).into() }
 
-	/// Playdate (hw) executable: `$build/pdex.elf`
+	/// Playdate (hw) executable: `$build/pdex.elf`.
 	fn binary(&'_ self) -> Cow<'_, Path> { self.build().join(PDX_BIN_NAME_ELF).into() }
 
-	/// Playdate (sim) library: `$build/pdex.(dylib|dll)`
+	/// Playdate (sim) library: `$build/pdex.(dylib|dll)`.
 	///
 	/// Type of library depends on the current (HOST) target.
 	fn library(&'_ self) -> Cow<'_, Path> {
@@ -67,7 +67,7 @@ pub trait Layout {
 	}
 
 
-	/// The final package: `$root/$NAME.pdx`
+	/// The final package: `$root/$NAME.pdx`.
 	fn artifact(&'_ self) -> Cow<'_, Path> {
 		self.root()
 		    .join(self.name().as_ref())

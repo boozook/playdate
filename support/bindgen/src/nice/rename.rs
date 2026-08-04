@@ -72,13 +72,13 @@ impl RenameMap {
 /// Contains original names.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Kind {
-	/// Item with original name
+	/// Item with original name.
 	Item(String),
-	/// Struct with original name
+	/// Struct with original name.
 	Struct(String),
-	/// Union with original name
+	/// Union with original name.
 	Union(String),
-	/// `(enum name, variant name)`
+	/// `(enum name, variant name)`.
 	EnumVariant(String, String),
 }
 

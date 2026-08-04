@@ -1,4 +1,4 @@
-//! Playdate SDK C-API docs parser
+//! Playdate SDK C-API docs parser.
 //!
 //! Util that parses `Inside Playdate with C.html` file and produces map with
 //! keys like `sound.effect.bitCrusher.setAmountModulator`

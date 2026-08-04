@@ -33,12 +33,11 @@ fn walk_struct(items: &[Cell<Item>],
 			syn::Type::Ptr(entry) => {
 				match entry.elem.as_mut() {
 					syn::Type::Path(path) => {
-						if let Some(ident) = path.path.get_ident() {
-							if let Some(ty) = find_struct(items, &ident.to_string()) {
+						if let Some(ident) = path.path.get_ident()
+							&& let Some(ty) = find_struct(items, &ident.to_string()) {
 								let key = format!("{prefix}{field_name}");
 								walk_struct(items, Some(&key), ty, docs);
 							}
-						}
 					},
 					_ => unimplemented!("unknown ty: {}", quote::quote!(#{{field.ty}})),
 				}

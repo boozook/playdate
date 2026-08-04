@@ -6,7 +6,7 @@ use syn::Ident;
 use syn::Item;
 
 
-/// Usage: `enum_repr("i686-pc-win32-msvc")`
+/// Usage: `enum_repr("i686-pc-win32-msvc")`.
 pub fn enum_repr(target: &str) -> Option<(Ident, bool)> {
 	let bindings = bindings_for_enum(target).ok()?;
 	let source = bindings.to_string();

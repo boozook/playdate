@@ -27,7 +27,12 @@ allow-panic-in-tests = true
 
 allowed-dotfiles = [".cargo-playdate.toml"]
 
-allowed-scripts = ["Latin", "Math Symbols", "Letterlike Symbols"]
+allowed-scripts = [
+	"Latin",
+	# XXX: Mathematical notation (#995) has no alias :(
+	"Math Symbols",
+	"Letterlike Symbols",
+]
 
 
 # https://doc.rust-lang.org/stable/clippy/lint_configuration.html#arithmetic-side-effects-allowed

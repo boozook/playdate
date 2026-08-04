@@ -99,11 +99,11 @@ fn walk_struct(items: &[Cell<Item>], this: Option<&str>, structure: &mut ItemStr
 			syn::Type::Ptr(entry) => {
 				match entry.elem.as_mut() {
 					syn::Type::Path(path) => {
-						if let Some(ident) = path.path.get_ident() {
-							if let Some(ty) = find_struct(items, &ident.to_string()) {
-								walk_struct(items, Some(&key), ty, cfg);
-								apply_all(&key, field, cfg, None);
-							}
+						if let Some(ident) = path.path.get_ident() &&
+						   let Some(ty) = find_struct(items, &ident.to_string())
+						{
+							walk_struct(items, Some(&key), ty, cfg);
+							apply_all(&key, field, cfg, None);
 						}
 					},
 					_ => unimplemented!("unknown ty: {}", quote::quote!(#{{field.ty}})),
@@ -195,12 +195,12 @@ pub struct PatchCfg {
 
 #[derive(Debug, Default, serde::Deserialize)]
 pub struct ParamPath {
-	/// Struct ident
+	/// Struct ident.
 	#[serde(alias = "struct", rename = "struct")]
 	name: String,
-	/// Field ident
+	/// Field ident.
 	field: String,
-	/// param ident
+	/// Param ident.
 	param: String,
 }
 

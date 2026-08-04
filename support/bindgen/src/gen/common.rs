@@ -58,7 +58,7 @@ pub fn find_struct<'t>(items: &'t [Cell<Item>], name: &str) -> Option<&'t mut It
 }
 
 
-pub fn opt_ty_get_mut<'t>(ty: &'t mut Type) -> &'t mut Type {
+pub fn opt_ty_get_mut(ty: &mut Type) -> &mut Type {
 	let p = ty as *mut Type;
 	extract_ty_from_opt_mut(ty).unwrap_or_else(|| unsafe { p.as_mut().unwrap_unchecked() })
 }
