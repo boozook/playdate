@@ -34,7 +34,7 @@ pub trait Layout {
 	fn dest(&'_ self) -> Cow<'_, Path> { self.root().join(self.name().as_ref()).into() }
 
 	/// Collected assets
-	fn assets(&'_ self) -> Cow<'_, Path> { self.build().clone() }
+	fn assets(&'_ self) -> Cow<'_, Path> { self.build() }
 	/// Hash of collected assets: `$dest/.assets.hash`
 	fn assets_hash(&'_ self) -> Cow<'_, Path> { self.dest().join(".assets.hash").into() }
 	fn assets_plan(&'_ self) -> Cow<'_, Path> { self.dest().join("plan.json").into() }
