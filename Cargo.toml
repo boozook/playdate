@@ -74,7 +74,7 @@ cast_possible_truncation = "warn"
 redundant_clone = "deny"
 disallowed_methods = "deny"
 doc_markdown = "warn"
-doc_broken_link = "forbid"
+doc_broken_link = "deny"
 doc_comment_double_space_linebreaks = "allow"
 doc_lazy_continuation = "allow"
 doc_link_code = "allow"
@@ -98,10 +98,11 @@ check-cfg = [
 
 [workspace.lints.rust.uncommon_codepoints]
 level = "allow"
-[workspace.lints.rust.rust_2024_compatibility] # unsafe_op_in_unsafe_fn only
+[workspace.lints.rust.unsafe_op_in_unsafe_fn]
 level = "allow"
-[workspace.lints.rust.future-incompatible]
+[workspace.lints.rust.future_incompatible]
 level = "warn"
+priority = 1
 
 
 [profile.dev.package.playdate-color]
