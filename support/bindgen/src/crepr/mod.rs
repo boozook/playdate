@@ -10,7 +10,7 @@ use syn::Item;
 pub fn enum_repr(target: &str) -> Option<(Ident, bool)> {
 	let bindings = bindings_for_enum(target).ok()?;
 	let source = bindings.to_string();
-	let module = syn::parse_file(&source.to_string()).ok()?;
+	let module = syn::parse_file(&source).ok()?; 
 	repr_of("MyEnum", &module).map(|ident| {
 		                          let signed = ident.to_string().starts_with('i');
 		                          println!("REPR TY: {ident}, signed: {signed}");

@@ -1,6 +1,6 @@
 use core::cell::Cell;
 
-use syn::{GenericArgument, Item, ItemStruct, PathArguments, PathSegment, Type, TypeBareFn};
+use syn::{GenericArgument, Item, ItemStruct, PathArguments, PathSegment, Type, TypeFnPtr};
 
 
 pub fn extract_ty_from_opt(ty: &Type) -> Option<&Type> {
@@ -64,7 +64,7 @@ pub fn opt_ty_get_mut<'t>(ty: &'t mut Type) -> &'t mut Type {
 }
 
 pub fn safe_opt_fn(ty: &mut Type) -> bool {
-	if let Type::BareFn(TypeBareFn { unsafety, .. }) = opt_ty_get_mut(ty) {
+	if let Type::FnPtr(TypeFnPtr { unsafety, .. }) = opt_ty_get_mut(ty) {
 		unsafety.take();
 		true
 	} else {

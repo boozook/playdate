@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::cell::Cell;
 use bindgen_cfg::Target;
-use syn::TypeBareFn;
+use syn::TypeFnPtr;
 use syn::spanned::Spanned;
 use syn::token;
 use syn::Item;
@@ -51,7 +51,7 @@ pub fn engage(bindings: &mut syn::File,
 					                .find(|f| f.ident.as_ref().is_some_and(|id| id.eq(&fix.field)));
 					if let Some(field) = field {
 						let ty = opt_ty_get_mut(&mut field.ty);
-						if let Type::BareFn(TypeBareFn { inputs, .. }) = ty {
+						if let Type::FnPtr(TypeFnPtr { inputs, .. }) = ty {
 							let arg = inputs.iter_mut()
 							                .find(|arg| arg.name.as_ref().is_some_and(|(id, _)| id.eq(&fix.param)));
 							if let Some(arg) = arg {
@@ -115,7 +115,7 @@ fn walk_struct(items: &[Cell<Item>], this: Option<&str>, structure: &mut ItemStr
 					unimplemented!("unexpected struct: '{}'", quote::quote!(#ident))
 				} else if let Some(ty) = extract_ty_from_opt(&field.ty) {
 					match ty {
-						Type::BareFn(_) => apply_all(&key, field, cfg, Some(ty.to_owned())),
+						Type::FnPtr(_) => apply_all(&key, field, cfg, Some(ty.to_owned())),
 						_ => unimplemented!("unexpected ty: '{}'", quote::quote!(#ty)),
 					}
 				} else {
@@ -133,11 +133,11 @@ fn walk_struct(items: &[Cell<Item>], this: Option<&str>, structure: &mut ItemStr
 
 
 fn apply_return_never(_key: &str, field: &mut syn::Field) {
-	if let Type::BareFn(ty) = &mut field.ty {
-		ty.output = ReturnType::Type(
-		                             token::RArrow(ty.output.span()),
-		                             Box::new(TypeNever { bang_token: syn::Token![!](ty.output.span()), }.into()),
-		);
+	if let Type::FnPtr(ty) = &mut field.ty {
+		let t = token::RArrow(ty.output.span());
+		let never = Box::new(Type::Never(TypeNever { bang_token: syn::Token![!](ty.output.span()),
+		                                             attrs: Default::default() }));
+		ty.output = ReturnType::Type(t, never);
 	}
 }
 
@@ -148,7 +148,7 @@ fn apply_all(key: &str, field: &mut syn::Field, cfg: &RootPath, ty: Option<Type>
 	           .unwrap_or(&field.ty);
 
 	match ty {
-		Type::BareFn(_) => {
+		Type::FnPtr(_) => {
 			// apply unwrap:
 			if !cfg.unwrap.exclude.iter().any(|v| v.eq(key)) {
 				field.ty = ty.to_owned();
@@ -160,10 +160,15 @@ fn apply_all(key: &str, field: &mut syn::Field, cfg: &RootPath, ty: Option<Type>
 				Type::Path(path) => {
 					if !cfg.deref.exclude.iter().any(|v| v.eq(key)) {
 						let lifetime = Lifetime::new("'static", ty.star_token.span());
+						let mutability = match ty.mutability {
+							syn::PointerMutability::Const(_) => None,
+							syn::PointerMutability::Mut(t) => Some(t),
+						};
 						field.ty = Type::Reference(TypeReference { and_token: token::And(ty.star_token.span()),
 						                                           lifetime: Some(lifetime),
-						                                           mutability: ty.mutability,
-						                                           elem: Type::Path(path.to_owned()).into() })
+						                                           mutability,
+						                                           elem: Type::Path(path.to_owned()).into(),
+						                                           attrs: Default::default() })
 					}
 				},
 				_ => unimplemented!(),

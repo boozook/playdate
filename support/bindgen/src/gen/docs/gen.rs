@@ -49,7 +49,7 @@ fn walk_struct(items: &[Cell<Item>],
 					unimplemented!("unexpected struct: '{}'", quote::quote!(#ident))
 				} else if let Some(ty) = extract_ty_from_opt(&field.ty) {
 					match ty {
-						Type::BareFn(_) => {
+						Type::FnPtr(_) => {
 							let key = format!("{prefix}{field_name}");
 							if let Some(doc) = docs.get(&key) {
 								let attr: syn::Attribute = syn::parse_quote! { #[doc = #doc] };

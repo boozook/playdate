@@ -53,6 +53,9 @@ tokio = { version = "1.45", default-features = false }
 async-std = { version = "1.13", default-features = false }
 duplicate = "2.0"
 
+syn = { version = "3.0", features = ["full"] }
+prettyplease = { version = "0.3", features = ["verbatim"] }
+
 
 [workspace.metadata.playdate.options.assets]
 dependencies = true
