@@ -30,7 +30,9 @@ pub fn parse<R: Read>(mut reader: R) -> anyhow::Result<impl Iterator<Item = Cras
 		   .collect()
 	};
 
-	pub const DATE: &str = r"^.*crash at\s+([\d:/ ]+).*$";
+	// Header-independent: any section line with "... at <timestamp>", e.g.
+	// "--- crash at ...---" or "--- watchdog reset at ...---".
+	pub const DATE: &str = r"^.*\bat\s+(\d{4}/\d{2}/\d{2}\s+\d{2}:\d{2}:\d{2})\s*.*$";
 	pub const BUILD: &str = r"^.*build:\s*(.*)$";
 	pub const HEAP: &str = r"^.*heap allocated:\s*(\d+).*$";
 	pub const VARS: &str = r"([a-z]+[0-9]*):\s*([0-9a-f]{8})(?:\s|$)";
@@ -157,7 +159,10 @@ impl<T: Copy> CrashLog<Addr<T>> where Addr<T>: std::cmp::Eq + std::hash::Hash + 
 
 
 		for (k, name) in regs {
-			let addr = &self.ptrs[k];
+			// Watchdog (and other) dumps may omit some registers; skip missing ones.
+			let Some(addr) = self.ptrs.get(k) else {
+				continue;
+			};
 
 			let space = " ".repeat(8 - name.len());
 			write!(out, "{indented}  {name}:{space}")?;
@@ -426,5 +431,98 @@ impl WriteReport for CrashLog<&'_ Report> {
 		writeln!(out)?;
 
 		Ok(())
+	}
+}
+
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use std::io::Cursor;
+
+	const CRASH_SAMPLE: &str = "\
+--- crash at 2026/08/19 14:21:39---
+build:057d750f-3.1.1-release.210171-gitlab-runner
+   r0:c2298d2d    r1:00000000     r2:6000c5b0    r3: 43efffff
+  r12:00000000    lr:6000166f     pc:00000000   psr: 600f0000
+ cfsr:00000001  hfsr:00000000  mmfar:00000000  bfar: 00000000
+rcccsr:00000000
+heap allocated: 51136
+Lua totalbytes=0 GCdebt=0 GCestimate=0 stacksize=0
+";
+
+	const WATCHDOG_SAMPLE: &str = "\
+--- watchdog reset at 2026/08/21 09:03:47---
+build:057d750f-3.1.1-release.210171-gitlab-runner
+   r0:00002c95    r1:20032548     r2:00000001    r3: 00000000
+  r12:006d3000    lr:08015f33     pc:080333b4   psr: 810f002c
+rcccsr:00000000
+heap allocated: 40736
+Lua totalbytes=0 GCdebt=0 GCestimate=0 stacksize=0
+";
+
+	#[test]
+	fn parse_crash_header() {
+		let logs: Vec<_> = parse(Cursor::new(CRASH_SAMPLE)).unwrap().collect();
+		assert_eq!(logs.len(), 1);
+		let log = &logs[0];
+		assert_eq!(log.date.as_deref(), Some("2026/08/19 14:21:39"));
+		assert_eq!(
+		           log.build.as_deref(),
+		           Some("057d750f-3.1.1-release.210171-gitlab-runner")
+		);
+		assert_eq!(log.heap, Some(51136));
+		assert_eq!(log.ptrs["pc"].value(), 0);
+		assert_eq!(log.ptrs["lr"].value(), 0x6000_166f);
+		assert_eq!(log.ptrs["mmfar"].value(), 0);
+		assert_eq!(log.ptrs["cfsr"].value(), 1);
+	}
+
+	#[test]
+	fn parse_watchdog_reset_header() {
+		let logs: Vec<_> = parse(Cursor::new(WATCHDOG_SAMPLE)).unwrap().collect();
+		assert_eq!(logs.len(), 1);
+		let log = &logs[0];
+		assert_eq!(log.date.as_deref(), Some("2026/08/21 09:03:47"));
+		assert_eq!(
+		           log.build.as_deref(),
+		           Some("057d750f-3.1.1-release.210171-gitlab-runner")
+		);
+		assert_eq!(log.heap, Some(40736));
+		assert_eq!(log.ptrs["pc"].value(), 0x0803_33b4);
+		assert_eq!(log.ptrs["lr"].value(), 0x0801_5f33);
+		assert_eq!(log.ptrs["r0"].value(), 0x0000_2c95);
+		assert_eq!(log.ptrs["rcccsr"].value(), 0);
+		// Watchdog dumps omit faulting address / CFSR registers:
+		assert!(!log.ptrs.contains_key("mmfar"));
+		assert!(!log.ptrs.contains_key("bfar"));
+		assert!(!log.ptrs.contains_key("cfsr"));
+		assert!(!log.ptrs.contains_key("hfsr"));
+	}
+
+	#[test]
+	fn parse_mixed_crash_and_watchdog_blocks() {
+		let mixed = format!("{CRASH_SAMPLE}\n{WATCHDOG_SAMPLE}");
+		let logs: Vec<_> = parse(Cursor::new(mixed)).unwrap().collect();
+		assert_eq!(logs.len(), 2);
+		assert_eq!(logs[0].date.as_deref(), Some("2026/08/19 14:21:39"));
+		assert_eq!(logs[1].date.as_deref(), Some("2026/08/21 09:03:47"));
+	}
+
+	#[test]
+	fn pretty_print_watchdog_skips_missing_regs() {
+		let logs: Vec<_> = parse(Cursor::new(WATCHDOG_SAMPLE)).unwrap().collect();
+		let log = &logs[0];
+		let resolved = HashMap::new();
+		let mut out = Vec::new();
+		log.pretty_print(&mut out, &resolved, true, 0, false, false, false, false)
+		   .expect("pretty_print must not panic on watchdog dump");
+		let text = String::from_utf8(out).unwrap();
+		assert!(text.contains("Crash at 2026/08/21 09:03:47"), "{text}");
+		assert!(text.contains("BUILD:"), "{text}");
+		assert!(text.contains("HEAP:"), "{text}");
+		assert!(text.contains("15 PC"), "{text}");
+		assert!(!text.contains("MMFAR"), "{text}");
+		assert!(!text.contains("BFAR"), "{text}");
 	}
 }
