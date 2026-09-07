@@ -34,7 +34,7 @@ jobs:
 
       - name: Toot
         id: mastodon
-        uses: cbrgm/mastodon-github-action@v2.2.2
+        uses: cbrgm/mastodon-github-action@v2.2.4
         with:
           message: |
             🎉 Rusty Playdate Update!
